@@ -22,7 +22,7 @@ export default function TrustStrip() {
     {
       icon: Truck,
       title: 'Free Express Delivery',
-      desc: 'Complimentary insured shipping on all orders over $150',
+      desc: 'Complimentary express delivery across India on orders over ₹999',
     },
     {
       icon: ShieldCheck,
@@ -42,7 +42,7 @@ export default function TrustStrip() {
   ];
 
   return (
-    <section className="ps-trust-section" aria-label="Customer Reassurance & Newsletter">
+    <section id="trust-strip" className="ps-trust-section" aria-label="Customer Reassurance & Newsletter">
       {/* 4 Trust Pillars */}
       <div className="ps-trust-container">
         <div className="ps-trust-grid">

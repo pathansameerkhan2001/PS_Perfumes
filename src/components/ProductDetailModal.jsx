@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Heart, Star, ShoppingBag, Zap, ShieldCheck, Truck, Sparkles, Check } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { formatINR } from '../utils/formatCurrency';
 import './ProductDetailModal.css';
 
 export default function ProductDetailModal() {
@@ -125,16 +126,16 @@ export default function ProductDetailModal() {
               <span className="ps-pdetail-review-count">({selectedProduct.reviewCount} Connoisseur Reviews)</span>
             </div>
 
-            {/* Price Row */}
+            {/* Price Row in INR */}
             <div className="ps-pdetail-price-box">
-              <span className="ps-pdetail-current-price">${selectedProduct.price}</span>
+              <span className="ps-pdetail-current-price">{formatINR(selectedProduct.price)}</span>
               {selectedProduct.originalPrice && (
-                <span className="ps-pdetail-orig-price">${selectedProduct.originalPrice}</span>
+                <span className="ps-pdetail-orig-price">{formatINR(selectedProduct.originalPrice)}</span>
               )}
               {selectedProduct.discountPercent && (
                 <span className="ps-pdetail-discount-tag">{selectedProduct.discountPercent}</span>
               )}
-              <span className="ps-pdetail-tax-note">Tax included • Free Worldwide Express</span>
+              <span className="ps-pdetail-tax-note">Inclusive of all taxes • Free Delivery Over ₹999</span>
             </div>
 
             {/* Narrative Description */}
@@ -237,7 +238,7 @@ export default function ProductDetailModal() {
                 ) : (
                   <>
                     <ShoppingBag size={16} />
-                    <span>ADD TO BAG • ${(selectedProduct.price * quantity).toFixed(2)}</span>
+                    <span>ADD TO BAG • {formatINR(selectedProduct.price * quantity)}</span>
                   </>
                 )}
               </button>
@@ -266,7 +267,7 @@ export default function ProductDetailModal() {
             <div className="ps-pdetail-perks">
               <div className="ps-perk-item">
                 <Truck size={15} color="#c5a059" />
-                <span>Free Express Worldwide Shipping Over $150</span>
+                <span>Free Express Shipping Across India Over ₹999</span>
               </div>
               <div className="ps-perk-item">
                 <ShieldCheck size={15} color="#c5a059" />

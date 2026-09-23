@@ -1,104 +1,168 @@
-import React, { useState } from 'react';
-import { Star, CheckCircle, ChevronLeft, ChevronRight, Quote } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Star, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 import { REVIEWS } from '../data/reviews';
-import './Sections.css';
+import './ReviewsSection.css';
 
 export default function ReviewsSection() {
-  const [startIndex, setStartIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const autoPlayRef = useRef(null);
 
-  const prevReview = () => {
-    setStartIndex((prev) => (prev === 0 ? Math.max(0, REVIEWS.length - 3) : prev - 1));
+  const totalReviews = REVIEWS.length;
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev === 0 ? totalReviews - 1 : prev - 1));
   };
 
-  const nextReview = () => {
-    setStartIndex((prev) => (prev >= REVIEWS.length - 3 ? 0 : prev + 1));
+  const nextSlide = () => {
+    setCurrentIndex((prev) => (prev === totalReviews - 1 ? 0 : prev + 1));
   };
 
-  const visibleReviews = REVIEWS.slice(startIndex, startIndex + 3);
+  // Keyboard navigation
+  const handleKeyDown = (e) => {
+    if (e.key === 'ArrowLeft') prevSlide();
+    if (e.key === 'ArrowRight') nextSlide();
+  };
+
+  // Touch swipe support for mobile
+  const handleTouchStart = (e) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      nextSlide();
+    } else if (isRightSwipe) {
+      prevSlide();
+    }
+
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
 
   return (
-    <section className="ps-reviews-section" aria-label="Customer Reviews">
+    <section
+      className="ps-reviews-section"
+      aria-label="What Our Customers Have to Say"
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+    >
       <div className="ps-reviews-container">
-        {/* Header */}
+        {/* Section Header */}
         <div className="ps-reviews-header">
-          <span className="ps-reviews-tag">PATRON TESTIMONIALS</span>
-          <h2 className="ps-reviews-heading">Loved By Discerning Fragrance Connoisseurs</h2>
-          <div className="ps-bestsellers-divider" />
-          <p className="ps-reviews-subheading">
-            Over 25,000+ luxury perfume orders delivered across 40 countries with an average 4.9/5 rating.
-          </p>
+          <h2 className="ps-reviews-heading">What Our Customers Have to Say</h2>
         </div>
 
-        {/* Reviews Cards Grid */}
-        <div className="ps-reviews-grid">
-          {visibleReviews.map((rev) => (
-            <div key={rev.id} className="ps-review-card">
-              <div className="ps-review-top">
-                <div className="ps-review-stars">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      size={14}
-                      fill="#c5a059"
-                      color="#c5a059"
-                    />
-                  ))}
-                </div>
-                <Quote size={20} className="ps-review-quote-icon" />
-              </div>
+        {/* Editorial Carousel Viewport */}
+        <div
+          className="ps-reviews-carousel-viewport"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div
+            className="ps-reviews-track"
+            style={{
+              transform: `translateX(calc(-0.5 * var(--slide-width) - (${currentIndex} * (var(--slide-width) + var(--slide-gap)))))`,
+            }}
+          >
+            {REVIEWS.map((rev, index) => {
+              const isActive = index === currentIndex;
+              const isPrev =
+                index === (currentIndex - 1 + totalReviews) % totalReviews;
+              const isNext = index === (currentIndex + 1) % totalReviews;
 
-              <h4 className="ps-review-title">"{rev.title}"</h4>
-              <p className="ps-review-comment">{rev.comment}</p>
+              let cardClass = 'ps-review-slide';
+              if (isActive) cardClass += ' is-active';
+              else if (isPrev) cardClass += ' is-prev';
+              else if (isNext) cardClass += ' is-next';
+              else cardClass += ' is-hidden';
 
-              <div className="ps-review-author-row">
-                <div className="ps-review-avatar">
-                  {rev.author.charAt(0)}
-                </div>
-                <div className="ps-review-meta">
-                  <div className="ps-review-name-wrap">
-                    <span className="ps-review-author">{rev.author}</span>
-                    {rev.verified && (
-                      <span className="ps-review-verified">
-                        <CheckCircle size={12} color="#10b981" />
-                        <span>Verified Buyer</span>
-                      </span>
-                    )}
+              return (
+                <div
+                  key={rev.id}
+                  className={cardClass}
+                  onClick={() => {
+                    if (isPrev) prevSlide();
+                    if (isNext) nextSlide();
+                  }}
+                  role={isActive ? 'group' : 'button'}
+                  tabIndex={isActive ? 0 : -1}
+                  aria-label={`Review ${index + 1} of ${totalReviews} by ${rev.author}`}
+                >
+                  <div className="ps-review-slide-inner">
+                    {/* 5 Gold Stars */}
+                    <div className="ps-review-stars" aria-label="5 out of 5 stars">
+                      {[...Array(rev.rating || 5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          size={18}
+                          className="ps-review-star-icon"
+                          fill="#D4AF37"
+                          color="#D4AF37"
+                        />
+                      ))}
+                    </div>
+
+                    {/* Review Quote Body */}
+                    <blockquote className="ps-review-quote">
+                      <p>
+                        “{rev.comment}”
+                        {rev.hasHeart && (
+                          <span className="ps-review-heart" aria-label="love">
+                            {' '}
+                            ❤️
+                          </span>
+                        )}
+                      </p>
+                    </blockquote>
+
+                    {/* Attribution: Bold Title & Customer Name */}
+                    <div className="ps-review-attribution">
+                      <span className="ps-review-title">“{rev.title}”</span>
+                      <span className="ps-review-author-name"> — {rev.author}</span>
+                    </div>
                   </div>
-                  <span className="ps-review-product-name">{rev.productName} • {rev.location}</span>
                 </div>
-              </div>
-            </div>
-          ))}
+              );
+            })}
+          </div>
         </div>
 
-        {/* Controls */}
+        {/* Carousel Navigation Controls (< 1 / 6 >) */}
         <div className="ps-reviews-controls">
           <button
             type="button"
-            className="ps-reviews-nav-btn"
-            onClick={prevReview}
-            aria-label="Previous reviews"
+            className="ps-reviews-nav-btn ps-reviews-prev-btn"
+            onClick={prevSlide}
+            aria-label="Previous review"
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={20} />
           </button>
-          <div className="ps-reviews-dots">
-            {REVIEWS.map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                className={`ps-review-dot ${idx === startIndex ? 'is-active' : ''}`}
-                onClick={() => setStartIndex(Math.min(idx, REVIEWS.length - 3))}
-                aria-label={`Go to review ${idx + 1}`}
-              />
-            ))}
+
+          <div className="ps-reviews-counter" aria-live="polite">
+            <span className="ps-reviews-current-num">{currentIndex + 1}</span>
+            <span className="ps-reviews-counter-divider">/</span>
+            <span className="ps-reviews-total-num">{totalReviews}</span>
           </div>
+
           <button
             type="button"
-            className="ps-reviews-nav-btn"
-            onClick={nextReview}
-            aria-label="Next reviews"
+            className="ps-reviews-nav-btn ps-reviews-next-btn"
+            onClick={nextSlide}
+            aria-label="Next review"
           >
-            <ChevronRight size={18} />
+            <ChevronRight size={20} />
           </button>
         </div>
       </div>

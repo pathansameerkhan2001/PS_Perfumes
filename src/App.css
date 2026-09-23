@@ -8,12 +8,30 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow-x: hidden;
   margin: 0;
   padding: 0;
+  width: 100%;
 }
 
-/* Page canvas underneath the header (strictly empty, no hero or products) */
+/* Dedicated Spacer element taking exact fixed header height */
+.ps-header-spacer {
+  display: block;
+  width: 100%;
+  height: var(--ps-header-height);
+  min-height: var(--ps-header-height);
+  flex-shrink: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* Main content wrapper starting below the fixed header */
+.ps-main-content {
+  width: 100%;
+  position: relative;
+  flex: 1;
+}
+
+/* Page canvas underneath the header (fallback / preview) */
 .ps-main-preview {
   flex: 1;
   background-color: #ffffff;

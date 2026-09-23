@@ -1,0 +1,291 @@
+/* ==========================================================================
+   PS PERFUMES — Combo Pack Section Stylesheet
+   Matches Ayaz Perfume reference layout, spacing, colors and card styling
+   ========================================================================== */
+
+.ps-combopack-section {
+  width: 100%;
+  background-color: #faf4dc;
+  padding: 56px 0 72px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.ps-combopack-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+/* Heading */
+.ps-combopack-header {
+  text-align: center;
+  margin-bottom: 38px;
+}
+
+.ps-combopack-heading {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #111111;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+/* 4-Column Wide Grid */
+.ps-combopack-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+}
+
+/* Combo Pack Product Card */
+.ps-combopack-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.ps-combopack-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.12);
+  border-color: rgba(197, 160, 89, 0.4);
+}
+
+/* Media Box */
+.ps-combopack-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: #0c0b0a;
+  overflow: hidden;
+}
+
+.ps-combopack-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ps-combopack-card:hover .ps-combopack-img {
+  transform: scale(1.05);
+}
+
+/* Discount Badge matching reference */
+.ps-combopack-discount-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background-color: rgba(0, 0, 0, 0.88);
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* Wishlist Button */
+.ps-combopack-wishlist-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.ps-combopack-wishlist-btn:hover {
+  background: #ffffff;
+  transform: scale(1.1);
+}
+
+/* Card Body Content */
+.ps-combopack-content {
+  padding: 18px 18px 0 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+}
+
+.ps-combopack-brand {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #777777;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.ps-combopack-title {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111111;
+  letter-spacing: -0.01em;
+  margin: 0 0 8px 0;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 40px;
+}
+
+.ps-combopack-card:hover .ps-combopack-title {
+  color: #c5a059;
+}
+
+/* Rating Row */
+.ps-combopack-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.ps-combopack-stars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.ps-combopack-review-count {
+  font-size: 12px;
+  color: #555555;
+  font-weight: 500;
+}
+
+/* Pricing Row */
+.ps-combopack-prices {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.ps-combopack-sale-price {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #000000;
+  letter-spacing: -0.02em;
+}
+
+.ps-combopack-orig-price {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13.5px;
+  color: #888888;
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+/* Full Width Bottom Gold ADD TO CART Button */
+.ps-combopack-add-btn {
+  width: 100%;
+  background: #c5a059;
+  color: #000000;
+  border: none;
+  padding: 13px 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  margin-top: auto;
+}
+
+.ps-combopack-add-btn:hover {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.ps-combopack-add-btn.is-added {
+  background-color: #108474;
+  color: #ffffff;
+}
+
+/* Wide Desktop & Responsive Adjustments */
+@media (min-width: 1600px) {
+  .ps-combopack-container {
+    padding: 0 64px;
+  }
+  .ps-combopack-grid {
+    gap: 32px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .ps-combopack-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+  }
+}
+
+@media (max-width: 860px) {
+  .ps-combopack-container {
+    padding: 0 24px;
+  }
+  .ps-combopack-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+  .ps-combopack-heading {
+    font-size: 26px;
+  }
+}
+
+@media (max-width: 540px) {
+  .ps-combopack-section {
+    padding: 40px 0 54px 0;
+  }
+  .ps-combopack-container {
+    padding: 0 16px;
+  }
+  .ps-combopack-heading {
+    font-size: 24px;
+    margin-bottom: 24px;
+  }
+  .ps-combopack-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .ps-combopack-content {
+    padding: 14px 14px 0 14px;
+  }
+  .ps-combopack-title {
+    font-size: 14px;
+  }
+  .ps-combopack-sale-price {
+    font-size: 17px;
+  }
+}

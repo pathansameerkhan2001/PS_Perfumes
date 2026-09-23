@@ -1,7 +1,28 @@
 /* ==========================================================================
    PS PERFUMES — Post-Hero Sections Stylesheet
    Marquee Strip • Find By Category • Explore Our Best Sellers
+   Wide Desktop Layout Enhancements (1280px, 1440px, 1600px, 1920px)
    ========================================================================== */
+
+.ps-categories-container,
+.ps-bestsellers-container,
+.ps-reviews-container,
+.ps-about-container,
+.ps-trust-container {
+  max-width: 1600px !important;
+  margin: 0 auto;
+}
+
+@media (min-width: 1600px) {
+  .ps-categories-section,
+  .ps-bestsellers-section,
+  .ps-reviews-section,
+  .ps-about-section,
+  .ps-trust-section {
+    padding-left: 64px !important;
+    padding-right: 64px !important;
+  }
+}
 
 /* --------------------------------------------------------------------------
    1. SLIM GOLD MARQUEE STRIP
@@ -651,211 +672,7 @@
   background-color: #c5a059;
 }
 
-/* --------------------------------------------------------------------------
-   6. REVIEWS & TESTIMONIALS SECTION
-   -------------------------------------------------------------------------- */
-.ps-reviews-section {
-  width: 100%;
-  background-color: #faf8f5;
-  padding: 64px 32px;
-  border-top: 1px solid #eeeeee;
-}
-
-.ps-reviews-container {
-  max-width: 1440px;
-  margin: 0 auto;
-}
-
-.ps-reviews-header {
-  text-align: center;
-  margin-bottom: 44px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.ps-reviews-tag {
-  font-family: var(--font-serif);
-  font-size: 11px;
-  letter-spacing: 0.24em;
-  color: #c5a059;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.ps-reviews-heading {
-  font-family: var(--font-serif);
-  font-size: 28px;
-  font-weight: 700;
-  color: #111111;
-  margin: 0 0 14px 0;
-}
-
-.ps-reviews-subheading {
-  font-size: 14px;
-  color: #666666;
-  max-width: 600px;
-  margin: 14px 0 0 0;
-}
-
-.ps-reviews-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 28px;
-  margin-bottom: 32px;
-}
-
-.ps-review-card {
-  background-color: #ffffff;
-  border: 1px solid rgba(197, 160, 89, 0.2);
-  border-radius: 4px;
-  padding: 28px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-  display: flex;
-  flex-direction: column;
-  transition: all 0.25s ease;
-}
-
-.ps-review-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
-  border-color: #c5a059;
-}
-
-.ps-review-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.ps-review-stars {
-  display: flex;
-  gap: 2px;
-}
-
-.ps-review-quote-icon {
-  color: rgba(197, 160, 89, 0.4);
-}
-
-.ps-review-title {
-  font-family: var(--font-serif);
-  font-size: 16px;
-  font-weight: 700;
-  color: #111111;
-  margin: 0 0 10px 0;
-  line-height: 1.35;
-}
-
-.ps-review-comment {
-  font-size: 13px;
-  line-height: 1.65;
-  color: #555555;
-  margin: 0 0 20px 0;
-  flex: 1;
-}
-
-.ps-review-author-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-top: 1px solid #f0f0f0;
-  padding-top: 14px;
-}
-
-.ps-review-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: #1a1714;
-  color: #c5a059;
-  font-weight: 800;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.ps-review-meta {
-  display: flex;
-  flex-direction: column;
-}
-
-.ps-review-name-wrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.ps-review-author {
-  font-size: 13px;
-  font-weight: 700;
-  color: #111111;
-}
-
-.ps-review-verified {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 10.5px;
-  color: #059669;
-  font-weight: 600;
-}
-
-.ps-review-product-name {
-  font-size: 11px;
-  color: #888888;
-}
-
-.ps-reviews-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-}
-
-.ps-reviews-nav-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 1px solid #dcdcdc;
-  background-color: #ffffff;
-  color: #111111;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.ps-reviews-nav-btn:hover {
-  background-color: #000000;
-  color: #ffffff;
-  border-color: #000000;
-}
-
-.ps-reviews-dots {
-  display: flex;
-  gap: 6px;
-}
-
-.ps-review-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #dcdcdc;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: all 0.2s;
-}
-
-.ps-review-dot.is-active {
-  background-color: #c5a059;
-  width: 20px;
-  border-radius: 999px;
-}
+/* 6. REVIEWS SECTION (Moved to ReviewsSection.css) */
 
 /* --------------------------------------------------------------------------
    7. ABOUT ATELIER HERITAGE SECTION
@@ -1234,9 +1051,6 @@
    RESPONSIVE ENHANCEMENTS FOR ALL SECTIONS
    -------------------------------------------------------------------------- */
 @media (max-width: 1024px) {
-  .ps-reviews-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
   .ps-about-layout {
     grid-template-columns: 1fr;
     gap: 40px;
@@ -1289,16 +1103,6 @@
     justify-content: center;
     padding: 13px 20px;
     font-size: 11.5px;
-  }
-  .ps-reviews-section {
-    padding: 44px 16px;
-  }
-  .ps-reviews-heading {
-    font-size: 22px;
-  }
-  .ps-reviews-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
   }
   .ps-review-card {
     padding: 20px;

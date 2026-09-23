@@ -1,0 +1,475 @@
+/* ==========================================================================
+   PS PERFUMES — Shoppable Video / Reels Stylesheet
+   Matches Ayaz Perfume reference layout, spacing, colors and interaction
+   ========================================================================== */
+
+.ps-shoppable-section {
+  width: 100%;
+  background-color: #faf4dc;
+  padding: 56px 0 64px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.ps-shoppable-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 48px;
+  position: relative;
+}
+
+/* Heading */
+.ps-shoppable-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.ps-shoppable-heading {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #111111;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+/* Carousel Outer Wrapper */
+.ps-reels-carousel-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Horizontal Scroll Track */
+.ps-reels-track {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 8px 4px 16px 4px;
+}
+
+.ps-reels-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* 9:16 Vertical Reel Card */
+.ps-reel-card {
+  flex: 0 0 calc((100% - (4 * 20px)) / 5);
+  min-width: 250px;
+  max-width: 310px;
+  aspect-ratio: 9 / 16;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  background-color: #111111;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  user-select: none;
+}
+
+.ps-reel-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.22);
+}
+
+/* Reel Background Media */
+.ps-reel-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.ps-reel-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ps-reel-card:hover .ps-reel-img {
+  transform: scale(1.05);
+}
+
+/* Gradients */
+.ps-reel-top-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 110px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ps-reel-bottom-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 160px;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 65%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Top Reel Overlay (Quotes / Badges) */
+.ps-reel-top-overlay {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  z-index: 3;
+}
+
+.ps-reel-quote-badge {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 13.5px;
+  color: #fff9e6;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
+  line-height: 1.25;
+  max-width: 80%;
+}
+
+.ps-reel-play-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.ps-reel-card:hover .ps-reel-play-icon {
+  background: rgba(197, 160, 89, 0.9);
+  color: #000000;
+  transform: scale(1.1);
+}
+
+/* Bottom Product Bar Overlay (Matching Reference Screenshot) */
+.ps-reel-product-bar {
+  position: absolute;
+  bottom: 12px;
+  left: 10px;
+  right: 10px;
+  background: rgba(22, 20, 18, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 4;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.ps-reel-product-bar:hover {
+  background: rgba(0, 0, 0, 0.96);
+  border-color: #c5a059;
+}
+
+.ps-reel-prod-thumb {
+  width: 42px;
+  height: 42px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background-color: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.ps-reel-prod-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ps-reel-prod-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-reel-prod-title {
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.ps-reel-pricing {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.ps-reel-price {
+  color: #c5a059;
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.ps-reel-orig-price {
+  color: #888888;
+  font-size: 11px;
+  text-decoration: line-through;
+}
+
+.ps-reel-bag-btn {
+  background: #c5a059;
+  color: #000000;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.ps-reel-bag-btn:hover {
+  background: #ffffff;
+  transform: scale(1.1);
+}
+
+/* Carousel Navigation Arrows */
+.ps-carousel-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #111111;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ps-carousel-nav-btn:hover {
+  background-color: #000000;
+  color: #ffffff;
+  transform: translateY(-50%) scale(1.08);
+}
+
+.ps-carousel-nav-btn.is-next {
+  right: 28px;
+}
+
+.ps-carousel-nav-btn.is-prev {
+  left: 28px;
+}
+
+/* Fullscreen Reel Viewer Modal */
+.ps-reel-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.ps-reel-modal-container {
+  width: 100%;
+  max-width: 440px;
+  height: 90vh;
+  max-height: 820px;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  background-color: #0d0c0a;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.ps-reel-modal-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 20;
+  transition: all 0.2s ease;
+}
+
+.ps-reel-modal-close:hover {
+  background: #eb1c24;
+  transform: rotate(90deg);
+}
+
+.ps-reel-modal-media {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.ps-reel-modal-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ps-reel-modal-bottom-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24px 20px 20px 20px;
+  background: linear-gradient(0deg, #000000 0%, rgba(0, 0, 0, 0.8) 60%, rgba(0, 0, 0, 0) 100%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ps-reel-modal-desc {
+  color: #e5e5e5;
+  font-size: 13.5px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.ps-reel-modal-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.ps-reel-modal-buy-btn {
+  background: #c5a059;
+  color: #000000;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-reel-modal-buy-btn:hover {
+  background: #ffffff;
+}
+
+/* Responsive adjustments */
+@media (min-width: 1600px) {
+  .ps-shoppable-container {
+    padding: 0 64px;
+  }
+  .ps-reel-card {
+    flex: 0 0 calc((100% - (4 * 24px)) / 5);
+    max-width: 320px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .ps-reel-card {
+    flex: 0 0 calc((100% - (3 * 18px)) / 4);
+    min-width: 230px;
+  }
+}
+
+@media (max-width: 900px) {
+  .ps-shoppable-container {
+    padding: 0 24px;
+  }
+  .ps-shoppable-heading {
+    font-size: 26px;
+  }
+  .ps-reel-card {
+    flex: 0 0 calc((100% - (2 * 16px)) / 3);
+    min-width: 210px;
+  }
+  .ps-carousel-nav-btn {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .ps-shoppable-section {
+    padding: 40px 0 48px 0;
+  }
+  .ps-shoppable-container {
+    padding: 0 16px;
+  }
+  .ps-shoppable-heading {
+    font-size: 24px;
+    margin-bottom: 24px;
+  }
+  .ps-reels-track {
+    gap: 14px;
+    padding-left: 4px;
+    padding-right: 16px;
+  }
+  .ps-reel-card {
+    flex: 0 0 76%;
+    min-width: 220px;
+  }
+  .ps-reel-product-bar {
+    padding: 6px 8px;
+    bottom: 10px;
+    left: 8px;
+    right: 8px;
+  }
+  .ps-reel-prod-thumb {
+    width: 36px;
+    height: 36px;
+  }
+  .ps-reel-prod-title {
+    font-size: 11.5px;
+  }
+  .ps-reel-price {
+    font-size: 12.5px;
+  }
+}

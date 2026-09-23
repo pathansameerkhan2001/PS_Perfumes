@@ -34,6 +34,32 @@
   /* Transitions */
   --transition-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --transition-duration: 0.3s;
+
+  /* Header Dimensions (Black Top Bar + White Nav Bar) */
+  --ps-header-topbar-height: 112px;
+  --ps-header-navbar-height: 48px;
+  --ps-header-height: calc(var(--ps-header-topbar-height) + var(--ps-header-navbar-height));
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  :root {
+    --ps-header-topbar-height: 94px;
+    --ps-header-navbar-height: 48px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --ps-header-topbar-height: 76px;
+    --ps-header-navbar-height: 44px;
+  }
+}
+
+@media (max-width: 430px) {
+  :root {
+    --ps-header-topbar-height: 72px;
+    --ps-header-navbar-height: 42px;
+  }
 }
 
 /* Reset & Base Rules */
@@ -45,6 +71,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: var(--ps-header-height);
   -webkit-text-size-adjust: 100%;
 }
 
@@ -56,7 +83,6 @@ html, body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
   width: 100%;
   min-height: 100vh;
   margin: 0;

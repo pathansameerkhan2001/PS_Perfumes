@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { PRODUCTS, COMBO_PRODUCTS } from '../data/products';
 
 const CartContext = createContext(null);
 
@@ -137,14 +138,23 @@ export function CartProvider({ children }) {
     return { success: false, message: 'Invalid code. Try PS10 or WELCOME20' };
   };
 
+  // Helper to open product by ID (supports catalog and combo products)
+  const openProductById = (id) => {
+    const all = [...PRODUCTS, ...COMBO_PRODUCTS];
+    const match = all.find((p) => p.id === id);
+    if (match) {
+      setSelectedProduct(match);
+    }
+  };
+
   // Calculations
   const itemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const subtotal = cartItems.reduce(
     (acc, item) => acc + item.product.price * item.quantity,
     0
   );
-  const freeShippingThreshold = 150;
-  const shipping = subtotal >= freeShippingThreshold || subtotal === 0 ? 0 : 15;
+  const freeShippingThreshold = 999;
+  const shipping = subtotal >= freeShippingThreshold || subtotal === 0 ? 0 : 99;
   const discountAmount = Math.round((subtotal * discountPercent) / 100);
   const total = Math.max(0, subtotal - discountAmount + shipping);
 
@@ -178,6 +188,7 @@ export function CartProvider({ children }) {
         setIsSearchOpen,
         selectedProduct,
         setSelectedProduct,
+        openProductById,
         selectedCategory,
         setSelectedCategory,
         toastMessage,

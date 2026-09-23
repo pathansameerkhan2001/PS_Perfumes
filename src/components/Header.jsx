@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, ShoppingBag, ChevronDown, Menu } from 'lucide-react';
 import brandLogo from '../assets/ps-perfumes-logo.png';
 import MobileNav from './MobileNav';
 import SearchModal from './SearchModal';
+import { useCart } from '../context/CartContext';
 import './Header.css';
 
 // Exact navigation items from the reference image
 const NAV_ITEMS = [
   { name: 'Home', href: '#home', hasDropdown: false },
-  { name: 'About Us', href: '#about', hasDropdown: true },
+  { name: 'About Us', href: '#about', hasDropdown: false },
   { name: 'Attar', href: '#attar', hasDropdown: false },
   { name: 'Perfume', href: '#perfume', hasDropdown: false },
   { name: 'Bakhoor', href: '#bakhoor', hasDropdown: false },
@@ -55,7 +56,6 @@ function ExpressUserIcon({ size = 22 }) {
       className="ps-util-svg"
       aria-label="Express Account"
     >
-      {/* User profile silhouette in white */}
       <path
         d="M15 20v-2a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 3 18v2"
         stroke="#ffffff"
@@ -72,7 +72,6 @@ function ExpressUserIcon({ size = 22 }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* Lightning bolt accent in warm gold / amber */}
       <path
         d="M19 1.5l-4.5 7h3.8l-2.8 7 6.5-8.5h-3.8l2.8-5.5z"
         fill="#f59e0b"
@@ -89,15 +88,38 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
+  const { itemCount, setIsCartOpen, setSelectedCategory } = useCart();
+
+  const handleNavClick = (e, item) => {
+    e.preventDefault();
+    setActiveItem(item.name);
+
+    if (item.name === 'Home') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (item.name === 'About Us') {
+      const el = document.getElementById('about');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (item.name === 'Shop All') {
+      setSelectedCategory('ALL');
+      const el = document.getElementById('catalog-grid');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      // Fragrance categories: Attar, Perfume, Bakhoor, Musky, Oud, Floral, Woody
+      setSelectedCategory(item.name);
+      const el = document.getElementById('catalog-grid');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <>
-      <header className="ps-header-container">
+      <header className="ps-header-container" id="ps-fixed-header">
         {/* ==========================================================
             SECTION 1 — BLACK TOP BAR
             ========================================================== */}
         <div className="ps-top-bar">
           <div className="ps-top-bar-inner">
-            {/* Desktop Left balance (empty spacer to ensure exact center logo) */}
+            {/* Desktop Left balance / spacer */}
             <div className="ps-top-bar-spacer" />
 
             {/* Mobile Hamburger Toggle */}
@@ -110,15 +132,23 @@ export default function Header() {
               <Menu size={24} color="#ffffff" />
             </button>
 
-            {/* Center: Authentic PS PERFUMES Logo */}
+            {/* Center: Authentic, Prominent PS PERFUMES Logo */}
             <div className="ps-top-bar-center">
-              <a href="#home" className="ps-brand-anchor" aria-label="PS PERFUMES Home">
+              <a
+                href="#home"
+                className="ps-brand-anchor"
+                aria-label="PS PERFUMES Home"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              >
                 <img
                   src={brandLogo}
                   alt="PS PERFUMES"
                   className="ps-brand-img"
-                  width="180"
-                  height="82"
+                  width="220"
+                  height="98"
                 />
               </a>
             </div>
@@ -132,36 +162,44 @@ export default function Header() {
                 onClick={() => setIsSearchOpen(true)}
                 aria-label="Search Fragrances"
               >
-                <Search size={21} color="#ffffff" strokeWidth={1.8} />
+                <Search size={22} color="#ffffff" strokeWidth={1.8} />
               </button>
 
               {/* Utility Icons Group (Delivery, Express, Shopping Bag) */}
               <div className="ps-util-group">
                 <button
                   type="button"
-                  className="ps-icon-link"
-                  aria-label="Delivery Tracking"
-                  onClick={() => {}}
+                  className="ps-icon-link ps-util-desktop-only"
+                  aria-label="Complimentary Express Delivery"
+                  title="Complimentary Express Shipping on Orders Above ₹999"
+                  onClick={() => {
+                    const el = document.getElementById('trust-strip');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}
                 >
                   <DeliveryTruckIcon size={22} color="#c5a059" />
                 </button>
 
                 <button
                   type="button"
-                  className="ps-icon-link"
-                  aria-label="Express Account"
-                  onClick={() => {}}
+                  className="ps-icon-link ps-util-desktop-only"
+                  aria-label="VIP Fragrance Account"
+                  title="VIP Scent Concierge"
+                  onClick={() => setIsCartOpen(true)}
                 >
                   <ExpressUserIcon size={22} />
                 </button>
 
                 <button
                   type="button"
-                  className="ps-icon-link"
-                  aria-label="Shopping Bag"
-                  onClick={() => {}}
+                  className="ps-icon-link ps-cart-btn"
+                  aria-label={`Shopping Bag (${itemCount} items)`}
+                  onClick={() => setIsCartOpen(true)}
                 >
-                  <ShoppingBag size={21} color="#ffffff" strokeWidth={1.8} />
+                  <ShoppingBag size={22} color="#ffffff" strokeWidth={1.8} />
+                  {itemCount > 0 && (
+                    <span className="ps-cart-badge">{itemCount}</span>
+                  )}
                 </button>
               </div>
             </div>
@@ -182,10 +220,7 @@ export default function Header() {
                     <a
                       href={item.href}
                       className={`ps-nav-menu-link ${isActive ? 'is-active' : ''}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setActiveItem(item.name);
-                      }}
+                      onClick={(e) => handleNavClick(e, item)}
                     >
                       <span className="ps-nav-text">{item.name}</span>
                       {item.hasDropdown && (
@@ -199,13 +234,24 @@ export default function Header() {
 
             {/* Red NEW ARRIVAL Badge at far right */}
             <div className="ps-nav-badge-wrapper">
-              <a href="#new-arrivals" className="ps-new-arrival-badge">
+              <a
+                href="#new-arrivals"
+                className="ps-new-arrival-badge"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const el = document.getElementById('new-arrivals');
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+              >
                 NEW ARRIVAL
               </a>
             </div>
           </div>
         </nav>
       </header>
+
+      {/* Fixed Header Spacer to ensure page content starts cleanly below header */}
+      <div className="ps-header-spacer" aria-hidden="true" />
 
       {/* Interactive Search Modal */}
       <SearchModal
@@ -217,9 +263,23 @@ export default function Header() {
       <MobileNav
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
-        navLinks={NAV_ITEMS}
         activeLink={activeItem}
-        onSelectLink={(name) => setActiveItem(name)}
+        onSelectLink={(name) => {
+          setActiveItem(name);
+          if (name === 'Home') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } else if (name === 'About Us') {
+            const el = document.getElementById('about');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          } else if (name === 'Combo Pack') {
+            const el = document.getElementById('combo-pack');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          } else {
+            setSelectedCategory(name === 'Shop All' || name === 'View All' ? 'ALL' : name);
+            const el = document.getElementById('catalog-grid');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }}
         onOpenSearch={() => setIsSearchOpen(true)}
       />
     </>

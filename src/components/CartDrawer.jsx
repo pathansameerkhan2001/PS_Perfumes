@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Trash2, ShoppingBag, ArrowRight, ShieldCheck, Tag, Check, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { formatINR } from '../utils/formatCurrency';
 import './CartDrawer.css';
 
 export default function CartDrawer() {
@@ -85,11 +86,11 @@ export default function CartDrawer() {
             <Truck size={14} color="#c5a059" />
             {amountNeededForFreeShipping > 0 ? (
               <span>
-                Add <strong>${amountNeededForFreeShipping.toFixed(2)}</strong> more to enjoy <strong>Free Express Worldwide Delivery</strong>
+                Add <strong>{formatINR(amountNeededForFreeShipping)}</strong> more to enjoy <strong>Free Express Delivery Across India</strong>
               </span>
             ) : (
               <span className="ps-shipping-unlocked">
-                🎉 Congratulations! You have unlocked <strong>Free Express Worldwide Delivery</strong>!
+                🎉 Congratulations! You have unlocked <strong>Free Express Delivery Across India</strong>!
               </span>
             )}
           </div>
@@ -168,7 +169,7 @@ export default function CartDrawer() {
                       </div>
 
                       <div className="ps-cart-item-price">
-                        ${(item.product.price * item.quantity).toFixed(2)}
+                        {formatINR(item.product.price * item.quantity)}
                       </div>
                     </div>
                   </div>
@@ -210,24 +211,24 @@ export default function CartDrawer() {
             <div className="ps-cart-summary-breakdown">
               <div className="ps-summary-row">
                 <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>{formatINR(subtotal)}</span>
               </div>
 
               {discountAmount > 0 && (
                 <div className="ps-summary-row ps-discount-row">
                   <span>Discount ({promoCode} - {discountPercent}%)</span>
-                  <span>-${discountAmount.toFixed(2)}</span>
+                  <span>-{formatINR(discountAmount)}</span>
                 </div>
               )}
 
               <div className="ps-summary-row">
                 <span>Estimated Express Shipping</span>
-                <span>{shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}</span>
+                <span>{shipping === 0 ? 'FREE' : formatINR(shipping)}</span>
               </div>
 
               <div className="ps-summary-row ps-total-row">
                 <span>Estimated Total</span>
-                <span className="ps-total-val">${total.toFixed(2)}</span>
+                <span className="ps-total-val">{formatINR(total)}</span>
               </div>
             </div>
 
@@ -243,7 +244,7 @@ export default function CartDrawer() {
               className="ps-cart-checkout-btn"
               onClick={handleProceedCheckout}
             >
-              <span>PROCEED TO CHECKOUT • ${total.toFixed(2)}</span>
+              <span>PROCEED TO CHECKOUT • {formatINR(total)}</span>
               <ArrowRight size={17} />
             </button>
 

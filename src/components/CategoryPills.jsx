@@ -8,10 +8,12 @@ import catWomen from '../assets/cat-women.jpg';
 import prodRoyalAmber from '../assets/prod-royal-amber.jpg';
 import prodNoirAbsolu from '../assets/prod-noir-absolu.jpg';
 import promoBanner from '../assets/promo-banner.jpg';
+import comboAttarSet from '../assets/combo-attar-set.jpg';
 
 const CATEGORIES = [
   { id: 'ALL', name: 'ALL COLLECTIONS', image: prodRoyalAmber },
   { id: 'Best Sellers', name: 'BEST SELLERS', image: catBestSellers },
+  { id: 'Combo Pack', name: 'COMBO PACK', image: comboAttarSet, isAnchor: '#combo-pack' },
   { id: 'Gift Sets', name: 'GIFT SETS', image: catGiftSets },
   { id: 'Attar', name: 'ATTAR', image: catWomen },
   { id: 'Perfume', name: 'PERFUME', image: prodNoirAbsolu },
@@ -25,9 +27,16 @@ const CATEGORIES = [
 export default function CategoryPills() {
   const { selectedCategory, setSelectedCategory } = useCart();
 
-  const handleSelect = (catId) => {
-    setSelectedCategory(catId);
-    // Smooth scroll to catalog grid
+  const handleSelect = (cat) => {
+    if (cat.isAnchor) {
+      const el = document.getElementById(cat.isAnchor.replace('#', ''));
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+    }
+
+    setSelectedCategory(cat.id);
     const target = document.getElementById('catalog-grid') || document.getElementById('best-sellers');
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -47,7 +56,7 @@ export default function CategoryPills() {
                 key={cat.id}
                 type="button"
                 className={`ps-category-pill-card ${isActive ? 'is-active' : ''}`}
-                onClick={() => handleSelect(cat.id)}
+                onClick={() => handleSelect(cat)}
               >
                 <div className="ps-category-thumb-wrapper">
                   <img

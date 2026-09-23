@@ -79,7 +79,14 @@ export default function Footer() {
             </div>
 
             <div className="ps-footer-socials">
-              <a href="#instagram" className="ps-social-link" aria-label="Instagram">
+              <a
+                href="https://www.instagram.com/ps_perfumes_kadapa/?hl=en"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ps-social-link"
+                aria-label="Instagram @ps_perfumes_kadapa"
+                title="Follow @ps_perfumes_kadapa on Instagram"
+              >
                 <InstagramIcon size={17} />
               </a>
               <a href="#facebook" className="ps-social-link" aria-label="Facebook">
@@ -88,7 +95,13 @@ export default function Footer() {
               <a href="#youtube" className="ps-social-link" aria-label="YouTube">
                 <YoutubeIcon size={17} />
               </a>
-              <a href="#whatsapp" className="ps-social-link" aria-label="WhatsApp">
+              <a
+                href="https://api.whatsapp.com/send?phone=919876543210&text=Hello%20PS%20Perfumes"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ps-social-link"
+                aria-label="WhatsApp Concierge"
+              >
                 <MessageCircle size={17} />
               </a>
             </div>
@@ -98,6 +111,18 @@ export default function Footer() {
           <div className="ps-footer-col">
             <h4 className="ps-footer-heading">Collections</h4>
             <ul className="ps-footer-links">
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const el = document.getElementById('combo-pack');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                  style={{ color: '#c5a059', fontWeight: 700 }}
+                >
+                  Combo Pack (Save Up to 47%)
+                </button>
+              </li>
               <li>
                 <button type="button" onClick={() => handleNavCategory('Best Sellers')}>
                   Best Sellers

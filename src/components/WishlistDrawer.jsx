@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { X, Heart, Trash2, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { formatINR } from '../utils/formatCurrency';
 import './WishlistDrawer.css';
 
 export default function WishlistDrawer() {
@@ -68,7 +69,7 @@ export default function WishlistDrawer() {
                   <div className="ps-wishlist-item-info">
                     <span className="ps-wishlist-item-type">{product.type || product.category}</span>
                     <h4 className="ps-wishlist-item-name">{product.name}</h4>
-                    <span className="ps-wishlist-item-price">${product.price}</span>
+                    <span className="ps-wishlist-item-price">{formatINR(product.price)}</span>
                     <button
                       type="button"
                       className="ps-wishlist-add-btn"

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, ShieldCheck, Truck, CreditCard, Lock, ArrowLeft, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { formatINR } from '../utils/formatCurrency';
 import brandLogo from '../assets/ps-perfumes-logo.png';
 import './CheckoutModal.css';
 
@@ -67,7 +68,7 @@ export default function CheckoutModal() {
     }, 1200);
   };
 
-  const shippingCost = formData.shippingMethod === 'priority' ? 25 : shipping;
+  const shippingCost = formData.shippingMethod === 'priority' ? 199 : shipping;
   const finalTotal = Math.max(0, subtotal - discountAmount + shippingCost);
 
   return (
@@ -253,7 +254,7 @@ export default function CheckoutModal() {
                       <span>Estimated delivery: 3 to 5 business days with tamper-proof seal</span>
                     </div>
                     <span className="ps-choice-price">
-                      {shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}
+                      {shipping === 0 ? 'FREE' : formatINR(shipping)}
                     </span>
                   </label>
 
@@ -269,7 +270,7 @@ export default function CheckoutModal() {
                       <strong>Atelier White-Glove VIP Courier</strong>
                       <span>Hand-delivered in velvet temperature-controlled case within 48-72h</span>
                     </div>
-                    <span className="ps-choice-price">$25.00</span>
+                    <span className="ps-choice-price">{formatINR(199)}</span>
                   </label>
                 </div>
 
@@ -409,7 +410,7 @@ export default function CheckoutModal() {
                     ) : (
                       <>
                         <Lock size={15} />
-                        <span>AUTHORIZE ORDER • ${finalTotal.toFixed(2)}</span>
+                        <span>AUTHORIZE ORDER • {formatINR(finalTotal)}</span>
                       </>
                     )}
                   </button>
@@ -447,7 +448,7 @@ export default function CheckoutModal() {
                   </div>
                   <div className="ps-receipt-row ps-receipt-total">
                     <span>AMOUNT PAID</span>
-                    <strong className="ps-paid-amount">${finalTotal.toFixed(2)}</strong>
+                    <strong className="ps-paid-amount">{formatINR(finalTotal)}</strong>
                   </div>
                 </div>
 
@@ -480,7 +481,7 @@ export default function CheckoutModal() {
                     <span className="ps-sidebar-item-size">{item.size}</span>
                   </div>
                   <span className="ps-sidebar-item-price">
-                    ${(item.product.price * item.quantity).toFixed(2)}
+                    {formatINR(item.product.price * item.quantity)}
                   </span>
                 </div>
               ))}
@@ -489,21 +490,21 @@ export default function CheckoutModal() {
             <div className="ps-sidebar-totals">
               <div className="ps-sidebar-row">
                 <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>{formatINR(subtotal)}</span>
               </div>
               {discountAmount > 0 && (
                 <div className="ps-sidebar-row ps-discount-text">
                   <span>Discount ({promoCode})</span>
-                  <span>-${discountAmount.toFixed(2)}</span>
+                  <span>-{formatINR(discountAmount)}</span>
                 </div>
               )}
               <div className="ps-sidebar-row">
                 <span>Shipping</span>
-                <span>{shippingCost === 0 ? 'FREE' : `$${shippingCost.toFixed(2)}`}</span>
+                <span>{shippingCost === 0 ? 'FREE' : formatINR(shippingCost)}</span>
               </div>
               <div className="ps-sidebar-row ps-sidebar-total-row">
                 <span>Grand Total</span>
-                <span className="ps-grand-total">${finalTotal.toFixed(2)}</span>
+                <span className="ps-grand-total">{formatINR(finalTotal)}</span>
               </div>
             </div>
 

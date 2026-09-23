@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Heart, Star, ShoppingBag, Check } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { formatINR } from '../utils/formatCurrency';
 import './ProductCard.css';
 
 export default function ProductCard({ product }) {
@@ -81,9 +82,9 @@ export default function ProductCard({ product }) {
         {/* Price & Add to Bag */}
         <div className="ps-pcard-pricing-row">
           <div className="ps-pcard-prices">
-            <span className="ps-pcard-price">${product.price}</span>
+            <span className="ps-pcard-price">{formatINR(product.price)}</span>
             {product.originalPrice && (
-              <span className="ps-pcard-orig-price">${product.originalPrice}</span>
+              <span className="ps-pcard-orig-price">{formatINR(product.originalPrice)}</span>
             )}
           </div>
 

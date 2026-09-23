@@ -5,7 +5,11 @@ import HeroSlider from './components/HeroSlider';
 import MarqueeStrip from './components/MarqueeStrip';
 import CategoryPills from './components/CategoryPills';
 import ProductGridSection from './components/ProductGridSection';
+import ShoppableVideoSection from './components/ShoppableVideoSection';
+import ComboPackSection from './components/ComboPackSection';
+import SignatureScentSection from './components/SignatureScentSection';
 import PromoBanner from './components/PromoBanner';
+import InstagramSection from './components/InstagramSection';
 import ReviewsSection from './components/ReviewsSection';
 import AboutSection from './components/AboutSection';
 import TrustStrip from './components/TrustStrip';
@@ -32,16 +36,18 @@ function App() {
   return (
     <CartProvider>
       <div className="ps-app-root">
-        {/* 1. Header (Untouched & Sits at the very top) */}
+        {/* 1. Header (Permanently Fixed with prominent PS PERFUMES logo & navigation) */}
         <Header />
 
-        {/* 2. Full-Width Campaign Hero Slider (Strictly IMAGE-ONLY) */}
-        <HeroSlider />
+        {/* Main Content (Starts below the fixed header) */}
+        <main className="ps-main-content">
+          {/* 2. Full-Width Campaign Hero Slider */}
+          <HeroSlider />
 
         {/* 3. Slim Gold Marquee Information Strip */}
         <MarqueeStrip />
 
-        {/* 4. Find By Category (Circular Pill Cards) */}
+        {/* 4. Find By Category (Circular Pill Cards including Combo Pack) */}
         <CategoryPills />
 
         {/* 5. Main Product Showcase: Explore Our Best Sellers */}
@@ -54,10 +60,19 @@ function App() {
           limit={8}
         />
 
-        {/* 6. Mid-Page Panoramic Promotional Banner */}
+        {/* 6. Shoppable Video / Reels Carousel Section (Matching Reference) */}
+        <ShoppableVideoSection />
+
+        {/* 7. Dedicated Combo Pack Section (Matching Reference) */}
+        <ComboPackSection />
+
+        {/* 8. Discover Your Signature Scent (6 Occasion Cards) */}
+        <SignatureScentSection />
+
+        {/* 9. Mid-Page Panoramic Promotional Banner */}
         <PromoBanner />
 
-        {/* 7. New Arrivals & Master Extractions Grid */}
+        {/* 10. New Arrivals & Master Extractions Grid */}
         <ProductGridSection
           id="new-arrivals"
           tag="PRIVATE BLEND VAULT"
@@ -67,17 +82,21 @@ function App() {
           limit={4}
         />
 
-        {/* 8. Patron Testimonials & Reviews */}
+        {/* 11. Follow us Instagram (4 Media Cards / Videos) */}
+        <InstagramSection />
+
+        {/* 12. What Our Customers Have to Say (Patron Testimonials & Reviews Carousel) */}
         <ReviewsSection />
 
-        {/* 9. The Atelier Heritage & Craftsmanship */}
+        {/* 11. The Atelier Heritage & Craftsmanship */}
         <AboutSection />
 
-        {/* 10. Customer Reassurance Trust Strip & VIP Newsletter */}
+        {/* 12. Customer Reassurance Trust Strip & VIP Newsletter */}
         <TrustStrip />
 
-        {/* 11. Luxury 5-Column Brand Footer */}
+        {/* 13. Luxury 5-Column Brand Footer with Instagram Channel Link */}
         <Footer />
+        </main>
 
         {/* Floating Quick Access Pill */}
         <FloatingCartButton />

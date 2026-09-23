@@ -1,0 +1,232 @@
+/* ===================================================
+   PS PERFUMES — WHAT OUR CUSTOMERS HAVE TO SAY (REVIEWS)
+   =================================================== */
+
+.ps-reviews-section {
+  width: 100%;
+  background-color: #f6f4fc;
+  padding: clamp(56px, 7vw, 88px) 0 clamp(48px, 6vw, 76px);
+  position: relative;
+  overflow: hidden;
+  outline: none;
+}
+
+.ps-reviews-container {
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Header */
+.ps-reviews-header {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto clamp(28px, 4vw, 48px);
+  padding: 0 24px;
+}
+
+.ps-reviews-heading {
+  font-family: var(--font-heading, inherit);
+  font-size: clamp(24px, 3.2vw, 36px);
+  font-weight: 700;
+  color: #111111;
+  letter-spacing: -0.01em;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+/* Carousel Viewport */
+.ps-reviews-carousel-viewport {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  padding: 16px 0 24px;
+  cursor: grab;
+}
+
+.ps-reviews-carousel-viewport:active {
+  cursor: grabbing;
+}
+
+/* Carousel Track with dynamic centering math */
+.ps-reviews-track {
+  --slide-width: clamp(280px, 62vw, 740px);
+  --slide-gap: clamp(16px, 3vw, 40px);
+
+  position: relative;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: var(--slide-gap);
+  width: max-content;
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  will-change: transform;
+}
+
+/* Individual Slide */
+.ps-review-slide {
+  width: var(--slide-width);
+  flex-shrink: 0;
+  transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+  user-select: none;
+}
+
+.ps-review-slide.is-active {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.ps-review-slide:not(.is-active) {
+  opacity: 0.24;
+  transform: scale(0.92);
+  cursor: pointer;
+}
+
+.ps-review-slide:not(.is-active):hover {
+  opacity: 0.45;
+}
+
+/* Inner Slide Content Card */
+.ps-review-slide-inner {
+  text-align: center;
+  padding: clamp(20px, 3vw, 32px) clamp(16px, 3vw, 36px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 5 Gold Stars */
+.ps-review-stars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.ps-review-star-icon {
+  filter: drop-shadow(0 1px 2px rgba(212, 175, 55, 0.25));
+}
+
+/* Quote Text */
+.ps-review-quote {
+  margin: 0 0 20px;
+  padding: 0;
+  border: none;
+}
+
+.ps-review-quote p {
+  font-family: var(--font-body, inherit);
+  font-size: clamp(15px, 1.3vw, 18px);
+  line-height: 1.75;
+  color: #222222;
+  font-style: normal;
+  margin: 0;
+  max-width: 660px;
+}
+
+.ps-review-heart {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 16px;
+}
+
+/* Attribution Line */
+.ps-review-attribution {
+  font-size: clamp(14px, 1.1vw, 15px);
+  color: #444444;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.ps-review-title {
+  font-weight: 700;
+  color: #111111;
+}
+
+.ps-review-author-name {
+  font-weight: 500;
+  color: #555555;
+}
+
+/* Carousel Navigation Controls (< 1 / 6 >) */
+.ps-reviews-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: clamp(24px, 3.5vw, 40px);
+}
+
+.ps-reviews-nav-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #111111;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: transform 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.ps-reviews-nav-btn:hover {
+  transform: scale(1.08);
+  border-color: #111111;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.ps-reviews-nav-btn:active {
+  transform: scale(0.95);
+}
+
+.ps-reviews-counter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111111;
+  letter-spacing: 0.08em;
+  min-width: 48px;
+  user-select: none;
+}
+
+.ps-reviews-current-num {
+  font-weight: 700;
+}
+
+.ps-reviews-counter-divider {
+  color: #888888;
+  font-weight: 400;
+}
+
+.ps-reviews-total-num {
+  color: #666666;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ps-reviews-track {
+    --slide-width: 84vw;
+    --slide-gap: 16px;
+  }
+
+  .ps-reviews-nav-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .ps-review-slide:not(.is-active) {
+    opacity: 0.18;
+  }
+}

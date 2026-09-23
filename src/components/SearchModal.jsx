@@ -1,12 +1,21 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, ArrowRight } from 'lucide-react';
+import { PRODUCTS, COMBO_PRODUCTS } from '../data/products';
+import { formatINR } from '../utils/formatCurrency';
+import { useCart } from '../context/CartContext';
+import './SearchModal.css';
 
 export default function SearchModal({ isOpen, onClose }) {
   const inputRef = useRef(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const { setSelectedProduct } = useCart();
+
+  const allItems = useMemo(() => [...PRODUCTS, ...COMBO_PRODUCTS], []);
 
   useEffect(() => {
     if (isOpen) {
+      setSearchTerm('');
       setTimeout(() => inputRef.current?.focus(), 150);
       const handleKeyDown = (e) => {
         if (e.key === 'Escape') onClose();
@@ -17,12 +26,31 @@ export default function SearchModal({ isOpen, onClose }) {
   }, [isOpen, onClose]);
 
   const quickSearches = [
-    'Oud Royal',
-    'Amber Absolu',
-    'Santal Precieux',
-    'Rose Damascena',
-    'Extrait de Parfum',
+    'Attar',
+    'Oud',
+    'Combo Pack',
+    'Amber',
+    'Rose',
+    'Bakhoor',
+    'Solid Perfume',
   ];
+
+  const filteredResults = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return [];
+    return allItems.filter(
+      (item) =>
+        item.name.toLowerCase().includes(q) ||
+        item.category.toLowerCase().includes(q) ||
+        item.subcategories?.some((s) => s.toLowerCase().includes(q)) ||
+        item.description?.toLowerCase().includes(q)
+    );
+  }, [searchTerm, allItems]);
+
+  const handleSelectProduct = (product) => {
+    setSelectedProduct(product);
+    onClose();
+  };
 
   return (
     <AnimatePresence>
@@ -49,8 +77,10 @@ export default function SearchModal({ isOpen, onClose }) {
                 <input
                   ref={inputRef}
                   type="text"
-                  placeholder="Search fragrances, notes, collections..."
+                  placeholder="Search perfumes, attars, combo packs, notes..."
                   className="search-input-field"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               <button
@@ -64,14 +94,60 @@ export default function SearchModal({ isOpen, onClose }) {
             </div>
 
             <div className="search-modal-body">
-              <div className="search-curated-label">SUGGESTED DISCOVERIES</div>
-              <div className="search-tags-row">
-                {quickSearches.map((term) => (
-                  <button key={term} type="button" className="search-tag-chip">
-                    {term}
-                  </button>
-                ))}
-              </div>
+              {/* Quick suggestions */}
+              {!searchTerm && (
+                <>
+                  <div className="search-curated-label">SUGGESTED DISCOVERIES</div>
+                  <div className="search-tags-row">
+                    {quickSearches.map((term) => (
+                      <button
+                        key={term}
+                        type="button"
+                        className="search-tag-chip"
+                        onClick={() => setSearchTerm(term)}
+                      >
+                        {term}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Live search results */}
+              {searchTerm && (
+                <div className="search-results-list">
+                  <div className="search-curated-label">
+                    MATCHING CREATIONS ({filteredResults.length})
+                  </div>
+                  {filteredResults.length === 0 ? (
+                    <p style={{ color: '#777', fontSize: '13.5px', padding: '12px 0' }}>
+                      No creations found matching "{searchTerm}". Try "Oud", "Attar", or "Combo".
+                    </p>
+                  ) : (
+                    filteredResults.slice(0, 8).map((product) => (
+                      <button
+                        key={product.id}
+                        type="button"
+                        className="search-result-item"
+                        onClick={() => handleSelectProduct(product)}
+                      >
+                        <div className="search-result-thumb">
+                          <img src={product.image} alt={product.name} />
+                        </div>
+                        <div className="search-result-info">
+                          <h4 className="search-result-name">{product.name}</h4>
+                          <span className="search-result-type">
+                            {product.type || product.category}
+                          </span>
+                        </div>
+                        <span className="search-result-price">
+                          {formatINR(product.price)}
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </motion.div>
         </motion.div>
