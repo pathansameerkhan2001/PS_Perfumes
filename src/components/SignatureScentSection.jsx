@@ -1,10 +1,11 @@
 import React from 'react';
-import everydayImg from '../assets/scent-everyday.jpg';
-import officeImg from '../assets/scent-office.jpg';
-import partyImg from '../assets/scent-party.jpg';
-import sportsImg from '../assets/scent-sports.jpg';
-import datenightImg from '../assets/scent-datenight.jpg';
-import collegeImg from '../assets/scent-college.jpg';
+import everydayImg from '../assets/scent-everyday.webp';
+import officeImg from '../assets/scent-office.webp';
+import partyImg from '../assets/scent-party.webp';
+import sportsImg from '../assets/scent-sports.webp';
+import datenightImg from '../assets/scent-datenight.webp';
+import collegeImg from '../assets/scent-college.webp';
+import OptimizedImage from './OptimizedImage';
 import './SignatureScentSection.css';
 
 const OCCASIONS = [
@@ -86,11 +87,11 @@ export default function SignatureScentSection() {
               aria-label={`Shop scents for ${occ.label}`}
             >
               <div className="ps-scent-image-wrapper">
-                <img
+                <OptimizedImage
                   src={occ.image}
                   alt={`PS Perfumes for ${occ.label}`}
                   className="ps-scent-img"
-                  loading="lazy"
+                  aspectRatio="4 / 5"
                   width="360"
                   height="450"
                 />

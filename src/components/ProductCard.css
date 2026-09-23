@@ -285,12 +285,14 @@
   }
   .ps-pcard-add-btn {
     width: 100%;
-    min-height: 38px;
+    min-height: 44px;
+    height: 44px;
     justify-content: center;
-    padding: 7px 10px;
-    font-size: 10.5px;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 700;
     letter-spacing: 0.06em;
-    border-radius: 3px;
+    border-radius: 4px;
   }
   .ps-pcard-add-btn span {
     display: inline;
@@ -302,14 +304,15 @@
     padding: 10px 8px 12px 8px;
   }
   .ps-pcard-title {
-    font-size: 12px;
-    min-height: 32px;
+    font-size: 12.5px;
+    min-height: 34px;
   }
   .ps-pcard-price {
     font-size: 15px;
   }
   .ps-pcard-add-btn {
-    min-height: 36px;
-    font-size: 10px;
+    min-height: 44px;
+    height: 44px;
+    font-size: 10.5px;
   }
 }

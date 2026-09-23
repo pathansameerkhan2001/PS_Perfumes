@@ -411,7 +411,7 @@
   }
 }
 
-/* Mobile Devices (<= 768px) */
+/* Mobile Devices (<= 768px) — Clean Compact Header */
 @media (max-width: 768px) {
   .ps-top-bar-inner {
     padding: 0 16px;
@@ -425,79 +425,58 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px;
     z-index: 4;
   }
   .ps-brand-img {
-    height: 60px;
-    max-width: 170px;
+    height: 52px;
+    max-width: 155px;
   }
   .ps-top-bar-right {
-    gap: 8px;
+    gap: 4px;
+  }
+  .ps-icon-link {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px;
   }
   .ps-search-btn {
-    margin-right: 6px;
+    margin-right: 0;
   }
   .ps-util-group {
-    gap: 6px;
+    gap: 2px;
   }
   .ps-util-desktop-only {
     display: none;
   }
 
-  /* Horizontal scrolling navigation bar on mobile */
-  .ps-nav-bar-inner {
-    padding: 0 16px;
-    height: var(--ps-header-navbar-height);
-    min-height: var(--ps-header-navbar-height);
-    justify-content: flex-start;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .ps-nav-bar-inner::-webkit-scrollbar {
+  /* Sub-nav is housed inside the full-width mobile navigation drawer */
+  .ps-nav-bar {
     display: none;
-  }
-  .ps-nav-menu {
-    gap: 16px;
-    margin-right: 110px;
-  }
-  .ps-nav-menu-link {
-    font-size: 12.5px;
-  }
-  .ps-nav-badge-wrapper {
-    right: 12px;
-  }
-  .ps-new-arrival-badge {
-    font-size: 9.5px;
-    padding: 4px 10px;
   }
 }
 
 /* Small Mobile (<= 430px) */
 @media (max-width: 430px) {
   .ps-top-bar-inner {
-    padding: 0 12px;
+    padding: 0 10px;
     height: var(--ps-header-topbar-height);
     min-height: var(--ps-header-topbar-height);
   }
   .ps-brand-img {
-    height: 56px;
-    max-width: 150px;
+    height: 48px;
+    max-width: 140px;
   }
-  .ps-nav-bar-inner {
-    height: var(--ps-header-navbar-height);
-    min-height: var(--ps-header-navbar-height);
-    padding: 0 12px;
+  .ps-mobile-toggle-btn {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px;
   }
-  .ps-nav-menu {
-    gap: 14px;
-    margin-right: 98px;
-  }
-  .ps-nav-menu-link {
-    font-size: 12px;
-  }
-  .ps-new-arrival-badge {
-    font-size: 9px;
-    padding: 3px 8px;
+  .ps-icon-link {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px;
   }
 }

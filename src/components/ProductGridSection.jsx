@@ -95,8 +95,12 @@ export default function ProductGridSection({
           </div>
         ) : (
           <div className="ps-bestsellers-grid">
-            {displayList.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {displayList.map((product, idx) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                priority={idx < 2 && id === 'catalog-grid'}
+              />
             ))}
           </div>
         )}

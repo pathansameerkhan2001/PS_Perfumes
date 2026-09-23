@@ -141,14 +141,39 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .ps-scent-section {
+    padding: 36px 0 44px 0;
+  }
+
   .ps-scent-container {
+    padding: 0;
+  }
+
+  .ps-scent-header {
     padding: 0 16px;
+    margin-bottom: 20px;
   }
 
   .ps-scent-grid {
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
     gap: 12px;
+    padding: 4px 16px 16px 16px;
+  }
+
+  .ps-scent-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ps-scent-card {
+    flex: 0 0 160px;
+    min-width: 160px;
+    max-width: 180px;
+    scroll-snap-align: start;
   }
 
   .ps-scent-pill-wrapper {
@@ -159,5 +184,12 @@
     padding: 6px 12px;
     font-size: 11px;
     letter-spacing: 0.06em;
+  }
+}
+
+@media (max-width: 430px) {
+  .ps-scent-card {
+    flex: 0 0 148px;
+    min-width: 148px;
   }
 }

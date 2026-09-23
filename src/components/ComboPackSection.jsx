@@ -3,6 +3,7 @@ import { Star, ShoppingBag, Heart, Check } from 'lucide-react';
 import { COMBO_PRODUCTS } from '../data/products';
 import { formatINR } from '../utils/formatCurrency';
 import { useCart } from '../context/CartContext';
+import OptimizedImage from './OptimizedImage';
 import './ComboPackSection.css';
 
 export default function ComboPackSection() {
@@ -48,11 +49,13 @@ export default function ComboPackSection() {
               >
                 {/* Media Container with Discount Badge & Wishlist */}
                 <div className="ps-combopack-media">
-                  <img
+                  <OptimizedImage
                     src={product.image}
                     alt={product.name}
                     className="ps-combopack-img"
-                    loading="lazy"
+                    aspectRatio="1 / 1"
+                    width="400"
+                    height="400"
                   />
 
                   {/* Top-Left Discount Badge */}

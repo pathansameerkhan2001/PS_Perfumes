@@ -1,5 +1,5 @@
 import React from 'react';
-import brandLogo from '../assets/ps-perfumes-logo.png';
+import brandLogo from '../assets/ps-perfumes-logo.webp';
 import { useCart } from '../context/CartContext';
 import { Phone, Mail, MapPin, MessageCircle, ShieldCheck } from 'lucide-react';
 import './Footer.css';

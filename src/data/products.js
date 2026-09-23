@@ -1,24 +1,24 @@
-import prodRoyalAmber from '../assets/prod-royal-amber.jpg';
-import prodNoirAbsolu from '../assets/prod-noir-absolu.jpg';
-import catUnisex from '../assets/cat-unisex.jpg';
-import catWomen from '../assets/cat-women.jpg';
-import catMen from '../assets/cat-men.jpg';
-import catBestSellers from '../assets/cat-bestsellers.jpg';
-import catGiftSets from '../assets/cat-giftsets.jpg';
-import promoBanner from '../assets/promo-banner.jpg';
+import prodRoyalAmber from '../assets/prod-royal-amber.webp';
+import prodNoirAbsolu from '../assets/prod-noir-absolu.webp';
+import catUnisex from '../assets/cat-unisex.webp';
+import catWomen from '../assets/cat-women.webp';
+import catMen from '../assets/cat-men.webp';
+import catBestSellers from '../assets/cat-bestsellers.webp';
+import catGiftSets from '../assets/cat-giftsets.webp';
+import promoBanner from '../assets/promo-banner.webp';
 
 // Combo Pack Assets
-import comboAttarSet from '../assets/combo-attar-set.jpg';
-import comboAttar12Pcs from '../assets/combo-attar-12pcs.jpg';
-import comboOudTrio from '../assets/combo-oud-trio.jpg';
-import comboSolidPerfume from '../assets/combo-solid-perfume.jpg';
+import comboAttarSet from '../assets/combo-attar-set.webp';
+import comboAttar12Pcs from '../assets/combo-attar-12pcs.webp';
+import comboOudTrio from '../assets/combo-oud-trio.webp';
+import comboSolidPerfume from '../assets/combo-solid-perfume.webp';
 
 // Shoppable Video Reels Assets
-import reelDayNight from '../assets/reel-day-night.jpg';
-import reelRunway from '../assets/reel-runway.jpg';
-import reelFestiveGift from '../assets/reel-festive-gift.jpg';
-import reelLuxuryUnboxing from '../assets/reel-luxury-unboxing.jpg';
-import reelLifestyleModel from '../assets/reel-lifestyle-model.jpg';
+import reelDayNight from '../assets/reel-day-night.webp';
+import reelRunway from '../assets/reel-runway.webp';
+import reelFestiveGift from '../assets/reel-festive-gift.webp';
+import reelLuxuryUnboxing from '../assets/reel-luxury-unboxing.webp';
+import reelLifestyleModel from '../assets/reel-lifestyle-model.webp';
 
 export const PRODUCTS = [
   {

@@ -77,6 +77,9 @@ export default function ProductDetailModal() {
                 src={activeImage || selectedProduct.image}
                 alt={selectedProduct.name}
                 className="ps-pdetail-main-img"
+                width="500"
+                height="500"
+                decoding="async"
               />
               {selectedProduct.badge && (
                 <span className="ps-pdetail-badge">{selectedProduct.badge}</span>

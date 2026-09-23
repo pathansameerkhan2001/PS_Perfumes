@@ -1,6 +1,6 @@
 import React from 'react';
-import heroDesktop from '../assets/hero-desktop.jpg';
-import heroMobile from '../assets/hero-mobile.jpg';
+import heroDesktop from '../assets/hero-desktop.webp';
+import heroMobile from '../assets/hero-mobile.webp';
 import './Hero.css';
 
 export default function Hero() {
@@ -8,12 +8,17 @@ export default function Hero() {
     <section className="ps-hero-section" aria-label="PS PERFUMES Campaign">
       {/* Background Campaign Imagery */}
       <picture className="ps-hero-picture">
-        <source media="(max-width: 768px)" srcSet={heroMobile} />
+        <source media="(max-width: 768px)" srcSet={heroMobile} type="image/webp" />
+        <source media="(min-width: 769px)" srcSet={heroDesktop} type="image/webp" />
         <img
           src={heroDesktop}
           alt="PS PERFUMES Haute Parfumerie Campaign"
           className="ps-hero-bg-img"
           loading="eager"
+          fetchPriority="high"
+          decoding="sync"
+          width="1600"
+          height="600"
         />
       </picture>
 

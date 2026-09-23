@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Check, ShieldCheck, Truck, CreditCard, Lock, ArrowLeft, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
-import brandLogo from '../assets/ps-perfumes-logo.png';
+import brandLogo from '../assets/ps-perfumes-logo.webp';
 import './CheckoutModal.css';
 
 export default function CheckoutModal() {

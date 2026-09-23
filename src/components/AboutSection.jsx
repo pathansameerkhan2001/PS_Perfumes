@@ -1,6 +1,6 @@
 import React from 'react';
-import brandLogo from '../assets/ps-perfumes-logo.png';
-import prodRoyalAmber from '../assets/prod-royal-amber.jpg';
+import brandLogo from '../assets/ps-perfumes-logo.webp';
+import prodRoyalAmber from '../assets/prod-royal-amber.webp';
 import { Award, Compass, ShieldCheck, HeartHandshake } from 'lucide-react';
 import './Sections.css';
 
@@ -17,6 +17,9 @@ export default function AboutSection() {
                 alt="PS Perfumes Flacon Craftsmanship"
                 className="ps-about-img"
                 loading="lazy"
+                decoding="async"
+                width="480"
+                height="600"
               />
               <div className="ps-about-badge-seal">
                 <span className="ps-about-seal-year">EST.</span>

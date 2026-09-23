@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ShoppingBag, ChevronDown, Menu } from 'lucide-react';
-import brandLogo from '../assets/ps-perfumes-logo.png';
+import brandLogo from '../assets/ps-perfumes-logo.webp';
 import MobileNav from './MobileNav';
-import SearchModal from './SearchModal';
+const SearchModal = React.lazy(() => import('./SearchModal'));
 import { useCart } from '../context/CartContext';
 import './Header.css';
 
@@ -149,6 +149,9 @@ export default function Header() {
                   className="ps-brand-img"
                   width="220"
                   height="98"
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="sync"
                 />
               </a>
             </div>
@@ -253,11 +256,15 @@ export default function Header() {
       {/* Fixed Header Spacer to ensure page content starts cleanly below header */}
       <div className="ps-header-spacer" aria-hidden="true" />
 
-      {/* Interactive Search Modal */}
-      <SearchModal
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-      />
+      {/* Interactive Search Modal (Loaded on Demand) */}
+      {isSearchOpen && (
+        <React.Suspense fallback={null}>
+          <SearchModal
+            isOpen={isSearchOpen}
+            onClose={() => setIsSearchOpen(false)}
+          />
+        </React.Suspense>
+      )}
 
       {/* Mobile Navigation Drawer */}
       <MobileNav

@@ -217,16 +217,18 @@
 /* Responsive */
 @media (max-width: 768px) {
   .ps-reviews-track {
-    --slide-width: 84vw;
-    --slide-gap: 16px;
+    --slide-width: 88vw;
+    --slide-gap: 14px;
   }
 
   .ps-reviews-nav-btn {
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .ps-review-slide:not(.is-active) {
-    opacity: 0.18;
+    opacity: 0.15;
   }
 }

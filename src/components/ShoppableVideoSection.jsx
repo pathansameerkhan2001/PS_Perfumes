@@ -85,6 +85,9 @@ export default function ShoppableVideoSection() {
                     alt={reel.title}
                     className="ps-reel-img"
                     loading="lazy"
+                    decoding="async"
+                    width="300"
+                    height="480"
                   />
                   <div className="ps-reel-top-gradient" />
                   <div className="ps-reel-bottom-gradient" />
@@ -109,6 +112,9 @@ export default function ShoppableVideoSection() {
                       src={reel.productThumbnail}
                       alt={reel.productName}
                       loading="lazy"
+                      decoding="async"
+                      width="48"
+                      height="48"
                     />
                   </div>
 

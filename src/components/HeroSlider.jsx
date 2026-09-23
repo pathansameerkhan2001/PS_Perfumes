@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import heroDesktop1 from '../assets/hero-desktop.jpg';
-import heroMobile1 from '../assets/hero-mobile.jpg';
-import heroSlide2 from '../assets/hero-slide2.jpg';
-import promoBanner from '../assets/promo-banner.jpg';
+import heroDesktop1 from '../assets/hero-desktop.webp';
+import heroMobile1 from '../assets/hero-mobile.webp';
+import heroSlide2 from '../assets/hero-slide2.webp';
+import heroSlide2Mobile from '../assets/hero-slide2-mobile.webp';
+import promoBanner from '../assets/promo-banner.webp';
+import promoBannerMobile from '../assets/promo-banner-mobile.webp';
 import './HeroSlider.css';
 
 const SLIDES = [
@@ -16,13 +18,13 @@ const SLIDES = [
   {
     id: 2,
     desktop: heroSlide2,
-    mobile: heroSlide2,
+    mobile: heroSlide2Mobile,
     alt: 'PS PERFUMES Royal Oud & Amber Fragrance Showcase',
   },
   {
     id: 3,
     desktop: promoBanner,
-    mobile: promoBanner,
+    mobile: promoBannerMobile,
     alt: 'PS PERFUMES Pure Artisanal Distillation & Incense',
   },
 ];
@@ -97,12 +99,17 @@ export default function HeroSlider() {
               aria-hidden={!isActive}
             >
               <picture className="ps-hero-picture">
-                <source media="(max-width: 768px)" srcSet={slide.mobile} />
+                <source media="(max-width: 768px)" srcSet={slide.mobile} type="image/webp" />
+                <source media="(min-width: 769px)" srcSet={slide.desktop} type="image/webp" />
                 <img
                   src={slide.desktop}
                   alt={slide.alt}
                   className="ps-hero-slide-img"
+                  width="1600"
+                  height="600"
                   loading={idx === 0 ? 'eager' : 'lazy'}
+                  fetchPriority={idx === 0 ? 'high' : 'low'}
+                  decoding={idx === 0 ? 'sync' : 'async'}
                 />
               </picture>
             </div>

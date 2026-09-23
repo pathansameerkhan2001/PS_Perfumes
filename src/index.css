@@ -50,15 +50,15 @@
 
 @media (max-width: 768px) {
   :root {
-    --ps-header-topbar-height: 76px;
-    --ps-header-navbar-height: 44px;
+    --ps-header-topbar-height: 70px;
+    --ps-header-navbar-height: 0px;
   }
 }
 
 @media (max-width: 430px) {
   :root {
-    --ps-header-topbar-height: 72px;
-    --ps-header-navbar-height: 42px;
+    --ps-header-topbar-height: 66px;
+    --ps-header-navbar-height: 0px;
   }
 }
 
@@ -83,6 +83,7 @@ html, body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
   width: 100%;
   min-height: 100vh;
   margin: 0;

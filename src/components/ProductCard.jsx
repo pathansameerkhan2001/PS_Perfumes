@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Heart, Star, ShoppingBag, Check } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
+import OptimizedImage from './OptimizedImage';
 import './ProductCard.css';
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, priority = false }) {
   const { addToCart, toggleWishlist, isInWishlist, setSelectedProduct } = useCart();
   const [isAddedAnim, setIsAddedAnim] = useState(false);
   const isWishlisted = isInWishlist(product.id);
@@ -29,11 +30,14 @@ export default function ProductCard({ product }) {
     <div className="ps-pcard" onClick={handleCardClick} role="button" tabIndex={0}>
       {/* Image Container with Badges */}
       <div className="ps-pcard-media">
-        <img
+        <OptimizedImage
           src={product.image}
           alt={product.name}
           className="ps-pcard-img"
-          loading="lazy"
+          aspectRatio="1 / 1"
+          width="400"
+          height="400"
+          priority={priority}
         />
 
         {/* Top Badges */}

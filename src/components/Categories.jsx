@@ -1,9 +1,9 @@
 import React from 'react';
-import catBestSellers from '../assets/cat-bestsellers.jpg';
-import catGiftSets from '../assets/cat-giftsets.jpg';
-import catUnisex from '../assets/cat-unisex.jpg';
-import catMen from '../assets/cat-men.jpg';
-import catWomen from '../assets/cat-women.jpg';
+import catBestSellers from '../assets/cat-bestsellers-thumb.webp';
+import catGiftSets from '../assets/cat-giftsets-thumb.webp';
+import catUnisex from '../assets/cat-unisex-thumb.webp';
+import catMen from '../assets/cat-men-thumb.webp';
+import catWomen from '../assets/cat-women-thumb.webp';
 
 const CATEGORIES = [
   { name: 'BEST SELLERS', href: '#best-sellers', image: catBestSellers },

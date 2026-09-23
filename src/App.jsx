@@ -15,11 +15,11 @@ import AboutSection from './components/AboutSection';
 import TrustStrip from './components/TrustStrip';
 import Footer from './components/Footer';
 
-// Modals & Drawers
-import ProductDetailModal from './components/ProductDetailModal';
-import CartDrawer from './components/CartDrawer';
-import CheckoutModal from './components/CheckoutModal';
-import WishlistDrawer from './components/WishlistDrawer';
+// Lazy-loaded Modals & Drawers (Code splitting to accelerate critical rendering path)
+const ProductDetailModal = React.lazy(() => import('./components/ProductDetailModal'));
+const CartDrawer = React.lazy(() => import('./components/CartDrawer'));
+const CheckoutModal = React.lazy(() => import('./components/CheckoutModal'));
+const WishlistDrawer = React.lazy(() => import('./components/WishlistDrawer'));
 import FloatingCartButton from './components/FloatingCartButton';
 import Toast from './components/Toast';
 
@@ -101,11 +101,13 @@ function App() {
         {/* Floating Quick Access Pill */}
         <FloatingCartButton />
 
-        {/* Interactive Drawers & Modals */}
-        <ProductDetailModal />
-        <CartDrawer />
-        <CheckoutModal />
-        <WishlistDrawer />
+        {/* Interactive Drawers & Modals (Lazy Loaded on Demand) */}
+        <React.Suspense fallback={null}>
+          <ProductDetailModal />
+          <CartDrawer />
+          <CheckoutModal />
+          <WishlistDrawer />
+        </React.Suspense>
         <Toast />
       </div>
     </CartProvider>

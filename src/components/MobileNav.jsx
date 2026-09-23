@@ -12,7 +12,7 @@ import {
   Truck,
   ExternalLink,
 } from 'lucide-react';
-import brandLogo from '../assets/ps-perfumes-logo.png';
+import brandLogo from '../assets/ps-perfumes-logo.webp';
 import { useCart } from '../context/CartContext';
 import './MobileNav.css';
 

@@ -1,5 +1,6 @@
 import React from 'react';
-import promoBannerImg from '../assets/promo-banner.jpg';
+import promoBannerWebp from '../assets/promo-banner.webp';
+import promoBannerMobileWebp from '../assets/promo-banner-mobile.webp';
 import { useCart } from '../context/CartContext';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import './Sections.css';
@@ -20,12 +21,19 @@ export default function PromoBanner() {
       <div className="ps-promo-banner-inner">
         {/* Background Visual with luxury gradient overlay */}
         <div className="ps-promo-image-wrapper">
-          <img
-            src={promoBannerImg}
-            alt="Artisanal Oud and Amber Distillation"
-            className="ps-promo-bg-img"
-            loading="lazy"
-          />
+          <picture>
+            <source media="(max-width: 768px)" srcSet={promoBannerMobileWebp} type="image/webp" />
+            <source media="(min-width: 769px)" srcSet={promoBannerWebp} type="image/webp" />
+            <img
+              src={promoBannerWebp}
+              alt="Artisanal Oud and Amber Distillation"
+              className="ps-promo-bg-img"
+              loading="lazy"
+              decoding="async"
+              width="1600"
+              height="600"
+            />
+          </picture>
           <div className="ps-promo-overlay" />
         </div>
 

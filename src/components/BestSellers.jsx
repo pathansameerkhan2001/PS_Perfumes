@@ -1,8 +1,8 @@
 import React from 'react';
-import prodRoyalAmber from '../assets/prod-royal-amber.jpg';
-import prodNoirAbsolu from '../assets/prod-noir-absolu.jpg';
-import prodVelvetSantal from '../assets/cat-unisex.jpg';
-import prodRoseImperiale from '../assets/cat-women.jpg';
+import prodRoyalAmber from '../assets/prod-royal-amber.webp';
+import prodNoirAbsolu from '../assets/prod-noir-absolu.webp';
+import prodVelvetSantal from '../assets/cat-unisex.webp';
+import prodRoseImperiale from '../assets/cat-women.webp';
 
 const BEST_SELLER_PRODUCTS = [
   {

@@ -142,13 +142,13 @@
 
 @media (max-width: 768px) {
   .ps-hero-slider-section {
-    height: clamp(280px, 58vw, 380px);
+    height: clamp(360px, 92vw, 480px);
   }
   .ps-slider-arrow {
     display: none; /* smooth touch swipe on mobile */
   }
   .ps-slider-dots-container {
-    bottom: 12px;
+    bottom: 14px;
     gap: 8px;
   }
   .ps-slider-dot {
@@ -162,6 +162,6 @@
 
 @media (max-width: 430px) {
   .ps-hero-slider-section {
-    height: clamp(250px, 66vw, 320px);
+    height: clamp(340px, 98vw, 440px);
   }
 }

@@ -1,14 +1,14 @@
 import React from 'react';
 import { useCart } from '../context/CartContext';
-import catBestSellers from '../assets/cat-bestsellers.jpg';
-import catGiftSets from '../assets/cat-giftsets.jpg';
-import catUnisex from '../assets/cat-unisex.jpg';
-import catMen from '../assets/cat-men.jpg';
-import catWomen from '../assets/cat-women.jpg';
-import prodRoyalAmber from '../assets/prod-royal-amber.jpg';
-import prodNoirAbsolu from '../assets/prod-noir-absolu.jpg';
-import promoBanner from '../assets/promo-banner.jpg';
-import comboAttarSet from '../assets/combo-attar-set.jpg';
+import catBestSellers from '../assets/cat-bestsellers-thumb.webp';
+import catGiftSets from '../assets/cat-giftsets-thumb.webp';
+import catUnisex from '../assets/cat-unisex-thumb.webp';
+import catMen from '../assets/cat-men-thumb.webp';
+import catWomen from '../assets/cat-women-thumb.webp';
+import prodRoyalAmber from '../assets/prod-royal-amber.webp';
+import prodNoirAbsolu from '../assets/prod-noir-absolu.webp';
+import promoBanner from '../assets/promo-banner.webp';
+import comboAttarSet from '../assets/combo-attar-set-thumb.webp';
 
 const CATEGORIES = [
   { id: 'ALL', name: 'ALL COLLECTIONS', image: prodRoyalAmber },

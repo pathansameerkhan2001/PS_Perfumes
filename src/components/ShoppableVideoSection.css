@@ -457,19 +457,41 @@
     min-width: 220px;
   }
   .ps-reel-product-bar {
-    padding: 6px 8px;
+    padding: 8px 10px;
     bottom: 10px;
     left: 8px;
     right: 8px;
   }
   .ps-reel-prod-thumb {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
   }
   .ps-reel-prod-title {
-    font-size: 11.5px;
+    font-size: 12px;
   }
   .ps-reel-price {
-    font-size: 12.5px;
+    font-size: 13px;
+  }
+  .ps-reel-bag-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+  }
+  .ps-reel-modal-backdrop {
+    padding: 10px;
+  }
+  .ps-reel-modal-close {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    top: 12px;
+    right: 12px;
+  }
+  .ps-reel-modal-buy-btn {
+    min-height: 44px;
+    padding: 10px 20px;
+    font-size: 13px;
   }
 }
