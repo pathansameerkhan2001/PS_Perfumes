@@ -1,0 +1,167 @@
+/* ==========================================================================
+   PS PERFUMES — IMAGE ONLY Hero Slider Stylesheet
+   ========================================================================== */
+
+.ps-hero-slider-section {
+  position: relative;
+  width: 100%;
+  height: clamp(320px, 48vw, 600px);
+  overflow: hidden;
+  background-color: #050505;
+  margin: 0;
+  padding: 0;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.ps-hero-slider-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform: translate3d(0, 0, 0);
+}
+
+.ps-hero-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.85s cubic-bezier(0.25, 1, 0.5, 1), visibility 0.85s;
+  pointer-events: none;
+  transform: translateZ(0);
+  will-change: opacity;
+}
+
+.ps-hero-slide.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.ps-hero-picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ps-hero-slide-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* Navigation Arrows (Discreet, Elegant, Luxury) */
+.ps-slider-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.ps-hero-slider-section:hover .ps-slider-arrow {
+  opacity: 1;
+}
+
+.ps-slider-arrow:hover {
+  background: rgba(0, 0, 0, 0.85);
+  border-color: #c5a059;
+  color: #c5a059;
+  transform: translateY(-50%) scale(1.06);
+}
+
+.ps-slider-arrow-prev {
+  left: 24px;
+}
+
+.ps-slider-arrow-next {
+  right: 24px;
+}
+
+/* Dots Indicators */
+.ps-slider-dots-container {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 10;
+}
+
+.ps-slider-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.3s ease;
+}
+
+.ps-slider-dot:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.ps-slider-dot.is-active {
+  background: #c5a059;
+  width: 24px;
+  border-radius: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE HERO SLIDER BREAKPOINTS
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1024px) {
+  .ps-slider-arrow {
+    opacity: 0.75;
+    width: 38px;
+    height: 38px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ps-hero-slider-section {
+    height: clamp(280px, 58vw, 380px);
+  }
+  .ps-slider-arrow {
+    display: none; /* smooth touch swipe on mobile */
+  }
+  .ps-slider-dots-container {
+    bottom: 12px;
+    gap: 8px;
+  }
+  .ps-slider-dot {
+    width: 8px;
+    height: 8px;
+  }
+  .ps-slider-dot.is-active {
+    width: 22px;
+  }
+}
+
+@media (max-width: 430px) {
+  .ps-hero-slider-section {
+    height: clamp(250px, 66vw, 320px);
+  }
+}

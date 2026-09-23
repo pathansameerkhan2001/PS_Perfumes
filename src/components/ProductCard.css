@@ -1,0 +1,315 @@
+/* ==========================================================================
+   PS PERFUMES — Product Card Stylesheet
+   ========================================================================== */
+
+.ps-pcard {
+  background-color: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  position: relative;
+}
+
+.ps-pcard:hover {
+  border-color: rgba(197, 160, 89, 0.45);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.09);
+  transform: translateY(-3px);
+}
+
+/* Media Box */
+.ps-pcard-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: #0d0c0a;
+  overflow: hidden;
+}
+
+.ps-pcard-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.45s ease;
+}
+
+.ps-pcard:hover .ps-pcard-img {
+  transform: scale(1.06);
+}
+
+/* Badges */
+.ps-pcard-badges {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  z-index: 2;
+}
+
+.ps-pcard-badge {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.ps-badge-primary {
+  background-color: #000000;
+  color: #c5a059;
+  border: 1px solid rgba(197, 160, 89, 0.5);
+}
+
+.ps-badge-discount {
+  background-color: #eb1c24;
+  color: #ffffff;
+}
+
+/* Wishlist Button */
+.ps-pcard-wishlist-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.ps-pcard-wishlist-btn:hover {
+  background: #ffffff;
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.ps-pcard-wishlist-btn.is-active {
+  background: #fff;
+  border-color: #eb1c24;
+}
+
+/* Details */
+.ps-pcard-details {
+  padding: 16px 16px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.ps-pcard-type {
+  font-family: var(--font-serif);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: #8c7d68;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+.ps-pcard-title {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #000000;
+  letter-spacing: -0.01em;
+  margin: 0 0 8px 0;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ps-pcard:hover .ps-pcard-title {
+  color: #c5a059;
+}
+
+/* Rating Row */
+.ps-pcard-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.ps-pcard-stars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.ps-pcard-rating-text {
+  font-size: 11px;
+  color: #666666;
+  font-weight: 500;
+}
+
+/* Pricing Row & Action */
+.ps-pcard-pricing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.ps-pcard-prices {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.ps-pcard-price {
+  font-size: 18px;
+  font-weight: 800;
+  color: #000000;
+  letter-spacing: -0.02em;
+}
+
+.ps-pcard-orig-price {
+  font-size: 13px;
+  color: #999999;
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+.ps-pcard-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-pcard-add-btn:hover {
+  background-color: #c5a059;
+  color: #000000;
+}
+
+.ps-pcard-add-btn.is-success {
+  background-color: #108474;
+  color: #ffffff;
+}
+
+/* Mobile & Tablet adjustments */
+@media (max-width: 768px) {
+  .ps-pcard {
+    border-radius: 4px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ps-pcard:active {
+    transform: scale(0.985);
+  }
+  .ps-pcard-wishlist-btn {
+    width: 34px;
+    height: 34px;
+    top: 8px;
+    right: 8px;
+  }
+  .ps-pcard-badges {
+    top: 8px;
+    left: 8px;
+    gap: 4px;
+  }
+  .ps-pcard-badge {
+    font-size: 9px;
+    padding: 2.5px 6px;
+  }
+  .ps-pcard-details {
+    padding: 12px 10px 14px 10px;
+  }
+  .ps-pcard-type {
+    font-size: 9px;
+    margin-bottom: 3px;
+  }
+  .ps-pcard-title {
+    font-size: 13px;
+    line-height: 1.35;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 35px;
+    margin-bottom: 4px;
+  }
+  .ps-pcard-rating-row {
+    margin-bottom: 8px;
+  }
+  .ps-pcard-rating-text {
+    font-size: 10px;
+  }
+  .ps-pcard-pricing-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding-top: 8px;
+  }
+  .ps-pcard-prices {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+  .ps-pcard-price {
+    font-size: 16px;
+  }
+  .ps-pcard-orig-price {
+    font-size: 12px;
+  }
+  .ps-pcard-add-btn {
+    width: 100%;
+    min-height: 38px;
+    justify-content: center;
+    padding: 7px 10px;
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    border-radius: 3px;
+  }
+  .ps-pcard-add-btn span {
+    display: inline;
+  }
+}
+
+@media (max-width: 430px) {
+  .ps-pcard-details {
+    padding: 10px 8px 12px 8px;
+  }
+  .ps-pcard-title {
+    font-size: 12px;
+    min-height: 32px;
+  }
+  .ps-pcard-price {
+    font-size: 15px;
+  }
+  .ps-pcard-add-btn {
+    min-height: 36px;
+    font-size: 10px;
+  }
+}

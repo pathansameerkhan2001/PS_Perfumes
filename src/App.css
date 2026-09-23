@@ -1,0 +1,21 @@
+/* ==========================================================================
+   App Root & Page Content Container
+   ========================================================================== */
+
+.ps-app-root {
+  min-height: 100vh;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+/* Page canvas underneath the header (strictly empty, no hero or products) */
+.ps-main-preview {
+  flex: 1;
+  background-color: #ffffff;
+  min-height: 80vh;
+}

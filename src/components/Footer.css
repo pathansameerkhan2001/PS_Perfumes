@@ -1,0 +1,269 @@
+/* ==========================================================================
+   PS PERFUMES — Luxury 5-Column Footer Stylesheet
+   ========================================================================== */
+
+.ps-footer {
+  background-color: #0c0b0a;
+  color: #a39c94;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
+  position: relative;
+  border-top: 1px solid rgba(197, 160, 89, 0.3);
+}
+
+.ps-footer-top-gold-bar {
+  height: 3px;
+  background: linear-gradient(90deg, #c5a059 0%, #deb868 50%, #c5a059 100%);
+  width: 100%;
+}
+
+.ps-footer-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 64px 32px 32px 32px;
+}
+
+.ps-footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1.3fr;
+  gap: 40px;
+  margin-bottom: 56px;
+}
+
+.ps-footer-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-footer-logo-wrapper {
+  margin-bottom: 16px;
+}
+
+.ps-footer-logo {
+  height: auto;
+  max-width: 180px;
+  display: block;
+}
+
+.ps-footer-brand-desc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #8c857c;
+  margin: 0 0 20px 0;
+  max-width: 320px;
+}
+
+.ps-footer-contact-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.ps-footer-contact-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12.5px;
+  color: #b5ad9e;
+  line-height: 1.4;
+}
+
+.ps-footer-contact-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ps-footer-socials {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ps-social-link {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #1a1714;
+  border: 1px solid rgba(197, 160, 89, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c5a059;
+  transition: all 0.25s ease;
+  text-decoration: none;
+}
+
+.ps-social-link:hover {
+  background-color: #c5a059;
+  color: #0c0b0a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(197, 160, 89, 0.35);
+}
+
+.ps-footer-heading {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #ffffff;
+  text-transform: uppercase;
+  margin: 0 0 20px 0;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.ps-footer-heading::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 24px;
+  height: 1.5px;
+  background-color: #c5a059;
+}
+
+.ps-footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.ps-footer-links a,
+.ps-footer-links button {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  color: #8c857c;
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
+  display: inline-block;
+}
+
+.ps-footer-links a:hover,
+.ps-footer-links button:hover {
+  color: #c5a059;
+  transform: translateX(3px);
+}
+
+.ps-footer-seal-text {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #8c857c;
+  margin-bottom: 16px;
+}
+
+.ps-footer-seal-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #171412;
+  border: 1px solid rgba(197, 160, 89, 0.25);
+  border-radius: 4px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+}
+
+.ps-footer-seal-box strong {
+  display: block;
+  font-size: 12.5px;
+  color: #ffffff;
+}
+
+.ps-footer-seal-box span {
+  font-size: 11px;
+  color: #c5a059;
+}
+
+.ps-footer-hours {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #7e766e;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ps-footer-hours strong {
+  color: #d1c8bd;
+  font-size: 12px;
+}
+
+/* Footer Bottom Bar */
+.ps-footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.ps-footer-copy {
+  font-size: 12px;
+  color: #6d665f;
+  line-height: 1.5;
+}
+
+.ps-footer-payments {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ps-payment-pill {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background-color: #1a1714;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #c5a059;
+  padding: 4px 8px;
+  border-radius: 3px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .ps-footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+  }
+  .ps-footer-brand-col {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .ps-footer-container {
+    padding: 44px 18px 96px 18px; /* Extra bottom clearance for floating cart button */
+  }
+  .ps-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .ps-footer-brand-col {
+    grid-column: span 1;
+  }
+  .ps-footer-links a,
+  .ps-footer-links button {
+    display: block;
+    padding: 6px 0;
+    font-size: 13.5px;
+    min-height: 32px;
+  }
+  .ps-footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .ps-footer-payments {
+    gap: 6px;
+  }
+}

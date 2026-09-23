@@ -1,0 +1,525 @@
+/* ==========================================================================
+   PS PERFUMES — Luxury Product Detail Modal Stylesheet
+   ========================================================================== */
+
+.ps-pdetail-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: psFadeIn 0.25s ease-out;
+}
+
+.ps-pdetail-modal {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 980px;
+  max-height: 90vh;
+  border-radius: 4px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+  position: relative;
+  overflow-y: auto;
+  border: 1px solid rgba(197, 160, 89, 0.35);
+  animation: psModalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ps-pdetail-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  color: #111111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.ps-pdetail-close-btn:hover {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.ps-pdetail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  min-height: 540px;
+}
+
+/* Left Visual Column */
+.ps-pdetail-visual {
+  background-color: #0d0c0a;
+  padding: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.ps-pdetail-main-img-box {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+}
+
+.ps-pdetail-main-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ps-pdetail-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background-color: #c5a059;
+  color: #000000;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  padding: 4px 10px;
+  border-radius: 2px;
+}
+
+.ps-pdetail-thumbs {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.ps-pdetail-thumb-btn {
+  width: 54px;
+  height: 54px;
+  border-radius: 3px;
+  border: 2px solid transparent;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  overflow: hidden;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+
+.ps-pdetail-thumb-btn.is-active {
+  border-color: #c5a059;
+  opacity: 1;
+}
+
+.ps-pdetail-thumb-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Right Details Column */
+.ps-pdetail-info {
+  padding: 40px 36px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-pdetail-brand-tag {
+  font-family: var(--font-serif);
+  font-size: 10.5px;
+  letter-spacing: 0.24em;
+  color: #c5a059;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.ps-pdetail-title {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 700;
+  color: #111111;
+  margin: 0 0 6px 0;
+  line-height: 1.25;
+}
+
+.ps-pdetail-type {
+  font-size: 12.5px;
+  color: #666666;
+  margin-bottom: 14px;
+}
+
+.ps-pdetail-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ps-pdetail-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.ps-pdetail-rating-num {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111111;
+}
+
+.ps-pdetail-review-count {
+  font-size: 12px;
+  color: #777777;
+}
+
+.ps-pdetail-price-box {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ps-pdetail-current-price {
+  font-size: 26px;
+  font-weight: 800;
+  color: #000000;
+}
+
+.ps-pdetail-orig-price {
+  font-size: 16px;
+  color: #888888;
+  text-decoration: line-through;
+}
+
+.ps-pdetail-discount-tag {
+  background-color: #eb1c24;
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 2px;
+}
+
+.ps-pdetail-tax-note {
+  font-size: 11.5px;
+  color: #777777;
+  width: 100%;
+  margin-top: -4px;
+}
+
+.ps-pdetail-description {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: #444444;
+  margin: 0 0 20px 0;
+}
+
+/* Olfactory Pyramid */
+.ps-pdetail-pyramid {
+  background-color: #faf7f2;
+  border: 1px solid rgba(197, 160, 89, 0.25);
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.ps-pyramid-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #7a5d24;
+  margin: 0 0 10px 0;
+}
+
+.ps-pyramid-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+}
+
+.ps-pyramid-tier {
+  font-weight: 700;
+  font-size: 11px;
+  color: #222222;
+  min-width: 90px;
+}
+
+.ps-pyramid-notes {
+  color: #555555;
+}
+
+.ps-pdetail-specs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.ps-spec-badge {
+  background-color: #f5f5f5;
+  border-radius: 3px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: #333333;
+}
+
+.ps-spec-badge strong {
+  color: #111111;
+}
+
+/* Size picker */
+.ps-pdetail-sizes {
+  margin-bottom: 22px;
+}
+
+.ps-sizes-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #333333;
+  margin-bottom: 8px;
+}
+
+.ps-sizes-options {
+  display: flex;
+  gap: 10px;
+}
+
+.ps-size-pill {
+  padding: 8px 18px;
+  border: 1.5px solid #dcdcdc;
+  background-color: #ffffff;
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-size-pill:hover {
+  border-color: #c5a059;
+}
+
+.ps-size-pill.is-active {
+  border-color: #000000;
+  background-color: #000000;
+  color: #ffffff;
+}
+
+/* Actions Row */
+.ps-pdetail-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.ps-qty-counter {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #dcdcdc;
+  border-radius: 3px;
+  height: 48px;
+}
+
+.ps-qty-btn {
+  width: 38px;
+  height: 100%;
+  background: none;
+  border: none;
+  font-size: 17px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333333;
+}
+
+.ps-qty-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.ps-qty-val {
+  width: 32px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.ps-pdetail-add-bag-btn {
+  flex: 1;
+  height: 48px;
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-pdetail-add-bag-btn:hover {
+  background-color: #c5a059;
+  color: #000000;
+}
+
+.ps-pdetail-add-bag-btn.is-success {
+  background-color: #10b981;
+  color: #ffffff;
+}
+
+.ps-pdetail-wishlist-toggle {
+  width: 48px;
+  height: 48px;
+  border-radius: 3px;
+  border: 1.5px solid #dcdcdc;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-pdetail-wishlist-toggle:hover {
+  border-color: #eb1c24;
+}
+
+.ps-pdetail-buy-now-btn {
+  width: 100%;
+  height: 46px;
+  background-color: #14120f;
+  color: #ffffff;
+  border: 1px solid #c5a059;
+  border-radius: 3px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: all 0.2s ease;
+}
+
+.ps-pdetail-buy-now-btn:hover {
+  background-color: #c5a059;
+  color: #000000;
+}
+
+.ps-pdetail-perks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 16px;
+}
+
+.ps-perk-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #666666;
+}
+
+/* Animations */
+@keyframes psFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes psModalSlideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Responsive Mobile Sheet */
+@media (max-width: 840px) {
+  .ps-pdetail-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+  .ps-pdetail-modal {
+    border-radius: 16px 16px 0 0;
+    max-height: 92vh;
+    border-bottom: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ps-pdetail-close-btn {
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+  }
+  .ps-pdetail-grid {
+    grid-template-columns: 1fr;
+  }
+  .ps-pdetail-visual {
+    padding: 28px 16px 16px 16px;
+  }
+  .ps-pdetail-main-img-box {
+    max-width: 220px;
+  }
+  .ps-pdetail-info {
+    padding: 18px 16px max(28px, env(safe-area-inset-bottom, 28px)) 16px;
+  }
+  .ps-pdetail-title {
+    font-size: 22px;
+  }
+  .ps-pdetail-current-price {
+    font-size: 22px;
+  }
+  .ps-pdetail-actions {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .ps-qty-counter {
+    width: 96px;
+    height: 46px;
+  }
+  .ps-qty-btn {
+    width: 30px;
+  }
+  .ps-pdetail-add-bag-btn {
+    height: 46px;
+    font-size: 11.5px;
+  }
+  .ps-pdetail-wishlist-toggle {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+  }
+  .ps-pdetail-buy-now-btn {
+    height: 46px;
+    font-size: 11.5px;
+  }
+}

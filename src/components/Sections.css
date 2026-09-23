@@ -1,0 +1,1380 @@
+/* ==========================================================================
+   PS PERFUMES — Post-Hero Sections Stylesheet
+   Marquee Strip • Find By Category • Explore Our Best Sellers
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. SLIM GOLD MARQUEE STRIP
+   -------------------------------------------------------------------------- */
+.ps-marquee-strip {
+  width: 100%;
+  background: linear-gradient(90deg, #c5a059 0%, #deb868 50%, #c5a059 100%);
+  height: 40px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3), 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ps-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: psMarqueeScroll 28s linear infinite;
+}
+
+.ps-marquee-strip:hover .ps-marquee-track {
+  animation-play-state: paused;
+}
+
+.ps-marquee-group {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding-right: 28px;
+}
+
+.ps-marquee-item {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #1a1208;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.ps-marquee-diamond {
+  color: #634f24;
+  font-size: 9px;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+@keyframes psMarqueeScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. FIND BY CATEGORY SECTION
+   -------------------------------------------------------------------------- */
+.ps-categories-section {
+  width: 100%;
+  background-color: #ffffff;
+  padding: 48px 32px 40px 32px;
+}
+
+.ps-categories-container {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.ps-categories-heading {
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #000000;
+  letter-spacing: -0.01em;
+  margin: 0 0 28px 0;
+}
+
+.ps-categories-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* Reference Pill Category Card */
+.ps-category-pill-card {
+  display: inline-flex;
+  align-items: center;
+  background-color: #fdf8f0;
+  border: 1px solid rgba(197, 160, 89, 0.22);
+  border-radius: 9999px;
+  padding: 5px 22px 5px 6px;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 170px;
+}
+
+.ps-category-pill-card:hover {
+  background-color: #f7ecd9;
+  border-color: #c5a059;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(197, 160, 89, 0.25);
+}
+
+.ps-category-thumb-wrapper {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  background-color: #111111;
+}
+
+.ps-category-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.ps-category-pill-card:hover .ps-category-thumb-img {
+  transform: scale(1.08);
+}
+
+.ps-category-pill-title {
+  margin-left: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #000000;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   3. EXPLORE OUR BEST SELLERS SECTION
+   -------------------------------------------------------------------------- */
+.ps-bestsellers-section {
+  width: 100%;
+  background-color: #ffffff;
+  padding: 44px 32px 80px 32px;
+}
+
+.ps-bestsellers-container {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.ps-bestsellers-header {
+  text-align: center;
+  margin-bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ps-bestsellers-tag {
+  font-family: var(--font-serif);
+  font-size: 10.5px;
+  letter-spacing: 0.26em;
+  color: #c5a059;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.ps-bestsellers-heading {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #000000;
+  letter-spacing: -0.01em;
+  margin: 0 0 14px 0;
+}
+
+.ps-bestsellers-divider {
+  width: 48px;
+  height: 2px;
+  background-color: #c5a059;
+}
+
+/* 4-Column Product Showcase Grid */
+.ps-bestsellers-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+}
+
+.ps-product-card {
+  background-color: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 4px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-product-card:hover {
+  border-color: rgba(197, 160, 89, 0.4);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+.ps-product-image-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background-color: #0c0b0a;
+  overflow: hidden;
+}
+
+.ps-product-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s ease;
+}
+
+.ps-product-card:hover .ps-product-img {
+  transform: scale(1.05);
+}
+
+.ps-product-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background-color: #000000;
+  color: #c5a059;
+  border: 1px solid #c5a059;
+  font-size: 9.5px;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  letter-spacing: 0.12em;
+  padding: 3px 8px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+.ps-product-info {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.ps-product-category {
+  font-family: var(--font-serif);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: #8c7d68;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.ps-product-title {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 600;
+  color: #000000;
+  letter-spacing: 0.02em;
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+}
+
+.ps-product-notes {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #555555;
+  margin: 0 0 18px 0;
+  flex: 1;
+}
+
+.ps-product-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.ps-product-pricing {
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-product-price {
+  font-size: 16px;
+  font-weight: 800;
+  color: #000000;
+}
+
+.ps-product-volume {
+  font-size: 10px;
+  color: #888888;
+  letter-spacing: 0.04em;
+}
+
+.ps-product-add-btn {
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 2px;
+  padding: 9px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-product-add-btn:hover {
+  background-color: #c5a059;
+  color: #000000;
+}
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE DESIGN FOR SECTIONS
+   -------------------------------------------------------------------------- */
+
+/* Tablet (769px - 1024px) */
+@media (max-width: 1024px) {
+  .ps-categories-section {
+    padding: 36px 20px 28px 20px;
+  }
+  .ps-categories-grid {
+    gap: 14px;
+  }
+  .ps-category-pill-card {
+    min-width: 150px;
+    padding: 4px 16px 4px 5px;
+  }
+  .ps-category-thumb-wrapper {
+    width: 44px;
+    height: 44px;
+  }
+  .ps-category-pill-title {
+    font-size: 12.5px;
+  }
+  .ps-bestsellers-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
+/* Mobile (<= 768px) */
+@media (max-width: 768px) {
+  .ps-marquee-strip {
+    height: 34px;
+  }
+  .ps-marquee-item {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+  .ps-categories-section {
+    padding: 28px 0 20px 0;
+  }
+  .ps-categories-heading {
+    font-size: 21px;
+    margin-bottom: 16px;
+    padding: 0 16px;
+  }
+  .ps-categories-grid {
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 4px 16px 12px 16px;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    gap: 10px;
+  }
+  .ps-categories-grid::-webkit-scrollbar {
+    display: none;
+  }
+  .ps-category-pill-card {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+    min-width: 145px;
+    padding: 4px 14px 4px 4px;
+  }
+  .ps-bestsellers-section {
+    padding: 28px 12px 52px 12px;
+  }
+  .ps-bestsellers-heading {
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+  .ps-bestsellers-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .ps-product-info {
+    padding: 12px;
+  }
+  .ps-product-title {
+    font-size: 14px;
+  }
+}
+
+/* Small Mobile (<= 430px) */
+@media (max-width: 430px) {
+  .ps-bestsellers-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .ps-category-pill-card {
+    min-width: 138px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. CATALOG FILTER TABS & EMPTY STATE
+   -------------------------------------------------------------------------- */
+.ps-catalog-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 36px;
+}
+
+.ps-catalog-tab-btn {
+  background-color: #f7f5f0;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #444444;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-catalog-tab-btn:hover {
+  background-color: #f0e9dc;
+  border-color: #c5a059;
+  color: #000000;
+}
+
+.ps-catalog-tab-btn.is-active {
+  background-color: #0c0b0a;
+  color: #ffffff;
+  border-color: #0c0b0a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.ps-grid-empty {
+  text-align: center;
+  padding: 48px 20px;
+  background-color: #fdfaf5;
+  border: 1px dashed rgba(197, 160, 89, 0.4);
+  border-radius: 4px;
+}
+
+.ps-grid-empty p {
+  font-size: 15px;
+  color: #666666;
+  margin-bottom: 16px;
+}
+
+.ps-grid-reset-btn {
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  padding: 10px 22px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.ps-grid-reset-btn:hover {
+  background-color: #c5a059;
+  color: #000000;
+}
+
+.ps-grid-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 44px;
+}
+
+.ps-view-all-btn {
+  background-color: transparent;
+  color: #0c0b0a;
+  border: 1.5px solid #0c0b0a;
+  border-radius: 3px;
+  padding: 13px 32px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.ps-view-all-btn:hover {
+  background-color: #0c0b0a;
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   5. MID-PAGE PROMO CAMPAIGN BANNER
+   -------------------------------------------------------------------------- */
+.ps-promo-banner-section {
+  width: 100%;
+  background-color: #0c0b0a;
+  position: relative;
+  overflow: hidden;
+  margin: 30px 0;
+}
+
+.ps-promo-banner-inner {
+  position: relative;
+  min-height: 480px;
+  display: flex;
+  align-items: center;
+}
+
+.ps-promo-image-wrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.ps-promo-bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.ps-promo-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(12, 11, 10, 0.94) 0%,
+    rgba(12, 11, 10, 0.8) 50%,
+    rgba(12, 11, 10, 0.4) 100%
+  );
+}
+
+.ps-promo-content-container {
+  position: relative;
+  z-index: 2;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 60px 48px;
+  width: 100%;
+}
+
+.ps-promo-content {
+  max-width: 600px;
+}
+
+.ps-promo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(197, 160, 89, 0.15);
+  border: 1px solid rgba(197, 160, 89, 0.4);
+  color: #c5a059;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  padding: 6px 14px;
+  border-radius: 2px;
+  margin-bottom: 20px;
+}
+
+.ps-promo-heading {
+  font-family: var(--font-serif);
+  font-size: 34px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.25;
+  margin: 0 0 18px 0;
+  letter-spacing: 0.01em;
+}
+
+.ps-promo-desc {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: #cccccc;
+  margin: 0 0 28px 0;
+}
+
+.ps-promo-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ps-promo-cta-btn {
+  align-self: flex-start;
+  background: linear-gradient(90deg, #c5a059 0%, #deb868 100%);
+  color: #0c0b0a;
+  border: none;
+  border-radius: 3px;
+  padding: 14px 28px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 8px 24px rgba(197, 160, 89, 0.35);
+}
+
+.ps-promo-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(197, 160, 89, 0.5);
+  background: #ffffff;
+  color: #000000;
+}
+
+.ps-promo-guarantee {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #c5a059;
+}
+
+.ps-promo-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #c5a059;
+}
+
+/* --------------------------------------------------------------------------
+   6. REVIEWS & TESTIMONIALS SECTION
+   -------------------------------------------------------------------------- */
+.ps-reviews-section {
+  width: 100%;
+  background-color: #faf8f5;
+  padding: 64px 32px;
+  border-top: 1px solid #eeeeee;
+}
+
+.ps-reviews-container {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.ps-reviews-header {
+  text-align: center;
+  margin-bottom: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ps-reviews-tag {
+  font-family: var(--font-serif);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  color: #c5a059;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.ps-reviews-heading {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 700;
+  color: #111111;
+  margin: 0 0 14px 0;
+}
+
+.ps-reviews-subheading {
+  font-size: 14px;
+  color: #666666;
+  max-width: 600px;
+  margin: 14px 0 0 0;
+}
+
+.ps-reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  margin-bottom: 32px;
+}
+
+.ps-review-card {
+  background-color: #ffffff;
+  border: 1px solid rgba(197, 160, 89, 0.2);
+  border-radius: 4px;
+  padding: 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s ease;
+}
+
+.ps-review-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  border-color: #c5a059;
+}
+
+.ps-review-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.ps-review-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.ps-review-quote-icon {
+  color: rgba(197, 160, 89, 0.4);
+}
+
+.ps-review-title {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 700;
+  color: #111111;
+  margin: 0 0 10px 0;
+  line-height: 1.35;
+}
+
+.ps-review-comment {
+  font-size: 13px;
+  line-height: 1.65;
+  color: #555555;
+  margin: 0 0 20px 0;
+  flex: 1;
+}
+
+.ps-review-author-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 14px;
+}
+
+.ps-review-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #1a1714;
+  color: #c5a059;
+  font-weight: 800;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ps-review-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-review-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ps-review-author {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111111;
+}
+
+.ps-review-verified {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10.5px;
+  color: #059669;
+  font-weight: 600;
+}
+
+.ps-review-product-name {
+  font-size: 11px;
+  color: #888888;
+}
+
+.ps-reviews-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.ps-reviews-nav-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid #dcdcdc;
+  background-color: #ffffff;
+  color: #111111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ps-reviews-nav-btn:hover {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+.ps-reviews-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.ps-review-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #dcdcdc;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s;
+}
+
+.ps-review-dot.is-active {
+  background-color: #c5a059;
+  width: 20px;
+  border-radius: 999px;
+}
+
+/* --------------------------------------------------------------------------
+   7. ABOUT ATELIER HERITAGE SECTION
+   -------------------------------------------------------------------------- */
+.ps-about-section {
+  width: 100%;
+  background-color: #ffffff;
+  padding: 72px 32px;
+}
+
+.ps-about-container {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.ps-about-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 56px;
+  align-items: center;
+}
+
+.ps-about-visual {
+  display: flex;
+  justify-content: center;
+}
+
+.ps-about-image-card {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 4 / 5;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(197, 160, 89, 0.35);
+}
+
+.ps-about-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ps-about-badge-seal {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  background-color: #0c0b0a;
+  color: #ffffff;
+  border: 2px solid #c5a059;
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.ps-about-seal-year {
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  color: #c5a059;
+}
+
+.ps-about-seal-brand {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.ps-about-seal-sub {
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  color: #c5a059;
+}
+
+.ps-about-tag {
+  font-family: var(--font-serif);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: #c5a059;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.ps-about-title {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 700;
+  color: #111111;
+  margin: 0 0 14px 0;
+  line-height: 1.25;
+}
+
+.ps-about-text {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: #4a4a4a;
+  margin: 0 0 18px 0;
+}
+
+.ps-about-pillars {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 28px;
+}
+
+.ps-about-pillar {
+  display: flex;
+  gap: 12px;
+}
+
+.ps-pillar-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #faf5eb;
+  border: 1px solid rgba(197, 160, 89, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ps-pillar-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #111111;
+  margin: 0 0 4px 0;
+}
+
+.ps-pillar-desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #666666;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   8. TRUST STRIP & VIP NEWSLETTER
+   -------------------------------------------------------------------------- */
+.ps-trust-section {
+  width: 100%;
+  background-color: #ffffff;
+  border-top: 1px solid #eeeeee;
+}
+
+.ps-trust-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 48px 32px;
+}
+
+.ps-trust-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 32px;
+}
+
+.ps-trust-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.ps-trust-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #faf5eb;
+  border: 1px solid rgba(197, 160, 89, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ps-trust-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-trust-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111111;
+  margin: 0 0 4px 0;
+}
+
+.ps-trust-desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #666666;
+  margin: 0;
+}
+
+.ps-newsletter-strip {
+  background-color: #12100d;
+  border-top: 1px solid rgba(197, 160, 89, 0.25);
+  padding: 48px 32px;
+}
+
+.ps-newsletter-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.ps-newsletter-text {
+  max-width: 540px;
+}
+
+.ps-newsletter-tag {
+  font-family: var(--font-serif);
+  font-size: 10.5px;
+  letter-spacing: 0.24em;
+  color: #c5a059;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.ps-newsletter-title {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+}
+
+.ps-newsletter-desc {
+  font-size: 13px;
+  color: #aaaaaa;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.ps-newsletter-form {
+  flex: 1;
+  max-width: 480px;
+}
+
+.ps-newsletter-input-group {
+  display: flex;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.ps-newsletter-input {
+  flex: 1;
+  padding: 13px 18px;
+  border: 1px solid rgba(197, 160, 89, 0.3);
+  border-right: none;
+  background-color: #1e1b18;
+  color: #ffffff;
+  font-size: 13px;
+  border-radius: 3px 0 0 3px;
+}
+
+.ps-newsletter-input:focus {
+  outline: none;
+  border-color: #c5a059;
+}
+
+.ps-newsletter-submit {
+  background: linear-gradient(90deg, #c5a059 0%, #deb868 100%);
+  color: #0c0b0a;
+  border: none;
+  border-radius: 0 3px 3px 0;
+  padding: 0 22px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ps-newsletter-submit:hover {
+  background: #ffffff;
+}
+
+.ps-newsletter-submit.is-success {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.ps-newsletter-success-msg {
+  font-size: 12px;
+  color: #10b981;
+  margin-top: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   9. FLOATING QUICK-ACCESS BUTTONS
+   -------------------------------------------------------------------------- */
+.ps-floating-actions {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 9990;
+}
+
+.ps-floating-btn {
+  height: 48px;
+  border-radius: 999px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.ps-floating-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+.ps-floating-wishlist {
+  width: 48px;
+  background-color: #ffffff;
+  border: 1.5px solid rgba(197, 160, 89, 0.4);
+}
+
+.ps-floating-cart {
+  background: linear-gradient(90deg, #c5a059 0%, #deb868 100%);
+  color: #0c0b0a;
+  padding: 0 20px 0 16px;
+  gap: 8px;
+}
+
+.ps-floating-cart-text {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.ps-floating-badge {
+  background-color: #eb1c24;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.ps-floating-cart-badge {
+  background-color: #0c0b0a;
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE ENHANCEMENTS FOR ALL SECTIONS
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .ps-reviews-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ps-about-layout {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .ps-trust-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .ps-catalog-tabs {
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 0 16px 14px 16px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .ps-catalog-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .ps-catalog-tab-btn {
+    flex-shrink: 0;
+    padding: 7px 16px;
+    font-size: 11.5px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ps-promo-banner-section {
+    margin: 20px 0;
+  }
+  .ps-promo-banner-inner {
+    min-height: 420px;
+  }
+  .ps-promo-content-container {
+    padding: 36px 18px;
+  }
+  .ps-promo-heading {
+    font-size: 24px;
+    line-height: 1.3;
+  }
+  .ps-promo-desc {
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .ps-promo-cta-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 13px 20px;
+    font-size: 11.5px;
+  }
+  .ps-reviews-section {
+    padding: 44px 16px;
+  }
+  .ps-reviews-heading {
+    font-size: 22px;
+  }
+  .ps-reviews-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .ps-review-card {
+    padding: 20px;
+  }
+  .ps-about-section {
+    padding: 44px 16px;
+  }
+  .ps-about-title {
+    font-size: 24px;
+  }
+  .ps-about-text {
+    font-size: 13.5px;
+  }
+  .ps-about-pillars {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .ps-trust-container {
+    padding: 36px 16px;
+  }
+  .ps-trust-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .ps-newsletter-strip {
+    padding: 36px 18px;
+  }
+  .ps-newsletter-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+  }
+  .ps-newsletter-title {
+    font-size: 20px;
+  }
+  .ps-newsletter-desc {
+    font-size: 12.5px;
+  }
+  .ps-newsletter-form {
+    width: 100%;
+    max-width: 100%;
+  }
+  .ps-newsletter-input-group {
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: none;
+  }
+  .ps-newsletter-input {
+    border-radius: 3px;
+    border-right: 1px solid rgba(197, 160, 89, 0.3);
+    padding: 12px 14px;
+    font-size: 16px; /* Prevents auto-zoom on iOS */
+  }
+  .ps-newsletter-submit {
+    border-radius: 3px;
+    height: 46px;
+    width: 100%;
+    justify-content: center;
+    font-size: 12px;
+  }
+  .ps-floating-actions {
+    bottom: max(16px, env(safe-area-inset-bottom, 16px));
+    right: 14px;
+    gap: 8px;
+  }
+  .ps-floating-btn {
+    height: 42px;
+  }
+  .ps-floating-wishlist {
+    width: 42px;
+  }
+  .ps-floating-cart {
+    padding: 0 14px 0 12px;
+  }
+  .ps-floating-cart-text {
+    font-size: 11px;
+  }
+}
+

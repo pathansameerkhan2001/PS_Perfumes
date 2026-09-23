@@ -1,0 +1,109 @@
+/* ==========================================================================
+   PS PERFUMES — Luxury Design System & Global Styles
+   ========================================================================== */
+
+:root {
+  /* Obsidian and Luxury Dark Palette */
+  --bg-primary: #070707;
+  --bg-header-top: #080808;
+  --bg-header-bottom: #050505;
+  --bg-surface: #0f0f0f;
+  --bg-drawer: #070707;
+
+  /* Authentic Metallic Gold Tones (matching PS Perfumes brand emblem) */
+  --gold-metallic: #c5a059;
+  --gold-primary: #d4af37;
+  --gold-bright: #e9cb84;
+  --gold-muted: #8d7a5b;
+  --gold-dark: #665438;
+  --gold-hairline: rgba(212, 175, 55, 0.16);
+  --gold-hairline-subtle: rgba(212, 175, 55, 0.08);
+  --gold-glow: rgba(212, 175, 55, 0.12);
+
+  /* Typography Colors */
+  --text-ivory: #f2ede4;
+  --text-cream: #e0d8cc;
+  --text-sand: #a69b8b;
+  --text-muted: #6e6557;
+
+  /* Font Families */
+  --font-serif: 'Cinzel', Georgia, serif;
+  --font-editorial: 'Cormorant Garamond', Garamond, serif;
+  --font-sans: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Transitions */
+  --transition-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-duration: 0.3s;
+}
+
+/* Reset & Base Rules */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+html, body {
+  background-color: #ffffff;
+  color: #111111;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Custom Luxury Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050505;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #221e18;
+  border-radius: 3px;
+  border: 1px solid rgba(212, 175, 55, 0.12);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-muted);
+}
+
+/* Focus Outline */
+button:focus-visible, a:focus-visible, input:focus-visible {
+  outline: 1px solid var(--gold-primary);
+  outline-offset: 3px;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}

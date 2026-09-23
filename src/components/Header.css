@@ -1,0 +1,434 @@
+/* ==========================================================================
+   PS PERFUMES — EXACT REFERENCE HEADER STYLESHEET
+   Section 1: Black Top Bar
+   Section 2: White Navigation Bar
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Container & Reset
+   -------------------------------------------------------------------------- */
+.ps-header-container {
+  width: 100%;
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  margin: 0;
+  padding: 0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* --------------------------------------------------------------------------
+   SECTION 1 — BLACK TOP BAR
+   -------------------------------------------------------------------------- */
+.ps-top-bar {
+  width: 100%;
+  background-color: #000000;
+  margin: 0;
+  padding: 0;
+}
+
+.ps-top-bar-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  min-height: 98px;
+  height: 98px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  position: relative;
+}
+
+/* Desktop spacer on left to mirror layout */
+.ps-top-bar-spacer {
+  width: 200px;
+  display: block;
+}
+
+/* Mobile Hamburger Toggle (hidden on desktop) */
+.ps-mobile-toggle-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  color: #ffffff;
+  line-height: 0;
+  transition: opacity 0.2s ease;
+}
+
+.ps-mobile-toggle-btn:hover {
+  opacity: 0.8;
+}
+
+/* Center: Authentic PS PERFUMES Logo */
+.ps-top-bar-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.ps-brand-anchor {
+  display: inline-block;
+  line-height: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.ps-brand-anchor:hover {
+  opacity: 0.95;
+  transform: scale(1.01);
+}
+
+.ps-brand-img {
+  height: 82px;
+  width: auto;
+  max-width: 220px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Right: Utility Icons matching Reference */
+.ps-top-bar-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  z-index: 3;
+}
+
+.ps-icon-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  color: #ffffff;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.ps-icon-link:hover {
+  opacity: 0.82;
+  transform: translateY(-1px);
+}
+
+.ps-util-svg {
+  display: block;
+}
+
+/* Search button positioned to the left of the 3 rightmost icons */
+.ps-search-btn {
+  margin-right: 64px;
+}
+
+/* Utility group: Delivery, Express Lightning, Shopping Bag */
+.ps-util-group {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+
+/* --------------------------------------------------------------------------
+   SECTION 2 — WHITE NAVIGATION BAR
+   -------------------------------------------------------------------------- */
+.ps-nav-bar {
+  width: 100%;
+  background-color: #ffffff;
+  margin: 0;
+  padding: 0;
+  border-top: none;
+}
+
+.ps-nav-bar-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  min-height: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 40px;
+  position: relative;
+}
+
+/* Centered Navigation Menu */
+.ps-nav-menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 32px;
+}
+
+.ps-nav-menu-item {
+  display: flex;
+  align-items: center;
+}
+
+.ps-nav-menu-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #000000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  padding: 6px 0;
+  transition: color 0.2s ease;
+}
+
+.ps-nav-menu-link:hover {
+  color: #666666;
+}
+
+.ps-nav-menu-link.is-active {
+  color: #000000;
+}
+
+.ps-dropdown-chevron {
+  color: #000000;
+  margin-left: 2px;
+  transition: transform 0.2s ease;
+}
+
+.ps-nav-menu-link:hover .ps-dropdown-chevron {
+  transform: translateY(1px);
+}
+
+/* Red NEW ARRIVAL Badge at far right */
+.ps-nav-badge-wrapper {
+  position: absolute;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+}
+
+.ps-new-arrival-badge {
+  display: inline-block;
+  background-color: #eb1c24;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 5px 13px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 6px rgba(235, 28, 36, 0.35);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+
+.ps-new-arrival-badge:hover {
+  background-color: #c91118;
+  transform: scale(1.03);
+}
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE DESIGN (375px, 390px, 430px, 768px, 1024px, 1280px, 1440px)
+   -------------------------------------------------------------------------- */
+
+/* Large Desktop (1281px - 1440px) */
+@media (min-width: 1281px) {
+  .ps-top-bar-inner,
+  .ps-nav-bar-inner {
+    padding: 0 48px;
+  }
+  .ps-nav-badge-wrapper {
+    right: 48px;
+  }
+  .ps-nav-menu {
+    gap: 34px;
+  }
+}
+
+/* Standard Desktop (1025px - 1280px) */
+@media (min-width: 1025px) and (max-width: 1280px) {
+  .ps-top-bar-inner,
+  .ps-nav-bar-inner {
+    padding: 0 28px;
+  }
+  .ps-nav-badge-wrapper {
+    right: 28px;
+  }
+  .ps-nav-menu {
+    gap: 22px;
+  }
+  .ps-nav-menu-link {
+    font-size: 13.5px;
+  }
+  .ps-search-btn {
+    margin-right: 42px;
+  }
+  .ps-util-group {
+    gap: 20px;
+  }
+}
+
+/* Tablet / Small Laptop (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .ps-top-bar-inner {
+    padding: 0 20px;
+    height: 88px;
+    min-height: 88px;
+  }
+  .ps-top-bar-spacer {
+    width: 60px;
+  }
+  .ps-brand-img {
+    height: 72px;
+  }
+  .ps-search-btn {
+    margin-right: 24px;
+  }
+  .ps-util-group {
+    gap: 16px;
+  }
+  .ps-nav-bar-inner {
+    padding: 0 16px;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .ps-nav-bar-inner::-webkit-scrollbar {
+    display: none;
+  }
+  .ps-nav-menu {
+    gap: 20px;
+    margin-right: 140px; /* space for badge */
+  }
+  .ps-nav-menu-link {
+    font-size: 13px;
+  }
+  .ps-nav-badge-wrapper {
+    right: 16px;
+  }
+}
+
+/* Mobile Devices (<= 768px) */
+@media (max-width: 768px) {
+  .ps-top-bar-inner {
+    padding: 0 16px;
+    height: 72px;
+    min-height: 72px;
+  }
+  .ps-top-bar-spacer {
+    display: none;
+  }
+  .ps-mobile-toggle-btn {
+    display: inline-flex;
+    z-index: 4;
+  }
+  .ps-brand-img {
+    height: 56px;
+    max-width: 150px;
+  }
+  .ps-top-bar-right {
+    gap: 8px;
+  }
+  .ps-search-btn {
+    margin-right: 8px;
+  }
+  .ps-util-group {
+    gap: 8px;
+  }
+  /* On mobile, keep Search and Bag in top bar, and reveal Delivery/Express in menu */
+  .ps-util-group button:nth-child(1),
+  .ps-util-group button:nth-child(2) {
+    display: none;
+  }
+
+  /* Horizontal scrolling navigation bar on mobile for instant browse */
+  .ps-nav-bar-inner {
+    padding: 0 16px;
+    height: 44px;
+    min-height: 44px;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .ps-nav-bar-inner::-webkit-scrollbar {
+    display: none;
+  }
+  .ps-nav-menu {
+    gap: 16px;
+    margin-right: 110px; /* space so badge doesn't overlap scrolled items */
+  }
+  .ps-nav-menu-link {
+    font-size: 12.5px;
+  }
+  .ps-nav-badge-wrapper {
+    right: 12px;
+  }
+  .ps-new-arrival-badge {
+    font-size: 9.5px;
+    padding: 3px 9px;
+  }
+}
+
+/* Compact Mobile (<= 430px) */
+@media (max-width: 430px) {
+  .ps-top-bar-inner {
+    padding: 0 12px;
+    height: 66px;
+    min-height: 66px;
+  }
+  .ps-brand-img {
+    height: 50px;
+    max-width: 135px;
+  }
+  .ps-nav-bar-inner {
+    height: 42px;
+    min-height: 42px;
+    padding: 0 12px;
+  }
+  .ps-nav-menu {
+    gap: 14px;
+    margin-right: 98px;
+  }
+  .ps-nav-menu-link {
+    font-size: 12px;
+  }
+  .ps-new-arrival-badge {
+    font-size: 9px;
+    padding: 3px 8px;
+  }
+}
+
+/* Mobile Nav New Arrival Pill */
+.mobile-nav-new-arrival {
+  margin-top: 14px;
+}
+
+.mobile-nav-arrival-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #eb1c24;
+  color: #ffffff;
+  padding: 10px 16px;
+  border-radius: 9999px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(235, 28, 36, 0.4);
+}
+

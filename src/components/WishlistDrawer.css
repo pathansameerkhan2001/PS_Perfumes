@@ -1,0 +1,225 @@
+/* ==========================================================================
+   PS PERFUMES — Luxury Wishlist Drawer Stylesheet
+   ========================================================================== */
+
+.ps-wishlist-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  justify-content: flex-end;
+  animation: psFadeIn 0.2s ease-out;
+}
+
+.ps-wishlist-drawer {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 420px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -10px 0 35px rgba(0, 0, 0, 0.25);
+  animation: psDrawerSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ps-wishlist-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #eeeeee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #0c0b0a;
+  color: #ffffff;
+}
+
+.ps-wishlist-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ps-wishlist-title {
+  font-family: var(--font-serif);
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #ffffff;
+  margin: 0;
+}
+
+.ps-wishlist-badge {
+  background-color: #eb1c24;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.ps-wishlist-close {
+  background: none;
+  border: none;
+  color: #cccccc;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.ps-wishlist-close:hover {
+  color: #ffffff;
+}
+
+.ps-wishlist-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.ps-wishlist-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.ps-wishlist-empty h3 {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 700;
+  margin: 16px 0 8px 0;
+  color: #111111;
+}
+
+.ps-wishlist-empty p {
+  font-size: 13px;
+  color: #666666;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.ps-wishlist-empty-btn {
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  padding: 12px 24px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.ps-wishlist-empty-btn:hover {
+  background-color: #c5a059;
+  color: #000000;
+}
+
+.ps-wishlist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ps-wishlist-item {
+  display: flex;
+  gap: 14px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: flex-start;
+}
+
+.ps-wishlist-thumb {
+  width: 70px;
+  height: 70px;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #0c0b0a;
+  flex-shrink: 0;
+}
+
+.ps-wishlist-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ps-wishlist-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-wishlist-item-type {
+  font-family: var(--font-serif);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  color: #888888;
+  text-transform: uppercase;
+}
+
+.ps-wishlist-item-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #111111;
+  margin: 2px 0 4px 0;
+}
+
+.ps-wishlist-item-price {
+  font-size: 14px;
+  font-weight: 800;
+  color: #000000;
+  margin-bottom: 10px;
+}
+
+.ps-wishlist-add-btn {
+  align-self: flex-start;
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 3px;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ps-wishlist-add-btn:hover {
+  background-color: #c5a059;
+  color: #000000;
+}
+
+.ps-wishlist-remove-btn {
+  background: none;
+  border: none;
+  color: #aaaaaa;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.ps-wishlist-remove-btn:hover {
+  color: #eb1c24;
+}
+
+@media (max-width: 480px) {
+  .ps-wishlist-drawer {
+    max-width: 100%;
+  }
+  .ps-wishlist-header {
+    padding: 16px 20px;
+  }
+  .ps-wishlist-body {
+    padding: 16px 20px max(24px, env(safe-area-inset-bottom, 24px)) 20px;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
