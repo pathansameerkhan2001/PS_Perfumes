@@ -1,0 +1,146 @@
+/* ==========================================================================
+   PS PERFUMES — Admin Login Stylesheet
+   ========================================================================== */
+
+.ps-admin-login-page {
+  min-height: 100vh;
+  background: radial-gradient(circle at 50% 20%, #151410 0%, #050505 80%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.ps-admin-login-card {
+  width: 100%;
+  max-width: 480px;
+  background: #0d0d0d;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 44px 36px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 24px rgba(200, 164, 93, 0.12);
+}
+
+@media (max-width: 500px) {
+  .ps-admin-login-card {
+    padding: 32px 20px;
+  }
+}
+
+.ps-admin-login-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.ps-admin-login-logo {
+  max-width: 200px;
+  height: auto;
+  margin: 0 auto 16px;
+  display: block;
+}
+
+.ps-admin-badge-tag {
+  display: inline-block;
+  font-family: var(--font-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--color-gold);
+  border: 1px solid rgba(200, 164, 93, 0.35);
+  background: rgba(200, 164, 93, 0.08);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.ps-admin-login-title {
+  font-family: var(--font-editorial);
+  font-size: 30px;
+  font-weight: 400;
+  color: var(--color-ivory);
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+}
+
+.ps-admin-login-sub {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.ps-admin-login-err {
+  background: rgba(227, 27, 35, 0.15);
+  border: 1px solid var(--color-red-cta);
+  color: #ff6b6b;
+  padding: 10px 14px;
+  font-size: 12px;
+  border-radius: 2px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.ps-admin-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ps-admin-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ps-admin-input-group label {
+  font-family: var(--font-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--color-champagne);
+  text-transform: uppercase;
+}
+
+.ps-admin-input-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #050505;
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  padding: 12px 14px;
+  transition: border-color 0.2s ease;
+}
+
+.ps-admin-input-box:focus-within {
+  border-color: var(--color-gold);
+}
+
+.ps-admin-input-box input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--color-ivory);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  outline: none;
+}
+
+.ps-admin-submit-btn {
+  width: 100%;
+  height: 48px;
+  margin-top: 8px;
+}
+
+.ps-admin-login-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--color-muted);
+  margin-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 16px;
+}

@@ -1,0 +1,187 @@
+/* ==========================================================================
+   PS PERFUMES — Admin Product Form Stylesheet
+   ========================================================================== */
+
+.ps-admin-form-page {
+  width: 100%;
+}
+
+.ps-admin-back-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--color-ivory);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-admin-back-btn:hover {
+  background: var(--color-gold);
+  color: #050505;
+}
+
+.ps-form-two-col {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 980px) {
+  .ps-form-two-col {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+.ps-admin-form-card {
+  background: #0d0d0d;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.ps-card-title {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--color-gold);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 10px;
+}
+
+.ps-upload-dropzone {
+  border: 1px dashed var(--color-border);
+  border-radius: 4px;
+  padding: 24px;
+  text-align: center;
+  background: #050505;
+  cursor: pointer;
+}
+
+.ps-dropzone-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.ps-dropzone-label span {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-ivory);
+}
+
+.ps-dropzone-label small {
+  font-size: 11px;
+  color: var(--color-muted);
+}
+
+.ps-image-preview-box {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(200, 164, 93, 0.3);
+  background: #000;
+}
+
+.ps-img-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+}
+
+.ps-remove-img-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.9);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.ps-gallery-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.ps-add-thumb-btn {
+  width: 120px;
+  height: 120px;
+  border: 1px dashed var(--color-border);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  background: #050505;
+  font-size: 11px;
+  color: var(--color-muted);
+  transition: border-color 0.2s ease;
+}
+
+.ps-add-thumb-btn:hover {
+  border-color: var(--color-gold);
+  color: var(--color-ivory);
+}
+
+.ps-admin-form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.ps-save-prod-btn {
+  width: 100%;
+  height: 48px;
+}
+
+.ps-btn-cancel-form {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.ps-btn-cancel-form:hover {
+  color: var(--color-ivory);
+}
+
+.ps-form-progress-banner {
+  background: rgba(200, 164, 93, 0.15);
+  border: 1px solid var(--color-gold);
+  color: var(--color-gold-bright);
+  padding: 10px 14px;
+  font-size: 12px;
+  border-radius: 2px;
+  margin-bottom: 20px;
+}

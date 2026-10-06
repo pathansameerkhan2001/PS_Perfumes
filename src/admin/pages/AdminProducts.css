@@ -1,0 +1,313 @@
+/* ==========================================================================
+   PS PERFUMES — Admin Products Stylesheet
+   ========================================================================== */
+
+.ps-admin-products-page {
+  width: 100%;
+}
+
+.ps-admin-products-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ps-admin-search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #0d0d0d;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 8px 14px;
+  width: 320px;
+}
+
+.ps-admin-search-input-wrap input {
+  background: none;
+  border: none;
+  color: var(--color-ivory);
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+}
+
+.ps-admin-filter-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ps-toolbar-pill {
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--color-muted);
+  font-size: 12px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-toolbar-pill.is-active,
+.ps-toolbar-pill:hover {
+  background: var(--color-gold);
+  color: #050505;
+  border-color: var(--color-gold);
+  font-weight: 600;
+}
+
+/* Table */
+.ps-admin-table-container {
+  background: #0d0d0d;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.ps-admin-products-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.ps-admin-products-table th {
+  padding: 14px 16px;
+  font-family: var(--font-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #080808;
+}
+
+.ps-admin-products-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  vertical-align: middle;
+}
+
+.ps-prod-table-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  background: #050505;
+  border: 1px solid rgba(200, 164, 93, 0.2);
+  border-radius: 3px;
+  padding: 3px;
+}
+
+.ps-prod-table-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-prod-table-name {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-ivory);
+  text-decoration: none;
+}
+
+.ps-prod-table-name:hover {
+  color: var(--color-gold);
+}
+
+.ps-prod-table-sku {
+  font-size: 11px;
+  color: var(--color-muted);
+  letter-spacing: 0.04em;
+}
+
+.ps-prod-table-category {
+  font-size: 12px;
+  color: var(--color-champagne);
+}
+
+.ps-prod-table-price {
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-prod-table-price strong {
+  color: var(--color-gold-bright);
+}
+
+.ps-prod-table-price span {
+  font-size: 11px;
+  color: var(--color-muted);
+  text-decoration: line-through;
+}
+
+.ps-stock-indicator-pill {
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border-radius: 9999px;
+}
+
+.ps-stock-indicator-pill.is-low {
+  background: rgba(234, 179, 8, 0.12);
+  color: #eab308;
+}
+
+.ps-status-toggle-btn {
+  padding: 3px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 9999px;
+  cursor: pointer;
+  border: none;
+}
+
+.ps-status-toggle-btn.is-active {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.ps-status-toggle-btn.is-draft {
+  background: rgba(140, 140, 140, 0.2);
+  color: #a3a3a3;
+}
+
+.ps-badges-cell {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.ps-table-badge {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+.ps-badge-gold {
+  background: rgba(200, 164, 93, 0.2);
+  color: var(--color-gold-bright);
+}
+
+.ps-badge-red {
+  background: rgba(227, 27, 35, 0.2);
+  color: #ff6b6b;
+}
+
+.ps-table-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ps-action-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--color-ivory);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-action-icon-btn:hover {
+  background: var(--color-gold);
+  color: #050505;
+}
+
+.ps-action-icon-btn.is-delete:hover {
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+}
+
+/* Modal */
+.ps-admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.ps-admin-modal-card {
+  max-width: 440px;
+  width: 100%;
+  background: #0d0d0d;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 32px 28px;
+  text-align: center;
+}
+
+.ps-modal-icon {
+  margin: 0 auto 16px;
+}
+
+.ps-modal-title {
+  font-family: var(--font-editorial);
+  font-size: 26px;
+  color: var(--color-ivory);
+  margin-bottom: 10px;
+}
+
+.ps-modal-desc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-muted);
+  margin-bottom: 24px;
+}
+
+.ps-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.ps-btn-cancel {
+  flex: 1;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-ivory);
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.ps-btn-confirm-delete {
+  flex: 1;
+  padding: 12px;
+  background: #ef4444;
+  border: none;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.ps-admin-empty-table {
+  text-align: center;
+  padding: 60px 20px;
+  background: #0d0d0d;
+  border: 1px solid var(--color-border);
+  color: var(--color-muted);
+}

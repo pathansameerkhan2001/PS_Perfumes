@@ -3,16 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
   ChevronDown,
-  ArrowRight,
   ShoppingBag,
   Search,
-  Sparkles,
-  Package,
   Heart,
-  Truck,
   ExternalLink,
+  MapPin,
 } from 'lucide-react';
-import brandLogo from '../assets/ps-perfumes-logo.webp';
+import PSPerfumesLogo from './common/PSPerfumesLogo';
 import { useCart } from '../context/CartContext';
 import './MobileNav.css';
 
@@ -27,29 +24,30 @@ function InstagramIcon({ size = 16 }) {
   );
 }
 
-// Full navigation items matching requirement 3
+// Navigation items strictly adhering to Section 6 requirement
 const PRIMARY_NAV = [
-  { name: 'Home', isAccordion: false },
-  { name: 'About Us', isAccordion: false },
-  { name: 'Attar', isAccordion: false },
-  { name: 'Perfume', isAccordion: false },
-  { name: 'Bakhoor', isAccordion: false },
-  { name: 'Musky', isAccordion: false },
-  { name: 'Oud', isAccordion: false },
-  { name: 'Floral', isAccordion: false },
-  { name: 'Woody', isAccordion: false },
-  { name: 'Shop All', isAccordion: true },
+  { name: 'Home', path: '/' },
+  { name: 'About Us', path: '/about' },
+  { name: 'Attar', path: '/attar' },
+  { name: 'Perfume', path: '/perfume' },
+  { name: 'Bakhoor', path: '/bakhoor' },
+  { name: 'Musky', path: '/musky' },
+  { name: 'Oud', path: '/oud' },
+  { name: 'Floral', path: '/floral' },
+  { name: 'Woody', path: '/woody' },
+  { name: 'Shop All', path: '/shop', isAccordion: true },
+  { name: 'New Arrivals', path: '/shop?filter=new_arrival', badge: 'NEW' },
+  { name: 'Instagram', path: '/instagram', isExternal: false },
+  { name: 'Contact', path: '/contact' },
 ];
 
 const SHOP_ALL_SUBITEMS = [
-  { name: 'Best Sellers', badge: 'Popular' },
-  { name: 'Combo Pack', badge: 'Save Up to 47%', isCombo: true },
-  { name: 'Perfume for Men', filter: 'Men' },
-  { name: 'Perfume for Women', filter: 'Women' },
-  { name: 'Unisex', filter: 'Unisex' },
-  { name: 'Gift Sets', badge: 'Gifts' },
-  { name: 'Fresh', filter: 'Perfume' },
-  { name: 'View All', filter: 'ALL' },
+  { name: 'Best Sellers', path: '/shop?filter=bestseller' },
+  { name: 'Combo Pack', path: '/shop?category=Combo%20Pack', badge: 'Save 47%' },
+  { name: 'Men Fragrances', path: '/shop?gender=Men' },
+  { name: 'Women Fragrances', path: '/shop?gender=Women' },
+  { name: 'Unisex Attars', path: '/shop?gender=Unisex' },
+  { name: 'View Complete Catalog', path: '/shop' },
 ];
 
 export default function MobileNav({
@@ -62,13 +60,11 @@ export default function MobileNav({
   const [isShopAllOpen, setIsShopAllOpen] = useState(false);
   const { itemCount, setIsCartOpen, setIsWishlistOpen, wishlist } = useCart();
 
-  // Prevent background scrolling when mobile menu is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
-      setIsShopAllOpen(false);
     }
     return () => {
       document.body.style.overflow = '';
@@ -79,52 +75,54 @@ export default function MobileNav({
     closed: {
       opacity: 0,
       x: '-100%',
-      transition: { duration: 0.3, ease: [0.32, 0.72, 0, 1] },
+      transition: { duration: 0.28, ease: [0.32, 0.72, 0, 1] },
     },
     open: {
       opacity: 1,
       x: '0%',
       transition: {
-        duration: 0.38,
+        duration: 0.35,
         ease: [0.16, 1, 0.3, 1],
       },
     },
   };
 
-  const handleItemClick = (name) => {
-    onSelectLink(name);
+  const handleItemClick = (path, name) => {
+    setIsShopAllOpen(false);
+    onSelectLink(path || name);
     onClose();
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          className="mobile-nav-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.25 }}
-          onClick={onClose}
-        >
+        <div className="ps-mobile-nav-portal">
+          {/* Backdrop Blur */}
           <motion.div
+            className="mobile-nav-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            onClick={onClose}
+            aria-hidden="true"
+          />
+
+          {/* Full-Height Drawer */}
+          <motion.aside
             className="mobile-nav-drawer"
             variants={containerVariants}
             initial="closed"
             animate="open"
             exit="closed"
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation Menu"
           >
-            {/* 1. Header with prominent logo */}
+            {/* 1. Header Bar with Logo and Close */}
             <div className="mobile-nav-header">
               <div className="mobile-nav-brand">
-                <img
-                  src={brandLogo}
-                  alt="PS PERFUMES"
-                  className="mobile-nav-logo-img"
-                  width="160"
-                  height="52"
-                />
+                <PSPerfumesLogo size="sm" variant="header" />
               </div>
               <button
                 type="button"
@@ -147,7 +145,7 @@ export default function MobileNav({
                 }}
               >
                 <Search size={16} />
-                <span>Search perfumes, attars & combos...</span>
+                <span>Search perfumes, attars & oud...</span>
               </button>
             </div>
 
@@ -184,22 +182,19 @@ export default function MobileNav({
                             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
                           >
                             {SHOP_ALL_SUBITEMS.map((sub) => (
-                              <a
+                              <button
                                 key={sub.name}
-                                href={`#${sub.filter || sub.name.toLowerCase().replace(/\s+/g, '-')}`}
+                                type="button"
                                 className="mobile-sub-link"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  handleItemClick(sub.filter || sub.name);
-                                }}
+                                onClick={() => handleItemClick(sub.path, sub.name)}
                               >
                                 <span>{sub.name}</span>
                                 {sub.badge && (
-                                  <span className={`mobile-sub-badge ${sub.isCombo ? 'is-combo' : ''}`}>
+                                  <span className="mobile-sub-badge">
                                     {sub.badge}
                                   </span>
                                 )}
-                              </a>
+                              </button>
                             ))}
                           </motion.div>
                         )}
@@ -208,121 +203,92 @@ export default function MobileNav({
                   );
                 }
 
-                const isActive = activeLink === item.name;
+                const isActive =
+                  activeLink === item.path ||
+                  (item.path !== '/' && activeLink === `/category${item.path}`);
                 return (
                   <div key={item.name} className="mobile-nav-item">
                     <button
                       type="button"
                       className={`mobile-nav-link ${isActive ? 'active' : ''}`}
-                      onClick={() => handleItemClick(item.name)}
+                      onClick={() => handleItemClick(item.path, item.name)}
                     >
                       <span className="mobile-nav-link-text">
                         <span>{item.name}</span>
                       </span>
-                      <ArrowRight size={15} color="#999999" />
+                      {item.badge && (
+                        <span className="mobile-new-badge">{item.badge}</span>
+                      )}
                     </button>
                   </div>
                 );
               })}
             </nav>
 
-            {/* 4. Quick Promotional Cards */}
-            <div className="mobile-nav-promos">
-              <a
-                href="#combo-pack"
-                className="mobile-nav-promo-card is-gold"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleItemClick('Combo Pack');
-                }}
-              >
-                <span>🔥 COMBO PACK OFFERS (SAVE UP TO 47%)</span>
-                <ArrowRight size={14} />
-              </a>
-
-              <a
-                href="#new-arrivals"
-                className="mobile-nav-promo-card is-red"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleItemClick('New Arrivals');
-                }}
-              >
-                <span>✨ NEW ARRIVALS & PRIVATE BLENDS</span>
-                <ArrowRight size={14} />
-              </a>
-            </div>
-
-            {/* 5. Official Instagram Channel Link */}
-            <a
-              href="https://www.instagram.com/ps_perfumes_kadapa/?hl=en"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mobile-nav-instagram-row"
-            >
-              <div className="mobile-nav-insta-content">
-                <InstagramIcon size={16} />
-                <span>Follow @ps_perfumes_kadapa</span>
-              </div>
-              <ExternalLink size={14} />
-            </a>
-
-            {/* 6. Utility Section at Bottom */}
-            <div className="mobile-nav-utility">
+            {/* 4. Quick Action Pills (Bag, Wishlist, Admin) */}
+            <div className="mobile-nav-quick-actions">
               <button
                 type="button"
-                className="mobile-utility-item"
+                className="mobile-quick-btn"
                 onClick={() => {
                   onClose();
                   setIsCartOpen(true);
                 }}
               >
-                <div className="mobile-utility-left">
-                  <ShoppingBag size={17} color="#c5a059" />
-                  <span>Shopping Bag</span>
+                <div className="mobile-quick-icon-wrap">
+                  <ShoppingBag size={18} />
+                  {itemCount > 0 && <span className="mobile-quick-badge">{itemCount}</span>}
                 </div>
-                {itemCount > 0 && (
-                  <span className="mobile-utility-badge">{itemCount} items</span>
-                )}
+                <span>Shopping Bag</span>
               </button>
 
               <button
                 type="button"
-                className="mobile-utility-item"
+                className="mobile-quick-btn"
                 onClick={() => {
                   onClose();
                   setIsWishlistOpen(true);
                 }}
               >
-                <div className="mobile-utility-left">
-                  <Heart size={17} color="#eb1c24" />
-                  <span>My Wishlist</span>
+                <div className="mobile-quick-icon-wrap">
+                  <Heart size={18} />
+                  {wishlist.length > 0 && (
+                    <span className="mobile-quick-badge">{wishlist.length}</span>
+                  )}
                 </div>
-                {wishlist.length > 0 && (
-                  <span className="mobile-utility-badge">{wishlist.length}</span>
-                )}
+                <span>Wishlist</span>
               </button>
-
-              <div className="mobile-utility-item">
-                <div className="mobile-utility-left">
-                  <Truck size={17} color="#c5a059" />
-                  <span>Free Express Delivery Over ₹999</span>
-                </div>
-              </div>
             </div>
 
-            {/* 7. Footer Tagline */}
+            {/* 5. Kadapa Store Location & Concierge Info */}
             <div className="mobile-nav-footer">
-              <div className="mobile-nav-tagline">
-                <Sparkles size={12} />
-                <span>HAUTE PARFUMERIE • PURE BOTANICALS</span>
+              <div className="mobile-nav-store-info">
+                <MapPin size={15} color="#c8a45d" />
+                <span>Kadapa, Andhra Pradesh – 516001</span>
               </div>
-              <p className="mobile-nav-craft-note">
-                Crafted with rare aged oud & distilled natural essences.
-              </p>
+              <div className="mobile-nav-store-links">
+                <a
+                  href="https://www.instagram.com/ps_perfumes_kadapa/?hl=en"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mobile-store-link"
+                >
+                  <InstagramIcon size={14} />
+                  <span>@ps_perfumes_kadapa</span>
+                </a>
+                <a
+                  href="https://share.google/b0yildKJKTaGc365J"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mobile-store-link"
+                >
+                  <ExternalLink size={14} />
+                  <span>Google Maps</span>
+                </a>
+              </div>
             </div>
-          </motion.div>
-        </motion.div>
+          </motion.aside>
+        </div>
       )}
     </AnimatePresence>
   );

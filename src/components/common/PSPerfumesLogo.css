@@ -1,0 +1,84 @@
+/* ==========================================================================
+   PS PERFUMES — Luxury Vector Logo Stylesheet
+   Pure vector presentation, 100% transparent background, responsive scaling
+   ========================================================================== */
+
+.ps-brand-logo-root {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+  user-select: none;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+.ps-brand-logo-root:hover {
+  opacity: 0.94;
+  transform: scale(1.02);
+}
+
+.ps-logo-svg {
+  display: block;
+  overflow: visible;
+  height: auto;
+  background: transparent !important;
+}
+
+/* Sizing Options */
+.ps-logo-sm .ps-logo-svg {
+  width: 140px;
+  max-height: 52px;
+}
+
+.ps-logo-md .ps-logo-svg {
+  width: 185px;
+  max-height: 72px;
+}
+
+.ps-logo-lg .ps-logo-svg {
+  width: 240px;
+  max-height: 96px;
+}
+
+/* Header Specific Tuning */
+.ps-logo-header {
+  vertical-align: middle;
+}
+
+/* Footer Specific Tuning */
+.ps-logo-footer {
+  margin-bottom: 8px;
+}
+
+.ps-logo-tagline-text {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  color: #C8A45D;
+  margin-top: 6px;
+  text-transform: uppercase;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .ps-logo-md .ps-logo-svg {
+    width: 135px;
+    max-height: 50px;
+  }
+}
+
+@media (max-width: 420px) {
+  .ps-logo-md .ps-logo-svg {
+    width: 120px;
+    max-height: 44px;
+  }
+}

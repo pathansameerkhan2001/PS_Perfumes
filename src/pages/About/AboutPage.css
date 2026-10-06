@@ -1,0 +1,188 @@
+/* ==========================================================================
+   PS PERFUMES — About Page Stylesheet
+   ========================================================================== */
+
+.ps-about-page {
+  width: 100%;
+  background-color: var(--color-primary);
+  color: var(--color-ivory);
+}
+
+.ps-about-hero {
+  padding: 80px 0 60px;
+  background: linear-gradient(180deg, #0d0d0d 0%, #050505 100%);
+  border-bottom: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.ps-about-hero-container {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+.ps-about-eyebrow {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: var(--color-gold);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.ps-about-title {
+  font-family: var(--font-editorial);
+  font-size: 46px;
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  color: var(--color-ivory);
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .ps-about-title {
+    font-size: 32px;
+  }
+}
+
+.ps-about-hero-sub {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.7;
+  color: #c9c1b2;
+}
+
+.ps-about-container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 80px 48px;
+}
+
+@media (max-width: 1024px) {
+  .ps-about-container {
+    padding: 60px 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ps-about-container {
+    padding: 48px 16px;
+  }
+}
+
+.ps-about-split-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .ps-about-split-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .ps-reverse-grid {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+}
+
+.ps-about-section-heading {
+  font-family: var(--font-editorial);
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--color-ivory);
+  margin-bottom: 18px;
+}
+
+@media (max-width: 768px) {
+  .ps-about-section-heading {
+    font-size: 26px;
+  }
+}
+
+.ps-about-split-text p {
+  font-size: 14px;
+  line-height: 1.75;
+  color: #c9c1b2;
+  margin-bottom: 16px;
+}
+
+.ps-about-highlights {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.ps-about-highlight-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--color-secondary);
+  border: 1px solid var(--color-border);
+  padding: 16px 20px;
+  border-radius: 4px;
+}
+
+.ps-about-highlight-item strong {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--color-ivory);
+  margin-bottom: 2px;
+}
+
+.ps-about-highlight-item span {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.ps-about-split-visual {
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ps-about-visual-img {
+  width: 100%;
+  aspect-ratio: 4 / 3.4;
+  object-fit: cover;
+  display: block;
+  border-radius: 4px;
+}
+
+.ps-about-visual-border {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(200, 164, 93, 0.35);
+  pointer-events: none;
+  border-radius: 4px;
+}
+
+.ps-about-location-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(200, 164, 93, 0.1);
+  border: 1px solid rgba(200, 164, 93, 0.35);
+  color: var(--color-gold-bright);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  margin-bottom: 20px;
+}
+
+.ps-about-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}

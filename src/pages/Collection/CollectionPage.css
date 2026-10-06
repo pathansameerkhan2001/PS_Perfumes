@@ -1,0 +1,769 @@
+/* ==========================================================================
+   PS PERFUMES — Collection Page Master Stylesheet
+   Based on the Attar Master Reference:
+   Clean Luxury Editorial, Ivory/Cream Palette, Champagne Accents,
+   Breadcrumbs, Dynamic Hero, Filter/Sort/View Toolbar, & Multi-View Grid.
+   ========================================================================== */
+
+.ps-collection-page {
+  width: 100%;
+  background-color: #FDFBF7;
+  color: #171513;
+  min-height: 100vh;
+}
+
+.ps-collection-container {
+  max-width: 1620px;
+  margin: 0 auto;
+  padding: 0 clamp(20px, 2.8vw, 48px);
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   1. CATEGORY HERO (Master Attar Structural Reference)
+   ========================================================================== */
+
+.ps-collection-hero {
+  width: 100%;
+  background-color: #F8F5EF;
+  border-bottom: 1px solid rgba(201, 164, 92, 0.2);
+  padding: clamp(36px, 4vw, 64px) 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.ps-collection-hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  align-items: center;
+  gap: clamp(32px, 5vw, 80px);
+}
+
+.ps-collection-hero-content {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Breadcrumb: Home > Category */
+.ps-collection-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.ps-breadcrumb-link {
+  color: #77716A;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.ps-breadcrumb-link:hover {
+  color: #C9A45C;
+}
+
+.ps-breadcrumb-sep {
+  color: #C9A45C;
+  font-size: 11px;
+}
+
+.ps-breadcrumb-current {
+  color: #171513;
+  font-weight: 600;
+}
+
+/* Heading */
+.ps-collection-hero-title {
+  font-family: 'Cinzel', 'Cormorant Garamond', serif;
+  font-size: clamp(38px, 4.2vw, 62px);
+  font-weight: 500;
+  color: #171513;
+  margin: 0 0 16px 0;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+}
+
+/* Decorative Champagne Hairline */
+.ps-collection-hero-divider {
+  width: 56px;
+  height: 2px;
+  background-color: #C9A45C;
+  margin-bottom: 18px;
+}
+
+/* Short Category Description */
+.ps-collection-hero-description {
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(14px, 1.05vw, 16px);
+  line-height: 1.65;
+  color: #55504A;
+  margin: 0;
+  max-width: 580px;
+}
+
+/* Hero Media: Large Editorial Fragrance Bottle Image */
+.ps-collection-hero-media {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ps-collection-hero-frame {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(23, 21, 19, 0.1),
+              0 2px 10px rgba(201, 164, 92, 0.15);
+  border: 1px solid rgba(201, 164, 92, 0.35);
+  background-color: #0E0C0A;
+}
+
+.ps-collection-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* ==========================================================================
+   2. FILTER + SORT + VIEW TOOLBAR
+   ========================================================================== */
+
+.ps-collection-toolbar-bar {
+  width: 100%;
+  background-color: #FFFFFF;
+  border-bottom: 1px solid rgba(23, 21, 19, 0.08);
+  padding: 14px 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.ps-collection-toolbar-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* Left Controls: Filter button + Sort Dropdown */
+.ps-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ps-toolbar-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  background-color: #FAF8F4;
+  border: 1px solid rgba(23, 21, 19, 0.15);
+  border-radius: 4px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #171513;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-toolbar-filter-btn:hover,
+.ps-toolbar-filter-btn.is-active {
+  background-color: #171513;
+  color: #FFFFFF;
+  border-color: #171513;
+}
+
+.ps-filter-count-badge {
+  background-color: #C9A45C;
+  color: #171513;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  line-height: 1.2;
+}
+
+.ps-filter-chevron {
+  transition: transform 0.2s ease;
+}
+
+.ps-filter-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+/* Sort Dropdown */
+.ps-toolbar-sort-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.ps-toolbar-sort-select {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 40px;
+  padding: 0 34px 0 14px;
+  background-color: #FAF8F4;
+  border: 1px solid rgba(23, 21, 19, 0.15);
+  border-radius: 4px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #171513;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.ps-toolbar-sort-select:hover,
+.ps-toolbar-sort-select:focus {
+  border-color: #C9A45C;
+}
+
+.ps-sort-select-icon {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  color: #77716A;
+}
+
+/* Right Controls: Count + 4 View Switcher Controls */
+.ps-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.ps-toolbar-count {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12.5px;
+  color: #77716A;
+}
+
+.ps-toolbar-count strong {
+  color: #171513;
+  font-weight: 600;
+}
+
+/* 4-View Switcher */
+.ps-view-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #FAF8F4;
+  padding: 3px;
+  border-radius: 4px;
+  border: 1px solid rgba(23, 21, 19, 0.1);
+}
+
+.ps-view-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background-color: transparent;
+  color: #8C847A;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-view-btn:hover {
+  color: #171513;
+}
+
+.ps-view-btn.is-active {
+  background-color: #171513;
+  color: #C9A45C;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+/* Active Filter Chips */
+.ps-active-filters-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(23, 21, 19, 0.06);
+}
+
+.ps-active-filters-label {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8C847A;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ps-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #FAF8F4;
+  border: 1px solid rgba(201, 164, 92, 0.45);
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: #171513;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-filter-chip:hover {
+  background-color: #171513;
+  color: #FFFFFF;
+  border-color: #171513;
+}
+
+.ps-filter-reset-link {
+  background: none;
+  border: none;
+  color: #C9A45C;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+/* ==============================================================
+   3. EXPANDABLE FILTER DRAWER
+   ============================================================== */
+
+.ps-filter-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+}
+
+.ps-filter-drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(14, 12, 10, 0.55);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+.ps-filter-drawer {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  height: 100%;
+  background-color: #FFFFFF;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+  margin-left: auto;
+  animation: slideDrawer 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideDrawer {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.ps-filter-drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(23, 21, 19, 0.08);
+}
+
+.ps-drawer-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ps-drawer-title {
+  font-family: 'Cinzel', 'Cormorant Garamond', serif;
+  font-size: 19px;
+  font-weight: 600;
+  color: #171513;
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+.ps-drawer-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #77716A;
+  padding: 6px;
+  transition: color 0.2s ease;
+}
+
+.ps-drawer-close-btn:hover {
+  color: #171513;
+}
+
+.ps-filter-drawer-body {
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.ps-drawer-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-drawer-subtitle {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8C7D68;
+  margin-bottom: 12px;
+}
+
+.ps-drawer-price-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+
+.ps-drawer-price-val {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #C9A45C;
+}
+
+.ps-drawer-slider {
+  width: 100%;
+  accent-color: #C9A45C;
+  cursor: pointer;
+}
+
+.ps-drawer-slider-ends {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  color: #8C847A;
+  margin-top: 6px;
+}
+
+.ps-drawer-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  color: #171513;
+  padding: 8px 0;
+  cursor: pointer;
+}
+
+.ps-drawer-checkbox input {
+  accent-color: #C9A45C;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.ps-filter-drawer-footer {
+  padding: 18px 24px;
+  border-top: 1px solid rgba(23, 21, 19, 0.08);
+  display: flex;
+  gap: 12px;
+}
+
+.ps-drawer-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 16px;
+  background-color: transparent;
+  border: 1px solid rgba(23, 21, 19, 0.2);
+  border-radius: 4px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #77716A;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-drawer-reset-btn:hover {
+  border-color: #171513;
+  color: #171513;
+}
+
+.ps-drawer-apply-btn {
+  flex: 1;
+  height: 44px;
+  background-color: #171513;
+  color: #FFFFFF;
+  border: 1px solid #171513;
+  border-radius: 4px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-drawer-apply-btn:hover {
+  background-color: #C9A45C;
+  border-color: #C9A45C;
+  color: #171513;
+}
+
+/* ==============================================================
+   4. PRODUCT GRID LAYOUTS (view-grid-4, view-grid-3, view-grid-2, view-list)
+   ============================================================== */
+
+.ps-collection-content {
+  padding: clamp(32px, 3.5vw, 48px) 0 clamp(48px, 5vw, 80px) 0;
+}
+
+.ps-collection-grid {
+  display: grid;
+  width: 100%;
+}
+
+/* 4-Column Desktop Default Grid */
+.ps-collection-grid.view-grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(16px, 1.8vw, 28px);
+}
+
+/* 3-Column Larger Grid */
+.ps-collection-grid.view-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(20px, 2.4vw, 36px);
+}
+
+/* 2-Column Compact Grid */
+.ps-collection-grid.view-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(18px, 2.2vw, 32px);
+}
+
+/* List View */
+.ps-collection-grid.view-list {
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+/* Skeletons */
+.ps-col-card-skeleton {
+  aspect-ratio: 1 / 1.35;
+  background: linear-gradient(90deg, #F0EDE5 25%, #FAF7F0 50%, #F0EDE5 75%);
+  background-size: 200% 100%;
+  animation: shimmerSkeleton 1.5s infinite;
+  border-radius: 6px;
+}
+
+@keyframes shimmerSkeleton {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ==============================================================
+   5. EMPTY STATE
+   ============================================================== */
+
+.ps-collection-empty {
+  text-align: center;
+  padding: 80px 20px;
+  background-color: #FFFFFF;
+  border: 1px solid rgba(23, 21, 19, 0.08);
+  border-radius: 8px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.ps-empty-heading {
+  font-family: 'Cinzel', 'Cormorant Garamond', serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: #171513;
+  margin: 0 0 12px 0;
+}
+
+.ps-empty-sub {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13.5px;
+  color: #77716A;
+  line-height: 1.6;
+  margin: 0 0 24px 0;
+}
+
+.ps-empty-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 24px;
+  background-color: #171513;
+  color: #FFFFFF;
+  border: 1px solid #171513;
+  border-radius: 4px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.22s ease;
+}
+
+.ps-empty-btn:hover {
+  background-color: #C9A45C;
+  border-color: #C9A45C;
+  color: #171513;
+}
+
+/* ==============================================================
+   6. LOAD MORE / PAGINATION
+   ============================================================== */
+
+.ps-collection-load-more-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 48px;
+}
+
+.ps-collection-load-more-btn {
+  height: 44px;
+  padding: 0 32px;
+  background-color: transparent;
+  color: #171513;
+  border: 1px solid #171513;
+  border-radius: 4px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.ps-collection-load-more-btn:hover {
+  background-color: #171513;
+  color: #FFFFFF;
+}
+
+.ps-collection-load-progress {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  color: #8C847A;
+}
+
+/* ==============================================================
+   7. RESPONSIVE BREAKPOINTS
+   ============================================================== */
+
+@media (max-width: 1080px) {
+  .ps-collection-grid.view-grid-4 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .ps-collection-hero-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .ps-collection-hero-media {
+    order: -1;
+  }
+
+  .ps-collection-hero-frame {
+    max-width: 320px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ps-collection-grid.view-grid-4,
+  .ps-collection-grid.view-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .ps-collection-toolbar-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ps-toolbar-left {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .ps-toolbar-right {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .ps-collection-hero-title {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ps-collection-container {
+    padding: 0 14px;
+  }
+
+  .ps-collection-grid.view-grid-4,
+  .ps-collection-grid.view-grid-3,
+  .ps-collection-grid.view-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .ps-collection-hero-frame {
+    max-width: 260px;
+  }
+}

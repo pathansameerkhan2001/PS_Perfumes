@@ -1,0 +1,435 @@
+/* ==========================================================================
+   PS PERFUMES — Shop Page Stylesheet
+   ========================================================================== */
+
+.ps-shop-page {
+  width: 100%;
+  min-height: 80vh;
+  background-color: var(--color-primary);
+  color: var(--color-ivory);
+}
+
+.ps-shop-hero-banner {
+  width: 100%;
+  background: linear-gradient(180deg, #0d0d0d 0%, #050505 100%);
+  border-bottom: 1px solid var(--color-border);
+  padding: 56px 0 42px;
+  text-align: center;
+}
+
+.ps-shop-hero-inner {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+.ps-shop-tag {
+  font-family: var(--font-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--color-gold);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.ps-shop-title {
+  font-family: var(--font-editorial);
+  font-size: 42px;
+  font-weight: 400;
+  color: var(--color-ivory);
+  letter-spacing: -0.015em;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .ps-shop-title {
+    font-size: 30px;
+  }
+}
+
+.ps-shop-sub {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.ps-shop-container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 40px 48px 80px;
+}
+
+@media (max-width: 1024px) {
+  .ps-shop-container {
+    padding: 30px 24px 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ps-shop-container {
+    padding: 20px 16px 50px;
+  }
+}
+
+/* Control Bar */
+.ps-shop-control-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.ps-shop-results-count {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.ps-shop-results-count strong {
+  color: var(--color-champagne);
+}
+
+.ps-shop-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ps-shop-mobile-filter-btn {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-champagne);
+  padding: 8px 16px;
+  font-family: var(--font-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+
+@media (max-width: 900px) {
+  .ps-shop-mobile-filter-btn {
+    display: inline-flex;
+  }
+}
+
+.ps-shop-sort-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ps-shop-sort-label {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.ps-shop-sort-select {
+  background: var(--color-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-ivory);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  padding: 8px 14px;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Layout */
+.ps-shop-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .ps-shop-layout {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .ps-desktop-sidebar {
+    display: none;
+  }
+}
+
+/* Sidebar */
+.ps-shop-sidebar {
+  background: var(--color-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 24px;
+}
+
+.ps-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ps-sidebar-title {
+  font-family: var(--font-serif);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--color-gold);
+  text-transform: uppercase;
+}
+
+.ps-sidebar-reset-btn {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--color-muted);
+  cursor: pointer;
+  background: none;
+  border: none;
+  text-decoration: underline;
+}
+
+.ps-sidebar-reset-btn:hover {
+  color: var(--color-ivory);
+}
+
+.ps-filter-block {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ps-filter-block:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.ps-filter-heading {
+  font-family: var(--font-serif);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--color-ivory);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.ps-filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ps-filter-pill {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-muted);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-filter-pill:hover {
+  border-color: var(--color-gold);
+  color: var(--color-ivory);
+}
+
+.ps-filter-pill.is-active {
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+  color: #050505;
+  font-weight: 600;
+}
+
+.ps-filter-price-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.ps-price-val {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-gold-bright);
+}
+
+.ps-price-slider {
+  width: 100%;
+  accent-color: var(--color-gold);
+  cursor: pointer;
+}
+
+.ps-price-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--color-muted);
+  margin-top: 4px;
+}
+
+.ps-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: #d1c8b8;
+  cursor: pointer;
+}
+
+.ps-checkbox-label input[type='checkbox'] {
+  accent-color: var(--color-gold);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+/* Products Grid */
+.ps-shop-products-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 1200px) {
+  .ps-shop-products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ps-shop-products-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* Empty State */
+.ps-shop-empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  background: var(--color-secondary);
+  border: 1px dashed var(--color-border);
+  border-radius: 4px;
+}
+
+.ps-empty-title {
+  font-family: var(--font-editorial);
+  font-size: 32px;
+  color: var(--color-ivory);
+  margin-bottom: 8px;
+}
+
+.ps-empty-desc {
+  font-size: 14px;
+  color: var(--color-muted);
+  margin-bottom: 24px;
+}
+
+/* Skeletons */
+.ps-shop-skeletons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.ps-shop-card-skeleton {
+  aspect-ratio: 1 / 1.3;
+  background: #111111;
+  border-radius: 4px;
+}
+
+/* Mobile Filter Sheet */
+.ps-mobile-filter-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.ps-mobile-filter-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+}
+
+.ps-mobile-filter-sheet {
+  position: relative;
+  z-index: 10;
+  background: var(--color-secondary);
+  border-top: 1px solid var(--color-border);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-mobile-filter-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ps-sheet-title {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-gold);
+  text-transform: uppercase;
+}
+
+.ps-mobile-filter-sheet-body {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.ps-mobile-filter-sheet-footer {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ps-sheet-reset-btn {
+  flex: 1;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-ivory);
+  font-family: var(--font-serif);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+
+.ps-sheet-apply-btn {
+  flex: 2;
+}

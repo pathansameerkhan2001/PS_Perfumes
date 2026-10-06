@@ -1,0 +1,317 @@
+/* ==========================================================================
+   PS PERFUMES — Instagram Reels Section
+   ========================================================================== */
+
+.ps-reels-section {
+  width: 100%;
+  padding: 80px 0;
+  background-color: var(--color-secondary);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+@media (max-width: 768px) {
+  .ps-reels-section {
+    padding: 48px 0;
+  }
+}
+
+.ps-reels-container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+@media (max-width: 1024px) {
+  .ps-reels-container {
+    padding: 0 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ps-reels-container {
+    padding: 0 16px;
+  }
+}
+
+/* Header */
+.ps-reels-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 36px;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.ps-reels-header-left {
+  max-width: 580px;
+}
+
+.ps-reels-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: var(--color-gold);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.ps-reels-title {
+  font-family: var(--font-editorial);
+  font-size: 38px;
+  font-weight: 400;
+  color: var(--color-ivory);
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .ps-reels-title {
+    font-size: 28px;
+  }
+}
+
+.ps-reels-sub {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.ps-reels-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ps-reels-follow-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(200, 164, 93, 0.1);
+  border: 1px solid rgba(200, 164, 93, 0.4);
+  color: var(--color-gold-bright);
+  font-family: var(--font-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  transition: all 0.25s ease;
+  text-decoration: none;
+}
+
+.ps-reels-follow-btn:hover {
+  background: var(--color-gold);
+  color: #050505;
+  border-color: var(--color-gold);
+}
+
+.ps-reels-carousel-arrows {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ps-reels-arrow-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border);
+  color: var(--color-ivory);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-reels-arrow-btn:hover {
+  background: var(--color-gold);
+  color: #050505;
+  border-color: var(--color-gold);
+}
+
+/* Track */
+.ps-reels-track {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding: 8px 0 20px;
+}
+
+.ps-reels-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* 9:16 Aspect Ratio Reel Card */
+.ps-reel-card {
+  flex: 0 0 calc((100% - 80px) / 5);
+  min-width: 220px;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  text-decoration: none;
+  transition: transform 0.35s var(--transition-smooth), box-shadow 0.35s ease;
+  background-color: #000000;
+  border: 1px solid rgba(200, 164, 93, 0.2);
+}
+
+@media (max-width: 1200px) {
+  .ps-reel-card {
+    flex: 0 0 calc((100% - 60px) / 4);
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 900px) {
+  .ps-reel-card {
+    flex: 0 0 calc((100% - 30px) / 2.5);
+    min-width: 180px;
+  }
+}
+
+@media (max-width: 600px) {
+  .ps-reel-card {
+    flex: 0 0 72vw;
+    min-width: 200px;
+  }
+}
+
+.ps-reel-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(200, 164, 93, 0.6);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 0 18px rgba(200, 164, 93, 0.2);
+}
+
+.ps-reel-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  background: #080808;
+}
+
+.ps-reel-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s var(--transition-smooth);
+}
+
+.ps-reel-card:hover .ps-reel-thumbnail {
+  transform: scale(1.06);
+}
+
+.ps-reel-vignette {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.15) 0%,
+    rgba(0, 0, 0, 0.1) 40%,
+    rgba(0, 0, 0, 0.85) 100%
+  );
+  pointer-events: none;
+}
+
+.ps-reel-play-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+}
+
+.ps-play-svg {
+  margin-left: 3px;
+}
+
+.ps-reel-card:hover .ps-reel-play-circle {
+  transform: translate(-50%, -50%) scale(1.12);
+  background: rgba(200, 164, 93, 0.9);
+  border-color: var(--color-gold-bright);
+}
+
+.ps-reel-card:hover .ps-play-svg {
+  fill: #050505;
+  color: #050505;
+}
+
+.ps-reel-insta-tag {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  backdrop-filter: blur(6px);
+}
+
+.ps-reel-caption-wrap {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+}
+
+.ps-reel-caption-text {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-ivory);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Skeletons */
+.ps-reels-skeleton-row {
+  display: flex;
+  gap: 20px;
+}
+
+.ps-reel-skeleton {
+  flex: 0 0 calc((100% - 80px) / 5);
+  aspect-ratio: 9 / 16;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #121212 25%, #1e1e1e 50%, #121212 75%);
+  background-size: 200% 100%;
+  animation: psSkeletonPulse 1.5s infinite;
+}
+
+@keyframes psSkeletonPulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

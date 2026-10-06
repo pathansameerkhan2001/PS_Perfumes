@@ -1,0 +1,341 @@
+/* ==========================================================================
+   PS PERFUMES — Shop by Fragrance Section
+   Clean luxury editorial, 7 prominent circular fragrance categories
+   No side decorations / botanical frames. Clean edges left to right.
+   ========================================================================== */
+
+.ps-fragrance-showcase-section {
+  width: 100%;
+  background-color: #FAF8F4;
+  position: relative;
+  overflow: hidden;
+  padding: clamp(38px, 3.6vw, 48px) 0 clamp(40px, 3.8vw, 52px) 0;
+  border-bottom: 1px solid rgba(201, 164, 92, 0.18);
+}
+
+.ps-fragrance-showcase-container {
+  max-width: 1620px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 clamp(20px, 2.8vw, 44px);
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   Section Header Area
+   ========================================================================== */
+
+.ps-fragrance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: clamp(26px, 2.4vw, 34px);
+}
+
+.ps-fragrance-header-titles {
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-fragrance-eyebrow-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.ps-fragrance-eyebrow {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: #C9A45C;
+  text-transform: uppercase;
+}
+
+.ps-fragrance-eyebrow-line {
+  display: inline-block;
+  width: 48px;
+  height: 1px;
+  background-color: #C9A45C;
+}
+
+.ps-fragrance-title {
+  font-family: 'Cormorant Garamond', 'Cinzel', serif;
+  font-size: clamp(30px, 2.5vw, 38px);
+  font-weight: 500;
+  color: #171513;
+  margin: 0;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.ps-fragrance-view-all-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: #171513;
+  text-decoration: none;
+  padding-bottom: 6px;
+  transition: color 0.25s ease;
+}
+
+.ps-fragrance-view-all-link:hover {
+  color: #C9A45C;
+}
+
+.ps-view-all-arrow {
+  color: #C9A45C;
+  transition: transform 0.25s ease;
+}
+
+.ps-fragrance-view-all-link:hover .ps-view-all-arrow {
+  transform: translateX(4px);
+}
+
+/* ==========================================================================
+   7 Categories Display — Desktop (One Horizontal Row, Large & Prominent)
+   ========================================================================== */
+
+.ps-fragrance-carousel-track {
+  width: 100%;
+  max-width: 100%;
+}
+
+.ps-fragrance-cards-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: clamp(14px, 1.8vw, 32px);
+  align-items: start;
+  justify-items: center;
+  width: 100%;
+}
+
+.ps-category-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  text-decoration: none;
+  position: relative;
+  width: 100%;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Prominent Circular Image Container */
+.ps-category-circle-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: clamp(148px, 10.6vw, 175px);
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+}
+
+.ps-category-circle-frame {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  background-color: #0e0c0a;
+  border: 1.5px solid rgba(201, 164, 92, 0.55);
+  box-shadow: 0 8px 24px rgba(23, 21, 19, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ps-category-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ps-category-card:hover .ps-category-img {
+  transform: scale(1.06);
+}
+
+.ps-category-card:hover .ps-category-circle-frame {
+  border-color: rgba(201, 164, 92, 0.95);
+  box-shadow: 0 12px 32px rgba(201, 164, 92, 0.28), 0 4px 12px rgba(23, 21, 19, 0.08);
+  transform: translateY(-3px);
+}
+
+/* Category Typography: Refined Serif / Display */
+.ps-category-name {
+  font-family: 'Cinzel', 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(14px, 0.95vw, 15.5px);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: #171513;
+  margin-top: 15px;
+  margin-bottom: 9px;
+  text-transform: uppercase;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: color 0.25s ease;
+}
+
+.ps-category-card:hover .ps-category-name {
+  color: #C9A45C;
+}
+
+/* Circular Gold Arrow Button */
+.ps-category-arrow-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(201, 164, 92, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #C9A45C;
+  background-color: transparent;
+  transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ps-category-arrow-icon {
+  color: #C9A45C;
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.ps-category-card:hover .ps-category-arrow-btn {
+  background-color: rgba(201, 164, 92, 0.22);
+  border-color: #C9A45C;
+  box-shadow: 0 2px 10px rgba(201, 164, 92, 0.22);
+}
+
+.ps-category-card:hover .ps-category-arrow-icon {
+  color: #171513;
+  transform: translateX(2px);
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   Tablet (Horizontal Carousel or Compact Row, ~130-150px images)
+   Mobile (Horizontal Carousel, ~105-130px images, No Site-Wide Scroll)
+   ========================================================================== */
+
+@media (max-width: 1080px) {
+  .ps-fragrance-showcase-section {
+    padding: 36px 0 42px 0;
+  }
+
+  .ps-fragrance-header {
+    margin-bottom: 24px;
+  }
+
+  /* Horizontal carousel on tablet to keep categories large & uncrowded */
+  .ps-fragrance-carousel-track {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 6px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .ps-fragrance-carousel-track::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  .ps-fragrance-cards-row {
+    display: flex;
+    width: max-content;
+    gap: 22px;
+    padding: 4px 6px 12px 2px;
+  }
+
+  .ps-category-card {
+    flex: 0 0 clamp(135px, 18vw, 150px);
+    scroll-snap-align: start;
+  }
+
+  .ps-category-circle-wrapper {
+    width: clamp(130px, 17vw, 148px);
+    max-width: 100%;
+  }
+
+  .ps-category-name {
+    font-size: 13.5px;
+    letter-spacing: 0.13em;
+    margin-top: 13px;
+    margin-bottom: 8px;
+  }
+
+  .ps-category-arrow-btn {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@media (max-width: 640px) {
+  .ps-fragrance-showcase-section {
+    padding: 30px 0 34px 0;
+  }
+
+  .ps-fragrance-showcase-container {
+    padding: 0 16px;
+  }
+
+  .ps-fragrance-header {
+    margin-bottom: 18px;
+  }
+
+  .ps-fragrance-title {
+    font-size: 26px;
+  }
+
+  .ps-fragrance-eyebrow {
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+  }
+
+  .ps-fragrance-eyebrow-line {
+    width: 32px;
+  }
+
+  .ps-fragrance-cards-row {
+    gap: 15px;
+    padding: 4px 4px 10px 2px;
+  }
+
+  .ps-category-card {
+    flex: 0 0 clamp(110px, 29vw, 128px);
+  }
+
+  .ps-category-circle-wrapper {
+    width: clamp(106px, 28vw, 122px);
+    max-width: 100%;
+  }
+
+  .ps-category-name {
+    font-size: 12px;
+    letter-spacing: 0.11em;
+    margin-top: 10px;
+    margin-bottom: 6px;
+  }
+
+  .ps-category-arrow-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .ps-category-arrow-btn svg {
+    width: 13px;
+    height: 13px;
+  }
+}

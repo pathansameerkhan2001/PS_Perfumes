@@ -1,0 +1,101 @@
+/* ==========================================================================
+   PS PERFUMES — Trust / Benefit Strip
+   ========================================================================== */
+
+.ps-trust-benefit-strip {
+  width: 100%;
+  background-color: var(--color-secondary);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  padding: 24px 0;
+  position: relative;
+  z-index: 5;
+}
+
+.ps-trust-benefit-container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+@media (max-width: 1024px) {
+  .ps-trust-benefit-container {
+    padding: 0 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ps-trust-benefit-container {
+    padding: 0 16px;
+  }
+}
+
+.ps-trust-benefit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .ps-trust-benefit-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ps-trust-benefit-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.ps-trust-benefit-col {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ps-trust-benefit-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(200, 164, 93, 0.08);
+  border: 1px solid rgba(200, 164, 93, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gold);
+  flex-shrink: 0;
+  transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+}
+
+.ps-trust-benefit-col:hover .ps-trust-benefit-icon-circle {
+  transform: translateY(-2px);
+  background: rgba(200, 164, 93, 0.18);
+  border-color: var(--color-gold-bright);
+  color: var(--color-gold-bright);
+}
+
+.ps-trust-benefit-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-trust-benefit-title {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-ivory);
+  text-transform: uppercase;
+}
+
+.ps-trust-benefit-sub {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-muted);
+  font-weight: 400;
+  margin-top: 2px;
+}

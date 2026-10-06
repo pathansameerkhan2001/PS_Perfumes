@@ -1,117 +1,137 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
-import Header from './components/Header';
-import HeroSlider from './components/HeroSlider';
-import MarqueeStrip from './components/MarqueeStrip';
-import CategoryPills from './components/CategoryPills';
-import ProductGridSection from './components/ProductGridSection';
-import ShoppableVideoSection from './components/ShoppableVideoSection';
-import ComboPackSection from './components/ComboPackSection';
-import SignatureScentSection from './components/SignatureScentSection';
-import PromoBanner from './components/PromoBanner';
-import InstagramSection from './components/InstagramSection';
-import ReviewsSection from './components/ReviewsSection';
-import AboutSection from './components/AboutSection';
-import TrustStrip from './components/TrustStrip';
-import Footer from './components/Footer';
+import PublicLayout from './components/layout/PublicLayout';
 
-// Lazy-loaded Modals & Drawers (Code splitting to accelerate critical rendering path)
-const ProductDetailModal = React.lazy(() => import('./components/ProductDetailModal'));
-const CartDrawer = React.lazy(() => import('./components/CartDrawer'));
-const CheckoutModal = React.lazy(() => import('./components/CheckoutModal'));
-const WishlistDrawer = React.lazy(() => import('./components/WishlistDrawer'));
-import FloatingCartButton from './components/FloatingCartButton';
-import Toast from './components/Toast';
+// Public Storefront Pages
+import HomePage from './pages/Home/HomePage';
+import AboutPage from './pages/About/AboutPage';
+import ShopPage from './pages/Shop/ShopPage';
+import CollectionPage from './pages/Collection/CollectionPage';
+import ProductDetailPage from './pages/Product/ProductDetailPage';
+import CartPage from './pages/Cart/CartPage';
+import CheckoutPage from './pages/Checkout/CheckoutPage';
+import WishlistPage from './pages/Wishlist/WishlistPage';
+import ContactPage from './pages/Contact/ContactPage';
+import SearchPage from './pages/Search/SearchPage';
+import InstagramPage from './pages/Instagram/InstagramPage';
 
-// Catalog Data
-import { PRODUCTS } from './data/products';
+// Lazy-loaded Admin Pages (Code-split for maximum storefront performance)
+const AdminLogin = lazy(() => import('./admin/pages/AdminLogin'));
+const AdminRoute = lazy(() => import('./admin/components/AdminRoute'));
+const AdminLayout = lazy(() => import('./admin/components/AdminLayout'));
+const AdminDashboard = lazy(() => import('./admin/pages/AdminDashboard'));
+const AdminProducts = lazy(() => import('./admin/pages/AdminProducts'));
+const AdminProductForm = lazy(() => import('./admin/pages/AdminProductForm'));
+const AdminCategories = lazy(() => import('./admin/pages/AdminCategories'));
+const AdminOrders = lazy(() => import('./admin/pages/AdminOrders'));
+const AdminCustomers = lazy(() => import('./admin/pages/AdminCustomers'));
+const AdminReviews = lazy(() => import('./admin/pages/AdminReviews'));
+const AdminReels = lazy(() => import('./admin/pages/AdminReels'));
+const AdminBanners = lazy(() => import('./admin/pages/AdminBanners'));
+const AdminHomepage = lazy(() => import('./admin/pages/AdminHomepage'));
+const AdminInventory = lazy(() => import('./admin/pages/AdminInventory'));
+const AdminCoupons = lazy(() => import('./admin/pages/AdminCoupons'));
+const AdminSettings = lazy(() => import('./admin/pages/AdminSettings'));
+const AdminEnquiries = lazy(() => import('./admin/pages/AdminEnquiries'));
 
 import './components/Sections.css';
 import './App.css';
 
-function App() {
-  const bestSellers = PRODUCTS.filter((p) => p.isBestSeller);
-  const newArrivals = PRODUCTS.filter((p) => p.isNewArrival);
-
+function AdminLoadingFallback() {
   return (
-    <CartProvider>
-      <div className="ps-app-root">
-        {/* 1. Header (Permanently Fixed with prominent PS PERFUMES logo & navigation) */}
-        <Header />
-
-        {/* Main Content (Starts below the fixed header) */}
-        <main className="ps-main-content">
-          {/* 2. Full-Width Campaign Hero Slider */}
-          <HeroSlider />
-
-        {/* 3. Slim Gold Marquee Information Strip */}
-        <MarqueeStrip />
-
-        {/* 4. Find By Category (Circular Pill Cards including Combo Pack) */}
-        <CategoryPills />
-
-        {/* 5. Main Product Showcase: Explore Our Best Sellers */}
-        <ProductGridSection
-          id="catalog-grid"
-          tag="THE ATELIER COLLECTION"
-          title="Explore Our Best Sellers"
-          products={PRODUCTS}
-          showFilterTabs={true}
-          limit={8}
-        />
-
-        {/* 6. Shoppable Video / Reels Carousel Section (Matching Reference) */}
-        <ShoppableVideoSection />
-
-        {/* 7. Dedicated Combo Pack Section (Matching Reference) */}
-        <ComboPackSection />
-
-        {/* 8. Discover Your Signature Scent (6 Occasion Cards) */}
-        <SignatureScentSection />
-
-        {/* 9. Mid-Page Panoramic Promotional Banner */}
-        <PromoBanner />
-
-        {/* 10. New Arrivals & Master Extractions Grid */}
-        <ProductGridSection
-          id="new-arrivals"
-          tag="PRIVATE BLEND VAULT"
-          title="New Arrivals & Rare Extractions"
-          products={newArrivals.length > 0 ? newArrivals : PRODUCTS.slice(4, 8)}
-          showFilterTabs={false}
-          limit={4}
-        />
-
-        {/* 11. Follow us Instagram (4 Media Cards / Videos) */}
-        <InstagramSection />
-
-        {/* 12. What Our Customers Have to Say (Patron Testimonials & Reviews Carousel) */}
-        <ReviewsSection />
-
-        {/* 11. The Atelier Heritage & Craftsmanship */}
-        <AboutSection />
-
-        {/* 12. Customer Reassurance Trust Strip & VIP Newsletter */}
-        <TrustStrip />
-
-        {/* 13. Luxury 5-Column Brand Footer with Instagram Channel Link */}
-        <Footer />
-        </main>
-
-        {/* Floating Quick Access Pill */}
-        <FloatingCartButton />
-
-        {/* Interactive Drawers & Modals (Lazy Loaded on Demand) */}
-        <React.Suspense fallback={null}>
-          <ProductDetailModal />
-          <CartDrawer />
-          <CheckoutModal />
-          <WishlistDrawer />
-        </React.Suspense>
-        <Toast />
-      </div>
-    </CartProvider>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '60vh',
+        gap: '1rem',
+        color: '#C8A45D',
+        fontFamily: 'Cinzel, serif',
+      }}
+    >
+      <div className="ps-admin-spinner" />
+      <span style={{ fontSize: '0.9rem', letterSpacing: '0.1em' }}>ACCESSING ATELIER CONSOLE...</span>
+    </div>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <CartProvider>
+      <Routes>
+        {/* ==============================================================
+            PUBLIC STOREFRONT ROUTES (Wrapped in Luxury Brand Layout)
+            ============================================================== */}
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/shop" element={<ShopPage />} />
+          {/* Reusable Master Fragrance Collection Routes */}
+          <Route path="/attar" element={<CollectionPage key="attar" category="attar" />} />
+          <Route path="/perfume" element={<CollectionPage key="perfume" category="perfume" />} />
+          <Route path="/bakhoor" element={<CollectionPage key="bakhoor" category="bakhoor" />} />
+          <Route path="/musky" element={<CollectionPage key="musky" category="musky" />} />
+          <Route path="/oud" element={<CollectionPage key="oud" category="oud" />} />
+          <Route path="/floral" element={<CollectionPage key="floral" category="floral" />} />
+          <Route path="/woody" element={<CollectionPage key="woody" category="woody" />} />
+          <Route path="/category/:slug" element={<CollectionPage />} />
+          <Route path="/product/:slug" element={<ProductDetailPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/instagram" element={<InstagramPage />} />
+        </Route>
+
+        {/* ==============================================================
+            ADMIN AUTHENTICATION (Standalone login page)
+            ============================================================== */}
+        <Route
+          path="/admin/login"
+          element={
+            <Suspense fallback={<AdminLoadingFallback />}>
+              <AdminLogin />
+            </Suspense>
+          }
+        />
+
+        {/* ==============================================================
+            PROTECTED ADMIN CONSOLE ROUTES (Role-verified via Supabase)
+            ============================================================== */}
+        <Route
+          path="/admin"
+          element={
+            <Suspense fallback={<AdminLoadingFallback />}>
+              <AdminRoute>
+                <AdminLayout />
+              </AdminRoute>
+            </Suspense>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="products" element={<AdminProducts />} />
+          <Route path="products/new" element={<AdminProductForm />} />
+          <Route path="products/:id" element={<AdminProductForm />} />
+          <Route path="categories" element={<AdminCategories />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="customers" element={<AdminCustomers />} />
+          <Route path="reviews" element={<AdminReviews />} />
+          <Route path="reels" element={<AdminReels />} />
+          <Route path="banners" element={<AdminBanners />} />
+          <Route path="homepage" element={<AdminHomepage />} />
+          <Route path="inventory" element={<AdminInventory />} />
+          <Route path="coupons" element={<AdminCoupons />} />
+          <Route path="settings" element={<AdminSettings />} />
+          <Route path="enquiries" element={<AdminEnquiries />} />
+        </Route>
+
+        {/* Fallback route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </CartProvider>
+  );
+}

@@ -3,33 +3,49 @@
    ========================================================================== */
 
 :root {
+  /* Primary Specification Color System */
+  --color-primary: #050505;
+  --color-secondary: #0D0D0D;
+  --color-gold: #C8A45D;
+  --color-gold-bright: #E5C77A;
+  --color-champagne: #F3E7C7;
+  --color-ivory: #F8F5EE;
+  --color-white: #FFFFFF;
+  --color-muted: #8F8A80;
+  --color-border: rgba(200, 164, 93, 0.25);
+  --color-red-cta: #E31B23;
+
   /* Obsidian and Luxury Dark Palette */
-  --bg-primary: #070707;
-  --bg-header-top: #080808;
-  --bg-header-bottom: #050505;
+  --bg-primary: #050505;
+  --bg-secondary: #0D0D0D;
+  --bg-header-top: #050505;
+  --bg-header-bottom: #0D0D0D;
   --bg-surface: #0f0f0f;
   --bg-drawer: #070707;
 
-  /* Authentic Metallic Gold Tones (matching PS Perfumes brand emblem) */
-  --gold-metallic: #c5a059;
-  --gold-primary: #d4af37;
-  --gold-bright: #e9cb84;
-  --gold-muted: #8d7a5b;
+  /* Authentic Metallic Gold Tones */
+  --gold-metallic: #C8A45D;
+  --gold-primary: #C8A45D;
+  --gold-bright: #E5C77A;
+  --gold-muted: #8F8A80;
   --gold-dark: #665438;
-  --gold-hairline: rgba(212, 175, 55, 0.16);
-  --gold-hairline-subtle: rgba(212, 175, 55, 0.08);
-  --gold-glow: rgba(212, 175, 55, 0.12);
+  --gold-hairline: rgba(200, 164, 93, 0.25);
+  --gold-hairline-subtle: rgba(200, 164, 93, 0.12);
+  --gold-glow: rgba(200, 164, 93, 0.2);
 
   /* Typography Colors */
-  --text-ivory: #f2ede4;
-  --text-cream: #e0d8cc;
-  --text-sand: #a69b8b;
-  --text-muted: #6e6557;
+  --text-ivory: #F8F5EE;
+  --text-cream: #F3E7C7;
+  --text-sand: #C8A45D;
+  --text-muted: #8F8A80;
 
   /* Font Families */
   --font-serif: 'Cinzel', Georgia, serif;
   --font-editorial: 'Cormorant Garamond', Garamond, serif;
   --font-sans: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Layout Standards */
+  --container-max-width: 1360px;
 
   /* Transitions */
   --transition-smooth: cubic-bezier(0.22, 1, 0.36, 1);

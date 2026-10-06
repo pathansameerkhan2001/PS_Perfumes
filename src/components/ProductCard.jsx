@@ -1,14 +1,22 @@
 import React, { useState } from 'react';
-import { Heart, Star, ShoppingBag, Check } from 'lucide-react';
+import { Heart, Star, ShoppingBag, Check, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
-import OptimizedImage from './OptimizedImage';
 import './ProductCard.css';
 
 export default function ProductCard({ product, priority = false }) {
   const { addToCart, toggleWishlist, isInWishlist, setSelectedProduct } = useCart();
   const [isAddedAnim, setIsAddedAnim] = useState(false);
+  const navigate = useNavigate();
+
   const isWishlisted = isInWishlist(product.id);
+  const imageSrc = product.main_image || product.image || '/assets/prod-royal-amber.webp';
+  const price = product.price || 999;
+  const comparePrice = product.compare_at_price || product.originalPrice;
+  const rating = product.rating || 5.0;
+  const reviewCount = product.review_count || product.reviewCount || 24;
+  const slug = product.slug || product.id;
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
@@ -22,33 +30,62 @@ export default function ProductCard({ product, priority = false }) {
     toggleWishlist(product);
   };
 
-  const handleCardClick = () => {
+  const handleQuickView = (e) => {
+    e.stopPropagation();
     setSelectedProduct(product);
   };
 
+  const handleCardClick = () => {
+    navigate(`/product/${slug}`);
+  };
+
   return (
-    <div className="ps-pcard" onClick={handleCardClick} role="button" tabIndex={0}>
+    <div
+      className="ps-pcard"
+      onClick={handleCardClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') handleCardClick();
+      }}
+    >
       {/* Image Container with Badges */}
       <div className="ps-pcard-media">
-        <OptimizedImage
-          src={product.image}
+        <img
+          src={imageSrc}
           alt={product.name}
           className="ps-pcard-img"
-          aspectRatio="1 / 1"
+          loading={priority ? 'eager' : 'lazy'}
           width="400"
           height="400"
-          priority={priority}
         />
 
-        {/* Top Badges */}
+        {/* Top Badges: New Arrival / Bestseller */}
         <div className="ps-pcard-badges">
-          {product.badge && (
+          {product.new_arrival && (
+            <span className="ps-pcard-badge ps-badge-new">NEW ARRIVAL</span>
+          )}
+          {product.bestseller && (
+            <span className="ps-pcard-badge ps-badge-primary">BESTSELLER</span>
+          )}
+          {!product.new_arrival && !product.bestseller && product.badge && (
             <span className="ps-pcard-badge ps-badge-primary">{product.badge}</span>
           )}
           {product.discountPercent && (
             <span className="ps-pcard-badge ps-badge-discount">{product.discountPercent}</span>
           )}
         </div>
+
+        {/* Quick View Button (hover desktop) */}
+        <button
+          type="button"
+          className="ps-pcard-quickview-btn"
+          onClick={handleQuickView}
+          aria-label="Quick view"
+          title="Quick View"
+        >
+          <Eye size={16} />
+        </button>
 
         {/* Wishlist Button */}
         <button
@@ -57,13 +94,17 @@ export default function ProductCard({ product, priority = false }) {
           onClick={handleWishlistClick}
           aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
         >
-          <Heart size={16} fill={isWishlisted ? '#eb1c24' : 'none'} color={isWishlisted ? '#eb1c24' : '#111111'} />
+          <Heart
+            size={16}
+            fill={isWishlisted ? '#e31b23' : 'none'}
+            color={isWishlisted ? '#e31b23' : '#111111'}
+          />
         </button>
       </div>
 
       {/* Product Content Details */}
       <div className="ps-pcard-details">
-        <span className="ps-pcard-type">{product.type || product.category}</span>
+        <span className="ps-pcard-type">{product.category || product.type}</span>
         <h3 className="ps-pcard-title">{product.name}</h3>
 
         {/* Rating Stars */}
@@ -73,22 +114,22 @@ export default function ProductCard({ product, priority = false }) {
               <Star
                 key={i}
                 size={12}
-                fill={i < Math.floor(product.rating) ? '#f59e0b' : '#e5e7eb'}
-                color={i < Math.floor(product.rating) ? '#f59e0b' : '#e5e7eb'}
+                fill={i < Math.floor(rating) ? '#f59e0b' : '#e5e7eb'}
+                color={i < Math.floor(rating) ? '#f59e0b' : '#e5e7eb'}
               />
             ))}
           </div>
           <span className="ps-pcard-rating-text">
-            {product.rating} ({product.reviewCount})
+            {rating} ({reviewCount})
           </span>
         </div>
 
         {/* Price & Add to Bag */}
         <div className="ps-pcard-pricing-row">
           <div className="ps-pcard-prices">
-            <span className="ps-pcard-price">{formatINR(product.price)}</span>
-            {product.originalPrice && (
-              <span className="ps-pcard-orig-price">{formatINR(product.originalPrice)}</span>
+            <span className="ps-pcard-price">{formatINR(price)}</span>
+            {comparePrice && (
+              <span className="ps-pcard-orig-price">{formatINR(comparePrice)}</span>
             )}
           </div>
 
@@ -106,7 +147,7 @@ export default function ProductCard({ product, priority = false }) {
             ) : (
               <>
                 <ShoppingBag size={14} />
-                <span>ADD TO BAG</span>
+                <span>ADD</span>
               </>
             )}
           </button>

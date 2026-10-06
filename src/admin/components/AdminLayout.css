@@ -1,0 +1,294 @@
+/* ==========================================================================
+   PS PERFUMES — Luxury Admin Layout Stylesheet
+   ========================================================================== */
+
+.ps-admin-root {
+  display: flex;
+  min-height: 100vh;
+  background-color: #050505;
+  color: #f8f5ee;
+  font-family: var(--font-sans);
+}
+
+/* Sidebar */
+.ps-admin-sidebar {
+  width: 260px;
+  background-color: #0a0a0a;
+  border-right: 1px solid rgba(200, 164, 93, 0.2);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (max-width: 1024px) {
+  .ps-admin-sidebar {
+    transform: translateX(-100%);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.8);
+  }
+  .ps-admin-sidebar.is-open {
+    transform: translateX(0);
+  }
+}
+
+.ps-admin-sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 95;
+}
+
+.ps-admin-sidebar-header {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.ps-admin-logo-link {
+  display: block;
+  line-height: 0;
+  margin-bottom: 8px;
+}
+
+.ps-admin-logo-img {
+  width: 170px;
+  height: auto;
+  object-fit: contain;
+}
+
+.ps-admin-tagline {
+  font-family: var(--font-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--color-gold);
+  text-transform: uppercase;
+}
+
+.ps-admin-close-sidebar-btn {
+  display: none;
+  position: absolute;
+  top: 20px;
+  right: 16px;
+  color: #fff;
+  cursor: pointer;
+}
+
+@media (max-width: 1024px) {
+  .ps-admin-close-sidebar-btn {
+    display: block;
+  }
+}
+
+/* Nav Menu */
+.ps-admin-nav-menu {
+  flex: 1;
+  padding: 16px 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ps-admin-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 4px;
+  color: #a39c91;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.ps-admin-nav-link:hover {
+  background: rgba(200, 164, 93, 0.08);
+  color: var(--color-ivory);
+}
+
+.ps-admin-nav-link.is-active {
+  background: linear-gradient(90deg, rgba(200, 164, 93, 0.18) 0%, rgba(200, 164, 93, 0.05) 100%);
+  color: var(--color-gold-bright);
+  border-left: 3px solid var(--color-gold);
+  font-weight: 600;
+}
+
+.ps-nav-icon {
+  flex-shrink: 0;
+}
+
+/* Sidebar Footer */
+.ps-admin-sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ps-admin-view-site-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--color-champagne);
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+.ps-admin-view-site-link:hover {
+  background: rgba(200, 164, 93, 0.15);
+  color: var(--color-gold);
+}
+
+.ps-admin-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #ff6b6b;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.ps-admin-logout-btn:hover {
+  background: rgba(235, 28, 36, 0.1);
+}
+
+/* Workspace Area */
+.ps-admin-workspace {
+  flex: 1;
+  margin-left: 260px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 1024px) {
+  .ps-admin-workspace {
+    margin-left: 0;
+  }
+}
+
+/* Topbar */
+.ps-admin-topbar {
+  height: 64px;
+  background-color: #080808;
+  border-bottom: 1px solid rgba(200, 164, 93, 0.15);
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+
+@media (max-width: 768px) {
+  .ps-admin-topbar {
+    padding: 0 16px;
+  }
+}
+
+.ps-admin-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ps-admin-menu-toggle {
+  display: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+@media (max-width: 1024px) {
+  .ps-admin-menu-toggle {
+    display: inline-flex;
+  }
+}
+
+.ps-admin-topbar-title {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--color-ivory);
+}
+
+.ps-admin-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ps-admin-profile-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(200, 164, 93, 0.25);
+  border-radius: 9999px;
+}
+
+.ps-admin-role-badge {
+  font-family: var(--font-serif);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: var(--color-gold);
+  color: #050505;
+  padding: 2px 6px;
+  border-radius: 9999px;
+}
+
+.ps-admin-email-text {
+  font-size: 12px;
+  color: var(--color-champagne);
+}
+
+@media (max-width: 600px) {
+  .ps-admin-email-text {
+    display: none;
+  }
+}
+
+.ps-admin-topbar-btn {
+  color: #a39c91;
+  cursor: pointer;
+  padding: 6px;
+  transition: color 0.2s ease;
+}
+
+.ps-admin-topbar-btn:hover {
+  color: var(--color-gold);
+}
+
+/* Content Container */
+.ps-admin-content-container {
+  flex: 1;
+  padding: 32px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .ps-admin-content-container {
+    padding: 20px 16px;
+  }
+}

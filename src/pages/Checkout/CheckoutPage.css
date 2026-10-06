@@ -1,0 +1,323 @@
+/* ==========================================================================
+   PS PERFUMES — Checkout Page Stylesheet
+   ========================================================================== */
+
+.ps-checkout-page {
+  width: 100%;
+  min-height: 80vh;
+  background-color: var(--color-primary);
+  color: var(--color-ivory);
+  padding: 48px 0 80px;
+}
+
+.ps-checkout-container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+@media (max-width: 1024px) {
+  .ps-checkout-container {
+    padding: 0 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ps-checkout-container {
+    padding: 0 16px;
+  }
+}
+
+.ps-checkout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 36px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.ps-checkout-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-muted);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.ps-checkout-back-link:hover {
+  color: var(--color-gold);
+}
+
+.ps-checkout-title {
+  font-family: var(--font-editorial);
+  font-size: 36px;
+  font-weight: 400;
+  color: var(--color-ivory);
+}
+
+.ps-checkout-secure-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--color-gold);
+  border: 1px solid rgba(200, 164, 93, 0.3);
+  padding: 4px 10px;
+  border-radius: 9999px;
+}
+
+.ps-checkout-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 48px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .ps-checkout-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+}
+
+.ps-checkout-card {
+  background: var(--color-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.ps-checkout-card-title {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--color-gold);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 10px;
+}
+
+.ps-field-err {
+  font-size: 11px;
+  color: #ff5252;
+  margin-top: 2px;
+}
+
+.ps-payment-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ps-payment-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: #050505;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-payment-option.is-selected {
+  border-color: var(--color-gold);
+  background: rgba(200, 164, 93, 0.08);
+}
+
+.ps-payment-option input {
+  accent-color: var(--color-gold);
+  width: 16px;
+  height: 16px;
+}
+
+.ps-payment-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-payment-text strong {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--color-ivory);
+}
+
+.ps-payment-text span {
+  font-size: 11px;
+  color: var(--color-muted);
+}
+
+/* Summary Column */
+.ps-checkout-summary-card {
+  background: var(--color-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 24px;
+  position: sticky;
+  top: 140px;
+}
+
+.ps-checkout-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 240px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ps-checkout-item-mini {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ps-mini-thumb {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  background: #050505;
+  border: 1px solid rgba(200, 164, 93, 0.2);
+  border-radius: 2px;
+}
+
+.ps-mini-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-mini-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-ivory);
+  line-height: 1.3;
+}
+
+.ps-mini-size {
+  font-size: 11px;
+  color: var(--color-muted);
+}
+
+.ps-mini-price {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-gold-bright);
+}
+
+.ps-place-order-btn {
+  width: 100%;
+  height: 48px;
+  margin-top: 16px;
+}
+
+.ps-checkout-reassurance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--color-muted);
+  justify-content: center;
+  margin-top: 16px;
+}
+
+/* Success Confirmation Page */
+.ps-checkout-success-page {
+  padding: 80px 20px;
+  background-color: var(--color-primary);
+  display: flex;
+  justify-content: center;
+}
+
+.ps-checkout-success-card {
+  max-width: 580px;
+  width: 100%;
+  background: var(--color-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 48px 36px;
+  text-align: center;
+}
+
+.ps-success-tag {
+  display: inline-block;
+  font-family: var(--font-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--color-gold);
+  text-transform: uppercase;
+  margin: 16px 0 8px;
+}
+
+.ps-success-title {
+  font-family: var(--font-editorial);
+  font-size: 34px;
+  font-weight: 400;
+  color: var(--color-ivory);
+  margin-bottom: 12px;
+}
+
+.ps-success-order-num {
+  font-size: 14px;
+  color: var(--color-gold-bright);
+  margin-bottom: 16px;
+}
+
+.ps-success-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #c9c1b2;
+  margin-bottom: 28px;
+}
+
+.ps-success-details {
+  background: #050505;
+  border: 1px solid rgba(200, 164, 93, 0.2);
+  border-radius: 4px;
+  padding: 18px;
+  margin-bottom: 28px;
+  text-align: left;
+}
+
+.ps-success-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ps-success-row:last-child {
+  border-bottom: none;
+}
+
+.ps-success-row span:first-child {
+  color: var(--color-muted);
+}
+
+.ps-success-row strong {
+  color: var(--color-gold-bright);
+}
+
+.ps-success-home-btn {
+  width: 100%;
+  height: 48px;
+}
+
+.ps-checkout-empty {
+  text-align: center;
+  padding: 100px 20px;
+}

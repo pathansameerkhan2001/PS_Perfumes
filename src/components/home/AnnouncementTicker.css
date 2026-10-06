@@ -1,0 +1,114 @@
+/* ==========================================================================
+   PS PERFUMES — Gold Announcement Ticker
+   Warm champagne gold infinite horizontal marquee
+   ========================================================================== */
+
+.ps-announcement-ticker {
+  width: 100%;
+  background: linear-gradient(90deg, #E0C177 0%, #F6E09D 25%, #E4C67D 50%, #F6E09D 75%, #E0C177 100%);
+  color: #171513;
+  overflow: hidden;
+  position: relative;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  border-top: 1px solid rgba(200, 164, 93, 0.4);
+  border-bottom: 1px solid rgba(200, 164, 93, 0.35);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  z-index: 10;
+  user-select: none;
+}
+
+.ps-ticker-track-wrapper {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ps-ticker-track {
+  display: flex;
+  white-space: nowrap;
+  width: max-content;
+  animation: psTickerMarquee 38s linear infinite;
+  will-change: transform;
+}
+
+.ps-announcement-ticker:hover .ps-ticker-track {
+  animation-play-state: paused;
+}
+
+.ps-ticker-content {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.ps-ticker-item {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #171513;
+  padding: 0 4px;
+}
+
+.ps-ticker-text {
+  transition: color 0.2s ease;
+}
+
+.ps-ticker-star {
+  display: inline-block;
+  margin: 0 28px;
+  font-size: 12px;
+  color: #2b251f;
+  opacity: 0.85;
+}
+
+@keyframes psTickerMarquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* Tablet & Mobile responsive behavior */
+@media (max-width: 768px) {
+  .ps-announcement-ticker {
+    height: 40px;
+  }
+
+  .ps-ticker-item {
+    font-size: 12px;
+    letter-spacing: 0.03em;
+  }
+
+  .ps-ticker-star {
+    margin: 0 20px;
+    font-size: 10px;
+  }
+
+  .ps-ticker-track {
+    animation-duration: 32s;
+  }
+}
+
+@media (max-width: 480px) {
+  .ps-announcement-ticker {
+    height: 38px;
+  }
+
+  .ps-ticker-item {
+    font-size: 11.5px;
+  }
+
+  .ps-ticker-star {
+    margin: 0 16px;
+    font-size: 9px;
+  }
+}

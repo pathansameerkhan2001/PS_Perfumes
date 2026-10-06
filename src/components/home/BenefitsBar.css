@@ -1,0 +1,162 @@
+/* ==========================================================================
+   PS PERFUMES — Luxury Benefits Bar (Exact 4 Pillars)
+   Ivory/cream background with gold circular icons & vertical dividers
+   ========================================================================== */
+
+.ps-benefits-bar {
+  width: 100%;
+  background-color: #FAF8F3;
+  border-bottom: 1px solid rgba(201, 164, 92, 0.22);
+  padding: 34px 0;
+  position: relative;
+  z-index: 5;
+}
+
+.ps-benefits-container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.ps-benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  position: relative;
+}
+
+.ps-benefit-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  padding: 8px 16px;
+  cursor: default;
+}
+
+.ps-benefit-icon-wrapper {
+  margin-bottom: 12px;
+}
+
+.ps-benefit-circle-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1.5px solid #C9A45C;
+  background-color: #FFFFFF;
+  color: #C9A45C;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(201, 164, 92, 0.08);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.ps-benefit-item:hover .ps-benefit-circle-icon {
+  transform: translateY(-2px);
+  border-color: #D8B76A;
+  box-shadow: 0 4px 14px rgba(201, 164, 92, 0.16);
+}
+
+.ps-benefit-svg-icon {
+  color: #C9A45C;
+  transition: transform 0.25s ease;
+}
+
+.ps-benefit-text-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.ps-benefit-title {
+  font-family: 'Cinzel', serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  color: #171513;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.ps-benefit-desc {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #77716A;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+/* Vertical Gold Dividers between Columns */
+.ps-benefit-vertical-divider {
+  position: absolute;
+  right: 0;
+  top: 10%;
+  height: 80%;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(201, 164, 92, 0.05) 0%,
+    rgba(201, 164, 92, 0.3) 50%,
+    rgba(201, 164, 92, 0.05) 100%
+  );
+  pointer-events: none;
+}
+
+/* Tablet & Mobile Breakpoints */
+@media (max-width: 992px) {
+  .ps-benefits-bar {
+    padding: 28px 0;
+  }
+
+  .ps-benefits-grid {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 24px;
+  }
+
+  .ps-benefit-item:nth-child(2) .ps-benefit-vertical-divider {
+    display: none;
+  }
+
+  .ps-benefit-vertical-divider {
+    height: 70%;
+    top: 15%;
+  }
+}
+
+@media (max-width: 540px) {
+  .ps-benefits-bar {
+    padding: 24px 0;
+  }
+
+  .ps-benefits-container {
+    padding: 0 16px;
+  }
+
+  .ps-benefits-grid {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 20px;
+    column-gap: 8px;
+  }
+
+  .ps-benefit-item {
+    padding: 4px 8px;
+  }
+
+  .ps-benefit-circle-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .ps-benefit-title {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+  }
+
+  .ps-benefit-desc {
+    font-size: 11px;
+  }
+}
