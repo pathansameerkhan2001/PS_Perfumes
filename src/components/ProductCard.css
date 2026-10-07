@@ -353,3 +353,53 @@
     font-size: 10.5px;
   }
 }
+
+/* Card Variant Selectors */
+.ps-pcard-variants-wrap {
+  margin-top: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ps-pcard-var-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ps-pcard-var-label {
+  font-size: 10px;
+  color: #8c7d68;
+  font-weight: 500;
+  min-width: 38px;
+}
+
+.ps-pcard-pill-group {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.ps-pcard-pill {
+  padding: 2px 7px;
+  font-size: 10.5px;
+  font-family: var(--font-sans);
+  background: var(--color-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-ivory);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.2;
+}
+
+.ps-pcard-pill:hover,
+.ps-pcard-pill.is-active {
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+  color: #050505;
+  font-weight: 600;
+}
+

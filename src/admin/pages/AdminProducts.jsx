@@ -21,6 +21,10 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [bottleFilter, setBottleFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [bestsellerFilter, setBestsellerFilter] = useState('ALL');
+  const [featuredFilter, setFeaturedFilter] = useState('ALL');
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const navigate = useNavigate();
 
@@ -67,6 +71,21 @@ export default function AdminProducts() {
     if (categoryFilter !== 'ALL' && p.category?.toLowerCase() !== categoryFilter.toLowerCase()) {
       return false;
     }
+    if (statusFilter !== 'ALL' && p.status !== statusFilter) {
+      return false;
+    }
+    if (bestsellerFilter === 'YES' && !p.bestseller) {
+      return false;
+    }
+    if (featuredFilter === 'YES' && !p.featured) {
+      return false;
+    }
+    if (bottleFilter !== 'ALL') {
+      const hasBottle = p.variants?.some((v) =>
+        v.bottle_type?.toLowerCase().includes(bottleFilter.toLowerCase())
+      );
+      if (!hasBottle) return false;
+    }
     if (searchTerm) {
       const s = searchTerm.toLowerCase();
       return p.name.toLowerCase().includes(s) || p.sku?.toLowerCase().includes(s);
@@ -78,44 +97,82 @@ export default function AdminProducts() {
     <div className="ps-admin-products-page">
       <div className="ps-admin-page-header">
         <div>
-          <span className="ps-admin-eyebrow">CATALOG REPOSITORY</span>
-          <h1 className="ps-admin-page-title">Fragrance Formulations</h1>
+          <h1 className="ps-admin-page-title">Products</h1>
+          <p className="ps-admin-page-subtitle">Manage formulations, variant matrices, and availability</p>
         </div>
         <div className="ps-admin-header-actions">
           <Link to="/admin/products/new" className="ps-btn-gold-primary ps-admin-header-btn">
             <Plus size={16} />
-            <span>CREATE NEW PRODUCT</span>
+            <span>+ Add Product</span>
           </Link>
         </div>
       </div>
 
-      {/* Control Bar: Search & Category Filter */}
+      {/* Control Bar: Search & Multi-Filters (Section 11) */}
       <div className="ps-admin-products-toolbar">
         <div className="ps-admin-search-input-wrap">
-          <Search size={16} color="#c8a45d" />
+          <Search size={15} className="ps-search-icon" />
           <input
             type="text"
-            placeholder="Search by perfume name or SKU..."
+            placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
-        <div className="ps-admin-filter-pills">
-          {['ALL', 'Perfume', 'Attar', 'Bakhoor', 'Musky', 'Oud', 'Floral', 'Woody'].map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              className={`ps-toolbar-pill ${categoryFilter === cat ? 'is-active' : ''}`}
-              onClick={() => setCategoryFilter(cat)}
-            >
-              {cat}
-            </button>
-          ))}
+        <div className="ps-admin-filter-dropdowns">
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="ps-admin-filter-select"
+          >
+            <option value="ALL">All Categories</option>
+            {['Perfume', 'Attar', 'Bakhoor', 'Musky', 'Oud', 'Floral', 'Woody'].map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+
+          <select
+            value={bottleFilter}
+            onChange={(e) => setBottleFilter(e.target.value)}
+            className="ps-admin-filter-select"
+          >
+            <option value="ALL">All Bottle Types</option>
+            <option value="Glass">Glass Bottle</option>
+            <option value="PVC">PVC Bottle</option>
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="ps-admin-filter-select"
+          >
+            <option value="ALL">All Status</option>
+            <option value="active">Active</option>
+            <option value="draft">Draft</option>
+          </select>
+
+          <select
+            value={bestsellerFilter}
+            onChange={(e) => setBestsellerFilter(e.target.value)}
+            className="ps-admin-filter-select"
+          >
+            <option value="ALL">All Badges</option>
+            <option value="YES">Bestsellers Only</option>
+          </select>
+
+          <select
+            value={featuredFilter}
+            onChange={(e) => setFeaturedFilter(e.target.value)}
+            className="ps-admin-filter-select"
+          >
+            <option value="ALL">Featured Filter</option>
+            <option value="YES">Featured Only</option>
+          </select>
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table matching Section 23 */}
       {loading ? (
         <div className="ps-admin-loading">Loading Formulations...</div>
       ) : filtered.length === 0 ? (
@@ -128,12 +185,13 @@ export default function AdminProducts() {
             <thead>
               <tr>
                 <th>Image</th>
-                <th>Product & SKU</th>
+                <th>Product</th>
                 <th>Category</th>
-                <th>Price</th>
+                <th>Bottle Type</th>
+                <th>Available Sizes</th>
+                <th>Starting Price</th>
                 <th>Stock</th>
                 <th>Status</th>
-                <th>Attributes</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -149,7 +207,7 @@ export default function AdminProducts() {
                   </td>
                   <td>
                     <div className="ps-prod-table-meta">
-                      <Link to={`/admin/products/${prod.id}`} className="ps-prod-table-name">
+                      <Link to={`/admin/products/${prod.id}/edit`} className="ps-prod-table-name">
                         {prod.name}
                       </Link>
                       <span className="ps-prod-table-sku">{prod.sku}</span>
@@ -157,6 +215,12 @@ export default function AdminProducts() {
                   </td>
                   <td>
                     <span className="ps-prod-table-category">{prod.category}</span>
+                  </td>
+                  <td>
+                    <span style={{ fontSize: '12px', color: '#fffaf0' }}>Glass & PVC</span>
+                  </td>
+                  <td>
+                    <span style={{ fontSize: '11px', color: '#c8a45d' }}>30ml, 50ml, 100ml</span>
                   </td>
                   <td>
                     <div className="ps-prod-table-price">
@@ -181,43 +245,26 @@ export default function AdminProducts() {
                       {prod.status}
                     </button>
                   </td>
-                  <td>
-                    <div className="ps-badges-cell">
-                      {prod.bestseller && (
-                        <span className="ps-table-badge ps-badge-gold" title="Bestseller">
-                          BESTSELLER
-                        </span>
-                      )}
-                      {prod.new_arrival && (
-                        <span className="ps-table-badge ps-badge-red" title="New Arrival">
-                          NEW
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td>
+                    <td>
                     <div className="ps-table-actions">
-                      <button
-                        type="button"
-                        className="ps-action-icon-btn"
-                        onClick={() => navigate(`/admin/products/${prod.id}`)}
+                      <Link
+                        to={`/admin/products/${prod.id}/edit`}
+                        className="ps-table-action-btn"
                         title="Edit Formulation"
                       >
                         <Edit2 size={15} />
-                      </button>
-
+                      </Link>
                       <button
                         type="button"
-                        className="ps-action-icon-btn"
+                        className="ps-table-action-btn"
                         onClick={() => handleDuplicate(prod)}
                         title="Duplicate Formulation"
                       >
                         <Copy size={15} />
                       </button>
-
                       <button
                         type="button"
-                        className="ps-action-icon-btn is-delete"
+                        className="ps-table-action-btn is-delete"
                         onClick={() => setDeleteConfirmId(prod.id)}
                         title="Delete Formulation"
                       >

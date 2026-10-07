@@ -1,0 +1,68 @@
+/* ==========================================================================
+   PS PERFUMES — Luxury Admin Design System
+   Source of Truth: Approved Reference Design (Dark Sidebar + Warm Ivory Main)
+   ========================================================================== */
+
+:root {
+  /* Palette: Backgrounds */
+  --ps-admin-bg-sidebar: #11100F;
+  --ps-admin-bg-header: #FFFEFA;
+  --ps-admin-bg-main: #F7F4EE;
+  --ps-admin-bg-card: #FFFEFA;
+  --ps-admin-bg-card-subtle: #FAF7F2;
+
+  /* Palette: Primary & Secondary Text */
+  --ps-admin-text-primary: #1A1714;
+  --ps-admin-text-secondary: #746B61;
+  --ps-admin-text-muted: #9E9487;
+  --ps-admin-text-ivory: #FFFAF0;
+
+  /* Palette: Champagne Gold Accents */
+  --ps-admin-gold: #C9A96E;
+  --ps-admin-gold-light: #E8D7B8;
+  --ps-admin-gold-dark: #8C7343;
+  --ps-admin-gold-hover: #D4B67E;
+  --ps-admin-gold-active-bg: rgba(201, 169, 110, 0.14);
+  --ps-admin-gold-active-border: rgba(201, 169, 110, 0.35);
+
+  /* Palette: Semantic Status Badges */
+  --ps-admin-success-bg: #EAF5ED;
+  --ps-admin-success-text: #2D6A4F;
+  --ps-admin-warning-bg: #FEF7EA;
+  --ps-admin-warning-text: #B45309;
+  --ps-admin-error-bg: #FDF2F2;
+  --ps-admin-error-text: #B91C1C;
+
+  /* Borders & Dividers */
+  --ps-admin-border-subtle: #ECE7DF;
+  --ps-admin-border-light: #E5E0D8;
+  --ps-admin-border-dark: rgba(255, 255, 255, 0.08);
+
+  /* Shadows */
+  --ps-admin-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.03);
+  --ps-admin-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.02);
+  --ps-admin-shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.06);
+
+  /* Layout Dimensions */
+  --ps-admin-sidebar-width: 200px;
+  --ps-admin-header-height: 68px;
+
+  /* Typography */
+  --ps-admin-font-serif: var(--font-serif, 'Cormorant Garamond', 'Playfair Display', Georgia, serif);
+  --ps-admin-font-sans: var(--font-sans, 'Montserrat', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
+}
+
+/* Reset / Base utility for admin scope */
+.ps-admin-shell {
+  font-family: var(--ps-admin-font-sans);
+  color: var(--ps-admin-text-primary);
+  background-color: var(--ps-admin-bg-main);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.ps-admin-heading-serif {
+  font-family: var(--ps-admin-font-serif);
+  letter-spacing: -0.01em;
+}

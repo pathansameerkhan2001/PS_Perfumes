@@ -12,13 +12,26 @@ export default function CollectionProductCard({
 }) {
   const { addToCart, toggleWishlist, isInWishlist, setSelectedProduct } = useCart();
   const [isAddedAnim, setIsAddedAnim] = useState(false);
+  const [selectedBottle, setSelectedBottle] = useState('Glass');
+  const [selectedSize, setSelectedSize] = useState('50ml');
   const navigate = useNavigate();
 
   const isWishlisted = isInWishlist(product.id);
   const imageSrc =
     product.main_image || product.image || '/assets/prod-royal-amber.webp';
-  const price = Number(product.price) || 999;
-  const comparePrice = Number(product.compare_at_price || product.originalPrice) || null;
+
+  const normalizeBottle = (b) => (b && String(b).toLowerCase().includes('pvc') ? 'PVC' : 'Glass');
+  const normalizeSz = (s) => (s ? String(s).toLowerCase().replace(/\s+/g, '') : '50ml');
+
+  const currentVariant = product.variants?.find((v) =>
+    normalizeBottle(v.bottle_type) === selectedBottle &&
+    normalizeSz(v.size_ml) === normalizeSz(selectedSize)
+  ) || product.variants?.[0] || null;
+
+  const price = currentVariant ? Number(currentVariant.sale_price || currentVariant.price) : (Number(product.price) || 999);
+  const comparePrice = currentVariant?.compare_at_price
+    ? Number(currentVariant.compare_at_price)
+    : Number(product.compare_at_price || product.originalPrice || null);
   const hasDiscount = comparePrice && comparePrice > price;
   const discountPercent = hasDiscount
     ? `-${Math.round(((comparePrice - price) / comparePrice) * 100)}%`
@@ -33,7 +46,12 @@ export default function CollectionProductCard({
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
-    addToCart(product, 1);
+    const chosenVariant = currentVariant || {
+      bottle_type: selectedBottle === 'Glass' ? 'Glass Bottle' : 'PVC Bottle',
+      size_ml: selectedSize,
+      price: price,
+    };
+    addToCart(product, 1, chosenVariant);
     setIsAddedAnim(true);
     setTimeout(() => setIsAddedAnim(false), 1800);
   };
@@ -155,6 +173,45 @@ export default function CollectionProductCard({
               {formatINR(comparePrice)}
             </span>
           )}
+        </div>
+
+        {/* Minimal Luxury Variant Selectors */}
+        <div className="ps-col-card-variants" onClick={(e) => e.stopPropagation()}>
+          <div className="ps-col-var-row">
+            <span className="ps-col-var-lbl">Bottle:</span>
+            <div className="ps-col-pills">
+              <button
+                type="button"
+                className={`ps-col-pill ${selectedBottle === 'Glass' ? 'is-active' : ''}`}
+                onClick={() => setSelectedBottle('Glass')}
+              >
+                Glass
+              </button>
+              <button
+                type="button"
+                className={`ps-col-pill ${selectedBottle === 'PVC' ? 'is-active' : ''}`}
+                onClick={() => setSelectedBottle('PVC')}
+              >
+                PVC
+              </button>
+            </div>
+          </div>
+
+          <div className="ps-col-var-row">
+            <span className="ps-col-var-lbl">Size:</span>
+            <div className="ps-col-pills">
+              {['30ml', '50ml', '100ml'].map((sz) => (
+                <button
+                  key={sz}
+                  type="button"
+                  className={`ps-col-pill ${normalizeSz(selectedSize) === sz ? 'is-active' : ''}`}
+                  onClick={() => setSelectedSize(sz)}
+                >
+                  {sz.replace('ml', ' ml')}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Action Controls: [ ADD TO CART ] [ ♡ ] */}

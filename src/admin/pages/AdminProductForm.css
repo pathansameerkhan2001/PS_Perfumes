@@ -1,187 +1,486 @@
 /* ==========================================================================
-   PS PERFUMES — Admin Product Form Stylesheet
+   PS PERFUMES — Luxury Admin Product Form Stylesheet
+   Approved Design Reference: Warm Ivory + White Cards + Champagne Gold Accents
+   Matches Screenshot 7: Top breadcrumbs/actions, left vertical tabs, variants matrix table
    ========================================================================== */
 
-.ps-admin-form-page {
+.ps-admin-product-builder {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.ps-admin-back-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--color-ivory);
+/* Top Bar */
+.ps-builder-top-bar {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.ps-builder-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.ps-crumb-link {
+  color: #6F675E;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.ps-crumb-link:hover {
+  color: #C9A96E;
+}
+
+.ps-crumb-sep {
+  color: #A8A196;
+  font-size: 11px;
+}
+
+.ps-crumb-active {
+  color: #1A1714;
+  font-weight: 600;
+}
+
+.ps-builder-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ps-builder-btn-cancel {
+  padding: 8px 18px;
+  background: #FFFFFF;
+  border: 1px solid #E5E0D8;
+  color: #6F675E;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.ps-admin-back-btn:hover {
-  background: var(--color-gold);
-  color: #050505;
+.ps-builder-btn-cancel:hover {
+  background: #FAF8F5;
+  color: #1A1714;
+  border-color: #C9A96E;
 }
 
-.ps-form-two-col {
+.ps-builder-btn-save {
+  padding: 8px 20px;
+  background: #11100F;
+  border: 1px solid #C9A96E;
+  color: #C9A96E;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.03em;
+}
+
+.ps-builder-btn-save:hover {
+  background: #C9A96E;
+  color: #11100F;
+}
+
+/* Alerts */
+.ps-form-error-banner {
+  background: #FEF2F2;
+  border: 1px solid #F87171;
+  color: #DC2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 12.5px;
+}
+
+.ps-form-success-banner {
+  background: #ECFDF5;
+  border: 1px solid #34D399;
+  color: #059669;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 12.5px;
+}
+
+.ps-form-progress-banner {
+  background: #FFFBEB;
+  border: 1px solid #FCD34D;
+  color: #D97706;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 12.5px;
+}
+
+/* Workspace Layout: Left Sidebar + Right Content */
+.ps-builder-workspace {
   display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 32px;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
   align-items: start;
 }
 
-@media (max-width: 980px) {
-  .ps-form-two-col {
+@media (max-width: 900px) {
+  .ps-builder-workspace {
     grid-template-columns: 1fr;
-    gap: 24px;
   }
 }
 
-.ps-admin-form-card {
-  background: #0d0d0d;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 24px;
+/* Vertical Tabs Sidebar */
+.ps-builder-tabs-sidebar {
+  background: #FFFFFF;
+  border: 1px solid #ECE7DF;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.ps-tab-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #6F675E;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: left;
+}
+
+.ps-tab-item:hover {
+  background: #FAF8F5;
+  color: #1A1714;
+}
+
+.ps-tab-item.is-active {
+  background: #FAF7F2;
+  color: #1A1714;
+  font-weight: 600;
+  border-left: 3px solid #C9A96E;
+  border-radius: 0 6px 6px 0;
+}
+
+/* Content Card */
+.ps-builder-content-card {
+  background: #FFFFFF;
+  border: 1px solid #ECE7DF;
+  border-radius: 12px;
+  padding: 26px 28px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.ps-pane-title {
+  font-family: var(--font-serif, 'Cormorant Garamond', serif);
+  font-size: 20px;
+  font-weight: 600;
+  color: #1A1714;
+  margin: 0 0 20px 0;
+  border-bottom: 1px solid #F0EAE1;
+  padding-bottom: 12px;
+}
+
+/* Matrix Table (Screenshot 7) */
+.ps-matrix-table-wrap {
+  overflow-x: auto;
   margin-bottom: 24px;
+  background: #FAF8F5;
+  border: 1px solid #ECE7DF;
+  border-radius: 8px;
+  padding: 12px;
 }
 
-.ps-card-title {
-  font-family: var(--font-serif);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--color-gold);
+.ps-variant-matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.ps-variant-matrix-table th {
+  padding: 10px 14px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #8C8479;
   text-transform: uppercase;
-  margin-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding-bottom: 10px;
+  border-bottom: 1px solid #E5E0D8;
 }
 
-.ps-upload-dropzone {
-  border: 1px dashed var(--color-border);
-  border-radius: 4px;
-  padding: 24px;
-  text-align: center;
-  background: #050505;
+.ps-variant-matrix-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #EDE8E0;
+}
+
+.ps-matrix-size-cell strong {
+  font-size: 13px;
+  color: #1A1714;
+}
+
+.ps-matrix-input {
+  width: 100%;
+  max-width: 130px;
+  padding: 8px 12px;
+  background: #FFFFFF;
+  border: 1px solid #E5E0D8;
+  border-radius: 6px;
+  color: #1A1714;
+  font-size: 12.5px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ps-matrix-input:focus {
+  border-color: #C9A96E;
+  box-shadow: 0 0 0 2px rgba(201, 169, 110, 0.15);
+}
+
+/* Section Header & Subheading */
+.ps-builder-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #F0EAE1;
+}
+
+.ps-sub-heading {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #8C8479;
+  text-transform: uppercase;
+  margin: 0 0 14px 0;
+}
+
+/* Checkbox Group */
+.ps-checkbox-group {
+  display: flex;
+  gap: 24px;
+}
+
+.ps-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #1A1714;
   cursor: pointer;
 }
 
-.ps-dropzone-label {
+.ps-checkbox-label input[type='checkbox'] {
+  accent-color: #C9A96E;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* Toggles Grid (Screenshot 7) */
+.ps-toggles-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  max-width: 480px;
+}
+
+.ps-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ps-toggle-label {
+  font-size: 13px;
+  color: #1A1714;
+}
+
+/* Toggle Switch */
+.ps-switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+
+.ps-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.ps-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #E5E0D8;
+  transition: 0.3s;
+  border-radius: 20px;
+}
+
+.ps-slider:before {
+  position: absolute;
+  content: '';
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #FFFFFF;
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+input:checked + .ps-slider {
+  background-color: #C9A96E;
+}
+
+input:checked + .ps-slider:before {
+  transform: translateX(16px);
+}
+
+/* General Form Elements */
+.ps-form-group {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ps-form-group label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #8C8479;
+  text-transform: uppercase;
+}
+
+.ps-form-group input,
+.ps-form-group select,
+.ps-form-group textarea {
+  padding: 9px 12px;
+  background: #FAF8F5;
+  border: 1px solid #E5E0D8;
+  border-radius: 6px;
+  color: #1A1714;
+  font-size: 12.5px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.ps-form-group input:focus,
+.ps-form-group select:focus,
+.ps-form-group textarea:focus {
+  border-color: #C9A96E;
+  background: #FFFFFF;
+}
+
+.ps-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Image Uploads */
+.ps-image-upload-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ps-upload-card {
+  width: 180px;
+  height: 160px;
+  border: 1.5px dashed #D4C7B0;
+  border-radius: 8px;
+  background: #FAF8F5;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   cursor: pointer;
+  text-align: center;
+  padding: 12px;
+  transition: all 0.2s ease;
 }
 
-.ps-dropzone-label span {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-ivory);
+.ps-upload-card:hover {
+  background: #FAF7F2;
+  border-color: #C9A96E;
 }
 
-.ps-dropzone-label small {
-  font-size: 11px;
-  color: var(--color-muted);
+.ps-upload-card span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1A1714;
 }
 
-.ps-image-preview-box {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  border-radius: 4px;
-  overflow: hidden;
-  border: 1px solid rgba(200, 164, 93, 0.3);
-  background: #000;
-}
-
-.ps-img-preview {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: 4px;
-}
-
-.ps-remove-img-btn {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: rgba(239, 68, 68, 0.9);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+.ps-upload-card small {
+  font-size: 10px;
+  color: #8C8479;
 }
 
 .ps-gallery-grid {
   display: flex;
-  gap: 12px;
   flex-wrap: wrap;
-  margin-top: 8px;
+  gap: 14px;
 }
 
-.ps-add-thumb-btn {
+.ps-upload-gallery-card {
   width: 120px;
   height: 120px;
-  border: 1px dashed var(--color-border);
-  border-radius: 4px;
+}
+
+.ps-img-preview-card {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #ECE7DF;
+  background: #FAF8F5;
+}
+
+.ps-img-preview-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ps-img-del-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(17, 16, 15, 0.7);
+  border: none;
+  color: #FFFFFF;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
   cursor: pointer;
-  background: #050505;
-  font-size: 11px;
-  color: var(--color-muted);
-  transition: border-color 0.2s ease;
+  transition: background 0.15s ease;
 }
 
-.ps-add-thumb-btn:hover {
-  border-color: var(--color-gold);
-  color: var(--color-ivory);
-}
-
-.ps-admin-form-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.ps-save-prod-btn {
-  width: 100%;
-  height: 48px;
-}
-
-.ps-btn-cancel-form {
-  width: 100%;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--color-muted);
-  font-size: 11px;
-  text-transform: uppercase;
-  border-radius: 2px;
-  cursor: pointer;
-}
-
-.ps-btn-cancel-form:hover {
-  color: var(--color-ivory);
-}
-
-.ps-form-progress-banner {
-  background: rgba(200, 164, 93, 0.15);
-  border: 1px solid var(--color-gold);
-  color: var(--color-gold-bright);
-  padding: 10px 14px;
-  font-size: 12px;
-  border-radius: 2px;
-  margin-bottom: 20px;
+.ps-img-del-btn:hover {
+  background: #DC2626;
 }

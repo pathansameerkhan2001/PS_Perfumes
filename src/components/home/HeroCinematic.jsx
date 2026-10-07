@@ -8,59 +8,81 @@ import heroSlide2 from '../../assets/hero-slide2.webp';
 import heroSlide2Mobile from '../../assets/hero-slide2-mobile.webp';
 import promoBanner from '../../assets/promo-banner.webp';
 import promoBannerMobile from '../../assets/promo-banner-mobile.webp';
+import { getHeroSlides, INITIAL_HERO_SLIDES } from '../../services/hero';
 import './HeroCinematic.css';
 
-const HERO_SLIDES = [
+const DEFAULT_SLIDES = [
   {
-    id: 1,
+    id: 'hero-1',
     desktop: heroLuxuryDesktop,
     mobile: heroLuxuryMobile,
-    collectionTag: 'ROYAL OUD & AMBER ESSENCE',
-    link: '/shop',
-    alt: 'PS PERFUMES Royal Oud, Golden Attar and Amber Essence Luxury Collection in Kadapa',
+    link: '/category/oud',
+    alt: 'PS PERFUMES Royal Oud, Golden Attar and Amber Essence Luxury Collection',
   },
   {
-    id: 2,
+    id: 'hero-2',
     desktop: heroSlide2,
     mobile: heroSlide2Mobile,
-    collectionTag: 'IMPERIAL ATTAR & EXTRACTS',
     link: '/category/attar',
     alt: 'PS PERFUMES Imperial Artisanal Attar and Pure Essential Extractions',
   },
   {
-    id: 3,
+    id: 'hero-3',
     desktop: promoBanner,
     mobile: promoBannerMobile,
-    collectionTag: 'SACRED BAKHOOR & DAHNAL OUD',
     link: '/category/bakhoor',
     alt: 'PS PERFUMES Pure Distilled Agarwood and Royal Bakhoor Incense',
   },
 ];
 
 export default function HeroCinematic() {
+  const [slides, setSlides] = useState(DEFAULT_SLIDES);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    if (isHovered) return;
+    let mounted = true;
+    async function loadSlides() {
+      try {
+        const data = await getHeroSlides({ activeOnly: true });
+        if (mounted && Array.isArray(data) && data.length > 0) {
+          const mapped = data.map((s, idx) => ({
+            id: s.id || `slide-${idx}`,
+            desktop: s.desktop_image || s.desktop || heroLuxuryDesktop,
+            mobile: s.mobile_image || s.mobile || heroLuxuryMobile,
+            link: s.cta_link || s.link || '/category/oud',
+            alt: s.heading ? `PS PERFUMES ${s.heading}` : 'PS PERFUMES Luxury Campaign',
+          }));
+          setSlides(mapped);
+        }
+      } catch (e) {
+        console.warn('Using local fallback hero slides:', e);
+      }
+    }
+    loadSlides();
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    if (isHovered || slides.length === 0) return;
     const timer = setInterval(() => {
-      setCurrentIdx((prev) => (prev + 1) % HERO_SLIDES.length);
+      setCurrentIdx((prev) => (prev + 1) % slides.length);
     }, 7500);
     return () => clearInterval(timer);
-  }, [isHovered]);
+  }, [isHovered, slides.length]);
 
-  const slide = HERO_SLIDES[currentIdx];
+  const slide = slides[currentIdx] || slides[0] || DEFAULT_SLIDES[0];
 
   const handleNext = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setCurrentIdx((prev) => (prev + 1) % HERO_SLIDES.length);
+    setCurrentIdx((prev) => (prev + 1) % slides.length);
   };
 
   const handlePrev = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setCurrentIdx((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
+    setCurrentIdx((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
   return (
@@ -105,13 +127,11 @@ export default function HeroCinematic() {
           <div className="ps-hero-bottom-blend" />
         </div>
 
-        {/* Minimal Subtle Editorial Overlays (No bulky cards or heavy headlines) */}
+        {/* Minimal Subtle Editorial Overlays (Clean subtle controls only) */}
         <div className="ps-hero-subtle-overlay">
-          {/* Bottom Left: Micro Collection Indicator */}
-          <div className="ps-hero-indicator-badge">
-            <span className="ps-hero-index-num">0{currentIdx + 1} / 0{HERO_SLIDES.length}</span>
-            <span className="ps-hero-sep-dot">•</span>
-            <span className="ps-hero-collection-name">{slide.collectionTag}</span>
+          {/* Bottom Left: Micro Slide Counter Indicator */}
+          <div className="ps-hero-indicator-badge" aria-label={`Slide ${currentIdx + 1} of ${slides.length}`}>
+            <span className="ps-hero-index-num">0{currentIdx + 1} / 0{slides.length}</span>
           </div>
 
           {/* Bottom Right: Minimalist Arrow Controls */}
@@ -125,7 +145,7 @@ export default function HeroCinematic() {
               <ChevronLeft size={16} />
             </button>
             <div className="ps-hero-dots-indicator">
-              {HERO_SLIDES.map((s, idx) => (
+              {slides.map((s, idx) => (
                 <button
                   key={s.id}
                   type="button"

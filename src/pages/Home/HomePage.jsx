@@ -34,63 +34,57 @@ export default function HomePage() {
     return () => { mounted = false; };
   }, []);
 
-  const bestSellers = products.filter((p) => p.bestseller || p.featured);
-  const newArrivals = products.filter((p) => p.new_arrival);
+  const bestSellers = products.filter(
+    (p) => Boolean(p.bestseller) && (p.status === 'active' || p.active !== false)
+  );
+  const featuredProducts = products.filter(
+    (p) => Boolean(p.featured) && (p.status === 'active' || p.active !== false)
+  );
 
   return (
     <div className="ps-home-page">
-      {/* 1. Cinematic Hero Section */}
+      {/* 1. Hero Section (Controlled dynamically through Admin) */}
       <HeroCinematic />
 
-      {/* 2. Gold Announcement Ticker (Infinite continuous marquee) */}
+      {/* 2. Slim Luxury Champagne-Gold Marquee/Ticker */}
       <AnnouncementTicker />
 
       {/* 3. Luxury 4-Pillar Benefits Bar */}
       <BenefitsBar />
 
-      {/* 4. Shop by Fragrance (7 Circular Luxury Categories) */}
+      {/* 4. Shop by Category (Database-driven, clean circular imagery) */}
       <ShopByFragrance />
 
-      {/* 4. Atelier Bestsellers Grid */}
+      {/* 5. Homepage Best Sellers (Section 8: bestseller=true AND active=true) */}
       <ProductGridSection
-        id="catalog-grid"
-        tag="THE ATELIER COLLECTION"
-        title="Explore Our Best Sellers"
-        products={products}
-        showFilterTabs={true}
+        id="best-sellers"
+        tag="SIGNATURE CREATIONS"
+        title="Best Sellers"
+        products={bestSellers}
+        showFilterTabs={false}
         limit={8}
+        emptyMessage="No best sellers available yet."
       />
 
-      {/* 5. Dedicated Combo Pack Section */}
+      {/* 6. Featured Products (Section 9: featured=true AND active=true) */}
+      <ProductGridSection
+        id="featured-products"
+        tag="CURATED FORMULATIONS"
+        title="Featured Products"
+        products={featuredProducts}
+        showFilterTabs={false}
+        limit={8}
+        emptyMessage="No featured products available."
+      />
+
+      {/* 7. Combo Collections (Section 10: Dedicated Combo Section) */}
       <ComboPackSection />
 
-      {/* 6. Signature Scent Occasions */}
-      <SignatureScentSection />
-
-      {/* 7. Panoramic Promotional Banner */}
-      <PromoBanner />
-
-      {/* 8. New Arrivals & Rare Extractions */}
-      <ProductGridSection
-        id="new-arrivals"
-        tag="PRIVATE BLEND VAULT"
-        title="New Arrivals & Rare Extractions"
-        products={newArrivals.length > 0 ? newArrivals : products.slice(4, 8)}
-        showFilterTabs={false}
-        limit={4}
-      />
-
-      {/* 9. Real Instagram Reels Section */}
+      {/* 8. Instagram Reels Section */}
       <InstagramReelsSection />
 
-      {/* 10. Patron Testimonials & Reviews */}
+      {/* 9. Patron Reviews Section */}
       <ReviewsSection />
-
-      {/* 11. Heritage & Craftsmanship */}
-      <AboutSection />
-
-      {/* 12. Reassurance & Newsletter */}
-      <TrustStrip />
     </div>
   );
 }

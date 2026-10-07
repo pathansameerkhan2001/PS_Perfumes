@@ -1,0 +1,119 @@
+.ps-admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--ps-admin-font-sans, 'Montserrat', sans-serif);
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.ps-admin-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Sizes */
+.ps-admin-btn.is-size-sm {
+  font-size: 11.5px;
+  padding: 6px 12px;
+  height: 32px;
+}
+
+.ps-admin-btn.is-size-md {
+  font-size: 13px;
+  padding: 8px 16px;
+  height: 40px;
+}
+
+.ps-admin-btn.is-size-lg {
+  font-size: 14px;
+  padding: 10px 22px;
+  height: 46px;
+}
+
+/* Primary (Champagne Gold) */
+.ps-admin-btn.is-primary {
+  background: var(--ps-admin-gold, #C9A96E);
+  color: #11100F;
+  border-color: #BFA063;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(201, 169, 110, 0.25);
+}
+
+.ps-admin-btn.is-primary:hover {
+  background: var(--ps-admin-gold-hover, #D4B67E);
+  box-shadow: 0 4px 12px rgba(201, 169, 110, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Secondary (Ivory with Subtle Border) */
+.ps-admin-btn.is-secondary {
+  background: #FFFFFF;
+  color: var(--ps-admin-text-primary, #1A1714);
+  border-color: var(--ps-admin-border-light, #E5E0D8);
+}
+
+.ps-admin-btn.is-secondary:hover {
+  background: #FAF7F2;
+  border-color: var(--ps-admin-gold, #C9A96E);
+  color: var(--ps-admin-text-primary, #1A1714);
+}
+
+/* Dark (Charcoal Brand Accent) */
+.ps-admin-btn.is-dark {
+  background: var(--ps-admin-bg-sidebar, #11100F);
+  color: var(--ps-admin-text-ivory, #FFFAF0);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.ps-admin-btn.is-dark:hover {
+  background: #22201D;
+  border-color: var(--ps-admin-gold, #C9A96E);
+}
+
+/* Danger */
+.ps-admin-btn.is-danger {
+  background: var(--ps-admin-error-bg, #FDF2F2);
+  color: var(--ps-admin-error-text, #B91C1C);
+  border-color: rgba(185, 28, 28, 0.2);
+}
+
+.ps-admin-btn.is-danger:hover {
+  background: #FEE2E2;
+}
+
+/* Ghost */
+.ps-admin-btn.is-ghost {
+  background: transparent;
+  color: var(--ps-admin-text-secondary, #746B61);
+  border-color: transparent;
+}
+
+.ps-admin-btn.is-ghost:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--ps-admin-text-primary, #1A1714);
+}
+
+/* Loading spinner */
+.ps-admin-btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: ps-btn-spin 0.6s linear infinite;
+}
+
+@keyframes ps-btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

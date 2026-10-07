@@ -1,146 +1,249 @@
 /* ==========================================================================
-   PS PERFUMES — Admin Login Stylesheet
+   PS PERFUMES — Luxury Admin Login Portal
+   Atmosphere: #11100F Charcoal / Champagne Gold Accent
    ========================================================================== */
 
-.ps-admin-login-page {
+.ps-admin-login-wrapper {
   min-height: 100vh;
-  background: radial-gradient(circle at 50% 20%, #151410 0%, #050505 80%);
+  width: 100%;
+  background-color: #11100F;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  font-family: var(--font-sans, 'Montserrat', sans-serif);
+  position: relative;
+  background-image: radial-gradient(circle at 50% 30%, rgba(201, 169, 110, 0.05) 0%, rgba(17, 16, 15, 0) 70%);
 }
 
 .ps-admin-login-card {
   width: 100%;
-  max-width: 480px;
-  background: #0d0d0d;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  padding: 44px 36px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 24px rgba(200, 164, 93, 0.12);
+  max-width: 410px;
+  background: #171614;
+  border: 1px solid rgba(201, 169, 110, 0.22);
+  border-radius: 14px;
+  padding: 38px 34px 30px 34px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 1px rgba(201, 169, 110, 0.3);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-sizing: border-box;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 480px) {
   .ps-admin-login-card {
-    padding: 32px 20px;
+    padding: 30px 22px 24px 22px;
   }
 }
 
-.ps-admin-login-header {
+/* Brand Header */
+.ps-login-brand-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
   margin-bottom: 28px;
 }
 
-.ps-admin-login-logo {
-  max-width: 200px;
-  height: auto;
-  margin: 0 auto 16px;
-  display: block;
-}
-
-.ps-admin-badge-tag {
-  display: inline-block;
-  font-family: var(--font-serif);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  color: var(--color-gold);
-  border: 1px solid rgba(200, 164, 93, 0.35);
-  background: rgba(200, 164, 93, 0.08);
-  padding: 4px 10px;
-  border-radius: 9999px;
-  text-transform: uppercase;
-  margin-bottom: 12px;
-}
-
-.ps-admin-login-title {
-  font-family: var(--font-editorial);
-  font-size: 30px;
-  font-weight: 400;
-  color: var(--color-ivory);
-  letter-spacing: -0.01em;
-  margin-bottom: 8px;
-}
-
-.ps-admin-login-sub {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--color-muted);
-  line-height: 1.5;
-}
-
-.ps-admin-login-err {
-  background: rgba(227, 27, 35, 0.15);
-  border: 1px solid var(--color-red-cta);
-  color: #ff6b6b;
-  padding: 10px 14px;
-  font-size: 12px;
-  border-radius: 2px;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.ps-admin-login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.ps-admin-input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.ps-admin-input-group label {
-  font-family: var(--font-serif);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: var(--color-champagne);
-  text-transform: uppercase;
-}
-
-.ps-admin-input-box {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #050505;
-  border: 1px solid var(--color-border);
-  border-radius: 2px;
-  padding: 12px 14px;
-  transition: border-color 0.2s ease;
-}
-
-.ps-admin-input-box:focus-within {
-  border-color: var(--color-gold);
-}
-
-.ps-admin-input-box input {
-  flex: 1;
-  background: none;
-  border: none;
-  color: var(--color-ivory);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  outline: none;
-}
-
-.ps-admin-submit-btn {
-  width: 100%;
-  height: 48px;
-  margin-top: 8px;
-}
-
-.ps-admin-login-footer {
+.ps-login-logo-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.ps-login-tagline {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  color: #C9A96E;
+  margin-top: 10px;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+/* Alerts */
+.ps-login-alert {
+  padding: 11px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.ps-login-alert.is-error {
+  background: rgba(185, 28, 28, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #FCA5A5;
+}
+
+.ps-login-alert.is-info {
+  background: rgba(201, 169, 110, 0.12);
+  border: 1px solid rgba(201, 169, 110, 0.3);
+  color: #E8D7B8;
+}
+
+.ps-alert-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Form */
+.ps-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ps-login-field {
+  display: flex;
+  flex-direction: column;
   gap: 6px;
+}
+
+.ps-login-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ps-login-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #D6CEC3;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ps-login-forgot-btn {
+  background: none;
+  border: none;
+  color: #C9A96E;
   font-size: 11px;
-  color: var(--color-muted);
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  transition: opacity 0.2s ease;
+}
+
+.ps-login-forgot-btn:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.ps-login-input-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #0E0D0C;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0 12px;
+  height: 44px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ps-login-input-box:focus-within {
+  border-color: #C9A96E;
+  box-shadow: 0 0 0 3px rgba(201, 169, 110, 0.15);
+}
+
+.ps-login-input-icon {
+  color: #746B61;
+  flex-shrink: 0;
+}
+
+.ps-login-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #FFFAF0;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.ps-login-input::placeholder {
+  color: #554F47;
+}
+
+.ps-login-eye-btn {
+  background: none;
+  border: none;
+  color: #746B61;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  transition: color 0.15s ease;
+}
+
+.ps-login-eye-btn:hover {
+  color: #D6CEC3;
+}
+
+/* Submit Button */
+.ps-login-submit-btn {
+  margin-top: 6px;
+  height: 44px;
+  background: #C9A96E;
+  color: #11100F;
+  border: 1px solid #BFA063;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(201, 169, 110, 0.25);
+}
+
+.ps-login-submit-btn:hover:not(:disabled) {
+  background: #D4B67E;
+  box-shadow: 0 6px 16px rgba(201, 169, 110, 0.35);
+  transform: translateY(-1px);
+}
+
+.ps-login-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ps-login-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #11100F;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: ps-login-spin 0.6s linear infinite;
+}
+
+@keyframes ps-login-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Footer Note */
+.ps-login-card-footer {
   margin-top: 24px;
+  text-align: center;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   padding-top: 16px;
+}
+
+.ps-login-security-notice {
+  font-size: 10.5px;
+  color: #746B61;
+  letter-spacing: 0.05em;
+  margin: 0;
+  text-transform: uppercase;
 }

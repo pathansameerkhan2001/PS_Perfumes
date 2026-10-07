@@ -1,206 +1,263 @@
 /* ==========================================================================
-   PS PERFUMES — Admin Products Stylesheet
+   PS PERFUMES — Luxury Admin Products Stylesheet
+   Approved Luxury Design: Warm Ivory + White Cards + Champagne Gold Accents
    ========================================================================== */
 
 .ps-admin-products-page {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
+/* Header */
+.ps-admin-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ps-admin-page-title {
+  font-family: var(--font-serif, 'Cormorant Garamond', serif);
+  font-size: 28px;
+  font-weight: 600;
+  color: #1A1714;
+  margin: 0;
+  line-height: 1.15;
+}
+
+.ps-admin-page-subtitle {
+  font-size: 13px;
+  color: #6F675E;
+  margin: 2px 0 0 0;
+}
+
+.ps-btn-gold-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #11100F;
+  color: #C9A96E;
+  border: 1px solid #C9A96E;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.04em;
+}
+
+.ps-btn-gold-primary:hover {
+  background-color: #C9A96E;
+  color: #11100F;
+}
+
+/* Toolbar: Search & Filters */
 .ps-admin-products-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
-  gap: 16px;
+  gap: 14px;
   flex-wrap: wrap;
+  background: #FFFFFF;
+  border: 1px solid #ECE7DF;
+  border-radius: 10px;
+  padding: 12px 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
 }
 
 .ps-admin-search-input-wrap {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: #0d0d0d;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 8px 14px;
-  width: 320px;
+  gap: 8px;
+  background: #FAF8F5;
+  border: 1px solid #E5E0D8;
+  border-radius: 6px;
+  padding: 7px 12px;
+  width: 280px;
+  transition: border-color 0.2s ease;
+}
+
+.ps-admin-search-input-wrap:focus-within {
+  border-color: #C9A96E;
+  background: #FFFFFF;
 }
 
 .ps-admin-search-input-wrap input {
   background: none;
   border: none;
-  color: var(--color-ivory);
-  font-size: 13px;
+  color: #1A1714;
+  font-size: 12.5px;
   outline: none;
   width: 100%;
 }
 
-.ps-admin-filter-pills {
+.ps-admin-search-input-wrap input::placeholder {
+  color: #8C8479;
+}
+
+.ps-admin-filter-dropdowns {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-.ps-toolbar-pill {
-  padding: 6px 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--color-muted);
+.ps-admin-filter-select {
+  padding: 7px 12px;
+  background: #FAF8F5;
+  border: 1px solid #E5E0D8;
+  color: #1A1714;
+  border-radius: 6px;
   font-size: 12px;
-  border-radius: 9999px;
+  outline: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease;
 }
 
-.ps-toolbar-pill.is-active,
-.ps-toolbar-pill:hover {
-  background: var(--color-gold);
-  color: #050505;
-  border-color: var(--color-gold);
-  font-weight: 600;
+.ps-admin-filter-select:focus,
+.ps-admin-filter-select:hover {
+  border-color: #C9A96E;
+  background: #FFFFFF;
 }
 
-/* Table */
+/* Table Container */
 .ps-admin-table-container {
-  background: #0d0d0d;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
+  background: #FFFFFF;
+  border: 1px solid #ECE7DF;
+  border-radius: 12px;
   overflow-x: auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
 .ps-admin-products-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
+  font-size: 12px;
 }
 
 .ps-admin-products-table th {
-  padding: 14px 16px;
-  font-family: var(--font-serif);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--color-muted);
+  padding: 12px 14px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #8C8479;
   text-transform: uppercase;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: #080808;
+  border-bottom: 1px solid #F0EAE1;
+  background: #FAF8F5;
 }
 
 .ps-admin-products-table td {
-  padding: 14px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 12px 14px;
+  border-bottom: 1px solid #F7F3ED;
   vertical-align: middle;
+  color: #1A1714;
+}
+
+.ps-admin-products-table tbody tr:hover {
+  background-color: #FDFBF7;
 }
 
 .ps-prod-table-thumb {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  background: #050505;
-  border: 1px solid rgba(200, 164, 93, 0.2);
-  border-radius: 3px;
-  padding: 3px;
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  background: #FAF8F5;
+  border: 1px solid #ECE7DF;
+  border-radius: 6px;
 }
 
 .ps-prod-table-meta {
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .ps-prod-table-name {
-  font-family: var(--font-serif);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--color-ivory);
+  color: #1A1714;
+  font-weight: 600;
   text-decoration: none;
+  font-size: 12.5px;
+  transition: color 0.15s ease;
 }
 
 .ps-prod-table-name:hover {
-  color: var(--color-gold);
+  color: #C9A96E;
 }
 
 .ps-prod-table-sku {
-  font-size: 11px;
-  color: var(--color-muted);
-  letter-spacing: 0.04em;
+  color: #8C8479;
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
 }
 
 .ps-prod-table-category {
-  font-size: 12px;
-  color: var(--color-champagne);
+  display: inline-block;
+  padding: 3px 8px;
+  background: #FAF8F5;
+  border: 1px solid #E5E0D8;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #6F675E;
 }
 
 .ps-prod-table-price {
   display: flex;
   flex-direction: column;
+  gap: 1px;
 }
 
 .ps-prod-table-price strong {
-  color: var(--color-gold-bright);
+  color: #1A1714;
+  font-weight: 700;
+  font-size: 12.5px;
 }
 
 .ps-prod-table-price span {
-  font-size: 11px;
-  color: var(--color-muted);
+  color: #8C8479;
+  font-size: 10.5px;
   text-decoration: line-through;
 }
 
 .ps-stock-indicator-pill {
   display: inline-block;
   padding: 3px 8px;
+  border-radius: 12px;
+  background: #F0FDF4;
+  color: #16A34A;
   font-size: 11px;
   font-weight: 600;
-  background: rgba(34, 197, 94, 0.12);
-  color: #4ade80;
-  border-radius: 9999px;
 }
 
 .ps-stock-indicator-pill.is-low {
-  background: rgba(234, 179, 8, 0.12);
-  color: #eab308;
+  background: #FEF3C7;
+  color: #B45309;
 }
 
 .ps-status-toggle-btn {
-  padding: 3px 10px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  border-radius: 9999px;
-  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 12px;
   border: none;
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: capitalize;
+  transition: opacity 0.2s ease;
 }
 
 .ps-status-toggle-btn.is-active {
-  background: rgba(34, 197, 94, 0.2);
-  color: #4ade80;
+  background: #ECFDF5;
+  color: #059669;
 }
 
 .ps-status-toggle-btn.is-draft {
-  background: rgba(140, 140, 140, 0.2);
-  color: #a3a3a3;
-}
-
-.ps-badges-cell {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.ps-table-badge {
-  font-size: 9px;
-  font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 2px;
-}
-
-.ps-badge-gold {
-  background: rgba(200, 164, 93, 0.2);
-  color: var(--color-gold-bright);
-}
-
-.ps-badge-red {
-  background: rgba(227, 27, 35, 0.2);
-  color: #ff6b6b;
+  background: #F3F4F6;
+  color: #6B7280;
 }
 
 .ps-table-actions {
@@ -209,105 +266,110 @@
   gap: 8px;
 }
 
-.ps-action-icon-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--color-ivory);
+.ps-table-action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #E5E0D8;
+  background: #FFFFFF;
+  color: #6F675E;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  text-decoration: none;
 }
 
-.ps-action-icon-btn:hover {
-  background: var(--color-gold);
-  color: #050505;
+.ps-table-action-btn:hover {
+  border-color: #C9A96E;
+  color: #1A1714;
+  background: #FAF8F5;
 }
 
-.ps-action-icon-btn.is-delete:hover {
-  background: #ef4444;
-  color: #fff;
-  border-color: #ef4444;
+.ps-table-action-btn.is-delete:hover {
+  border-color: #EF4444;
+  color: #EF4444;
+  background: #FEF2F2;
 }
 
 /* Modal */
 .ps-admin-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(17, 16, 15, 0.6);
   backdrop-filter: blur(4px);
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
   padding: 20px;
 }
 
 .ps-admin-modal-card {
-  max-width: 440px;
+  background: #FFFFFF;
+  border: 1px solid #ECE7DF;
+  border-radius: 12px;
+  padding: 28px;
+  max-width: 420px;
   width: 100%;
-  background: #0d0d0d;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  padding: 32px 28px;
   text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
 .ps-modal-icon {
-  margin: 0 auto 16px;
+  margin-bottom: 12px;
 }
 
 .ps-modal-title {
-  font-family: var(--font-editorial);
-  font-size: 26px;
-  color: var(--color-ivory);
-  margin-bottom: 10px;
+  font-family: var(--font-serif, 'Cormorant Garamond', serif);
+  font-size: 20px;
+  color: #1A1714;
+  margin: 0 0 8px 0;
 }
 
 .ps-modal-desc {
-  font-size: 13px;
+  font-size: 12.5px;
+  color: #6F675E;
   line-height: 1.5;
-  color: var(--color-muted);
-  margin-bottom: 24px;
+  margin: 0 0 20px 0;
 }
 
 .ps-modal-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
+  justify-content: center;
 }
 
 .ps-btn-cancel {
-  flex: 1;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--color-ivory);
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 2px;
+  padding: 8px 16px;
+  background: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  color: #4B5563;
+  font-size: 11.5px;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .ps-btn-confirm-delete {
-  flex: 1;
-  padding: 12px;
-  background: #ef4444;
+  padding: 8px 16px;
+  background: #DC2626;
   border: none;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 2px;
+  border-radius: 6px;
+  color: #FFFFFF;
+  font-size: 11.5px;
+  font-weight: 600;
   cursor: pointer;
 }
 
+.ps-admin-loading,
 .ps-admin-empty-table {
+  padding: 40px;
   text-align: center;
-  padding: 60px 20px;
-  background: #0d0d0d;
-  border: 1px solid var(--color-border);
-  color: var(--color-muted);
+  background: #FFFFFF;
+  border: 1px solid #ECE7DF;
+  border-radius: 10px;
+  color: #6F675E;
+  font-size: 13px;
 }

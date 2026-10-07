@@ -1,20 +1,24 @@
 /* ==========================================================================
    PS PERFUMES — Luxury Admin Layout Stylesheet
+   Approved Design Reference: Black Sidebar + Warm Ivory Content Area (#F7F4EE)
    ========================================================================== */
 
 .ps-admin-root {
   display: flex;
   min-height: 100vh;
-  background-color: #050505;
-  color: #f8f5ee;
-  font-family: var(--font-sans);
+  background-color: #F7F4EE;
+  color: #1A1714;
+  font-family: var(--font-sans, 'Montserrat', -apple-system, sans-serif);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Sidebar */
+/* ==========================================================================
+   1. FIXED SIDEBAR (~200px)
+   ========================================================================== */
 .ps-admin-sidebar {
-  width: 260px;
-  background-color: #0a0a0a;
-  border-right: 1px solid rgba(200, 164, 93, 0.2);
+  width: 200px;
+  background-color: #11100F;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -22,13 +26,14 @@
   bottom: 0;
   left: 0;
   z-index: 100;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.25);
 }
 
 @media (max-width: 1024px) {
   .ps-admin-sidebar {
     transform: translateX(-100%);
-    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.8);
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.7);
   }
   .ps-admin-sidebar.is-open {
     transform: translateX(0);
@@ -38,37 +43,34 @@
 .ps-admin-sidebar-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(17, 16, 15, 0.65);
   backdrop-filter: blur(4px);
   z-index: 95;
 }
 
+/* Brand Header */
 .ps-admin-sidebar-header {
-  padding: 24px 20px 16px;
+  padding: 24px 18px 16px 18px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
+  align-items: center;
   position: relative;
+  text-align: center;
 }
 
 .ps-admin-logo-link {
-  display: block;
+  display: inline-block;
   line-height: 0;
-  margin-bottom: 8px;
-}
-
-.ps-admin-logo-img {
-  width: 170px;
-  height: auto;
-  object-fit: contain;
+  margin-bottom: 4px;
 }
 
 .ps-admin-tagline {
-  font-family: var(--font-serif);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  color: var(--color-gold);
+  font-family: var(--font-serif, 'Cormorant Garamond', serif);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  color: #C9A96E;
   text-transform: uppercase;
 }
 
@@ -76,105 +78,177 @@
   display: none;
   position: absolute;
   top: 20px;
-  right: 16px;
-  color: #fff;
+  right: 14px;
+  background: none;
+  border: none;
+  color: #8E877E;
   cursor: pointer;
+  padding: 4px;
 }
 
 @media (max-width: 1024px) {
   .ps-admin-close-sidebar-btn {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
-/* Nav Menu */
+/* Navigation Menu */
 .ps-admin-nav-menu {
   flex: 1;
-  padding: 16px 12px;
+  padding: 14px 10px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 14px;
+}
+
+.ps-admin-nav-menu::-webkit-scrollbar {
+  width: 3px;
+}
+.ps-admin-nav-menu::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.ps-admin-nav-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-admin-nav-heading {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #6F675E;
+  text-transform: uppercase;
+  padding: 0 10px 6px 10px;
+}
+
+.ps-admin-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .ps-admin-nav-link {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 4px;
-  color: #a39c91;
-  font-size: 13px;
-  font-weight: 500;
+  gap: 10px;
+  padding: 7px 11px;
+  border-radius: 6px;
+  color: #A8A196;
   text-decoration: none;
-  transition: all 0.2s ease;
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: all 0.18s ease;
+  border: 1px solid transparent;
 }
 
 .ps-admin-nav-link:hover {
-  background: rgba(200, 164, 93, 0.08);
-  color: var(--color-ivory);
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.04);
 }
 
 .ps-admin-nav-link.is-active {
-  background: linear-gradient(90deg, rgba(200, 164, 93, 0.18) 0%, rgba(200, 164, 93, 0.05) 100%);
-  color: var(--color-gold-bright);
-  border-left: 3px solid var(--color-gold);
+  color: #FFFAF0;
+  background-color: #1C1A16;
+  border: 1px solid rgba(201, 169, 110, 0.35);
+  border-radius: 8px;
   font-weight: 600;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
 }
 
 .ps-nav-icon {
+  color: #8E877E;
   flex-shrink: 0;
+  transition: color 0.18s ease;
+}
+
+.ps-admin-nav-link:hover .ps-nav-icon {
+  color: #C9A96E;
+}
+
+.ps-admin-nav-link.is-active .ps-nav-icon {
+  color: #C9A96E;
 }
 
 /* Sidebar Footer */
 .ps-admin-sidebar-footer {
-  padding: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 14px 14px 18px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background-color: #0E0D0C;
   display: flex;
   flex-direction: column;
+  gap: 12px;
+}
+
+.ps-admin-profile-box {
+  display: flex;
+  align-items: center;
   gap: 10px;
 }
 
-.ps-admin-view-site-link {
+.ps-admin-profile-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #A17440;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--color-champagne);
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 4px;
-  text-decoration: none;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-.ps-admin-view-site-link:hover {
-  background: rgba(200, 164, 93, 0.15);
-  color: var(--color-gold);
+.ps-admin-profile-details {
+  display: flex;
+  flex-direction: column;
 }
 
-.ps-admin-logout-btn {
+.ps-admin-profile-name {
+  color: #FFFFFF;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.ps-admin-profile-role {
+  color: #8E877E;
+  font-size: 10.5px;
+}
+
+.ps-admin-logout-action {
   display: flex;
   align-items: center;
   gap: 8px;
+  background: none;
+  border: none;
+  color: #A8A196;
   font-size: 12px;
-  color: #ff6b6b;
-  padding: 8px 12px;
   cursor: pointer;
+  padding: 6px 4px;
   border-radius: 4px;
-  transition: background 0.2s ease;
+  transition: color 0.18s ease;
 }
 
-.ps-admin-logout-btn:hover {
-  background: rgba(235, 28, 36, 0.1);
+.ps-admin-logout-action:hover {
+  color: #EF4444;
 }
 
-/* Workspace Area */
+/* ==========================================================================
+   2. MAIN WORKSPACE AREA (#F7F4EE Warm Ivory)
+   ========================================================================== */
 .ps-admin-workspace {
+  margin-left: 200px;
   flex: 1;
-  margin-left: 260px;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+  background-color: #F7F4EE;
+  min-width: 0;
 }
 
 @media (max-width: 1024px) {
@@ -183,112 +257,452 @@
   }
 }
 
-/* Topbar */
+/* Top Header Bar */
 .ps-admin-topbar {
   height: 64px;
-  background-color: #080808;
-  border-bottom: 1px solid rgba(200, 164, 93, 0.15);
   padding: 0 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background-color: #F7F4EE;
+  border-bottom: 1px solid rgba(230, 224, 214, 0.7);
   position: sticky;
   top: 0;
-  z-index: 90;
+  z-index: 50;
 }
 
 @media (max-width: 768px) {
   .ps-admin-topbar {
     padding: 0 16px;
+    height: 58px;
   }
 }
 
 .ps-admin-topbar-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .ps-admin-menu-toggle {
-  display: none;
-  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #1A1714;
   cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
 }
 
-@media (max-width: 1024px) {
-  .ps-admin-menu-toggle {
-    display: inline-flex;
-  }
+.ps-admin-menu-toggle:hover {
+  background: rgba(0, 0, 0, 0.05);
 }
 
-.ps-admin-topbar-title {
-  font-family: var(--font-serif);
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--color-ivory);
+.ps-admin-storefront-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid #E5E0D8;
+  background: #FFFFFF;
+  color: #6F675E;
+  font-size: 11px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
+.ps-admin-storefront-badge:hover {
+  color: #C9A96E;
+  border-color: #C9A96E;
+}
+
+/* Topbar Right Area */
 .ps-admin-topbar-right {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-.ps-admin-profile-pill {
+/* Ivory/White Search Field */
+.ps-admin-header-search {
   display: flex;
   align-items: center;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E0D8;
+  border-radius: 20px;
+  padding: 6px 14px;
+  width: 290px;
   gap: 8px;
-  padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(200, 164, 93, 0.25);
-  border-radius: 9999px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.ps-admin-role-badge {
-  font-family: var(--font-serif);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  background: var(--color-gold);
-  color: #050505;
-  padding: 2px 6px;
-  border-radius: 9999px;
+.ps-admin-header-search:focus-within {
+  border-color: #C9A96E;
+  box-shadow: 0 0 0 2px rgba(201, 169, 110, 0.15);
 }
 
-.ps-admin-email-text {
-  font-size: 12px;
-  color: var(--color-champagne);
-}
-
-@media (max-width: 600px) {
-  .ps-admin-email-text {
+@media (max-width: 640px) {
+  .ps-admin-header-search {
     display: none;
   }
 }
 
-.ps-admin-topbar-btn {
-  color: #a39c91;
-  cursor: pointer;
-  padding: 6px;
-  transition: color 0.2s ease;
+.ps-search-icon {
+  color: #8C8479;
+  flex-shrink: 0;
 }
 
-.ps-admin-topbar-btn:hover {
-  color: var(--color-gold);
-}
-
-/* Content Container */
-.ps-admin-content-container {
-  flex: 1;
-  padding: 32px;
-  max-width: 1400px;
+.ps-search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 12.5px;
+  color: #1A1714;
   width: 100%;
-  margin: 0 auto;
+}
+
+.ps-search-input::placeholder {
+  color: #8C8479;
+}
+
+/* Notifications Button */
+.ps-admin-notif-wrap {
+  position: relative;
+}
+
+.ps-admin-notif-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 1px solid #E5E0D8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6F675E;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.ps-admin-notif-btn:hover {
+  color: #1A1714;
+  border-color: #C9A96E;
+}
+
+.ps-notif-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background-color: #DC2626;
+  color: #FFFFFF;
+  font-size: 9px;
+  font-weight: 700;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #F7F4EE;
+}
+
+.ps-admin-notif-dropdown {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  width: 240px;
+  background: #FFFFFF;
+  border: 1px solid #E5E0D8;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  padding: 12px;
+  z-index: 100;
+}
+
+.ps-notif-head {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1A1714;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #F0ECE4;
+  padding-bottom: 6px;
+}
+
+.ps-notif-empty {
+  font-size: 11px;
+  color: #8C8479;
+  text-align: center;
+  padding: 10px 0;
+}
+
+/* User Pill / Avatar */
+.ps-admin-user-menu-wrap {
+  position: relative;
+}
+
+.ps-admin-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.ps-admin-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #A17440;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ps-admin-user-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1A1714;
+}
+
+.ps-admin-user-caret {
+  font-size: 10px;
+  color: #6F675E;
+}
+
+.ps-admin-user-dropdown {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  width: 190px;
+  background: #FFFFFF;
+  border: 1px solid #E5E0D8;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  padding: 8px 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-user-dropdown-meta {
+  padding: 8px 14px 10px;
+  border-bottom: 1px solid #F0ECE4;
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-user-dropdown-meta strong {
+  font-size: 12px;
+  color: #1A1714;
+}
+
+.ps-user-dropdown-meta span {
+  font-size: 10.5px;
+  color: #8C8479;
+}
+
+.ps-user-dropdown-link {
+  padding: 8px 14px;
+  font-size: 12px;
+  color: #1A1714;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.ps-user-dropdown-link:hover {
+  background: #F7F4EE;
+  color: #C9A96E;
+}
+
+.ps-user-dropdown-logout {
+  padding: 8px 14px;
+  font-size: 12px;
+  color: #DC2626;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  border-top: 1px solid #F0ECE4;
+  margin-top: 4px;
+}
+
+.ps-user-dropdown-logout:hover {
+  background: #FEF2F2;
+}
+
+/* ==========================================================================
+   3. CONTENT CONTAINER
+   ========================================================================== */
+.ps-admin-content-container {
+  padding: 24px 32px 48px 32px;
+  flex: 1;
 }
 
 @media (max-width: 768px) {
   .ps-admin-content-container {
-    padding: 20px 16px;
+    padding: 16px 16px 36px 16px;
   }
 }
+
+/* ==========================================================================
+   4. GLOBAL LUXURY ADMIN DESIGN SYSTEM TOKENS & UTILITIES
+   Ensures All Admin Pages (/admin/*) Share the Exact Same Visual Balance
+   ========================================================================== */
+.ps-admin-root .ps-admin-table-container,
+.ps-admin-root .ps-admin-card,
+.ps-admin-root .ps-admin-panel {
+  background: #FFFFFF !important;
+  border: 1px solid #ECE7DF !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02) !important;
+  color: #1A1714 !important;
+}
+
+.ps-admin-root .ps-admin-products-table th,
+.ps-admin-root .ps-admin-table th {
+  background: #FAF8F5 !important;
+  color: #8C8479 !important;
+  border-bottom: 1px solid #F0EAE1 !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  padding: 11px 14px !important;
+}
+
+.ps-admin-root .ps-admin-products-table td,
+.ps-admin-root .ps-admin-table td {
+  border-bottom: 1px solid #F7F3ED !important;
+  color: #1A1714 !important;
+  padding: 12px 14px !important;
+}
+
+.ps-admin-root .ps-admin-products-table tr:hover,
+.ps-admin-root .ps-admin-table tr:hover {
+  background-color: #FDFBF7 !important;
+}
+
+/* Status Badges & Pills */
+.ps-admin-root .ps-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.ps-admin-root .ps-status-delivered,
+.ps-admin-root .ps-status-active,
+.ps-admin-root .ps-badge-active {
+  background: #ECFDF5 !important;
+  color: #059669 !important;
+  border: 1px solid #A7F3D0 !important;
+}
+
+.ps-admin-root .ps-status-pending,
+.ps-admin-root .ps-status-low,
+.ps-admin-root .ps-badge-low {
+  background: #FEF3C7 !important;
+  color: #B45309 !important;
+  border: 1px solid #FDE68A !important;
+}
+
+.ps-admin-root .ps-status-cancelled,
+.ps-admin-root .ps-status-disabled,
+.ps-admin-root .ps-status-out,
+.ps-admin-root .ps-badge-out {
+  background: #FEE2E2 !important;
+  color: #DC2626 !important;
+  border: 1px solid #FECACA !important;
+}
+
+.ps-admin-root .ps-status-shipped,
+.ps-admin-root .ps-status-processing,
+.ps-admin-root .ps-status-confirmed {
+  background: #EFF6FF !important;
+  color: #2563EB !important;
+  border: 1px solid #BFDBFE !important;
+}
+
+/* Status Dropdown Select */
+.ps-admin-root .ps-status-select {
+  background: #FFFFFF !important;
+  border: 1px solid #E5E0D8 !important;
+  color: #1A1714 !important;
+  padding: 5px 10px !important;
+  font-size: 11.5px !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  outline: none;
+}
+
+.ps-admin-root .ps-status-select:focus {
+  border-color: #C9A96E !important;
+}
+
+/* Action Icon Buttons */
+.ps-admin-root .ps-action-icon-btn {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 6px !important;
+  border: 1px solid #E5E0D8 !important;
+  background: #FFFFFF !important;
+  color: #6F675E !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.ps-admin-root .ps-action-icon-btn:hover {
+  border-color: #C9A96E !important;
+  color: #1A1714 !important;
+  background: #FAF8F5 !important;
+}
+
+.ps-admin-root .ps-action-icon-btn.is-delete:hover {
+  border-color: #EF4444 !important;
+  color: #EF4444 !important;
+  background: #FEF2F2 !important;
+}
+
+/* Modals */
+.ps-admin-root .ps-admin-modal-card {
+  background: #FFFFFF !important;
+  border: 1px solid #ECE7DF !important;
+  border-radius: 12px !important;
+  color: #1A1714 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
+}
+
+.ps-admin-root .ps-admin-modal-card input,
+.ps-admin-root .ps-admin-modal-card select,
+.ps-admin-root .ps-admin-modal-card textarea {
+  background: #FAF8F5 !important;
+  border: 1px solid #E5E0D8 !important;
+  color: #1A1714 !important;
+  border-radius: 6px !important;
+}
+
+.ps-admin-root .ps-admin-modal-card input:focus,
+.ps-admin-root .ps-admin-modal-card select:focus,
+.ps-admin-root .ps-admin-modal-card textarea:focus {
+  border-color: #C9A96E !important;
+  background: #FFFFFF !important;
+}
+

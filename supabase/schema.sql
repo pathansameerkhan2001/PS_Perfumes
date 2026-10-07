@@ -112,6 +112,94 @@ CREATE INDEX IF NOT EXISTS idx_products_new_arrival ON public.products(new_arriv
 CREATE INDEX IF NOT EXISTS idx_products_bestseller ON public.products(bestseller);
 CREATE INDEX IF NOT EXISTS idx_products_created_at ON public.products(created_at DESC);
 
+-- 3B. PRODUCT VARIANTS (Variant Matrix: Glass / PVC x 30ml, 50ml, 100ml)
+CREATE TABLE IF NOT EXISTS public.product_variants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+  bottle_type TEXT NOT NULL CHECK (bottle_type IN ('glass', 'pvc', 'Glass Bottle', 'PVC Bottle')),
+  size_ml TEXT NOT NULL,
+  price NUMERIC(10, 2) NOT NULL,
+  sale_price NUMERIC(10, 2),
+  compare_at_price NUMERIC(10, 2),
+  stock INT NOT NULL DEFAULT 15,
+  sku TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  UNIQUE(product_id, bottle_type, size_ml)
+);
+
+CREATE INDEX IF NOT EXISTS idx_variants_product_id ON public.product_variants(product_id);
+CREATE INDEX IF NOT EXISTS idx_variants_stock ON public.product_variants(stock);
+
+-- 3C. COMBOS & BUNDLES
+CREATE TABLE IF NOT EXISTS public.combos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  category TEXT DEFAULT 'Combo Pack',
+  description TEXT,
+  image_url TEXT NOT NULL,
+  combo_price NUMERIC(10, 2) NOT NULL,
+  original_price NUMERIC(10, 2),
+  discount INT,
+  stock INT NOT NULL DEFAULT 20,
+  bestseller BOOLEAN DEFAULT false,
+  featured BOOLEAN DEFAULT false,
+  is_active BOOLEAN DEFAULT true,
+  display_order INT DEFAULT 0,
+  rating NUMERIC(3, 2) DEFAULT 5.0,
+  review_count INT DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE INDEX IF NOT EXISTS idx_combos_slug ON public.combos(slug);
+CREATE INDEX IF NOT EXISTS idx_combos_order ON public.combos(display_order);
+
+CREATE TABLE IF NOT EXISTS public.combo_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  combo_id UUID NOT NULL REFERENCES public.combos(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
+  product_name TEXT NOT NULL,
+  variant_id UUID REFERENCES public.product_variants(id) ON DELETE SET NULL,
+  bottle_type TEXT,
+  size_ml TEXT,
+  quantity INT NOT NULL DEFAULT 1,
+  product_image TEXT,
+  subtitle TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_combo_items_combo_id ON public.combo_items(combo_id);
+
+-- 3D. HERO SLIDES
+CREATE TABLE IF NOT EXISTS public.hero_slides (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  desktop_image TEXT NOT NULL,
+  mobile_image TEXT NOT NULL,
+  eyebrow TEXT,
+  heading TEXT,
+  description TEXT,
+  cta_text TEXT,
+  cta_link TEXT,
+  display_order INT DEFAULT 0,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE INDEX IF NOT EXISTS idx_hero_slides_order ON public.hero_slides(display_order);
+
+-- 3E. ADMIN USERS
+CREATE TABLE IF NOT EXISTS public.admin_users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE NOT NULL,
+  full_name TEXT NOT NULL,
+  role TEXT DEFAULT 'admin',
+  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'suspended')),
+  last_login TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
 -- 4. ORDERS & ORDER ITEMS
 CREATE TABLE IF NOT EXISTS public.orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -142,7 +230,10 @@ CREATE TABLE IF NOT EXISTS public.order_items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id UUID NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
   product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
+  variant_id UUID REFERENCES public.product_variants(id) ON DELETE SET NULL,
   product_name TEXT NOT NULL,
+  bottle_type TEXT,
+  size_ml TEXT,
   quantity INT NOT NULL DEFAULT 1,
   price NUMERIC(10, 2) NOT NULL,
   total NUMERIC(10, 2) NOT NULL,
@@ -264,6 +355,11 @@ CREATE TABLE IF NOT EXISTS public.contact_enquiries (
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_variants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.combos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.combo_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.hero_slides ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
@@ -293,6 +389,41 @@ CREATE POLICY "Public can read active products" ON public.products
   FOR SELECT USING (status = 'active' OR public.is_admin());
 
 CREATE POLICY "Admin manage products" ON public.products
+  FOR ALL USING (public.is_admin());
+
+-- Product Variants: Public read active; Admin all
+CREATE POLICY "Public can read active variants" ON public.product_variants
+  FOR SELECT USING (is_active = true OR public.is_admin());
+
+CREATE POLICY "Admin manage variants" ON public.product_variants
+  FOR ALL USING (public.is_admin());
+
+-- Combos: Public read active; Admin all
+CREATE POLICY "Public can read active combos" ON public.combos
+  FOR SELECT USING (is_active = true OR public.is_admin());
+
+CREATE POLICY "Admin manage combos" ON public.combos
+  FOR ALL USING (public.is_admin());
+
+-- Combo Items: Public read; Admin all
+CREATE POLICY "Public can read combo items" ON public.combo_items
+  FOR SELECT USING (true);
+
+CREATE POLICY "Admin manage combo items" ON public.combo_items
+  FOR ALL USING (public.is_admin());
+
+-- Hero Slides: Public read active; Admin all
+CREATE POLICY "Public can read active hero slides" ON public.hero_slides
+  FOR SELECT USING (is_active = true OR public.is_admin());
+
+CREATE POLICY "Admin manage hero slides" ON public.hero_slides
+  FOR ALL USING (public.is_admin());
+
+-- Admin Users: Admin only
+CREATE POLICY "Admin view admin users" ON public.admin_users
+  FOR SELECT USING (public.is_admin());
+
+CREATE POLICY "Admin manage admin users" ON public.admin_users
   FOR ALL USING (public.is_admin());
 
 -- Orders: Customers can read own; Anyone can create an order; Admin manage all

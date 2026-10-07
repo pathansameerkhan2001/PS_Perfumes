@@ -19,21 +19,8 @@ import InstagramPage from './pages/Instagram/InstagramPage';
 // Lazy-loaded Admin Pages (Code-split for maximum storefront performance)
 const AdminLogin = lazy(() => import('./admin/pages/AdminLogin'));
 const AdminRoute = lazy(() => import('./admin/components/AdminRoute'));
-const AdminLayout = lazy(() => import('./admin/components/AdminLayout'));
+const AdminLayout = lazy(() => import('./admin/layouts/AdminLayout'));
 const AdminDashboard = lazy(() => import('./admin/pages/AdminDashboard'));
-const AdminProducts = lazy(() => import('./admin/pages/AdminProducts'));
-const AdminProductForm = lazy(() => import('./admin/pages/AdminProductForm'));
-const AdminCategories = lazy(() => import('./admin/pages/AdminCategories'));
-const AdminOrders = lazy(() => import('./admin/pages/AdminOrders'));
-const AdminCustomers = lazy(() => import('./admin/pages/AdminCustomers'));
-const AdminReviews = lazy(() => import('./admin/pages/AdminReviews'));
-const AdminReels = lazy(() => import('./admin/pages/AdminReels'));
-const AdminBanners = lazy(() => import('./admin/pages/AdminBanners'));
-const AdminHomepage = lazy(() => import('./admin/pages/AdminHomepage'));
-const AdminInventory = lazy(() => import('./admin/pages/AdminInventory'));
-const AdminCoupons = lazy(() => import('./admin/pages/AdminCoupons'));
-const AdminSettings = lazy(() => import('./admin/pages/AdminSettings'));
-const AdminEnquiries = lazy(() => import('./admin/pages/AdminEnquiries'));
 
 import './components/Sections.css';
 import './App.css';
@@ -47,13 +34,24 @@ function AdminLoadingFallback() {
         alignItems: 'center',
         justifyContent: 'center',
         minHeight: '60vh',
-        gap: '1rem',
-        color: '#C8A45D',
-        fontFamily: 'Cinzel, serif',
+        gap: '12px',
+        color: '#C9A96E',
+        fontFamily: "'Cormorant Garamond', Georgia, serif",
       }}
     >
-      <div className="ps-admin-spinner" />
-      <span style={{ fontSize: '0.9rem', letterSpacing: '0.1em' }}>ACCESSING ATELIER CONSOLE...</span>
+      <div
+        style={{
+          width: '26px',
+          height: '26px',
+          border: '2px solid rgba(201, 169, 110, 0.25)',
+          borderTopColor: '#C9A96E',
+          borderRadius: '50%',
+          animation: 'ps-spin 0.7s linear infinite',
+        }}
+      />
+      <span style={{ fontSize: '13px', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+        Accessing Atelier Console...
+      </span>
     </div>
   );
 }
@@ -113,20 +111,7 @@ export default function App() {
           }
         >
           <Route index element={<AdminDashboard />} />
-          <Route path="products" element={<AdminProducts />} />
-          <Route path="products/new" element={<AdminProductForm />} />
-          <Route path="products/:id" element={<AdminProductForm />} />
-          <Route path="categories" element={<AdminCategories />} />
-          <Route path="orders" element={<AdminOrders />} />
-          <Route path="customers" element={<AdminCustomers />} />
-          <Route path="reviews" element={<AdminReviews />} />
-          <Route path="reels" element={<AdminReels />} />
-          <Route path="banners" element={<AdminBanners />} />
-          <Route path="homepage" element={<AdminHomepage />} />
-          <Route path="inventory" element={<AdminInventory />} />
-          <Route path="coupons" element={<AdminCoupons />} />
-          <Route path="settings" element={<AdminSettings />} />
-          <Route path="enquiries" element={<AdminEnquiries />} />
+          <Route path="*" element={<Navigate to="/admin" replace />} />
         </Route>
 
         {/* Fallback route */}

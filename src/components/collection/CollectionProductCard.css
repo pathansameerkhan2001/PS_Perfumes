@@ -246,6 +246,55 @@
   font-weight: 500;
 }
 
+/* Minimal Luxury Variant Selectors */
+.ps-col-card-variants {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.ps-col-var-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ps-col-var-lbl {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px;
+  color: #77716A;
+  font-weight: 500;
+  min-width: 36px;
+}
+
+.ps-col-pills {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.ps-col-pill {
+  padding: 2px 7px;
+  font-size: 10.5px;
+  font-family: 'Montserrat', sans-serif;
+  background: #FDFBF7;
+  border: 1px solid #E5DFD3;
+  color: #2B2520;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.2;
+}
+
+.ps-col-pill:hover,
+.ps-col-pill.is-active {
+  background: #171513;
+  border-color: #171513;
+  color: #C9A45C;
+  font-weight: 600;
+}
+
 /* Action Controls: [ ADD TO CART ] [ ♡ ] */
 .ps-col-card-actions {
   display: grid;

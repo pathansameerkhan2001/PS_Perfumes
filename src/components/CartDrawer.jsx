@@ -123,58 +123,67 @@ export default function CartDrawer() {
             </div>
           ) : (
             <div className="ps-cart-items-list">
-              {cartItems.map((item, index) => (
-                <div key={`${item.product.id}-${item.size}-${index}`} className="ps-cart-item">
-                  <div className="ps-cart-item-img-wrap">
-                    <img
-                      src={item.product.image}
-                      alt={item.product.name}
-                      className="ps-cart-item-img"
-                    />
-                  </div>
+              {cartItems.map((item, index) => {
+                const prod = item.product || item;
+                const img = item.image || prod.main_image || prod.image || '/assets/prod-royal-amber.webp';
+                const itemPrice = Number(item.price) || Number(prod.price) || 0;
+                const identifier = item.cartItemId || item.variant_id || item.size_ml || item.size;
 
-                  <div className="ps-cart-item-details">
-                    <div className="ps-cart-item-top">
-                      <span className="ps-cart-item-brand">PS PERFUMES</span>
-                      <button
-                        type="button"
-                        className="ps-cart-item-remove"
-                        onClick={() => removeFromCart(item.product.id, item.size)}
-                        aria-label="Remove item"
-                      >
-                        <Trash2 size={15} />
-                      </button>
+                return (
+                  <div key={`${prod.id}-${identifier}-${index}`} className="ps-cart-item">
+                    <div className="ps-cart-item-img-wrap">
+                      <img
+                        src={img}
+                        alt={item.name || prod.name}
+                        className="ps-cart-item-img"
+                      />
                     </div>
 
-                    <h4 className="ps-cart-item-title">{item.product.name}</h4>
-                    <span className="ps-cart-item-size">Size: {item.size}</span>
-
-                    <div className="ps-cart-item-bottom">
-                      <div className="ps-cart-qty-ctrl">
+                    <div className="ps-cart-item-details">
+                      <div className="ps-cart-item-top">
+                        <span className="ps-cart-item-brand">{prod.brand || 'PS PERFUMES'}</span>
                         <button
                           type="button"
-                          className="ps-cart-qty-btn"
-                          onClick={() => updateQuantity(item.product.id, item.size, item.quantity - 1)}
+                          className="ps-cart-item-remove"
+                          onClick={() => removeFromCart(prod.id, identifier)}
+                          aria-label="Remove item"
                         >
-                          -
-                        </button>
-                        <span className="ps-cart-qty-num">{item.quantity}</span>
-                        <button
-                          type="button"
-                          className="ps-cart-qty-btn"
-                          onClick={() => updateQuantity(item.product.id, item.size, item.quantity + 1)}
-                        >
-                          +
+                          <Trash2 size={15} />
                         </button>
                       </div>
 
-                      <div className="ps-cart-item-price">
-                        {formatINR(item.product.price * item.quantity)}
+                      <h4 className="ps-cart-item-title">{item.name || prod.name}</h4>
+                      <span className="ps-cart-item-size">
+                        {item.bottle_type ? `${item.bottle_type} • ${item.size_ml || item.size}` : `Size: ${item.size || item.size_ml}`}
+                      </span>
+
+                      <div className="ps-cart-item-bottom">
+                        <div className="ps-cart-qty-ctrl">
+                          <button
+                            type="button"
+                            className="ps-cart-qty-btn"
+                            onClick={() => updateQuantity(prod.id, identifier, item.quantity - 1)}
+                          >
+                            -
+                          </button>
+                          <span className="ps-cart-qty-num">{item.quantity}</span>
+                          <button
+                            type="button"
+                            className="ps-cart-qty-btn"
+                            onClick={() => updateQuantity(prod.id, identifier, item.quantity + 1)}
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        <div className="ps-cart-item-price">
+                          {formatINR(itemPrice * item.quantity)}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

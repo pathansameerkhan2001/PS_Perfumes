@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
-  ChevronDown,
   ShoppingBag,
   Search,
   Heart,
@@ -24,7 +23,7 @@ function InstagramIcon({ size = 16 }) {
   );
 }
 
-// Navigation items strictly adhering to Section 6 requirement
+// Navigation items matching exactly the 9 primary navigation items
 const PRIMARY_NAV = [
   { name: 'Home', path: '/' },
   { name: 'About Us', path: '/about' },
@@ -35,19 +34,6 @@ const PRIMARY_NAV = [
   { name: 'Oud', path: '/oud' },
   { name: 'Floral', path: '/floral' },
   { name: 'Woody', path: '/woody' },
-  { name: 'Shop All', path: '/shop', isAccordion: true },
-  { name: 'New Arrivals', path: '/shop?filter=new_arrival', badge: 'NEW' },
-  { name: 'Instagram', path: '/instagram', isExternal: false },
-  { name: 'Contact', path: '/contact' },
-];
-
-const SHOP_ALL_SUBITEMS = [
-  { name: 'Best Sellers', path: '/shop?filter=bestseller' },
-  { name: 'Combo Pack', path: '/shop?category=Combo%20Pack', badge: 'Save 47%' },
-  { name: 'Men Fragrances', path: '/shop?gender=Men' },
-  { name: 'Women Fragrances', path: '/shop?gender=Women' },
-  { name: 'Unisex Attars', path: '/shop?gender=Unisex' },
-  { name: 'View Complete Catalog', path: '/shop' },
 ];
 
 export default function MobileNav({
@@ -57,7 +43,6 @@ export default function MobileNav({
   onSelectLink,
   onOpenSearch,
 }) {
-  const [isShopAllOpen, setIsShopAllOpen] = useState(false);
   const { itemCount, setIsCartOpen, setIsWishlistOpen, wishlist } = useCart();
 
   useEffect(() => {
@@ -88,7 +73,6 @@ export default function MobileNav({
   };
 
   const handleItemClick = (path, name) => {
-    setIsShopAllOpen(false);
     onSelectLink(path || name);
     onClose();
   };
@@ -149,60 +133,9 @@ export default function MobileNav({
               </button>
             </div>
 
-            {/* 3. Primary Navigation List with Accordion */}
+            {/* 3. Primary Navigation List */}
             <nav className="mobile-nav-list" aria-label="Mobile Navigation Menu">
               {PRIMARY_NAV.map((item) => {
-                if (item.isAccordion) {
-                  return (
-                    <div key={item.name} className="mobile-nav-item">
-                      <button
-                        type="button"
-                        className={`mobile-nav-link ${isShopAllOpen ? 'active' : ''}`}
-                        onClick={() => setIsShopAllOpen((prev) => !prev)}
-                        aria-expanded={isShopAllOpen}
-                      >
-                        <span className="mobile-nav-link-text">
-                          <span className="mobile-nav-dot" />
-                          <span>{item.name}</span>
-                        </span>
-                        <ChevronDown
-                          size={18}
-                          className={`mobile-nav-chevron ${isShopAllOpen ? 'is-open' : ''}`}
-                        />
-                      </button>
-
-                      {/* Smooth Accordion Body */}
-                      <AnimatePresence>
-                        {isShopAllOpen && (
-                          <motion.div
-                            className="mobile-nav-submenu"
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                          >
-                            {SHOP_ALL_SUBITEMS.map((sub) => (
-                              <button
-                                key={sub.name}
-                                type="button"
-                                className="mobile-sub-link"
-                                onClick={() => handleItemClick(sub.path, sub.name)}
-                              >
-                                <span>{sub.name}</span>
-                                {sub.badge && (
-                                  <span className="mobile-sub-badge">
-                                    {sub.badge}
-                                  </span>
-                                )}
-                              </button>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                }
-
                 const isActive =
                   activeLink === item.path ||
                   (item.path !== '/' && activeLink === `/category${item.path}`);
@@ -216,9 +149,6 @@ export default function MobileNav({
                       <span className="mobile-nav-link-text">
                         <span>{item.name}</span>
                       </span>
-                      {item.badge && (
-                        <span className="mobile-new-badge">{item.badge}</span>
-                      )}
                     </button>
                   </div>
                 );

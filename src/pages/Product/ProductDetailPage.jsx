@@ -26,7 +26,8 @@ export default function ProductDetailPage() {
   const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState('');
-  const [selectedSize, setSelectedSize] = useState('100ml');
+  const [selectedBottleType, setSelectedBottleType] = useState('Glass Bottle');
+  const [selectedSize, setSelectedSize] = useState('50 ml');
   const [quantity, setQuantity] = useState(1);
   const [isAddedAnim, setIsAddedAnim] = useState(false);
 
@@ -45,7 +46,12 @@ export default function ProductDetailPage() {
           if (prod) {
             setProduct(prod);
             setActiveImage(prod.main_image || prod.image);
-            setSelectedSize(prod.sizes?.[0] || '100ml');
+            if (prod.variants && prod.variants.length > 0) {
+              setSelectedBottleType(prod.variants[0].bottle_type || 'Glass Bottle');
+              setSelectedSize(prod.variants[0].size_ml || '50 ml');
+            } else {
+              setSelectedSize(prod.sizes?.[0] || '50 ml');
+            }
             setQuantity(1);
 
             // Fetch related
@@ -87,19 +93,34 @@ export default function ProductDetailPage() {
 
   const isWishlisted = isInWishlist(product.id);
   const gallery = [product.main_image || product.image, ...(product.gallery_images || [])].filter(Boolean);
-  const price = product.price || 999;
-  const comparePrice = product.compare_at_price || product.originalPrice;
+
+  const normalizeBottle = (b) => (b && String(b).toLowerCase().includes('pvc') ? 'PVC Bottle' : 'Glass Bottle');
+  const normalizeSz = (s) => (s ? String(s).toLowerCase().replace(/\s+/g, '') : '50ml');
+
+  // Match active variant based on user selection
+  const currentVariant = product.variants?.find(
+    (v) =>
+      normalizeBottle(v.bottle_type) === normalizeBottle(selectedBottleType) &&
+      normalizeSz(v.size_ml) === normalizeSz(selectedSize)
+  ) || product.variants?.[0] || null;
+
+  const price = currentVariant ? Number(currentVariant.sale_price || currentVariant.price) : Number(product.price || 999);
+  const comparePrice = currentVariant?.compare_at_price
+    ? Number(currentVariant.compare_at_price)
+    : Number(product.compare_at_price || product.originalPrice || null);
+  const currentStock = currentVariant && currentVariant.stock !== undefined ? Number(currentVariant.stock) : Number(product.stock || 20);
+
   const rating = product.rating || 5.0;
   const reviewCount = product.review_count || 24;
 
   const handleAddToCart = () => {
-    addToCart(product, quantity, selectedSize);
+    addToCart(product, quantity, currentVariant || { bottle_type: selectedBottleType, size_ml: selectedSize, price });
     setIsAddedAnim(true);
     setTimeout(() => setIsAddedAnim(false), 2000);
   };
 
   const handleBuyNow = () => {
-    addToCart(product, quantity, selectedSize);
+    addToCart(product, quantity, currentVariant || { bottle_type: selectedBottleType, size_ml: selectedSize, price });
     setIsCheckoutOpen(true);
   };
 
@@ -193,11 +214,13 @@ export default function ProductDetailPage() {
           {/* Price & Discount Indicator */}
           <div className="ps-pdp-price-row">
             <span className="ps-pdp-price">{formatINR(price)}</span>
-            {comparePrice && (
+            {comparePrice && comparePrice > price && (
               <span className="ps-pdp-compare-price">{formatINR(comparePrice)}</span>
             )}
-            {product.discountPercent && (
-              <span className="ps-pdp-discount-tag">{product.discountPercent}</span>
+            {comparePrice && comparePrice > price && (
+              <span className="ps-pdp-discount-tag">
+                {Math.round(((comparePrice - price) / comparePrice) * 100)}% OFF
+              </span>
             )}
             <span className="ps-pdp-tax-note">Inclusive of all duties & taxes</span>
           </div>
@@ -207,33 +230,64 @@ export default function ProductDetailPage() {
             {product.short_description || product.description}
           </p>
 
-          {/* Size / Flacon Selector */}
-          {product.sizes && product.sizes.length > 0 && (
-            <div className="ps-pdp-size-selector">
-              <span className="ps-pdp-section-label">Select Volume:</span>
-              <div className="ps-pdp-size-options">
-                {product.sizes.map((sz) => (
+          {/* Bottle Type Selector (Glass vs PVC) */}
+          <div className="ps-pdp-variant-block">
+            <span className="ps-pdp-section-label">Bottle Type:</span>
+            <div className="ps-pdp-bottle-options">
+              <button
+                type="button"
+                className={`ps-pdp-bottle-card ${normalizeBottle(selectedBottleType) === 'Glass Bottle' ? 'is-active' : ''}`}
+                onClick={() => setSelectedBottleType('Glass Bottle')}
+              >
+                <span className="ps-bottle-title">Glass Bottle</span>
+                <span className="ps-bottle-desc">Premium quality</span>
+              </button>
+              <button
+                type="button"
+                className={`ps-pdp-bottle-card ${normalizeBottle(selectedBottleType) === 'PVC Bottle' ? 'is-active' : ''}`}
+                onClick={() => setSelectedBottleType('PVC Bottle')}
+              >
+                <span className="ps-bottle-title">PVC Bottle</span>
+                <span className="ps-bottle-desc">Regular quality</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Size / Flacon Selector (30 ml, 50 ml, 100 ml) */}
+          <div className="ps-pdp-size-selector">
+            <span className="ps-pdp-section-label">Size:</span>
+            <div className="ps-pdp-size-grid">
+              {['30 ml', '50 ml', '100 ml'].map((sz) => {
+                const vForSz = product.variants?.find(
+                  (v) =>
+                    normalizeBottle(v.bottle_type) === normalizeBottle(selectedBottleType) &&
+                    normalizeSz(v.size_ml) === normalizeSz(sz)
+                );
+                const vPrice = vForSz ? Number(vForSz.sale_price || vForSz.price) : null;
+                const isActive = normalizeSz(selectedSize) === normalizeSz(sz);
+                return (
                   <button
                     key={sz}
                     type="button"
-                    className={`ps-pdp-size-btn ${selectedSize === sz ? 'is-active' : ''}`}
+                    className={`ps-pdp-size-card ${isActive ? 'is-active' : ''}`}
                     onClick={() => setSelectedSize(sz)}
                   >
-                    <span>{sz}</span>
+                    <span className="ps-size-title">{sz}</span>
+                    {vPrice && <span className="ps-size-price">{formatINR(vPrice)}</span>}
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          )}
+          </div>
 
           {/* Stock & Availability */}
           <div className="ps-pdp-stock-status">
-            <div className={`ps-stock-indicator ${product.stock > 0 ? 'is-in-stock' : 'is-out'}`} />
+            <div className={`ps-stock-indicator ${currentStock > 0 ? 'is-in-stock' : 'is-out'}`} />
             <span>
-              {product.stock > 0 ? (
-                <>In Stock & Ready for Express Dispatch from Kadapa</>
+              {currentStock > 0 ? (
+                <>In Stock & Ready for Express Dispatch from Kadapa ({currentStock} available)</>
               ) : (
-                <>Currently Out of Stock</>
+                <>Currently Out of Stock for this variant</>
               )}
             </span>
           </div>
@@ -262,7 +316,7 @@ export default function ProductDetailPage() {
               type="button"
               className={`ps-btn-gold-primary ps-pdp-add-btn ${isAddedAnim ? 'is-success' : ''}`}
               onClick={handleAddToCart}
-              disabled={product.stock <= 0}
+              disabled={currentStock <= 0}
             >
               {isAddedAnim ? (
                 <>
@@ -296,7 +350,7 @@ export default function ProductDetailPage() {
             type="button"
             className="ps-pdp-buynow-btn"
             onClick={handleBuyNow}
-            disabled={product.stock <= 0}
+            disabled={currentStock <= 0}
           >
             <Zap size={16} />
             <span>EXPRESS BUY NOW</span>
@@ -306,7 +360,7 @@ export default function ProductDetailPage() {
           <div className="ps-pdp-reassurances">
             <div className="ps-pdp-reassurance-item">
               <Truck size={16} color="#c8a45d" />
-              <span>Complimentary Pan-India Shipping over ₹999</span>
+              <span>Complimentary Pan-India Shipping over ₹1,500</span>
             </div>
             <div className="ps-pdp-reassurance-item">
               <ShieldCheck size={16} color="#c8a45d" />

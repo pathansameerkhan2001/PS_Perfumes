@@ -10,6 +10,7 @@ export default function ProductGridSection({
   products = [],
   showFilterTabs = true,
   limit = 8,
+  emptyMessage = 'No fragrances found in this category.',
 }) {
   const { selectedCategory, setSelectedCategory } = useCart();
   const [activeTab, setActiveTab] = useState('ALL');
@@ -81,7 +82,7 @@ export default function ProductGridSection({
         {/* Product Grid */}
         {displayList.length === 0 ? (
           <div className="ps-grid-empty">
-            <p>No fragrances found in this category.</p>
+            <p>{emptyMessage}</p>
             <button
               type="button"
               className="ps-grid-reset-btn"

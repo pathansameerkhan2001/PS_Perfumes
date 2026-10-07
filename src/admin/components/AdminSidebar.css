@@ -1,0 +1,107 @@
+.ps-admin-sidebar {
+  width: var(--ps-admin-sidebar-width, 200px);
+  background-color: var(--ps-admin-bg-sidebar, #11100F);
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 1024px) {
+  .ps-admin-sidebar {
+    transform: translateX(-100%);
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.65);
+  }
+
+  .ps-admin-sidebar.is-open {
+    transform: translateX(0);
+  }
+}
+
+.ps-admin-sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 16, 15, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 95;
+}
+
+/* Sidebar Top Logo Area */
+.ps-admin-sidebar-header {
+  padding: 20px 14px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  position: relative;
+  background: #11100F;
+}
+
+.ps-admin-logo-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.ps-admin-logo-link:hover {
+  opacity: 0.9;
+}
+
+.ps-admin-brand-tagline {
+  font-family: var(--ps-admin-font-sans, 'Montserrat', sans-serif);
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  color: var(--ps-admin-gold, #C9A96E);
+  margin-top: 6px;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.ps-admin-sidebar-close {
+  display: none;
+  position: absolute;
+  top: 14px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #9C9488;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+@media (max-width: 1024px) {
+  .ps-admin-sidebar-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Scrollable nav list */
+.ps-admin-sidebar-nav-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+.ps-admin-sidebar-nav-scroll::-webkit-scrollbar {
+  width: 3px;
+}
+
+.ps-admin-sidebar-nav-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}

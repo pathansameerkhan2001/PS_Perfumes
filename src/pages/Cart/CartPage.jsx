@@ -70,21 +70,27 @@ export default function CartPage() {
 
             <div className="ps-cart-items-list">
               {cartItems.map((item, idx) => {
-                const img = item.product.main_image || item.product.image;
-                const lineTotal = item.product.price * item.quantity;
+                const prod = item.product || item;
+                const img = item.image || prod.main_image || prod.image || '/assets/prod-royal-amber.webp';
+                const itemPrice = Number(item.price) || Number(prod.price) || 0;
+                const lineTotal = itemPrice * item.quantity;
+                const identifier = item.cartItemId || item.variant_id || item.size_ml || item.size;
+
                 return (
-                  <div key={`${item.product.id}-${item.size}-${idx}`} className="ps-cart-row">
+                  <div key={`${prod.id}-${identifier}-${idx}`} className="ps-cart-row">
                     <div className="ps-cart-product-cell">
-                      <img src={img} alt={item.product.name} className="ps-cart-item-thumb" />
+                      <img src={img} alt={item.name || prod.name} className="ps-cart-item-thumb" />
                       <div className="ps-cart-item-meta">
-                        <Link to={`/product/${item.product.slug || item.product.id}`} className="ps-cart-item-name">
-                          {item.product.name}
+                        <Link to={`/product/${prod.slug || prod.id}`} className="ps-cart-item-name">
+                          {item.name || prod.name}
                         </Link>
-                        <span className="ps-cart-item-size">Volume: {item.size}</span>
+                        <span className="ps-cart-item-size">
+                          {item.bottle_type ? `${item.bottle_type} • ${item.size_ml || item.size}` : `Volume: ${item.size || item.size_ml}`}
+                        </span>
                         <button
                           type="button"
                           className="ps-cart-remove-mobile-btn"
-                          onClick={() => removeFromCart(item.product.id, item.size)}
+                          onClick={() => removeFromCart(prod.id, identifier)}
                         >
                           <Trash2 size={13} />
                           <span>Remove</span>
@@ -93,21 +99,21 @@ export default function CartPage() {
                     </div>
 
                     <div className="ps-cart-price-cell">
-                      {formatINR(item.product.price)}
+                      {formatINR(itemPrice)}
                     </div>
 
                     <div className="ps-cart-qty-cell">
                       <div className="ps-cart-qty-ctrl">
                         <button
                           type="button"
-                          onClick={() => updateQuantity(item.product.id, item.size, item.quantity - 1)}
+                          onClick={() => updateQuantity(prod.id, identifier, item.quantity - 1)}
                         >
                           -
                         </button>
                         <span>{item.quantity}</span>
                         <button
                           type="button"
-                          onClick={() => updateQuantity(item.product.id, item.size, item.quantity + 1)}
+                          onClick={() => updateQuantity(prod.id, identifier, item.quantity + 1)}
                         >
                           +
                         </button>
@@ -119,7 +125,7 @@ export default function CartPage() {
                       <button
                         type="button"
                         className="ps-cart-remove-desktop-btn"
-                        onClick={() => removeFromCart(item.product.id, item.size)}
+                        onClick={() => removeFromCart(prod.id, identifier)}
                         aria-label="Remove item"
                       >
                         <Trash2 size={15} />

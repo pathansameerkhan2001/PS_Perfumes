@@ -1,0 +1,57 @@
+.ps-admin-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-family: var(--ps-admin-font-sans, 'Montserrat', sans-serif);
+  font-weight: 600;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.ps-admin-badge.is-size-sm {
+  font-size: 10px;
+  padding: 2px 7px;
+}
+
+.ps-admin-badge.is-size-md {
+  font-size: 11px;
+  padding: 4px 10px;
+}
+
+/* Success: Muted Green */
+.ps-admin-badge.is-success {
+  background-color: var(--ps-admin-success-bg, #EAF5ED);
+  color: var(--ps-admin-success-text, #2D6A4F);
+  border: 1px solid rgba(45, 106, 79, 0.2);
+}
+
+/* Warning: Soft Champagne / Yellow */
+.ps-admin-badge.is-warning {
+  background-color: var(--ps-admin-warning-bg, #FEF7EA);
+  color: var(--ps-admin-warning-text, #B45309);
+  border: 1px solid rgba(180, 83, 9, 0.2);
+}
+
+/* Error: Muted Red */
+.ps-admin-badge.is-error {
+  background-color: var(--ps-admin-error-bg, #FDF2F2);
+  color: var(--ps-admin-error-text, #B91C1C);
+  border: 1px solid rgba(185, 28, 28, 0.2);
+}
+
+/* Gold Accent */
+.ps-admin-badge.is-gold {
+  background-color: rgba(201, 169, 110, 0.12);
+  color: var(--ps-admin-gold-dark, #8C7343);
+  border: 1px solid rgba(201, 169, 110, 0.35);
+}
+
+/* Neutral */
+.ps-admin-badge.is-neutral {
+  background-color: #F3EFE9;
+  color: var(--ps-admin-text-secondary, #746B61);
+  border: 1px solid #E5E0D8;
+}

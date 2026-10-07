@@ -55,23 +55,6 @@
   position: relative;
 }
 
-/* Desktop left: Luxury tagline */
-.ps-top-bar-left {
-  max-width: 320px;
-  display: flex;
-  align-items: center;
-}
-
-.ps-top-tagline {
-  font-family: 'Cinzel', serif;
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  color: #C8A45D;
-  line-height: 1.5;
-  text-transform: uppercase;
-}
-
 /* Delivery Location pill */
 .ps-delivery-location-pill {
   display: inline-flex;
@@ -151,7 +134,9 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 16px;
   z-index: 3;
+  margin-left: auto;
 }
 
 .ps-icon-link {
@@ -176,16 +161,9 @@
   display: block;
 }
 
-/* Search button positioned to the left of the rightmost group */
+/* Search button */
 .ps-search-btn {
-  margin-right: 56px;
-}
-
-/* Utility group: Delivery, Express Lightning, Shopping Bag */
-.ps-util-group {
-  display: flex;
-  align-items: center;
-  gap: 24px;
+  /* Aligned via flex gap */
 }
 
 /* Cart Button with Count Badge */
@@ -294,17 +272,6 @@
   box-shadow: 0 0 10px rgba(200, 164, 93, 0.5);
 }
 
-.ps-dropdown-chevron {
-  color: #C8A45D;
-  margin-left: 2px;
-  transition: transform 0.2s ease;
-}
-
-.ps-nav-menu-link:hover .ps-dropdown-chevron {
-  transform: translateY(2px);
-  color: #E5C77A;
-}
-
 /* Premium NEW ARRIVAL Badge at far right */
 .ps-nav-badge-wrapper {
   position: absolute;
@@ -389,13 +356,6 @@
   .ps-nav-bar-inner {
     padding: 0 32px;
   }
-  .ps-top-bar-spacer {
-    width: 160px;
-  }
-  .ps-brand-img {
-    height: 88px;
-    max-width: 230px;
-  }
   .ps-nav-badge-wrapper {
     right: 32px;
   }
@@ -404,12 +364,6 @@
   }
   .ps-nav-menu-link {
     font-size: 13.5px;
-  }
-  .ps-search-btn {
-    margin-right: 36px;
-  }
-  .ps-util-group {
-    gap: 18px;
   }
 }
 
@@ -420,18 +374,8 @@
     height: 94px;
     min-height: 94px;
   }
-  .ps-top-bar-spacer {
-    width: 80px;
-  }
-  .ps-brand-img {
-    height: 78px;
-    max-width: 200px;
-  }
-  .ps-search-btn {
-    margin-right: 24px;
-  }
-  .ps-util-group {
-    gap: 16px;
+  .ps-top-bar-right {
+    gap: 12px;
   }
   .ps-nav-bar-inner {
     padding: 0 20px;
@@ -462,9 +406,6 @@
     height: var(--ps-header-topbar-height);
     min-height: var(--ps-header-topbar-height);
   }
-  .ps-top-bar-spacer {
-    display: none;
-  }
   .ps-mobile-toggle-btn {
     display: inline-flex;
     align-items: center;
@@ -485,12 +426,6 @@
     min-width: 44px;
     min-height: 44px;
     padding: 10px;
-  }
-  .ps-search-btn {
-    margin-right: 0;
-  }
-  .ps-util-group {
-    gap: 2px;
   }
   .ps-util-desktop-only {
     display: none;

@@ -1,0 +1,47 @@
+.ps-admin-table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ps-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-family: var(--ps-admin-font-sans, 'Montserrat', sans-serif);
+  font-size: 12.5px;
+  color: var(--ps-admin-text-primary, #1A1714);
+}
+
+.ps-admin-table th {
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ps-admin-text-secondary, #746B61);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--ps-admin-border-subtle, #ECE7DF);
+  background: #FAF8F5;
+  white-space: nowrap;
+}
+
+.ps-admin-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #F2EEE6;
+  vertical-align: middle;
+  transition: background 0.15s ease;
+}
+
+.ps-admin-table tbody tr:hover td {
+  background: #FAF8F5;
+}
+
+.ps-admin-table.is-compact th {
+  padding: 8px 10px;
+  font-size: 10.5px;
+}
+
+.ps-admin-table.is-compact td {
+  padding: 9px 10px;
+  font-size: 11.5px;
+}

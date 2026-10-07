@@ -1,0 +1,68 @@
+.ps-admin-nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 12px 20px 12px;
+  flex: 1;
+}
+
+.ps-admin-nav-section {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ps-admin-nav-heading {
+  font-family: var(--ps-admin-font-sans, 'Montserrat', sans-serif);
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #746B61;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 4px 8px;
+  user-select: none;
+}
+
+.ps-admin-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ps-admin-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: #9E9487;
+  text-decoration: none;
+  font-family: var(--ps-admin-font-sans, 'Montserrat', sans-serif);
+  font-size: 12.5px;
+  font-weight: 450;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid transparent;
+}
+
+.ps-admin-nav-link:hover {
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.ps-nav-icon {
+  flex-shrink: 0;
+  transition: color 0.18s ease;
+}
+
+/* Active State: Subtle Champagne-Gold Highlight + Dark Gold Background + Ivory Text */
+.ps-admin-nav-link.is-active {
+  background: #1C1A16;
+  color: #FFFAF0;
+  font-weight: 550;
+  border: 1px solid rgba(201, 169, 110, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.ps-admin-nav-link.is-active .ps-nav-icon {
+  color: var(--ps-admin-gold, #C9A96E);
+}

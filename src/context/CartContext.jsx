@@ -60,43 +60,145 @@ export function CartProvider({ children }) {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const addToCart = (product, quantity = 1, size = null) => {
-    const chosenSize = size || product.sizeOptions?.[0] || '100ml';
+  /**
+   * Helper to normalize bottle type string
+   */
+  const normalizeBottleType = (bt) => {
+    if (!bt) return 'Glass Bottle';
+    const s = String(bt).toLowerCase();
+    if (s.includes('pvc')) return 'PVC Bottle';
+    return 'Glass Bottle';
+  };
+
+  /**
+   * Helper to normalize size string
+   */
+  const normalizeSize = (sz) => {
+    if (!sz) return '50 ml';
+    const s = String(sz).trim();
+    if (!s.toLowerCase().includes('ml')) return `${s} ml`;
+    return s;
+  };
+
+  /**
+   * Add to Cart with exact selected variant
+   * Supports:
+   *  addToCart(product, quantity, selectedVariant)
+   *  addToCart(product, quantity, sizeString)
+   *  addToCart(product, quantity)
+   */
+  const addToCart = (product, quantity = 1, variantOrSize = null, bottleTypeArg = null) => {
+    if (!product) return;
+
+    let selectedVariant = null;
+    let bottleType = 'Glass Bottle';
+    let sizeMl = '50 ml';
+    let unitPrice = Number(product.price) || 999;
+
+    if (variantOrSize && typeof variantOrSize === 'object') {
+      selectedVariant = variantOrSize;
+      bottleType = normalizeBottleType(selectedVariant.bottle_type || selectedVariant.bottleType);
+      sizeMl = normalizeSize(selectedVariant.size_ml || selectedVariant.size);
+      unitPrice = Number(selectedVariant.sale_price || selectedVariant.price || product.price);
+    } else if (typeof variantOrSize === 'string') {
+      sizeMl = normalizeSize(variantOrSize);
+      if (bottleTypeArg) {
+        bottleType = normalizeBottleType(bottleTypeArg);
+      }
+      // If product has variants, try to match
+      if (Array.isArray(product.variants) && product.variants.length > 0) {
+        const matched = product.variants.find((v) => {
+          const vBottle = normalizeBottleType(v.bottle_type);
+          const vSize = normalizeSize(v.size_ml);
+          return vBottle === bottleType && vSize === sizeMl;
+        });
+        if (matched) {
+          selectedVariant = matched;
+          unitPrice = Number(matched.sale_price || matched.price || unitPrice);
+        }
+      }
+    } else {
+      // Default variant
+      if (Array.isArray(product.variants) && product.variants.length > 0) {
+        selectedVariant = product.variants[0];
+        bottleType = normalizeBottleType(selectedVariant.bottle_type);
+        sizeMl = normalizeSize(selectedVariant.size_ml);
+        unitPrice = Number(selectedVariant.sale_price || selectedVariant.price || unitPrice);
+      }
+    }
+
+    const variantId = selectedVariant?.id || selectedVariant?.variant_id || `var-${product.id}-${bottleType}-${sizeMl}`;
+    const cartItemId = `${product.id}_${bottleType}_${sizeMl}`;
+
     setCartItems((prev) => {
       const existingIdx = prev.findIndex(
-        (item) => item.product.id === product.id && item.size === chosenSize
+        (item) =>
+          item.cartItemId === cartItemId ||
+          (item.product_id === product.id && item.bottle_type === bottleType && item.size_ml === sizeMl)
       );
+
       if (existingIdx > -1) {
         const copy = [...prev];
         copy[existingIdx].quantity += quantity;
         return copy;
       }
-      return [...prev, { product, quantity, size: chosenSize }];
+
+      const newItem = {
+        cartItemId,
+        product_id: product.id,
+        variant_id: variantId,
+        bottle_type: bottleType,
+        size_ml: sizeMl,
+        price: unitPrice,
+        quantity: Math.max(1, quantity),
+        product: product,
+        name: product.name,
+        image: product.main_image || product.image || '/assets/prod-royal-amber.webp',
+        size: sizeMl, // backward compatibility
+      };
+
+      return [...prev, newItem];
     });
 
-    showToast(`Added "${product.name}" to your bag`);
+    showToast(`Added "${product.name}" (${bottleType} • ${sizeMl}) to your bag`);
     setIsCartOpen(true);
   };
 
-  const updateQuantity = (productId, size, quantity) => {
+  /**
+   * Update quantity of specific variant
+   */
+  const updateQuantity = (productId, variantIdentifier, quantity) => {
     if (quantity <= 0) {
-      removeFromCart(productId, size);
+      removeFromCart(productId, variantIdentifier);
       return;
     }
     setCartItems((prev) =>
-      prev.map((item) =>
-        item.product.id === productId && item.size === size
-          ? { ...item, quantity }
-          : item
-      )
+      prev.map((item) => {
+        const matches =
+          item.cartItemId === variantIdentifier ||
+          item.variant_id === variantIdentifier ||
+          item.size_ml === variantIdentifier ||
+          item.size === variantIdentifier ||
+          (item.product_id === productId && item.size_ml === variantIdentifier);
+        return matches ? { ...item, quantity } : item;
+      })
     );
   };
 
-  const removeFromCart = (productId, size) => {
+  /**
+   * Remove specific variant from cart
+   */
+  const removeFromCart = (productId, variantIdentifier) => {
     setCartItems((prev) =>
-      prev.filter(
-        (item) => !(item.product.id === productId && item.size === size)
-      )
+      prev.filter((item) => {
+        const matches =
+          item.cartItemId === variantIdentifier ||
+          item.variant_id === variantIdentifier ||
+          item.size_ml === variantIdentifier ||
+          item.size === variantIdentifier ||
+          (item.product_id === productId && item.size_ml === variantIdentifier);
+        return !matches;
+      })
     );
   };
 
@@ -150,10 +252,11 @@ export function CartProvider({ children }) {
   // Calculations
   const itemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const subtotal = cartItems.reduce(
-    (acc, item) => acc + item.product.price * item.quantity,
+    (acc, item) => acc + (Number(item.price) || Number(item.product?.price) || 0) * item.quantity,
     0
   );
-  const freeShippingThreshold = 999;
+  // Requirement Section 6: Free shipping on orders over ₹1,500
+  const freeShippingThreshold = 1500;
   const shipping = subtotal >= freeShippingThreshold || subtotal === 0 ? 0 : 99;
   const discountAmount = Math.round((subtotal * discountPercent) / 100);
   const total = Math.max(0, subtotal - discountAmount + shipping);

@@ -1,0 +1,312 @@
+.ps-admin-header {
+  height: var(--ps-admin-header-height, 68px);
+  background: var(--ps-admin-bg-header, #FFFEFA);
+  border-bottom: 1px solid var(--ps-admin-border-subtle, #ECE7DF);
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  transition: background-color 0.2s ease;
+}
+
+@media (max-width: 768px) {
+  .ps-admin-header {
+    padding: 0 16px;
+    height: 60px;
+  }
+}
+
+.ps-admin-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ps-admin-header-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--ps-admin-text-primary, #1A1714);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.ps-admin-header-toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.ps-admin-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Light, Minimal Search Input */
+.ps-admin-header-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #FFFFFF;
+  border: 1px solid var(--ps-admin-border-light, #E5E0D8);
+  border-radius: 8px;
+  padding: 0 12px;
+  height: 38px;
+  width: 280px;
+  transition: all 0.2s ease;
+}
+
+.ps-admin-header-search-wrap:focus-within {
+  border-color: var(--ps-admin-gold, #C9A96E);
+  box-shadow: 0 0 0 3px rgba(201, 169, 110, 0.12);
+  width: 310px;
+}
+
+@media (max-width: 900px) {
+  .ps-admin-header-search-wrap {
+    width: 200px;
+  }
+  .ps-admin-header-search-wrap:focus-within {
+    width: 220px;
+  }
+}
+
+@media (max-width: 600px) {
+  .ps-admin-header-search-wrap {
+    display: none;
+  }
+}
+
+.ps-header-search-icon {
+  color: var(--ps-admin-text-muted, #9E9487);
+  flex-shrink: 0;
+}
+
+.ps-header-search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  font-family: var(--ps-admin-font-sans, 'Montserrat', sans-serif);
+  font-size: 12px;
+  color: var(--ps-admin-text-primary, #1A1714);
+}
+
+.ps-header-search-input::placeholder {
+  color: var(--ps-admin-text-muted, #9E9487);
+  font-size: 12px;
+}
+
+/* Notification Button */
+.ps-admin-header-notif-wrap {
+  position: relative;
+}
+
+.ps-admin-header-icon-btn {
+  background: none;
+  border: none;
+  color: #5A534B;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.ps-admin-header-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--ps-admin-text-primary, #1A1714);
+}
+
+.ps-header-notif-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #DC2626;
+  color: #FFFFFF;
+  font-size: 9px;
+  font-weight: 700;
+  min-width: 15px;
+  height: 15px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  border: 1.5px solid #FFFEFA;
+}
+
+/* Admin User Button */
+.ps-admin-header-user-wrap {
+  position: relative;
+}
+
+.ps-admin-header-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 20px;
+  transition: background-color 0.2s ease;
+}
+
+.ps-admin-header-user-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.ps-header-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #B38646;
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.ps-header-user-name {
+  font-family: var(--ps-admin-font-sans, 'Montserrat', sans-serif);
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--ps-admin-text-primary, #1A1714);
+}
+
+.ps-header-caret {
+  color: #746B61;
+}
+
+/* Dropdowns */
+.ps-admin-header-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #FFFFFF;
+  border: 1px solid var(--ps-admin-border-light, #E5E0D8);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  min-width: 220px;
+  z-index: 100;
+  animation: ps-header-dropdown-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@keyframes ps-header-dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ps-notif-dropdown {
+  width: 280px;
+}
+
+.ps-header-dropdown-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #F0ECE4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--ps-admin-text-primary, #1A1714);
+}
+
+.ps-header-badge-count {
+  font-size: 10px;
+  color: var(--ps-admin-text-secondary, #746B61);
+  background: #F4EFE6;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.ps-header-dropdown-content {
+  padding: 20px 16px;
+}
+
+.ps-header-empty-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--ps-admin-text-secondary, #746B61);
+  text-align: center;
+}
+
+.ps-header-user-meta {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ps-user-meta-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ps-admin-text-primary, #1A1714);
+}
+
+.ps-user-meta-role {
+  font-size: 11px;
+  color: var(--ps-admin-gold-dark, #8C7343);
+  font-weight: 500;
+}
+
+.ps-user-meta-email {
+  font-size: 11px;
+  color: var(--ps-admin-text-muted, #9E9487);
+}
+
+.ps-header-dropdown-divider {
+  height: 1px;
+  background: #F0ECE4;
+}
+
+.ps-header-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  font-size: 12.5px;
+  color: var(--ps-admin-text-primary, #1A1714);
+  text-decoration: none;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  font-family: inherit;
+}
+
+.ps-header-dropdown-item:hover {
+  background: #FAF8F5;
+  color: var(--ps-admin-gold-dark, #8C7343);
+}
+
+.ps-header-dropdown-item.is-logout:hover {
+  color: #EF4444;
+  background: #FDF2F2;
+}

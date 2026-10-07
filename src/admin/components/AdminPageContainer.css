@@ -1,0 +1,24 @@
+.ps-admin-page-container {
+  flex: 1;
+  background-color: var(--ps-admin-bg-main, #F7F4EE);
+  padding: 32px 36px 48px 36px;
+  min-height: calc(100vh - var(--ps-admin-header-height, 68px));
+  box-sizing: border-box;
+}
+
+.ps-admin-page-inner {
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .ps-admin-page-container {
+    padding: 24px 20px 40px 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .ps-admin-page-container {
+    padding: 16px 14px 32px 14px;
+  }
+}

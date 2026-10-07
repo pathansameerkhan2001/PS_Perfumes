@@ -17,7 +17,6 @@ const NAV_ITEMS = [
   { name: 'Oud', path: '/oud' },
   { name: 'Floral', path: '/floral' },
   { name: 'Woody', path: '/woody' },
-  { name: 'Shop All', path: '/shop' },
 ];
 
 export default function Header() {
@@ -38,9 +37,7 @@ export default function Header() {
   }, []);
 
   const handleNavClick = (path, name) => {
-    if (name === 'Shop All') {
-      setSelectedCategory('ALL');
-    } else if (!['Home', 'About Us'].includes(name)) {
+    if (!['Home', 'About Us'].includes(name)) {
       setSelectedCategory(name);
     }
     navigate(path);
@@ -57,13 +54,6 @@ export default function Header() {
             ========================================================== */}
         <div className="ps-top-bar">
           <div className="ps-top-bar-inner">
-            {/* Desktop Left: Luxury Brand Statement */}
-            <div className="ps-top-bar-left">
-              <span className="ps-top-tagline">
-                LUXURY FRAGRANCES FOR A MORE BEAUTIFUL TOMORROW
-              </span>
-            </div>
-
             {/* Mobile Hamburger Toggle (Left on mobile) */}
             <button
               type="button"
@@ -144,7 +134,6 @@ export default function Header() {
                 const isCategoryMatch =
                   item.path !== '/' &&
                   item.path !== '/about' &&
-                  item.path !== '/shop' &&
                   (location.pathname === `/category${item.path}` ||
                    location.pathname === item.path);
                 const isActive = isExact || isCategoryMatch;
@@ -201,15 +190,6 @@ export default function Header() {
             navigate('/');
           } else if (target === 'About Us') {
             navigate('/about');
-          } else if (target === 'Shop All') {
-            setSelectedCategory('ALL');
-            navigate('/shop');
-          } else if (target === 'New Arrivals') {
-            navigate('/shop?filter=new_arrival');
-          } else if (target === 'Instagram') {
-            navigate('/instagram');
-          } else if (target === 'Contact') {
-            navigate('/contact');
           } else {
             setSelectedCategory(target);
             navigate(`/category/${target.toLowerCase()}`);
