@@ -107,7 +107,7 @@ export default function AdminLogin() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@psperfumes.com"
+                placeholder="brandnix.in@gmail.com"
                 required
                 autoComplete="email"
                 className="ps-login-input"

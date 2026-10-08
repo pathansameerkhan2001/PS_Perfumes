@@ -1,75 +1,121 @@
-import { supabase, isSupabaseConfigured, STORAGE_BUCKET } from './supabase';
+import { supabase, STORAGE_BUCKET } from './supabase';
 
 /**
- * Sanitizes a file name for storage path
+ * Supabase Storage Folders within the 'ps-perfumes' bucket
+ */
+export const STORAGE_FOLDERS = {
+  PRODUCTS: 'products',
+  CATEGORIES: 'categories',
+  COMBOS: 'combos',
+  HERO: 'hero',
+  HOMEPAGE: 'homepage',
+  REELS: 'reels',
+  REVIEWS: 'reviews',
+  LOGO: 'logo',
+};
+
+/**
+ * Sanitizes a file name for safe storage path
+ * @param {string} name - Raw file name
+ * @returns {string} Sanitized file name
  */
 export function sanitizeFileName(name) {
+  if (!name) return 'asset';
   return name
     .toLowerCase()
     .replace(/[^a-z0-9.]/g, '-')
-    .replace(/-+/g, '-');
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 /**
- * Upload an image file to Supabase Storage under `ps-perfumes` bucket
- * @param {File} file - File object to upload
- * @param {string} folder - 'products', 'categories', 'reels', 'banners', etc.
- * @param {string} customSlug - optional subfolder / slug
- * @returns {Promise<{ url: string, path: string, error: any }>}
+ * Returns the public CDN URL for a file in Supabase Storage
+ * @param {string} path - Full storage path (e.g. 'products/perfume-oud.webp')
+ * @returns {string} Public URL
  */
-export async function uploadImage(file, folder = 'products', customSlug = '') {
-  if (!file) return { url: '', path: '', error: 'No file provided' };
+export function getStoragePublicUrl(path) {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  if (!supabase) return path;
 
-  const timestamp = Date.now();
-  const cleanName = sanitizeFileName(file.name);
-  const subPath = customSlug ? `${customSlug}/` : '';
-  const filePath = `${folder}/${subPath}${timestamp}-${cleanName}`;
+  const { data } = supabase.storage
+    .from(STORAGE_BUCKET)
+    .getPublicUrl(path);
 
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { data, error } = await supabase.storage
-        .from(STORAGE_BUCKET)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true,
-        });
+  return data?.publicUrl || '';
+}
 
-      if (error) {
-        console.warn('Supabase storage upload error:', error);
-        // Fallback to local Data URL
-        const localUrl = await readFileAsDataUrl(file);
-        return { url: localUrl, path: filePath, error: null };
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from(STORAGE_BUCKET)
-        .getPublicUrl(data.path);
-
-      return {
-        url: publicUrlData.publicUrl,
-        path: data.path,
-        error: null,
-      };
-    } catch (err) {
-      console.warn('Storage upload exception:', err);
-      const localUrl = await readFileAsDataUrl(file);
-      return { url: localUrl, path: filePath, error: null };
-    }
+/**
+ * Upload a file to a designated folder in the 'ps-perfumes' bucket
+ * @param {File|Blob} file - File object to upload
+ * @param {string} folder - Destination folder (from STORAGE_FOLDERS)
+ * @param {string} [customSlug] - Optional subpath / slug prefix
+ * @returns {Promise<{ url: string, path: string, error: string | null }>}
+ */
+export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS, customSlug = '') {
+  if (!file) {
+    return { url: '', path: '', error: 'No file provided for upload' };
+  }
+  if (!supabase) {
+    return { url: '', path: '', error: 'Supabase client not initialized' };
   }
 
-  // Local offline fallback: Convert to Data URL
-  const localUrl = await readFileAsDataUrl(file);
-  return { url: localUrl, path: filePath, error: null };
+  const timestamp = Date.now();
+  const cleanName = sanitizeFileName(file.name || 'file');
+  const subFolder = customSlug ? `${customSlug}/` : '';
+  const filePath = `${folder}/${subFolder}${timestamp}-${cleanName}`;
+
+  try {
+    const { data, error } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true,
+      });
+
+    if (error) {
+      return { url: '', path: '', error: error.message };
+    }
+
+    const publicUrl = getStoragePublicUrl(data.path);
+    return {
+      url: publicUrl,
+      path: data.path,
+      error: null,
+    };
+  } catch (err) {
+    return {
+      url: '',
+      path: '',
+      error: err?.message || 'Storage upload failed',
+    };
+  }
 }
 
 /**
- * Helper to convert file to Base64 data URL
+ * Remove an existing file from the 'ps-perfumes' bucket
+ * @param {string} path - Storage file path
+ * @returns {Promise<{ success: boolean, error: string | null }>}
  */
-export function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (err) => reject(err);
-    reader.readAsDataURL(file);
-  });
+export async function deleteStorageFile(path) {
+  if (!path) return { success: false, error: 'File path required' };
+  if (!supabase) return { success: false, error: 'Supabase client not initialized' };
+
+  try {
+    const { error } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .remove([path]);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, error: null };
+  } catch (err) {
+    return { success: false, error: err?.message || 'Storage deletion failed' };
+  }
 }
+
+// Exact named exports as requested by specifications
+export const uploadImage = uploadStorageFile;
+export const deleteImage = deleteStorageFile;
+export const getPublicImageUrl = getStoragePublicUrl;

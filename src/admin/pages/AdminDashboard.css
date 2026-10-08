@@ -871,3 +871,248 @@
   border-color: var(--ps-admin-gold, #C9A96E);
   transform: translateX(2px);
 }
+
+/* ==========================================================================
+   LIVE REALTIME BADGE & ERROR BANNER
+   ========================================================================== */
+.ps-dash-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #FFFFFF;
+  border: 1px solid var(--ps-admin-border-subtle, #ECE7DF);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ps-admin-text-secondary, #746B61);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.ps-live-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2E7D32;
+  box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
+  animation: ps-live-pulse 2s infinite;
+}
+
+@keyframes ps-live-pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.4); }
+  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(46, 125, 50, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 125, 50, 0); }
+}
+
+.ps-kpi-note {
+  font-size: 11px;
+  color: var(--ps-admin-text-secondary, #746B61);
+  margin-top: 4px;
+}
+
+.ps-dash-error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  background: #FDF4F4;
+  border: 1px solid #F5C6CB;
+  border-radius: 10px;
+  color: #721C24;
+  font-size: 13px;
+  animation: ps-fade-in 0.3s ease;
+}
+
+.ps-dash-error-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ps-dash-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #FFFFFF;
+  border: 1px solid #D9534F;
+  border-radius: 6px;
+  color: #D9534F;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-dash-retry-btn:hover {
+  background: #D9534F;
+  color: #FFFFFF;
+}
+
+/* ==========================================================================
+   PANEL EMPTY STATES (ZERO PLACEHOLDERS / REAL ZERO DATA)
+   ========================================================== */
+.ps-panel-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--ps-admin-text-secondary, #746B61);
+}
+
+.ps-panel-empty-state.is-compact {
+  padding: 28px 16px;
+}
+
+.ps-empty-icon {
+  color: var(--ps-admin-gold, #C9A96E);
+  opacity: 0.6;
+  margin-bottom: 12px;
+}
+
+.ps-empty-message {
+  font-family: var(--ps-admin-font-serif, 'Cormorant Garamond', serif);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ps-admin-text-primary, #1A1714);
+  margin: 0 0 6px 0;
+}
+
+.ps-empty-subtext {
+  font-size: 12px;
+  color: var(--ps-admin-text-secondary, #746B61);
+  max-width: 380px;
+  line-height: 1.45;
+}
+
+.ps-stock-sufficient-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #E8F5E9;
+  color: #2E7D32;
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+/* ==========================================================================
+   PREMIUM SKELETON SHIMMER LOADERS
+   ========================================================================== */
+.ps-skeleton {
+  background: linear-gradient(
+    90deg,
+    #EFECE6 0%,
+    #F8F6F2 50%,
+    #EFECE6 100%
+  );
+  background-size: 200% 100%;
+  animation: ps-skeleton-shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+
+@keyframes ps-skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.ps-skeleton-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+}
+
+.ps-skeleton-panel {
+  padding: 24px;
+}
+
+/* ==========================================================================
+   MODULAR QUICK MANAGEMENT GRID (11 REQUIRED CATEGORIES)
+   ========================================================================== */
+.ps-quick-modular-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.ps-quick-item-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #FFFFFF;
+  border: 1px solid var(--ps-admin-border-subtle, #ECE7DF);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ps-quick-item-card:hover {
+  transform: translateY(-2px);
+  border-color: #D8CFBF;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+}
+
+.ps-quick-icon-wrapper {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #FAF7F2;
+  border: 1px solid #E8DCBE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ps-quick-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.ps-quick-title {
+  font-family: var(--ps-admin-font-serif, 'Cormorant Garamond', serif);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ps-admin-text-primary, #1A1714);
+  margin: 0 0 2px 0;
+}
+
+.ps-quick-desc {
+  font-size: 11.5px;
+  color: var(--ps-admin-text-secondary, #746B61);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ps-quick-action-link {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #E3D3B5;
+  background: #FAF7F2;
+  color: var(--ps-admin-gold, #C9A96E);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.ps-quick-item-card:hover .ps-quick-action-link {
+  background: var(--ps-admin-gold, #C9A96E);
+  color: #FFFFFF;
+  border-color: var(--ps-admin-gold, #C9A96E);
+  transform: translateX(2px);
+}

@@ -20,9 +20,9 @@ export default function AdminLayout() {
     navigate('/admin/login');
   };
 
-  const displayName = user?.user_metadata?.full_name || 'PS Perfumes Administrator';
-  const roleName = role === 'admin' ? 'Super Admin' : 'Admin';
-  const email = user?.email || 'brandnix.in@gmail.com';
+  const email = user?.email || '';
+  const displayName = user?.user_metadata?.full_name || (email ? email.split('@')[0] : 'Administrator');
+  const roleName = role === 'super_admin' ? 'Super Admin' : role === 'editor' ? 'Editor' : 'Admin';
 
   return (
     <div className="ps-admin-shell ps-admin-master-layout">
@@ -31,6 +31,7 @@ export default function AdminLayout() {
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         adminName={displayName}
+        adminEmail={email}
         roleTitle={roleName}
         onLogout={handleLogout}
       />

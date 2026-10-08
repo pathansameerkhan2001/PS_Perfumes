@@ -13,6 +13,7 @@ export default function AdminSidebar({
   isOpen = false,
   onClose,
   adminName = 'Admin',
+  adminEmail = '',
   roleTitle = 'Super Admin',
   onLogout,
 }) {
@@ -55,6 +56,7 @@ export default function AdminSidebar({
         {/* Bottom Profile & Logout Box */}
         <AdminProfile
           adminName={adminName}
+          adminEmail={adminEmail}
           roleTitle={roleTitle}
           onLogout={onLogout}
         />

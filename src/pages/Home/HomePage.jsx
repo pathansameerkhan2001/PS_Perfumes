@@ -5,41 +5,36 @@ import BenefitsBar from '../../components/home/BenefitsBar';
 import ShopByFragrance from '../../components/home/ShopByFragrance';
 import ProductGridSection from '../../components/ProductGridSection';
 import ComboPackSection from '../../components/ComboPackSection';
-import SignatureScentSection from '../../components/SignatureScentSection';
-import PromoBanner from '../../components/PromoBanner';
 import InstagramReelsSection from '../../components/home/InstagramReelsSection';
 import ReviewsSection from '../../components/ReviewsSection';
-import AboutSection from '../../components/AboutSection';
-import TrustStrip from '../../components/TrustStrip';
-import { getProducts } from '../../services/products';
+import { getHomepageProductSections } from '../../services/homepageService';
 
 export default function HomePage() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [bestSellers, setBestSellers] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    async function fetchCatalog() {
+
+    async function fetchHomeProducts() {
       try {
-        const list = await getProducts({ status: 'active' });
+        const { bestSellers: bs, featuredProducts: fp } = await getHomepageProductSections();
         if (mounted) {
-          setProducts(list);
+          setBestSellers(bs);
+          setFeaturedProducts(fp);
           setLoading(false);
         }
       } catch {
         if (mounted) setLoading(false);
       }
     }
-    fetchCatalog();
-    return () => { mounted = false; };
-  }, []);
 
-  const bestSellers = products.filter(
-    (p) => Boolean(p.bestseller) && (p.status === 'active' || p.active !== false)
-  );
-  const featuredProducts = products.filter(
-    (p) => Boolean(p.featured) && (p.status === 'active' || p.active !== false)
-  );
+    fetchHomeProducts();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <div className="ps-home-page">
@@ -55,7 +50,7 @@ export default function HomePage() {
       {/* 4. Shop by Category (Database-driven, clean circular imagery) */}
       <ShopByFragrance />
 
-      {/* 5. Homepage Best Sellers (Section 8: bestseller=true AND active=true) */}
+      {/* 5. Homepage Best Sellers (Calculated from real sales data) */}
       <ProductGridSection
         id="best-sellers"
         tag="SIGNATURE CREATIONS"
@@ -63,10 +58,10 @@ export default function HomePage() {
         products={bestSellers}
         showFilterTabs={false}
         limit={8}
-        emptyMessage="No best sellers available yet."
+        emptyMessage="No sales data yet."
       />
 
-      {/* 6. Featured Products (Section 9: featured=true AND active=true) */}
+      {/* 6. Featured Products (is_featured=true AND is_active=true) */}
       <ProductGridSection
         id="featured-products"
         tag="CURATED FORMULATIONS"
@@ -77,7 +72,7 @@ export default function HomePage() {
         emptyMessage="No featured products available."
       />
 
-      {/* 7. Combo Collections (Section 10: Dedicated Combo Section) */}
+      {/* 7. Combo Collections (Dedicated Combo Section) */}
       <ComboPackSection />
 
       {/* 8. Instagram Reels Section */}

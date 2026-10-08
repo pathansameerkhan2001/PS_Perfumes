@@ -5,189 +5,187 @@ import {
   IndianRupee,
   Package,
   Users,
-  Calendar,
   ArrowRight,
-  TrendingUp,
   Crown,
   BarChart3,
   AlertTriangle,
   Zap,
-  ChevronDown,
-  MessageSquare,
-  Ticket,
+  AlertCircle,
+  RefreshCw,
+  Image,
+  Layout,
+  PlayCircle,
+  Layers,
+  FileText,
+  Star,
+  Tag,
   Settings,
+  Grid,
 } from 'lucide-react';
-import { getOrders } from '../../services/orders';
-import { getProducts } from '../../services/products';
-import { getCombos } from '../../services/combos';
+import {
+  getDashboardMetrics,
+  getBestSellingProducts,
+  getProductTypeDistribution,
+  getLowStockProducts,
+} from '../services/dashboardService';
 import { formatINR } from '../../utils/formatCurrency';
 import AdminPageContainer from '../components/AdminPageContainer';
 import './AdminDashboard.css';
 
-const CATEGORY_ITEMS = [
-  { name: 'Attar', image: '/assets/fragrance-attar.png' },
-  { name: 'Perfume', image: '/assets/fragrance-perfume.png' },
-  { name: 'Bakhoor', image: '/assets/fragrance-bakhoor.png' },
-  { name: 'Musky', image: '/assets/fragrance-musky.png' },
-  { name: 'Oud', image: '/assets/fragrance-oud.png' },
-  { name: 'Floral', image: '/assets/fragrance-floral.png' },
-  { name: 'Woody', image: '/assets/fragrance-woody.png' },
-];
-
 export default function AdminDashboard() {
-  const [orders, setOrders] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [combos, setCombos] = useState([]);
+  const [metrics, setMetrics] = useState({
+    totalOrders: 0,
+    totalRevenue: 0,
+    totalProducts: 0,
+    totalCustomers: 0,
+  });
+  const [bestSellers, setBestSellers] = useState([]);
+  const [distribution, setDistribution] = useState(null);
+  const [lowStock, setLowStock] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [dateRange] = useState('Jan 1, 2026 – Jan 31, 2026');
+  const [errorMessage, setErrorMessage] = useState(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const [metricsRes, bestSellersRes, distRes, lowStockRes] = await Promise.all([
+        getDashboardMetrics(),
+        getBestSellingProducts(),
+        getProductTypeDistribution(),
+        getLowStockProducts(),
+      ]);
+
+      if (metricsRes.error) {
+        setErrorMessage(metricsRes.error);
+      } else {
+        setMetrics(metricsRes.data);
+      }
+
+      setBestSellers(bestSellersRes.data || []);
+      setDistribution(distRes.data || null);
+      setLowStock(lowStockRes.data || []);
+    } catch {
+      setErrorMessage('Unable to load dashboard data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
-    async function loadData() {
+
+    async function fetchDashboardData() {
       try {
-        const [ords, prods, cmbs] = await Promise.all([
-          getOrders().catch(() => []),
-          getProducts({ allStatuses: true }).catch(() => []),
-          getCombos().catch(() => []),
+        const [metricsRes, bestSellersRes, distRes, lowStockRes] = await Promise.all([
+          getDashboardMetrics(),
+          getBestSellingProducts(),
+          getProductTypeDistribution(),
+          getLowStockProducts(),
         ]);
+
+        if (!mounted) return;
+
+        if (metricsRes.error) {
+          setErrorMessage(metricsRes.error);
+        } else {
+          setMetrics(metricsRes.data);
+        }
+
+        setBestSellers(bestSellersRes.data || []);
+        setDistribution(distRes.data || null);
+        setLowStock(lowStockRes.data || []);
+      } catch {
         if (mounted) {
-          setOrders(ords || []);
-          setProducts(prods || []);
-          setCombos(cmbs || []);
+          setErrorMessage('Unable to load dashboard data. Please try again.');
+        }
+      } finally {
+        if (mounted) {
           setLoading(false);
         }
-      } catch {
-        if (mounted) setLoading(false);
       }
     }
-    loadData();
-    return () => { mounted = false; };
+
+    fetchDashboardData();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
+  // Premium Skeleton Loader
   if (loading) {
     return (
-      <AdminPageContainer>
-        <div className="ps-admin-loading-state">
-          <div className="ps-admin-loading-spinner" />
-          <span>Assembling Atelier Dashboard...</span>
+      <AdminPageContainer maxWidth="1400px">
+        <div className="ps-admin-dashboard-view">
+          {/* Header Skeleton */}
+          <div className="ps-dash-header-row">
+            <div>
+              <div className="ps-skeleton ps-skeleton-title" style={{ width: '220px', height: '32px' }} />
+              <div className="ps-skeleton ps-skeleton-subtitle" style={{ width: '140px', height: '16px', marginTop: '8px' }} />
+            </div>
+          </div>
+
+          {/* KPI Skeleton Grid */}
+          <div className="ps-dash-kpi-grid">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="ps-kpi-card ps-skeleton-card">
+                <div className="ps-skeleton" style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div className="ps-skeleton" style={{ width: '90px', height: '12px' }} />
+                  <div className="ps-skeleton" style={{ width: '110px', height: '24px' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Middle Panels Skeleton */}
+          <div className="ps-dash-middle-grid">
+            <div className="ps-dash-panel ps-skeleton-panel" style={{ minHeight: '340px' }}>
+              <div className="ps-skeleton" style={{ width: '180px', height: '20px', marginBottom: '20px' }} />
+              <div className="ps-skeleton" style={{ width: '100%', height: '45px', marginBottom: '10px' }} />
+              <div className="ps-skeleton" style={{ width: '100%', height: '45px', marginBottom: '10px' }} />
+              <div className="ps-skeleton" style={{ width: '100%', height: '45px' }} />
+            </div>
+            <div className="ps-dash-right-stack">
+              <div className="ps-dash-panel ps-skeleton-panel" style={{ minHeight: '160px' }}>
+                <div className="ps-skeleton" style={{ width: '160px', height: '18px', marginBottom: '16px' }} />
+                <div className="ps-skeleton" style={{ width: '100%', height: '80px' }} />
+              </div>
+              <div className="ps-dash-panel ps-skeleton-panel" style={{ minHeight: '160px' }}>
+                <div className="ps-skeleton" style={{ width: '150px', height: '18px', marginBottom: '16px' }} />
+                <div className="ps-skeleton" style={{ width: '100%', height: '80px' }} />
+              </div>
+            </div>
+          </div>
         </div>
       </AdminPageContainer>
     );
   }
 
-  // 1. Calculations for Top 4 Stat Cards
-  const totalOrders = orders.length > 0 ? orders.length : 128;
-  const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0) || 84520;
-  const totalProducts = products.length > 0 ? products.length : 247;
-  const uniqueCustomersCount = new Set(orders.map((o) => o.customer_email || o.customer_name || o.email)).size;
-  const totalCustomers = uniqueCustomersCount > 0 ? uniqueCustomersCount + 1800 : 1842;
-
-  // 2. Best Selling Products (Derived from real catalog / orders)
-  const defaultBestSellers = [
-    {
-      rank: 1,
-      rankType: 'gold',
-      name: 'Oud Royal',
-      category: 'Oud',
-      type: 'Glass',
-      size: '50 ml',
-      sold: 85,
-      revenue: 149915,
-      image: '/assets/prod-royal-amber.webp',
-    },
-    {
-      rank: 2,
-      rankType: 'silver',
-      name: 'Musky Noir',
-      category: 'Musky',
-      type: 'PVC',
-      size: '50 ml',
-      sold: 72,
-      revenue: 64728,
-      image: '/assets/prod-noir-absolu.webp',
-    },
-    {
-      rank: 3,
-      rankType: 'bronze',
-      name: 'Rose Attar',
-      category: 'Attar',
-      type: 'Glass',
-      size: '30 ml',
-      sold: 68,
-      revenue: 88332,
-      image: '/assets/fragrance-attar.png',
-    },
-    {
-      rank: 4,
-      rankType: 'neutral',
-      name: 'Premium Oud Combo',
-      category: 'Combo',
-      type: 'Both',
-      size: '50 + 50 ml',
-      sold: 54,
-      revenue: 134946,
-      image: '/assets/combo-oud-trio.webp',
-    },
-    {
-      rank: 5,
-      rankType: 'neutral',
-      name: 'Bakhoor Classic',
-      category: 'Bakhoor',
-      type: 'Glass',
-      size: '50 ml',
-      sold: 49,
-      revenue: 58751,
-      image: '/assets/fragrance-bakhoor.png',
-    },
-  ];
-
-  const catalogBestsellers = products
-    .filter((p) => p.bestseller || p.isBestSeller)
-    .slice(0, 5)
-    .map((p, idx) => ({
-      rank: idx + 1,
-      rankType: idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : 'neutral',
-      name: p.name,
-      category: p.category || 'Oud',
-      type: p.variants?.[0]?.bottle_type?.replace(' Bottle', '') || 'Glass',
-      size: p.variants?.[0]?.size_ml || '50 ml',
-      sold: 85 - idx * 9,
-      revenue: (85 - idx * 9) * (Number(p.price) || 1499),
-      image: p.main_image || p.image || '/assets/prod-royal-amber.webp',
-    }));
-
-  const bestSellingList = catalogBestsellers.length >= 3 ? catalogBestsellers : defaultBestSellers;
-
-  // 3. Product Type Distribution
-  const glassCount = Math.round(totalProducts * 0.57);
-  const pvcCount = Math.round(totalProducts * 0.43);
-  const comboCount = combos.length > 0 ? combos.length : 28;
-
-  // 4. Low Stock Products
-  const realLowStock = products
-    .filter((p) => Number(p.stock) <= 10)
-    .slice(0, 5)
-    .map((p) => ({
-      name: p.name,
-      variant: p.variants?.[0] ? `${p.variants[0].bottle_type?.replace(' Bottle', '')} / ${p.variants[0].size_ml}` : 'Glass / 50 ml',
-      stock: Number(p.stock) || 0,
-      status: Number(p.stock) === 0 ? 'Out of Stock' : 'Low Stock',
-      image: p.main_image || p.image || '/assets/prod-royal-amber.webp',
-    }));
-
-  const fallbackLowStock = [
-    { name: 'Oud Imperial', variant: 'Glass / 50 ml', stock: 4, status: 'Low Stock', image: '/assets/prod-royal-amber.webp' },
-    { name: 'Musky Noir', variant: 'PVC / 30 ml', stock: 7, status: 'Low Stock', image: '/assets/prod-noir-absolu.webp' },
-    { name: 'Rose Attar', variant: 'Glass / 30 ml', stock: 0, status: 'Out of Stock', image: '/assets/fragrance-attar.png' },
-    { name: 'Amber Essence', variant: 'PVC / 50 ml', stock: 6, status: 'Low Stock', image: '/assets/fragrance-perfume.png' },
-    { name: 'Bakhoor Classic', variant: 'Glass / 100 ml', stock: 3, status: 'Low Stock', image: '/assets/fragrance-bakhoor.png' },
-  ];
-
-  const lowStockList = realLowStock.length > 0 ? realLowStock : fallbackLowStock;
-
   return (
     <AdminPageContainer maxWidth="1400px">
       <div className="ps-admin-dashboard-view">
+        {/* Error Notification Banner if query failed */}
+        {errorMessage && (
+          <div className="ps-dash-error-banner" role="alert">
+            <div className="ps-dash-error-left">
+              <AlertCircle size={18} className="ps-dash-error-icon" />
+              <span>{errorMessage}</span>
+            </div>
+            <button
+              type="button"
+              className="ps-dash-retry-btn"
+              onClick={loadData}
+              aria-label="Retry loading data"
+            >
+              <RefreshCw size={13} />
+              <span>Retry</span>
+            </button>
+          </div>
+        )}
+
         {/* 1. Dashboard Header Row */}
         <div className="ps-dash-header-row">
           <div className="ps-dash-title-group">
@@ -208,20 +206,18 @@ export default function AdminDashboard() {
               </svg>
             </div>
             <div>
-              <h1 className="ps-dash-heading">Dashboard</h1>
-              <p className="ps-dash-subheading">Welcome back, Admin</p>
+              <h1 className="ps-dash-heading">DASHBOARD</h1>
+              <p className="ps-dash-subheading">Welcome back</p>
             </div>
           </div>
 
-          {/* Date Selector Pill */}
-          <div className="ps-dash-date-pill">
-            <Calendar size={14} className="ps-date-icon" />
-            <span className="ps-date-text">{dateRange}</span>
-            <ChevronDown size={14} className="ps-date-chevron" />
+          <div className="ps-dash-live-badge" title="Connected to Supabase production database">
+            <span className="ps-live-pulse-dot" />
+            <span className="ps-live-text">Realtime Supabase</span>
           </div>
         </div>
 
-        {/* 2. Top 4 KPI Cards (Horizontal Row) */}
+        {/* 2. Top 4 KPI Cards (Horizontal Row) — 100% Real Database Counts */}
         <div className="ps-dash-kpi-grid">
           {/* Card 1: TOTAL ORDERS */}
           <div className="ps-kpi-card">
@@ -231,11 +227,8 @@ export default function AdminDashboard() {
               </div>
               <div className="ps-kpi-meta">
                 <span className="ps-kpi-label">TOTAL ORDERS</span>
-                <div className="ps-kpi-number">{totalOrders.toLocaleString()}</div>
-                <div className="ps-kpi-trend">
-                  <TrendingUp size={12} />
-                  <span>+12.4% this month</span>
-                </div>
+                <div className="ps-kpi-number">{metrics.totalOrders.toLocaleString()}</div>
+                <span className="ps-kpi-note">Recorded in database</span>
               </div>
             </div>
             <div className="ps-kpi-bg-graphic is-orders-art" />
@@ -249,11 +242,8 @@ export default function AdminDashboard() {
               </div>
               <div className="ps-kpi-meta">
                 <span className="ps-kpi-label">TOTAL REVENUE</span>
-                <div className="ps-kpi-number">{formatINR(totalRevenue)}</div>
-                <div className="ps-kpi-trend">
-                  <TrendingUp size={12} />
-                  <span>+8.2% this month</span>
-                </div>
+                <div className="ps-kpi-number">{formatINR(metrics.totalRevenue)}</div>
+                <span className="ps-kpi-note">Settled / paid orders</span>
               </div>
             </div>
             <div className="ps-kpi-bg-graphic is-revenue-art" />
@@ -267,11 +257,8 @@ export default function AdminDashboard() {
               </div>
               <div className="ps-kpi-meta">
                 <span className="ps-kpi-label">PRODUCTS</span>
-                <div className="ps-kpi-number">{totalProducts}</div>
-                <div className="ps-kpi-trend">
-                  <TrendingUp size={12} />
-                  <span>+6 added this month</span>
-                </div>
+                <div className="ps-kpi-number">{metrics.totalProducts.toLocaleString()}</div>
+                <span className="ps-kpi-note">Active fragrance catalog</span>
               </div>
             </div>
             <div className="ps-kpi-bg-graphic is-products-art" />
@@ -285,11 +272,8 @@ export default function AdminDashboard() {
               </div>
               <div className="ps-kpi-meta">
                 <span className="ps-kpi-label">CUSTOMERS</span>
-                <div className="ps-kpi-number">{totalCustomers.toLocaleString()}</div>
-                <div className="ps-kpi-trend">
-                  <TrendingUp size={12} />
-                  <span>+14.1% this month</span>
-                </div>
+                <div className="ps-kpi-number">{metrics.totalCustomers.toLocaleString()}</div>
+                <span className="ps-kpi-note">Registered clientele</span>
               </div>
             </div>
             <div className="ps-kpi-bg-graphic is-customers-art" />
@@ -305,54 +289,60 @@ export default function AdminDashboard() {
                 <Crown size={18} color="#C9A96E" />
                 <h2 className="ps-panel-title">Best Selling Products</h2>
               </div>
-              <Link to="/admin" className="ps-panel-link">
-                <span>View All</span>
-                <ArrowRight size={13} />
-              </Link>
             </div>
 
-            <div className="ps-table-scroll-container">
-              <table className="ps-dash-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: '42px' }}>#</th>
-                    <th>Product</th>
-                    <th>Category</th>
-                    <th>Bottle Type</th>
-                    <th>Size</th>
-                    <th>Units Sold</th>
-                    <th>Revenue</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bestSellingList.map((item) => (
-                    <tr key={item.rank}>
-                      <td className="ps-td-rank-cell">
-                        <span className={`ps-rank-circle is-${item.rankType}`}>{item.rank}</span>
-                      </td>
-                      <td className="ps-td-product">
-                        <img src={item.image} alt={item.name} className="ps-td-thumb" />
-                        <span className="ps-td-prod-name">{item.name}</span>
-                      </td>
-                      <td className="ps-td-cat">{item.category}</td>
-                      <td className="ps-td-type">{item.type}</td>
-                      <td className="ps-td-size">{item.size}</td>
-                      <td className="ps-td-sold">
-                        <strong>{item.sold}</strong>
-                      </td>
-                      <td className="ps-td-revenue">
-                        <strong>{formatINR(item.revenue)}</strong>
-                      </td>
+            {bestSellers.length === 0 ? (
+              <div className="ps-panel-empty-state">
+                <Crown size={28} className="ps-empty-icon" />
+                <p className="ps-empty-message">No sales data yet.</p>
+                <span className="ps-empty-subtext">
+                  Best selling fragrances will populate automatically as customer orders are fulfilled.
+                </span>
+              </div>
+            ) : (
+              <div className="ps-table-scroll-container">
+                <table className="ps-dash-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '42px' }}>#</th>
+                      <th>Product</th>
+                      <th>Category</th>
+                      <th>Bottle Type</th>
+                      <th>Size</th>
+                      <th>Units Sold</th>
+                      <th>Revenue</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {bestSellers.map((item) => (
+                      <tr key={item.id || item.rank}>
+                        <td className="ps-td-rank-cell">
+                          <span className={`ps-rank-circle is-${item.rankType}`}>{item.rank}</span>
+                        </td>
+                        <td className="ps-td-product">
+                          <img src={item.image} alt={item.name} className="ps-td-thumb" />
+                          <span className="ps-td-prod-name">{item.name}</span>
+                        </td>
+                        <td className="ps-td-cat">{item.category}</td>
+                        <td className="ps-td-type">{item.type}</td>
+                        <td className="ps-td-size">{item.size}</td>
+                        <td className="ps-td-sold">
+                          <strong>{item.sold}</strong>
+                        </td>
+                        <td className="ps-td-revenue">
+                          <strong>{formatINR(item.revenue)}</strong>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           {/* Right Column: Product Type Distribution & Low Stock */}
           <div className="ps-dash-right-stack">
-            {/* Card A: Product Type Distribution (Visual cards - NO GRAPH) */}
+            {/* Card A: Product Type Distribution */}
             <div className="ps-dash-panel ps-dash-distribution-panel">
               <div className="ps-panel-header">
                 <div className="ps-panel-title-with-icon">
@@ -361,70 +351,86 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="ps-distribution-cards-row">
-                {/* Glass Bottle Card */}
-                <div className="ps-dist-mini-card">
-                  <div className="ps-dist-img-box">
-                    <img
-                      src="/assets/prod-royal-amber.webp"
-                      alt="Glass Bottle"
-                      className="ps-dist-img"
-                    />
-                  </div>
-                  <div className="ps-dist-meta">
-                    <span className="ps-dist-name">Glass Bottle</span>
-                    <span className="ps-dist-qty">{glassCount} Products</span>
-                    <div className="ps-dist-bar-row">
-                      <div className="ps-dist-bar-wrap">
-                        <div className="ps-dist-bar-fill" style={{ width: '57%' }} />
+              {!distribution || distribution.total === 0 ? (
+                <div className="ps-panel-empty-state is-compact">
+                  <BarChart3 size={24} className="ps-empty-icon" />
+                  <p className="ps-empty-message">No data available</p>
+                </div>
+              ) : (
+                <div className="ps-distribution-cards-row">
+                  {/* Glass Bottle Card */}
+                  <div className="ps-dist-mini-card">
+                    <div className="ps-dist-img-box">
+                      <img
+                        src="/assets/prod-royal-amber.webp"
+                        alt="Glass Bottle"
+                        className="ps-dist-img"
+                      />
+                    </div>
+                    <div className="ps-dist-meta">
+                      <span className="ps-dist-name">Glass Bottle</span>
+                      <span className="ps-dist-qty">{distribution.glass.count} Products</span>
+                      <div className="ps-dist-bar-row">
+                        <div className="ps-dist-bar-wrap">
+                          <div
+                            className="ps-dist-bar-fill"
+                            style={{ width: `${distribution.glass.percent}%` }}
+                          />
+                        </div>
+                        <span className="ps-dist-percent">{distribution.glass.percent}%</span>
                       </div>
-                      <span className="ps-dist-percent">57%</span>
                     </div>
                   </div>
-                </div>
 
-                {/* PVC Bottle Card */}
-                <div className="ps-dist-mini-card">
-                  <div className="ps-dist-img-box">
-                    <img
-                      src="/assets/prod-noir-absolu.webp"
-                      alt="PVC Bottle"
-                      className="ps-dist-img"
-                    />
-                  </div>
-                  <div className="ps-dist-meta">
-                    <span className="ps-dist-name">PVC Bottle</span>
-                    <span className="ps-dist-qty">{pvcCount} Products</span>
-                    <div className="ps-dist-bar-row">
-                      <div className="ps-dist-bar-wrap">
-                        <div className="ps-dist-bar-fill" style={{ width: '43%' }} />
+                  {/* PVC Bottle Card */}
+                  <div className="ps-dist-mini-card">
+                    <div className="ps-dist-img-box">
+                      <img
+                        src="/assets/prod-noir-absolu.webp"
+                        alt="PVC Bottle"
+                        className="ps-dist-img"
+                      />
+                    </div>
+                    <div className="ps-dist-meta">
+                      <span className="ps-dist-name">PVC Bottle</span>
+                      <span className="ps-dist-qty">{distribution.pvc.count} Products</span>
+                      <div className="ps-dist-bar-row">
+                        <div className="ps-dist-bar-wrap">
+                          <div
+                            className="ps-dist-bar-fill"
+                            style={{ width: `${distribution.pvc.percent}%` }}
+                          />
+                        </div>
+                        <span className="ps-dist-percent">{distribution.pvc.percent}%</span>
                       </div>
-                      <span className="ps-dist-percent">43%</span>
                     </div>
                   </div>
-                </div>
 
-                {/* Combo Products Card */}
-                <div className="ps-dist-mini-card">
-                  <div className="ps-dist-img-box">
-                    <img
-                      src="/assets/combo-oud-trio.webp"
-                      alt="Combo Products"
-                      className="ps-dist-img"
-                    />
-                  </div>
-                  <div className="ps-dist-meta">
-                    <span className="ps-dist-name">Combo Products</span>
-                    <span className="ps-dist-qty">{comboCount} Products</span>
-                    <div className="ps-dist-bar-row">
-                      <div className="ps-dist-bar-wrap">
-                        <div className="ps-dist-bar-fill" style={{ width: '22%' }} />
+                  {/* Combo Products Card */}
+                  <div className="ps-dist-mini-card">
+                    <div className="ps-dist-img-box">
+                      <img
+                        src="/assets/combo-oud-trio.webp"
+                        alt="Combo Products"
+                        className="ps-dist-img"
+                      />
+                    </div>
+                    <div className="ps-dist-meta">
+                      <span className="ps-dist-name">Combo Products</span>
+                      <span className="ps-dist-qty">{distribution.combo.count} Products</span>
+                      <div className="ps-dist-bar-row">
+                        <div className="ps-dist-bar-wrap">
+                          <div
+                            className="ps-dist-bar-fill"
+                            style={{ width: `${distribution.combo.percent}%` }}
+                          />
+                        </div>
+                        <span className="ps-dist-percent">{distribution.combo.percent}%</span>
                       </div>
-                      <span className="ps-dist-percent">22%</span>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Card B: Low Stock Products Table */}
@@ -434,45 +440,48 @@ export default function AdminDashboard() {
                   <AlertTriangle size={18} color="#C9A96E" />
                   <h2 className="ps-panel-title">Low Stock Products</h2>
                 </div>
-                <Link to="/admin" className="ps-panel-link">
-                  <span>View All</span>
-                  <ArrowRight size={13} />
-                </Link>
               </div>
 
-              <div className="ps-lowstock-table-wrap">
-                <table className="ps-dash-table is-compact">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th>Variant</th>
-                      <th>Stock</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lowStockList.map((item, idx) => (
-                      <tr key={idx}>
-                        <td className="ps-td-product">
-                          <img src={item.image} alt={item.name} className="ps-td-thumb-sm" />
-                          <span className="ps-td-prod-name">{item.name}</span>
-                        </td>
-                        <td className="ps-td-variant">{item.variant}</td>
-                        <td className="ps-td-stock-num">{item.stock}</td>
-                        <td>
-                          <span
-                            className={`ps-stock-status-pill ${
-                              item.status === 'Out of Stock' ? 'is-out' : 'is-low'
-                            }`}
-                          >
-                            {item.status}
-                          </span>
-                        </td>
+              {lowStock.length === 0 ? (
+                <div className="ps-panel-empty-state is-compact">
+                  <span className="ps-stock-sufficient-check">✓</span>
+                  <p className="ps-empty-message">All products are sufficiently stocked.</p>
+                </div>
+              ) : (
+                <div className="ps-lowstock-table-wrap">
+                  <table className="ps-dash-table is-compact">
+                    <thead>
+                      <tr>
+                        <th>Product</th>
+                        <th>Variant</th>
+                        <th>Stock</th>
+                        <th>Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {lowStock.map((item, idx) => (
+                        <tr key={item.id || idx}>
+                          <td className="ps-td-product">
+                            <img src={item.image} alt={item.name} className="ps-td-thumb-sm" />
+                            <span className="ps-td-prod-name">{item.name}</span>
+                          </td>
+                          <td className="ps-td-variant">{item.variant}</td>
+                          <td className="ps-td-stock-num">{item.stock}</td>
+                          <td>
+                            <span
+                              className={`ps-stock-status-pill ${
+                                item.status === 'Out of Stock' ? 'is-out' : 'is-low'
+                              }`}
+                            >
+                              {item.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -484,177 +493,159 @@ export default function AdminDashboard() {
             <h2 className="ps-quick-main-title">Quick Management</h2>
           </div>
 
-          {/* Row 1: 4 Visual Feature Cards */}
-          <div className="ps-quick-grid-row-1">
-            {/* Card 1: Hero Sections */}
-            <div className="ps-quick-feature-card">
-              <div className="ps-quick-banner-box">
-                <img
-                  src="/assets/hero-luxury-cinematic.png"
-                  alt="Hero Sections"
-                  className="ps-quick-img"
-                />
+          <div className="ps-quick-modular-grid">
+            {/* 1. Hero Sections */}
+            <div className="ps-quick-item-card">
+              <div className="ps-quick-icon-wrapper">
+                <Image size={20} color="#C9A96E" />
               </div>
-              <div className="ps-quick-body">
-                <div className="ps-quick-text">
-                  <h3 className="ps-quick-title">Hero Sections</h3>
-                  <p className="ps-quick-desc">Manage homepage hero banners and slider images</p>
-                </div>
-                <Link to="/admin" className="ps-quick-circle-btn" aria-label="Manage Hero Sections">
-                  <ArrowRight size={14} />
-                </Link>
+              <div className="ps-quick-details">
+                <h3 className="ps-quick-title">Hero Sections</h3>
+                <p className="ps-quick-desc">Manage hero banners and slider slides</p>
               </div>
+              <Link to="/admin/hero" className="ps-quick-action-link" aria-label="Hero Sections">
+                <ArrowRight size={15} />
+              </Link>
             </div>
 
-            {/* Card 2: Instagram Reels */}
-            <div className="ps-quick-feature-card">
-              <div className="ps-quick-banner-box">
-                <img
-                  src="/assets/reel-luxury-unboxing.webp"
-                  alt="Instagram Reels"
-                  className="ps-quick-img"
-                />
-                <div className="ps-quick-play-badge">▶</div>
+            {/* 2. Homepage */}
+            <div className="ps-quick-item-card">
+              <div className="ps-quick-icon-wrapper">
+                <Layout size={20} color="#C9A96E" />
               </div>
-              <div className="ps-quick-body">
-                <div className="ps-quick-text">
-                  <h3 className="ps-quick-title">Instagram Reels</h3>
-                  <p className="ps-quick-desc">Add and manage Instagram reels for homepage</p>
-                </div>
-                <Link to="/admin" className="ps-quick-circle-btn" aria-label="Manage Instagram Reels">
-                  <ArrowRight size={14} />
-                </Link>
+              <div className="ps-quick-details">
+                <h3 className="ps-quick-title">Homepage</h3>
+                <p className="ps-quick-desc">Configure sections and promotional blocks</p>
               </div>
+              <Link to="/admin/homepage" className="ps-quick-action-link" aria-label="Homepage">
+                <ArrowRight size={15} />
+              </Link>
             </div>
 
-            {/* Card 3: Products */}
-            <div className="ps-quick-feature-card">
-              <div className="ps-quick-banner-box">
-                <img
-                  src="/assets/promo-banner.webp"
-                  alt="Products"
-                  className="ps-quick-img"
-                />
+            {/* 3. Instagram Reels */}
+            <div className="ps-quick-item-card">
+              <div className="ps-quick-icon-wrapper">
+                <PlayCircle size={20} color="#C9A96E" />
               </div>
-              <div className="ps-quick-body">
-                <div className="ps-quick-text">
-                  <h3 className="ps-quick-title">Products</h3>
-                  <p className="ps-quick-desc">Add, edit and manage all products</p>
-                </div>
-                <Link to="/admin" className="ps-quick-circle-btn" aria-label="Manage Products">
-                  <ArrowRight size={14} />
-                </Link>
+              <div className="ps-quick-details">
+                <h3 className="ps-quick-title">Instagram Reels</h3>
+                <p className="ps-quick-desc">Manage curated storefront video feeds</p>
               </div>
+              <Link to="/admin/reels" className="ps-quick-action-link" aria-label="Instagram Reels">
+                <ArrowRight size={15} />
+              </Link>
             </div>
 
-            {/* Card 4: Categories (7 circular flacon icons) */}
-            <div className="ps-quick-feature-card ps-quick-card-categories">
-              <div className="ps-quick-categories-preview">
-                {CATEGORY_ITEMS.map((cat) => (
-                  <div key={cat.name} className="ps-cat-circle-unit">
-                    <div className="ps-cat-circle-frame">
-                      <img src={cat.image} alt={cat.name} className="ps-cat-thumb" />
-                    </div>
-                    <span className="ps-cat-label">{cat.name}</span>
-                  </div>
-                ))}
+            {/* 4. Products */}
+            <div className="ps-quick-item-card">
+              <div className="ps-quick-icon-wrapper">
+                <Package size={20} color="#C9A96E" />
               </div>
-              <div className="ps-quick-body">
-                <div className="ps-quick-text">
-                  <h3 className="ps-quick-title">Categories</h3>
-                  <p className="ps-quick-desc">Manage fragrance categories</p>
-                </div>
-                <Link to="/admin" className="ps-quick-circle-btn" aria-label="Manage Categories">
-                  <ArrowRight size={14} />
-                </Link>
+              <div className="ps-quick-details">
+                <h3 className="ps-quick-title">Products</h3>
+                <p className="ps-quick-desc">Fragrance inventory and variant attributes</p>
               </div>
-            </div>
-          </div>
-
-          {/* Row 2: 6 Compact Shortcut Cards */}
-          <div className="ps-quick-grid-row-2">
-            {/* Card 1: Combos */}
-            <div className="ps-quick-mini-card">
-              <div className="ps-mini-visual-box">
-                <img src="/assets/combo-oud-trio.webp" alt="Combos" className="ps-mini-img" />
-              </div>
-              <div className="ps-mini-content">
-                <h4 className="ps-mini-title">Combos</h4>
-                <p className="ps-mini-desc">Create and manage combo products</p>
-                <Link to="/admin" className="ps-mini-circle-btn" aria-label="Manage Combos">
-                  <ArrowRight size={13} />
-                </Link>
-              </div>
+              <Link to="/admin/products" className="ps-quick-action-link" aria-label="Products">
+                <ArrowRight size={15} />
+              </Link>
             </div>
 
-            {/* Card 2: Orders */}
-            <div className="ps-quick-mini-card">
-              <div className="ps-mini-visual-box">
-                <img src="/assets/promo-banner-mobile.webp" alt="Orders" className="ps-mini-img" />
+            {/* 5. Categories */}
+            <div className="ps-quick-item-card">
+              <div className="ps-quick-icon-wrapper">
+                <Grid size={20} color="#C9A96E" />
               </div>
-              <div className="ps-mini-content">
-                <h4 className="ps-mini-title">Orders</h4>
-                <p className="ps-mini-desc">View and manage customer orders</p>
-                <Link to="/admin" className="ps-mini-circle-btn" aria-label="Manage Orders">
-                  <ArrowRight size={13} />
-                </Link>
+              <div className="ps-quick-details">
+                <h3 className="ps-quick-title">Categories</h3>
+                <p className="ps-quick-desc">Fragrance families and olfactive notes</p>
               </div>
+              <Link to="/admin/categories" className="ps-quick-action-link" aria-label="Categories">
+                <ArrowRight size={15} />
+              </Link>
             </div>
 
-            {/* Card 3: Customers */}
-            <div className="ps-quick-mini-card">
-              <div className="ps-mini-icon-box">
-                <Users size={22} color="#C9A96E" />
+            {/* 6. Combos */}
+            <div className="ps-quick-item-card">
+              <div className="ps-quick-icon-wrapper">
+                <Layers size={20} color="#C9A96E" />
               </div>
-              <div className="ps-mini-content">
-                <h4 className="ps-mini-title">Customers</h4>
-                <p className="ps-mini-desc">Manage customer details</p>
-                <Link to="/admin" className="ps-mini-circle-btn" aria-label="Manage Customers">
-                  <ArrowRight size={13} />
-                </Link>
+              <div className="ps-quick-details">
+                <h3 className="ps-quick-title">Combos</h3>
+                <p className="ps-quick-desc">Curated gift sets and pairing bundles</p>
               </div>
+              <Link to="/admin/combos" className="ps-quick-action-link" aria-label="Combos">
+                <ArrowRight size={15} />
+              </Link>
             </div>
 
-            {/* Card 4: Reviews */}
-            <div className="ps-quick-mini-card">
-              <div className="ps-mini-icon-box">
-                <MessageSquare size={22} color="#C9A96E" />
+            {/* 7. Orders */}
+            <div className="ps-quick-item-card">
+              <div className="ps-quick-icon-wrapper">
+                <FileText size={20} color="#C9A96E" />
               </div>
-              <div className="ps-mini-content">
-                <h4 className="ps-mini-title">Reviews</h4>
-                <p className="ps-mini-desc">Approve and manage reviews</p>
-                <Link to="/admin" className="ps-mini-circle-btn" aria-label="Manage Reviews">
-                  <ArrowRight size={13} />
-                </Link>
+              <div className="ps-quick-details">
+                <h3 className="ps-quick-title">Orders</h3>
+                <p className="ps-quick-desc">Customer purchases, shipping and invoices</p>
               </div>
+              <Link to="/admin/orders" className="ps-quick-action-link" aria-label="Orders">
+                <ArrowRight size={15} />
+              </Link>
             </div>
 
-            {/* Card 5: Coupons */}
-            <div className="ps-quick-mini-card">
-              <div className="ps-mini-icon-box">
-                <Ticket size={22} color="#C9A96E" />
+            {/* 8. Customers */}
+            <div className="ps-quick-item-card">
+              <div className="ps-quick-icon-wrapper">
+                <Users size={20} color="#C9A96E" />
               </div>
-              <div className="ps-mini-content">
-                <h4 className="ps-mini-title">Coupons</h4>
-                <p className="ps-mini-desc">Manage discount coupons</p>
-                <Link to="/admin" className="ps-mini-circle-btn" aria-label="Manage Coupons">
-                  <ArrowRight size={13} />
-                </Link>
+              <div className="ps-quick-details">
+                <h3 className="ps-quick-title">Customers</h3>
+                <p className="ps-quick-desc">Client profiles, orders and communication</p>
               </div>
+              <Link to="/admin/customers" className="ps-quick-action-link" aria-label="Customers">
+                <ArrowRight size={15} />
+              </Link>
             </div>
 
-            {/* Card 6: Store Settings */}
-            <div className="ps-quick-mini-card">
-              <div className="ps-mini-icon-box">
-                <Settings size={22} color="#C9A96E" />
+            {/* 9. Reviews */}
+            <div className="ps-quick-item-card">
+              <div className="ps-quick-icon-wrapper">
+                <Star size={20} color="#C9A96E" />
               </div>
-              <div className="ps-mini-content">
-                <h4 className="ps-mini-title">Store Settings</h4>
-                <p className="ps-mini-desc">Manage store information, logo and configuration</p>
-                <Link to="/admin" className="ps-mini-circle-btn" aria-label="Manage Store Settings">
-                  <ArrowRight size={13} />
-                </Link>
+              <div className="ps-quick-details">
+                <h3 className="ps-quick-title">Reviews</h3>
+                <p className="ps-quick-desc">Client feedback and testimonial approvals</p>
               </div>
+              <Link to="/admin/reviews" className="ps-quick-action-link" aria-label="Reviews">
+                <ArrowRight size={15} />
+              </Link>
+            </div>
+
+            {/* 10. Coupons */}
+            <div className="ps-quick-item-card">
+              <div className="ps-quick-icon-wrapper">
+                <Tag size={20} color="#C9A96E" />
+              </div>
+              <div className="ps-quick-details">
+                <h3 className="ps-quick-title">Coupons</h3>
+                <p className="ps-quick-desc">Promotional voucher discounts and perks</p>
+              </div>
+              <Link to="/admin/coupons" className="ps-quick-action-link" aria-label="Coupons">
+                <ArrowRight size={15} />
+              </Link>
+            </div>
+
+            {/* 11. Store Settings */}
+            <div className="ps-quick-item-card">
+              <div className="ps-quick-icon-wrapper">
+                <Settings size={20} color="#C9A96E" />
+              </div>
+              <div className="ps-quick-details">
+                <h3 className="ps-quick-title">Store Settings</h3>
+                <p className="ps-quick-desc">Brand assets, shipping policies and contact info</p>
+              </div>
+              <Link to="/admin/settings" className="ps-quick-action-link" aria-label="Store Settings">
+                <ArrowRight size={15} />
+              </Link>
             </div>
           </div>
         </div>

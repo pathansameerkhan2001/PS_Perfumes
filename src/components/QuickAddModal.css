@@ -1,0 +1,396 @@
+/* ==========================================================================
+   PS PERFUMES — Premium Quick Add Modal Styles
+   Warm ivory background, dark charcoal text, champagne-gold accents.
+   ========================================================================== */
+
+.ps-quickadd-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: rgba(14, 12, 10, 0.68);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: psQuickAddFadeIn 0.22s ease-out;
+}
+
+@keyframes psQuickAddFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.ps-quickadd-modal {
+  position: relative;
+  background-color: #fdfbf7;
+  color: #171513;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 14px;
+  border: 1px solid rgba(200, 164, 93, 0.35);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+  padding: 24px 22px 22px 22px;
+  animation: psQuickAddSlideUp 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@keyframes psQuickAddSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Close Button */
+.ps-quickadd-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #171513;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.ps-quickadd-close-btn:hover {
+  background: #ffffff;
+  color: #ba8f4c;
+  border-color: #ba8f4c;
+  transform: rotate(90deg);
+}
+
+/* Product Header */
+.ps-quickadd-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-right: 32px;
+}
+
+.ps-quickadd-img-wrap {
+  width: 70px;
+  height: 88px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #0d0c0a;
+  flex-shrink: 0;
+  border: 1px solid rgba(200, 164, 93, 0.2);
+}
+
+.ps-quickadd-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ps-quickadd-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ps-quickadd-category {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #b59050;
+}
+
+.ps-quickadd-name {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 19px;
+  font-weight: 600;
+  color: #171513;
+  margin: 0;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Ratings */
+.ps-quickadd-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.ps-quickadd-stars {
+  display: flex;
+  align-items: center;
+  gap: 1.5px;
+}
+
+.ps-quickadd-rating-text {
+  font-size: 11.5px;
+  color: #78716c;
+  font-weight: 500;
+}
+
+.ps-quickadd-no-reviews {
+  font-size: 11px;
+  color: #8c827a;
+  font-style: italic;
+}
+
+/* Price Header */
+.ps-quickadd-price-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ps-quickadd-price-val {
+  font-size: 19px;
+  font-weight: 700;
+  color: #111111;
+  letter-spacing: -0.01em;
+}
+
+.ps-quickadd-orig-price {
+  font-size: 13px;
+  color: #9ca3af;
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+.ps-quickadd-discount-tag {
+  font-size: 10px;
+  font-weight: 700;
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(185, 28, 28, 0.2);
+}
+
+/* Divider */
+.ps-quickadd-divider {
+  width: 100%;
+  height: 1px;
+  background-color: rgba(200, 164, 93, 0.2);
+  margin: 16px 0;
+}
+
+/* Options */
+.ps-quickadd-options {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.ps-quickadd-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ps-quickadd-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ps-quickadd-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #555047;
+}
+
+.ps-quickadd-selected-val {
+  font-size: 11px;
+  font-weight: 600;
+  color: #ba8f4c;
+}
+
+/* Pills */
+.ps-quickadd-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ps-quickadd-pill {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: #ffffff;
+  border: 1px solid #e2ddd5;
+  color: #2b2823;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  line-height: 1.2;
+}
+
+.ps-quickadd-pill:hover {
+  border-color: #ba8f4c;
+  color: #ba8f4c;
+}
+
+.ps-quickadd-pill.is-selected {
+  background-color: #ba8f4c;
+  border-color: #ba8f4c;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(186, 143, 76, 0.28);
+}
+
+/* Meta Row: Stock & Quantity */
+.ps-quickadd-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 4px;
+}
+
+.ps-quickadd-stock-info {
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.ps-stock-available {
+  color: #15803d;
+}
+
+.ps-stock-low {
+  color: #d97706;
+}
+
+.ps-stock-out {
+  color: #b91c1c;
+}
+
+/* Quantity Control */
+.ps-quickadd-qty-wrap {
+  display: inline-flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e2ddd5;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.ps-quickadd-qty-btn {
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #171513;
+  transition: background-color 0.15s ease;
+}
+
+.ps-quickadd-qty-btn:hover:not(:disabled) {
+  background-color: #f3ede2;
+  color: #ba8f4c;
+}
+
+.ps-quickadd-qty-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.ps-quickadd-qty-num {
+  min-width: 28px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #171513;
+}
+
+/* Submit Action Button */
+.ps-quickadd-submit-btn {
+  width: 100%;
+  height: 48px;
+  border-radius: 8px;
+  border: none;
+  background-color: #ba8f4c;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  box-shadow: 0 4px 12px rgba(186, 143, 76, 0.25);
+}
+
+.ps-quickadd-submit-btn:hover:not(:disabled) {
+  background-color: #a87d3a;
+  box-shadow: 0 6px 18px rgba(186, 143, 76, 0.38);
+  transform: translateY(-1px);
+}
+
+.ps-quickadd-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.ps-quickadd-submit-btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.ps-quickadd-submit-btn.is-success {
+  background-color: #108474;
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  .ps-quickadd-modal {
+    padding: 20px 16px 18px 16px;
+    border-radius: 12px;
+  }
+  .ps-quickadd-img-wrap {
+    width: 60px;
+    height: 75px;
+  }
+  .ps-quickadd-name {
+    font-size: 17px;
+  }
+  .ps-quickadd-price-val {
+    font-size: 17px;
+  }
+  .ps-quickadd-pill {
+    padding: 7px 13px;
+    font-size: 11.5px;
+  }
+  .ps-quickadd-submit-btn {
+    height: 44px;
+    font-size: 11px;
+  }
+}

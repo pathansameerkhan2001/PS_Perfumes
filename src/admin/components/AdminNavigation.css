@@ -66,3 +66,13 @@
 .ps-admin-nav-link.is-active .ps-nav-icon {
   color: var(--ps-admin-gold, #C9A96E);
 }
+
+.ps-admin-nav-link.is-future-module {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.ps-admin-nav-link.is-future-module:hover {
+  color: #C5BAA8;
+  background-color: rgba(255, 255, 255, 0.02);
+}

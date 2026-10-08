@@ -26,19 +26,21 @@ export default function ProductGridSection({
 
   // Filtering logic: first check if global selectedCategory is active, else tab
   const filteredProducts = products.filter((prod) => {
+    if (!prod) return false;
+
     // If user clicked a category pill from the top category bar
     if (selectedCategory && selectedCategory !== 'ALL') {
       const matchGlobal =
-        prod.category.toLowerCase() === selectedCategory.toLowerCase() ||
+        (prod.category && prod.category.toLowerCase() === selectedCategory.toLowerCase()) ||
         prod.subcategories?.some((s) => s.toLowerCase() === selectedCategory.toLowerCase());
       if (!matchGlobal) return false;
     }
 
     // Local tab filter
     if (activeTab === 'ALL') return true;
-    if (activeTab === 'Best Sellers') return prod.isBestSeller;
+    if (activeTab === 'Best Sellers') return Boolean(prod.isBestSeller || prod.is_bestseller || prod.bestseller);
     return (
-      prod.category.toLowerCase() === activeTab.toLowerCase() ||
+      (prod.category && prod.category.toLowerCase() === activeTab.toLowerCase()) ||
       prod.subcategories?.some((s) => s.toLowerCase() === activeTab.toLowerCase())
     );
   });
