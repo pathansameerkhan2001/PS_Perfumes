@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { getPublicImageUrl } from '../lib/storage';
 import { PRODUCTS } from '../data/products';
 
 const LOCAL_PRODUCTS_KEY = 'ps_db_products';
@@ -40,6 +41,7 @@ export function generateDefaultVariants(p) {
       sale_price: config.price,
       compare_at_price: config.compare,
       stock: config.stock,
+      stock_quantity: config.stock,
       sku: `PS-${p.id.toUpperCase()}-GL-${sizeNum}`,
       active: true,
       is_active: true,
@@ -59,6 +61,7 @@ export function generateDefaultVariants(p) {
       sale_price: config.price,
       compare_at_price: config.compare,
       stock: config.stock,
+      stock_quantity: config.stock,
       sku: `PS-${p.id.toUpperCase()}-PV-${sizeNum}`,
       active: true,
       is_active: true,
@@ -71,32 +74,69 @@ export function generateDefaultVariants(p) {
 // Helper to convert catalog item to standard schema with variants
 export function formatProduct(p) {
   const slug = p.slug || p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  const variants = p.variants && p.variants.length > 0 ? p.variants : (p.product_variants && p.product_variants.length > 0 ? p.product_variants : generateDefaultVariants(p));
+  const rawVariants = p.variants && p.variants.length > 0 ? p.variants : (p.product_variants && p.product_variants.length > 0 ? p.product_variants : generateDefaultVariants(p));
+
+  const formattedVariants = rawVariants.map((v) => ({
+    ...v,
+    stock: v.stock_quantity !== undefined ? Number(v.stock_quantity) : (Number(v.stock) || 0),
+    stock_quantity: v.stock_quantity !== undefined ? Number(v.stock_quantity) : (Number(v.stock) || 0),
+    is_active: v.is_active !== false && v.active !== false,
+    active: v.is_active !== false && v.active !== false,
+    price: Number(v.price) || 0,
+    sale_price: v.sale_price ? Number(v.sale_price) : null,
+  }));
+
+  let resolvedImage = p.main_image || p.image;
+  if (p.main_image_url) {
+    resolvedImage = getPublicImageUrl(p.main_image_url);
+  } else if (p.main_image_path) {
+    resolvedImage = getPublicImageUrl(p.main_image_path);
+  }
+  if (!resolvedImage) {
+    resolvedImage = '/assets/prod-royal-amber.webp';
+  }
+
+  const isActive = p.is_active !== undefined ? Boolean(p.is_active) : (p.status ? p.status === 'active' : true);
+  const isFeatured = Boolean(p.is_featured ?? p.featured);
+  const isBestseller = Boolean(p.is_bestseller ?? p.bestseller);
+  const isNewArrival = Boolean(p.is_new_arrival ?? p.new_arrival);
+
+  const firstVar = formattedVariants[0];
+  const derivedPrice = firstVar ? (firstVar.sale_price || firstVar.price) : 999;
+  const displayPrice = Number(p.price) || derivedPrice;
 
   return {
     id: p.id,
     name: p.name,
     slug: slug,
+    brand: p.brand || 'PS PERFUMES',
     category: p.category || 'Perfume',
     subcategory: p.subcategory || (p.subcategories?.[0] || ''),
     description: p.description || '',
     short_description: p.short_description || p.description?.slice(0, 140) + '...' || '',
-    price: Number(p.price) || (variants[0] ? variants[0].price : 999),
-    sale_price: p.sale_price ? Number(p.sale_price) : (p.originalPrice ? Number(p.price) : null),
-    compare_at_price: p.compare_at_price ? Number(p.compare_at_price) : (p.originalPrice ? Number(p.originalPrice) : null),
+    price: displayPrice,
+    sale_price: p.sale_price ? Number(p.sale_price) : null,
+    compare_at_price: p.compare_at_price ? Number(p.compare_at_price) : null,
     sku: p.sku || `PS-${p.id.toUpperCase()}`,
-    stock: p.stock !== undefined ? p.stock : (p.inStock ? 25 : 0),
-    status: p.status || (p.inStock !== false ? 'active' : 'out_of_stock'),
-    featured: Boolean(p.featured || p.isBestSeller),
-    new_arrival: Boolean(p.new_arrival || p.isNewArrival),
-    bestseller: Boolean(p.bestseller || p.isBestSeller),
+    stock: p.stock !== undefined ? p.stock : (formattedVariants.reduce((sum, v) => sum + v.stock, 0)),
+    status: isActive ? 'active' : 'draft',
+    is_active: isActive,
+    active: isActive,
+    featured: isFeatured,
+    is_featured: isFeatured,
+    new_arrival: isNewArrival,
+    is_new_arrival: isNewArrival,
+    bestseller: isBestseller,
+    is_bestseller: isBestseller,
     rating: Number(p.rating) || 5.0,
     review_count: Number(p.reviewCount || p.review_count) || 28,
-    main_image: p.main_image || p.image || '/assets/prod-royal-amber.webp',
+    main_image: resolvedImage,
+    main_image_url: resolvedImage,
+    image: resolvedImage,
     gallery_images: p.gallery_images || (p.secondaryImage ? [p.secondaryImage] : []),
     bottle_types: p.bottle_types || STANDARD_BOTTLE_TYPES,
     sizes: p.sizes || STANDARD_SIZES,
-    variants: variants,
+    variants: formattedVariants,
     fragrance_notes: p.fragrance_notes || [],
     top_notes: p.top_notes || p.topNotes || [],
     heart_notes: p.heart_notes || p.heartNotes || [],
@@ -148,7 +188,6 @@ function saveLocalProducts(products) {
  */
 export async function getProducts(options = {}) {
   const {
-    category,
     status = 'active',
     featured,
     new_arrival,
@@ -161,37 +200,56 @@ export async function getProducts(options = {}) {
 
   if (isSupabaseConfigured && supabase) {
     try {
-      let query = supabase.from('products').select('*, product_variants(*)');
+      let query = supabase.from('products').select(`
+        id,
+        name,
+        slug,
+        brand,
+        description,
+        short_description,
+        category_id,
+        main_image_path,
+        main_image_url,
+        is_featured,
+        is_bestseller,
+        is_new_arrival,
+        is_active,
+        display_order,
+        created_at,
+        updated_at,
+        product_variants (
+          id,
+          product_id,
+          bottle_type,
+          size_ml,
+          price,
+          sale_price,
+          stock_quantity,
+          is_active,
+          sku
+        )
+      `);
 
       if (!allStatuses && status) {
-        query = query.eq('status', status);
-      }
-      if (category && category !== 'ALL') {
-        query = query.ilike('category', `%${category}%`);
+        query = query.eq('is_active', status === 'active');
       }
       if (featured !== undefined) {
-        query = query.eq('featured', featured);
+        query = query.eq('is_featured', featured);
       }
       if (new_arrival !== undefined) {
-        query = query.eq('new_arrival', new_arrival);
+        query = query.eq('is_new_arrival', new_arrival);
       }
       if (bestseller !== undefined) {
-        query = query.eq('bestseller', bestseller);
+        query = query.eq('is_bestseller', bestseller);
       }
       if (search) {
-        query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,category.ilike.%${search}%`);
+        query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
       }
 
-      if (sort === 'price-low') {
-        query = query.order('price', { ascending: true });
-      } else if (sort === 'price-high') {
-        query = query.order('price', { ascending: false });
-      } else if (sort === 'rating') {
-        query = query.order('rating', { ascending: false });
-      } else if (sort === 'newest') {
+      if (sort === 'newest') {
         query = query.order('created_at', { ascending: false });
       } else {
-        query = query.order('featured', { ascending: false }).order('created_at', { ascending: false });
+        query = query.order('display_order', { ascending: true }).order('created_at', { ascending: false });
       }
 
       if (limit) {
@@ -199,7 +257,7 @@ export async function getProducts(options = {}) {
       }
 
       const { data, error } = await query;
-      if (!error && Array.isArray(data) && data.length > 0) {
+      if (!error && Array.isArray(data)) {
         return data.map((item) => formatProduct(item));
       }
     } catch (e) {
@@ -213,9 +271,9 @@ export async function getProducts(options = {}) {
   if (!allStatuses && status) {
     list = list.filter((p) => p.status === status);
   }
-  if (category && category !== 'ALL') {
-    const term = category.toLowerCase();
-    list = list.filter((p) => p.category.toLowerCase().includes(term) || (p.subcategory && p.subcategory.toLowerCase().includes(term)));
+  if (options.category && options.category !== 'ALL') {
+    const term = options.category.toLowerCase();
+    list = list.filter((p) => p.category?.toLowerCase().includes(term) || (p.subcategory && p.subcategory.toLowerCase().includes(term)));
   }
   if (featured !== undefined) {
     list = list.filter((p) => Boolean(p.featured) === featured);
@@ -262,7 +320,35 @@ export async function getProductBySlug(slugOrId) {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId);
       const query = supabase
         .from('products')
-        .select('*, product_variants(*)')
+        .select(`
+          id,
+          name,
+          slug,
+          brand,
+          description,
+          short_description,
+          category_id,
+          main_image_path,
+          main_image_url,
+          is_featured,
+          is_bestseller,
+          is_new_arrival,
+          is_active,
+          display_order,
+          created_at,
+          updated_at,
+          product_variants (
+            id,
+            product_id,
+            bottle_type,
+            size_ml,
+            price,
+            sale_price,
+            stock_quantity,
+            is_active,
+            sku
+          )
+        `)
         .or(isUUID ? `id.eq.${slugOrId},slug.eq.${slugOrId}` : `slug.eq.${slugOrId}`);
 
       const { data, error } = await query.maybeSingle();
@@ -287,40 +373,55 @@ export async function getProductById(id) {
  * Create a new product with variants
  */
 export async function createProduct(productData) {
-  const id = `ps-${Date.now().toString(36)}`;
-  const slug = productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-
-  const newProd = formatProduct({
-    ...productData,
-    id,
-    slug,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  });
+  const autoSlug = productData.slug || productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
   if (isSupabaseConfigured && supabase) {
     try {
-      const { variants, ...dbMain } = newProd;
-      const { data, error } = await supabase.from('products').insert([dbMain]).select().single();
+      const dbProduct = {
+        name: productData.name,
+        slug: autoSlug,
+        brand: productData.brand || 'PS PERFUMES',
+        description: productData.description || '',
+        short_description: productData.short_description || '',
+        main_image_url: productData.main_image || productData.main_image_url || null,
+        main_image_path: productData.main_image_path || null,
+        is_active: productData.active !== undefined ? Boolean(productData.active) : (productData.is_active !== undefined ? Boolean(productData.is_active) : productData.status === 'active'),
+        is_featured: Boolean(productData.featured || productData.is_featured),
+        is_bestseller: Boolean(productData.bestseller || productData.is_bestseller),
+        is_new_arrival: Boolean(productData.new_arrival || productData.is_new_arrival),
+        display_order: Number(productData.display_order) || 0,
+      };
+
+      const { data, error } = await supabase.from('products').insert([dbProduct]).select().single();
       if (!error && data) {
-        if (variants && variants.length > 0) {
-          const varRows = variants.map((v) => ({
+        if (productData.variants && productData.variants.length > 0) {
+          const varRows = productData.variants.map((v) => ({
             product_id: data.id,
-            bottle_type: v.bottle_type.toLowerCase().includes('glass') ? 'glass' : 'pvc',
-            size_ml: v.size_ml,
-            price: v.price,
-            sale_price: v.sale_price || v.price,
-            stock: v.stock || 10,
-            sku: v.sku,
-            is_active: v.active !== false,
+            bottle_type: v.bottle_type || 'Glass Bottle',
+            size_ml: v.size_ml || '50ml',
+            price: Number(v.price) || 999,
+            sale_price: v.sale_price ? Number(v.sale_price) : null,
+            stock_quantity: Number(v.stock || v.stock_quantity) || 10,
+            sku: v.sku || null,
+            is_active: v.active !== false && v.is_active !== false,
           }));
           await supabase.from('product_variants').insert(varRows);
         }
+        return formatProduct({ ...data, variants: productData.variants });
       }
     } catch (e) {
       console.warn('Supabase createProduct error, saved to local store:', e);
     }
   }
+
+  const id = `ps-${Date.now().toString(36)}`;
+  const newProd = formatProduct({
+    ...productData,
+    id,
+    slug: autoSlug,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
 
   const list = getLocalProducts();
   list.unshift(newProd);
@@ -334,19 +435,39 @@ export async function createProduct(productData) {
 export async function updateProduct(id, updates) {
   if (isSupabaseConfigured && supabase) {
     try {
-      const { variants, ...dbUpdates } = updates;
-      await supabase.from('products').update({ ...dbUpdates, updated_at: new Date().toISOString() }).eq('id', id);
+      const dbUpdates = {};
+      if (updates.name !== undefined) dbUpdates.name = updates.name;
+      if (updates.slug !== undefined) dbUpdates.slug = updates.slug;
+      if (updates.brand !== undefined) dbUpdates.brand = updates.brand;
+      if (updates.description !== undefined) dbUpdates.description = updates.description;
+      if (updates.short_description !== undefined) dbUpdates.short_description = updates.short_description;
+      if (updates.main_image !== undefined) dbUpdates.main_image_url = updates.main_image;
+      if (updates.main_image_url !== undefined) dbUpdates.main_image_url = updates.main_image_url;
+      if (updates.main_image_path !== undefined) dbUpdates.main_image_path = updates.main_image_path;
+      if (updates.is_active !== undefined) dbUpdates.is_active = updates.is_active;
+      else if (updates.active !== undefined) dbUpdates.is_active = updates.active;
+      else if (updates.status !== undefined) dbUpdates.is_active = updates.status === 'active';
+      if (updates.is_featured !== undefined) dbUpdates.is_featured = updates.is_featured;
+      else if (updates.featured !== undefined) dbUpdates.is_featured = updates.featured;
+      if (updates.is_bestseller !== undefined) dbUpdates.is_bestseller = updates.is_bestseller;
+      else if (updates.bestseller !== undefined) dbUpdates.is_bestseller = updates.bestseller;
+      if (updates.is_new_arrival !== undefined) dbUpdates.is_new_arrival = updates.is_new_arrival;
+      else if (updates.new_arrival !== undefined) dbUpdates.is_new_arrival = updates.new_arrival;
+      if (updates.display_order !== undefined) dbUpdates.display_order = updates.display_order;
+      dbUpdates.updated_at = new Date().toISOString();
 
-      if (variants && variants.length > 0) {
-        for (const v of variants) {
-          if (v.id && !v.id.startsWith('var-temp')) {
+      await supabase.from('products').update(dbUpdates).eq('id', id);
+
+      if (updates.variants && updates.variants.length > 0) {
+        for (const v of updates.variants) {
+          if (v.id && !v.id.startsWith('var-')) {
             await supabase
               .from('product_variants')
               .update({
-                price: v.price,
-                stock: v.stock,
-                sale_price: v.sale_price || v.price,
-                is_active: v.active !== false,
+                price: Number(v.price) || 0,
+                sale_price: v.sale_price ? Number(v.sale_price) : null,
+                stock_quantity: Number(v.stock || v.stock_quantity) || 0,
+                is_active: v.active !== false && v.is_active !== false,
               })
               .eq('id', v.id);
           }

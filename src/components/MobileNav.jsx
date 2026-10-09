@@ -1,70 +1,103 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
-  ShoppingBag,
-  Search,
+  Home,
+  Info,
+  Droplets,
+  SprayCan,
+  Flame,
+  Moon,
+  Crown,
+  Flower2,
+  TreePine,
+  Sparkles,
+  BadgePercent,
+  Truck,
+  User,
   Heart,
-  ExternalLink,
-  MapPin,
+  ShoppingBag,
+  ChevronRight,
 } from 'lucide-react';
 import PSPerfumesLogo from './common/PSPerfumesLogo';
 import { useCart } from '../context/CartContext';
 import './MobileNav.css';
 
-// Instagram Icon
-function InstagramIcon({ size = 16 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-    </svg>
-  );
-}
-
-// Navigation items matching exactly the 9 primary navigation items
-const PRIMARY_NAV = [
-  { name: 'Home', path: '/' },
-  { name: 'About Us', path: '/about' },
-  { name: 'Attar', path: '/attar' },
-  { name: 'Perfume', path: '/perfume' },
-  { name: 'Bakhoor', path: '/bakhoor' },
-  { name: 'Musky', path: '/musky' },
-  { name: 'Oud', path: '/oud' },
-  { name: 'Floral', path: '/floral' },
-  { name: 'Woody', path: '/woody' },
+// EXACT 12 navigation items in specified order (Shop All strictly excluded)
+const NAVIGATION_ITEMS = [
+  { name: 'Home', path: '/', icon: Home },
+  { name: 'About Us', path: '/about', icon: Info },
+  { name: 'Attar', path: '/attar', icon: Droplets },
+  { name: 'Perfume', path: '/perfume', icon: SprayCan },
+  { name: 'Bakhoor', path: '/bakhoor', icon: Flame },
+  { name: 'Musky', path: '/musky', icon: Moon },
+  { name: 'Oud', path: '/oud', icon: Crown },
+  { name: 'Floral', path: '/floral', icon: Flower2 },
+  { name: 'Woody', path: '/woody', icon: TreePine },
+  { name: 'New Arrival', path: '/shop?filter=new_arrival', icon: Sparkles },
+  { name: 'Offers', path: '/offers', icon: BadgePercent },
+  { name: 'Track Order', path: '/track-order', icon: Truck },
 ];
 
 export default function MobileNav({
   isOpen,
   onClose,
-  activeLink,
+  activeLink = '/',
   onSelectLink,
-  onOpenSearch,
 }) {
-  const { itemCount, setIsCartOpen, setIsWishlistOpen, wishlist } = useCart();
+  const { itemCount, setIsCartOpen, setIsWishlistOpen, wishlist = [] } = useCart();
+  const drawerRef = useRef(null);
 
+  // Lock background scrolling across iOS and Android browsers without layout shifts
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    if (!isOpen) return;
+
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+
     return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
       document.body.style.overflow = '';
+      window.scrollTo(0, scrollY);
     };
   }, [isOpen]);
 
-  const containerVariants = {
+  // Handle Escape key to close drawer
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  // Drawer slide-in & fade animation variants
+  const drawerVariants = {
     closed: {
-      opacity: 0,
       x: '-100%',
-      transition: { duration: 0.28, ease: [0.32, 0.72, 0, 1] },
+      opacity: 0,
+      transition: {
+        duration: 0.28,
+        ease: [0.32, 0.72, 0, 1],
+      },
     },
     open: {
-      opacity: 1,
       x: '0%',
+      opacity: 1,
       transition: {
         duration: 0.35,
         ease: [0.16, 1, 0.3, 1],
@@ -72,9 +105,62 @@ export default function MobileNav({
     },
   };
 
-  const handleItemClick = (path, name) => {
-    onSelectLink(path || name);
+  const backdropVariants = {
+    closed: { opacity: 0 },
+    open: { opacity: 1, transition: { duration: 0.25 } },
+  };
+
+  // Determine if a navigation item is currently active
+  const isItemActive = (item) => {
+    if (item.path === '/') {
+      return activeLink === '/';
+    }
+    if (item.name === 'New Arrival') {
+      if (typeof window !== 'undefined') {
+        const search = window.location.search;
+        return search.includes('new_arrival') || activeLink.includes('new_arrival');
+      }
+      return activeLink.includes('new_arrival');
+    }
+    if (item.name === 'Offers') {
+      if (typeof window !== 'undefined') {
+        const search = window.location.search;
+        return activeLink === '/offers' || search.includes('offers');
+      }
+      return activeLink === '/offers';
+    }
+    if (item.name === 'Track Order') {
+      return activeLink === '/track-order';
+    }
+    if (item.path === '/about') {
+      return activeLink === '/about';
+    }
+    // Category match
+    return (
+      activeLink === item.path ||
+      activeLink === `/category${item.path}` ||
+      activeLink === `/category/${item.name.toLowerCase()}`
+    );
+  };
+
+  const handleItemClick = (item) => {
+    onSelectLink(item.path, item.name);
     onClose();
+  };
+
+  const handleAccountClick = () => {
+    onSelectLink('/admin/login', 'Account');
+    onClose();
+  };
+
+  const handleWishlistClick = () => {
+    onClose();
+    setIsWishlistOpen(true);
+  };
+
+  const handleCartClick = () => {
+    onClose();
+    setIsCartOpen(true);
   };
 
   return (
@@ -84,26 +170,27 @@ export default function MobileNav({
           {/* Backdrop Blur */}
           <motion.div
             className="mobile-nav-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
+            variants={backdropVariants}
+            initial="closed"
+            animate="open"
+            exit="closed"
             onClick={onClose}
             aria-hidden="true"
           />
 
-          {/* Full-Height Drawer */}
+          {/* Full-Height Black & Gold Drawer */}
           <motion.aside
+            ref={drawerRef}
             className="mobile-nav-drawer"
-            variants={containerVariants}
+            variants={drawerVariants}
             initial="closed"
             animate="open"
             exit="closed"
             role="dialog"
             aria-modal="true"
-            aria-label="Navigation Menu"
+            aria-label="PS PERFUMES Mobile Navigation Menu"
           >
-            {/* 1. Header Bar with Logo and Close */}
+            {/* 1. Header Bar: Official Brand Logo & Clear Close (X) Button */}
             <div className="mobile-nav-header">
               <div className="mobile-nav-brand">
                 <PSPerfumesLogo size="sm" variant="header" />
@@ -112,109 +199,107 @@ export default function MobileNav({
                 type="button"
                 className="mobile-nav-close-btn"
                 onClick={onClose}
-                aria-label="Close navigation"
+                aria-label="Close navigation menu"
+                title="Close"
               >
                 <X size={20} />
               </button>
             </div>
 
-            {/* 2. Interactive Search Trigger */}
-            <div className="mobile-nav-search-bar">
-              <button
-                type="button"
-                className="mobile-nav-search-trigger"
-                onClick={() => {
-                  onClose();
-                  onOpenSearch();
-                }}
-              >
-                <Search size={16} />
-                <span>Search perfumes, attars & oud...</span>
-              </button>
+            {/* Subtle Brand Tagline Divider */}
+            <div className="mobile-nav-brand-strip" aria-hidden="true">
+              <span className="mobile-nav-tagline">HAUTE PARFUMERIE • KADAPA</span>
             </div>
 
-            {/* 3. Primary Navigation List */}
-            <nav className="mobile-nav-list" aria-label="Mobile Navigation Menu">
-              {PRIMARY_NAV.map((item) => {
-                const isActive =
-                  activeLink === item.path ||
-                  (item.path !== '/' && activeLink === `/category${item.path}`);
-                return (
-                  <div key={item.name} className="mobile-nav-item">
-                    <button
-                      type="button"
-                      className={`mobile-nav-link ${isActive ? 'active' : ''}`}
-                      onClick={() => handleItemClick(item.path, item.name)}
-                    >
-                      <span className="mobile-nav-link-text">
-                        <span>{item.name}</span>
-                      </span>
-                    </button>
-                  </div>
-                );
-              })}
-            </nav>
+            {/* 2. Scrollable Body: Exact 12 Navigation Items in Defined Order */}
+            <div className="mobile-nav-body">
+              <nav className="mobile-nav-list" aria-label="Store Navigation">
+                {NAVIGATION_ITEMS.map((item, idx) => {
+                  const Icon = item.icon;
+                  const isActive = isItemActive(item);
 
-            {/* 4. Quick Action Pills (Bag, Wishlist, Admin) */}
-            <div className="mobile-nav-quick-actions">
-              <button
-                type="button"
-                className="mobile-quick-btn"
-                onClick={() => {
-                  onClose();
-                  setIsCartOpen(true);
-                }}
-              >
-                <div className="mobile-quick-icon-wrap">
-                  <ShoppingBag size={18} />
-                  {itemCount > 0 && <span className="mobile-quick-badge">{itemCount}</span>}
-                </div>
-                <span>Shopping Bag</span>
-              </button>
+                  return (
+                    <div key={item.name} className="mobile-nav-item">
+                      <button
+                        type="button"
+                        className={`mobile-nav-link ${isActive ? 'is-active' : ''}`}
+                        onClick={() => handleItemClick(item)}
+                        aria-current={isActive ? 'page' : undefined}
+                      >
+                        <div className="mobile-nav-link-left">
+                          <span className="mobile-nav-icon-wrap" aria-hidden="true">
+                            <Icon size={18} className="mobile-nav-icon" />
+                          </span>
+                          <span className="mobile-nav-label">{item.name}</span>
+                        </div>
 
-              <button
-                type="button"
-                className="mobile-quick-btn"
-                onClick={() => {
-                  onClose();
-                  setIsWishlistOpen(true);
-                }}
-              >
-                <div className="mobile-quick-icon-wrap">
-                  <Heart size={18} />
-                  {wishlist.length > 0 && (
-                    <span className="mobile-quick-badge">{wishlist.length}</span>
-                  )}
-                </div>
-                <span>Wishlist</span>
-              </button>
+                        <div className="mobile-nav-link-right">
+                          {item.name === 'New Arrival' && (
+                            <span className="mobile-nav-badge-pill mobile-badge-new">NEW</span>
+                          )}
+                          {item.name === 'Offers' && (
+                            <span className="mobile-nav-badge-pill mobile-badge-sale">OFFER</span>
+                          )}
+                          <ChevronRight size={15} className="mobile-nav-arrow" aria-hidden="true" />
+                        </div>
+                      </button>
+                    </div>
+                  );
+                })}
+              </nav>
             </div>
 
-            {/* 5. Kadapa Store Location & Concierge Info */}
-            <div className="mobile-nav-footer">
-              <div className="mobile-nav-store-info">
-                <MapPin size={15} color="#c8a45d" />
-                <span>Kadapa, Andhra Pradesh – 516001</span>
+            {/* 3. Account Shortcuts Bar at Bottom: Account, Wishlist, Bag */}
+            <div className="mobile-nav-shortcuts-section">
+              <div className="mobile-nav-shortcuts-label" aria-hidden="true">
+                <span>PATRON SERVICES</span>
               </div>
-              <div className="mobile-nav-store-links">
-                <a
-                  href="https://www.instagram.com/ps_perfumes_kadapa/?hl=en"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mobile-store-link"
+
+              <div className="mobile-nav-shortcuts-grid">
+                {/* Account Shortcut */}
+                <button
+                  type="button"
+                  className="mobile-shortcut-btn"
+                  onClick={handleAccountClick}
+                  aria-label="Go to Account / Admin Portal"
                 >
-                  <InstagramIcon size={14} />
-                  <span>@ps_perfumes_kadapa</span>
-                </a>
-                <a
-                  href="https://share.google/b0yildKJKTaGc365J"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mobile-store-link"
+                  <div className="mobile-shortcut-icon-box">
+                    <User size={19} className="mobile-shortcut-icon" />
+                  </div>
+                  <span className="mobile-shortcut-title">Account</span>
+                </button>
+
+                {/* Wishlist Shortcut */}
+                <button
+                  type="button"
+                  className="mobile-shortcut-btn"
+                  onClick={handleWishlistClick}
+                  aria-label={`View Wishlist (${wishlist.length} items)`}
                 >
-                  <ExternalLink size={14} />
-                  <span>Google Maps</span>
-                </a>
+                  <div className="mobile-shortcut-icon-box">
+                    <Heart size={19} className="mobile-shortcut-icon" />
+                    {wishlist.length > 0 && (
+                      <span className="mobile-shortcut-badge">{wishlist.length}</span>
+                    )}
+                  </div>
+                  <span className="mobile-shortcut-title">Wishlist</span>
+                </button>
+
+                {/* Bag Shortcut */}
+                <button
+                  type="button"
+                  className="mobile-shortcut-btn"
+                  onClick={handleCartClick}
+                  aria-label={`View Shopping Bag (${itemCount} items)`}
+                >
+                  <div className="mobile-shortcut-icon-box">
+                    <ShoppingBag size={19} className="mobile-shortcut-icon" />
+                    {itemCount > 0 && (
+                      <span className="mobile-shortcut-badge">{itemCount}</span>
+                    )}
+                  </div>
+                  <span className="mobile-shortcut-title">Bag</span>
+                </button>
               </div>
             </div>
           </motion.aside>

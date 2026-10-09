@@ -9,9 +9,11 @@ import { getPublicImageUrl } from '../lib/storage';
 function formatHomepageProduct(item) {
   if (!item) return null;
 
-  // Resolve image from Supabase Storage path or URL
-  let resolvedImage = item.main_image_url;
-  if (!resolvedImage && item.main_image_path) {
+  // Resolve image from Supabase Storage path or URL (bucket: ps-perfumes)
+  let resolvedImage = '';
+  if (item.main_image_url) {
+    resolvedImage = getPublicImageUrl(item.main_image_url);
+  } else if (item.main_image_path) {
     resolvedImage = getPublicImageUrl(item.main_image_path);
   }
   if (!resolvedImage) {
@@ -76,6 +78,8 @@ export async function getFeaturedProducts(limit = 8) {
         is_featured,
         is_bestseller,
         is_active,
+        display_order,
+        created_at,
         product_variants (
           id,
           product_id,
@@ -87,8 +91,10 @@ export async function getFeaturedProducts(limit = 8) {
           is_active
         )
       `)
-      .eq('is_featured', true)
       .eq('is_active', true)
+      .eq('is_featured', true)
+      .order('display_order', { ascending: true })
+      .order('created_at', { ascending: false })
       .limit(limit);
 
     if (error) {
@@ -104,38 +110,78 @@ export async function getFeaturedProducts(limit = 8) {
 }
 
 /**
- * Fetch Best Selling Products calculated from real sales (orders & order_items)
- * If no order records exist: returns empty array [] (UI renders "No sales data yet.")
+ * Fetch Best Selling Products:
+ * 1. Primary logic: Rank using actual completed sales (orders & order_items) if sales exist.
+ * 2. Fallback logic: If zero orders/sales exist, query products with is_bestseller = true AND is_active = true.
+ * This ensures the homepage displays best sellers even before the first customer order.
  */
 export async function getBestSellingProducts(limit = 8) {
   try {
-    // 1. Query order items to calculate actual units sold
+    // 1. Check if real sales data exists in order_items
     const { data: orderItems, error: itemsErr } = await supabase
       .from('order_items')
       .select('product_id, quantity');
 
-    if (itemsErr || !orderItems || orderItems.length === 0) {
-      // No sales data in database
-      return [];
+    if (!itemsErr && Array.isArray(orderItems) && orderItems.length > 0) {
+      // Aggregate sales tally per product
+      const salesTally = {};
+      for (const item of orderItems) {
+        if (!item.product_id) continue;
+        salesTally[item.product_id] = (salesTally[item.product_id] || 0) + (Number(item.quantity) || 1);
+      }
+
+      const sortedProductIds = Object.keys(salesTally)
+        .sort((a, b) => salesTally[b] - salesTally[a])
+        .slice(0, limit);
+
+      if (sortedProductIds.length > 0) {
+        // Single-pass relational query for sales-ranked products (NO N+1)
+        const { data: salesProducts, error: prodErr } = await supabase
+          .from('products')
+          .select(`
+            id,
+            name,
+            slug,
+            brand,
+            main_image_path,
+            main_image_url,
+            is_featured,
+            is_bestseller,
+            is_active,
+            display_order,
+            created_at,
+            product_variants (
+              id,
+              product_id,
+              bottle_type,
+              size_ml,
+              price,
+              sale_price,
+              stock_quantity,
+              is_active
+            )
+          `)
+          .in('id', sortedProductIds)
+          .eq('is_active', true);
+
+        if (!prodErr && Array.isArray(salesProducts) && salesProducts.length > 0) {
+          const prodMap = new Map(salesProducts.map((p) => [p.id, p]));
+          const orderedProducts = [];
+          for (const id of sortedProductIds) {
+            const prod = prodMap.get(id);
+            if (prod) {
+              orderedProducts.push(formatHomepageProduct(prod));
+            }
+          }
+          if (orderedProducts.length > 0) {
+            return orderedProducts;
+          }
+        }
+      }
     }
 
-    // 2. Aggregate sales per product
-    const salesTally = {};
-    for (const item of orderItems) {
-      if (!item.product_id) continue;
-      salesTally[item.product_id] = (salesTally[item.product_id] || 0) + (Number(item.quantity) || 1);
-    }
-
-    const sortedProductIds = Object.keys(salesTally)
-      .sort((a, b) => salesTally[b] - salesTally[a])
-      .slice(0, limit);
-
-    if (sortedProductIds.length === 0) {
-      return [];
-    }
-
-    // 3. Batched relational query for top best-seller products (NO N+1)
-    const { data: products, error: prodErr } = await supabase
+    // 2. Fallback: Query products table where is_bestseller = true AND is_active = true
+    const { data: fallbackProducts, error: fallbackErr } = await supabase
       .from('products')
       .select(`
         id,
@@ -147,6 +193,8 @@ export async function getBestSellingProducts(limit = 8) {
         is_featured,
         is_bestseller,
         is_active,
+        display_order,
+        created_at,
         product_variants (
           id,
           product_id,
@@ -158,24 +206,18 @@ export async function getBestSellingProducts(limit = 8) {
           is_active
         )
       `)
-      .in('id', sortedProductIds)
-      .eq('is_active', true);
+      .eq('is_active', true)
+      .eq('is_bestseller', true)
+      .order('display_order', { ascending: true })
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
-    if (prodErr || !products) {
+    if (fallbackErr) {
+      if (import.meta.env.DEV) console.warn('getBestSellingProducts fallback note:', fallbackErr.message);
       return [];
     }
 
-    // Sort products by sales rank
-    const prodMap = new Map(products.map((p) => [p.id, p]));
-    const orderedProducts = [];
-    for (const id of sortedProductIds) {
-      const prod = prodMap.get(id);
-      if (prod) {
-        orderedProducts.push(formatHomepageProduct(prod));
-      }
-    }
-
-    return orderedProducts;
+    return (fallbackProducts || []).map(formatHomepageProduct);
   } catch (err) {
     if (import.meta.env.DEV) console.warn('getBestSellingProducts error:', err);
     return [];

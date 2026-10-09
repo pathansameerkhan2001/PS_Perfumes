@@ -1,250 +1,171 @@
 /* ==========================================================================
-   PS PERFUMES — Pure Visual Luxury Hero Stylesheet
-   Focus: Full-width, cinematic fragrance presentation, zero text obstruction,
-   perfume bottles remain crystal clear and prominent.
+   PS PERFUMES — Responsive Luxury Hero Video Stylesheet
+   Pure Visual Haute Parfumerie Showcase:
+   - Full-width responsive container
+   - Zero text obstruction or unwanted buttons
+   - Fine-tuned object-position keeping perfume bottle and spray action visible
+   - Native controls strictly suppressed
    ========================================================================== */
 
 .ps-hero-cinematic {
   position: relative;
   width: 100%;
-  height: 80vh;
-  min-height: 560px;
-  max-height: 820px;
+  height: 76vh;
+  min-height: 520px;
+  max-height: 780px;
   background-color: #050505;
   overflow: hidden;
   margin: 0;
   padding: 0;
 }
 
-@media (min-width: 1600px) {
+/* Extra-wide screens (1440px - 1920px+) */
+@media (min-width: 1440px) {
   .ps-hero-cinematic {
-    height: 82vh;
-    max-height: 880px;
+    height: 80vh;
+    min-height: 560px;
+    max-height: 840px;
   }
 }
 
+/* Tablet (768px - 1024px) */
 @media (max-width: 1024px) {
   .ps-hero-cinematic {
-    height: 72vh;
-    min-height: 500px;
+    height: 62vh;
+    min-height: 440px;
+    max-height: 580px;
   }
 }
 
+/* Standard Mobile (<= 768px) */
 @media (max-width: 768px) {
   .ps-hero-cinematic {
-    height: 58vh;
-    min-height: 420px;
+    height: 56vh;
+    min-height: 400px;
     max-height: 520px;
   }
 }
 
+/* Compact Mobile (<= 480px, including 430px and 390px) */
 @media (max-width: 480px) {
   .ps-hero-cinematic {
-    height: 54vh;
-    min-height: 380px;
+    height: 52vh;
+    min-height: 360px;
+    max-height: 460px;
   }
 }
 
-/* Full Area Link Wrapper */
-.ps-hero-viewport-link {
-  display: block;
-  width: 100%;
-  height: 100%;
-  position: relative;
-  text-decoration: none;
-  cursor: pointer;
-  overflow: hidden;
+/* Small Mobile (<= 375px, down to 320px) */
+@media (max-width: 375px) {
+  .ps-hero-cinematic {
+    height: 48vh;
+    min-height: 330px;
+    max-height: 420px;
+  }
 }
 
-/* Media Layer */
+/* Media Wrapper */
 .ps-hero-media-wrapper {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
+  background-color: #050505;
 }
 
-.ps-hero-picture-container {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  will-change: transform, opacity;
-}
-
-.ps-hero-picture-container picture {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.ps-hero-cinematic-img {
+/* Responsive Hero Video */
+.ps-hero-cinematic-video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center center;
   display: block;
-  transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: #050505;
 }
 
-.ps-hero-viewport-link:hover .ps-hero-cinematic-img {
-  transform: scale(1.02);
+/* Adjust object-position at tablet breakpoints to keep central flacon focused */
+@media (max-width: 1024px) {
+  .ps-hero-cinematic-video {
+    object-position: 50% 48%;
+  }
 }
 
-/* Subtle Vignette & Natural Ambient Lighting Preservation */
+/* Adjust object-position at mobile breakpoints to keep perfume bottle and spray visible */
+@media (max-width: 768px) {
+  .ps-hero-cinematic-video {
+    object-position: 49% 46%;
+  }
+}
+
+/* Fine-tuned for modern smartphones (iPhone 14/15/16 Pro, Galaxy S-series, 390px - 430px) */
+@media (max-width: 430px) {
+  .ps-hero-cinematic-video {
+    object-position: 48.5% 45%;
+  }
+}
+
+/* Fine-tuned for compact smartphones (iPhone SE, Galaxy A, 320px - 375px) */
+@media (max-width: 375px) {
+  .ps-hero-cinematic-video {
+    object-position: 48% 44%;
+  }
+}
+
+/* Poster Only (Reduced Motion Accessibility) */
+.ps-hero-poster-only {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Native Video Controls Suppression Across All Browsers */
+.ps-hero-cinematic-video::-webkit-media-controls {
+  display: none !important;
+}
+
+.ps-hero-cinematic-video::-webkit-media-controls-start-playback-button,
+.ps-hero-cinematic-video::-webkit-media-controls-play-button,
+.ps-hero-cinematic-video::-webkit-media-controls-panel,
+.ps-hero-cinematic-video::-webkit-media-controls-enclosure {
+  display: none !important;
+  -webkit-appearance: none !important;
+}
+
+/* Delicate Ambient Vignette & Natural Gold Lighting Preservation */
 .ps-hero-delicate-vignette {
   position: absolute;
   inset: 0;
   background: radial-gradient(
     ellipse at center,
-    rgba(0, 0, 0, 0) 55%,
-    rgba(5, 5, 5, 0.35) 85%,
-    rgba(5, 5, 5, 0.65) 100%
+    rgba(0, 0, 0, 0) 50%,
+    rgba(5, 5, 5, 0.28) 80%,
+    rgba(5, 5, 5, 0.6) 100%
   );
   pointer-events: none;
   z-index: 2;
 }
 
-/* Top Subtle Blend with Nav */
+/* Top Subtle Blend with Fixed Luxury Header */
 .ps-hero-top-blend {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 60px;
-  background: linear-gradient(to bottom, rgba(5, 5, 5, 0.45) 0%, transparent 100%);
+  height: 50px;
+  background: linear-gradient(to bottom, rgba(5, 5, 5, 0.5) 0%, transparent 100%);
   pointer-events: none;
   z-index: 2;
 }
 
-/* Bottom Subtle Blend with Trust Strip */
+/* Bottom Subtle Blend with Champagne Ticker Strip */
 .ps-hero-bottom-blend {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 70px;
-  background: linear-gradient(to top, rgba(5, 5, 5, 0.75) 0%, transparent 100%);
+  height: 60px;
+  background: linear-gradient(to top, rgba(5, 5, 5, 0.7) 0%, transparent 100%);
   pointer-events: none;
   z-index: 2;
-}
-
-/* Subtle Minimalist Overlays */
-.ps-hero-subtle-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  padding: 32px 48px;
-  pointer-events: none;
-}
-
-@media (max-width: 768px) {
-  .ps-hero-subtle-overlay {
-    padding: 18px 20px;
-  }
-}
-
-/* Bottom Left: Micro Slide Counter Indicator */
-.ps-hero-indicator-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5px 14px;
-  background: rgba(5, 5, 5, 0.72);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(200, 164, 93, 0.28);
-  border-radius: 9999px;
-  color: #F8F5EE;
-  font-family: 'Cinzel', serif;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  pointer-events: auto;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-  transition: border-color 0.25s ease, background-color 0.25s ease;
-}
-
-.ps-hero-indicator-badge:hover {
-  border-color: #C8A45D;
-  background: rgba(5, 5, 5, 0.88);
-}
-
-.ps-hero-index-num {
-  color: #E5C77A;
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-}
-
-/* Bottom Right: Minimalist Arrow Controls */
-.ps-hero-subtle-controls {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 4px 10px;
-  background: rgba(5, 5, 5, 0.72);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(200, 164, 93, 0.28);
-  border-radius: 9999px;
-  pointer-events: auto;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-}
-
-.ps-hero-ctrl-btn {
-  background: transparent;
-  border: none;
-  color: #C8A45D;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.2s ease, transform 0.2s ease, background 0.2s ease;
-}
-
-.ps-hero-ctrl-btn:hover {
-  color: #F8F5EE;
-  background: rgba(200, 164, 93, 0.2);
-  transform: scale(1.1);
-}
-
-/* Micro Dots */
-.ps-hero-dots-indicator {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 4px;
-}
-
-.ps-hero-micro-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(200, 164, 93, 0.3);
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  transition: width 0.3s ease, background-color 0.3s ease;
-}
-
-.ps-hero-micro-dot.is-active {
-  width: 18px;
-  border-radius: 9999px;
-  background: #C8A45D;
-}
-
-/* Mobile Fine-Tuning */
-@media (max-width: 640px) {
-  .ps-hero-indicator-badge {
-    padding: 4px 10px;
-    font-size: 10px;
-  }
 }

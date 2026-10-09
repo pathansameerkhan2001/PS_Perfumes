@@ -15,6 +15,7 @@ import WishlistPage from './pages/Wishlist/WishlistPage';
 import ContactPage from './pages/Contact/ContactPage';
 import SearchPage from './pages/Search/SearchPage';
 import InstagramPage from './pages/Instagram/InstagramPage';
+import TrackOrderPage from './pages/TrackOrder/TrackOrderPage';
 
 // Lazy-loaded Admin Pages (Code-split for maximum storefront performance)
 const AdminLogin = lazy(() => import('./admin/pages/AdminLogin'));
@@ -83,6 +84,8 @@ export default function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/instagram" element={<InstagramPage />} />
+          <Route path="/offers" element={<ShopPage />} />
+          <Route path="/track-order" element={<TrackOrderPage />} />
         </Route>
 
         {/* ==============================================================

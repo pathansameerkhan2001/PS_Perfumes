@@ -50,7 +50,7 @@ export default function HomePage() {
       {/* 4. Shop by Category (Database-driven, clean circular imagery) */}
       <ShopByFragrance />
 
-      {/* 5. Homepage Best Sellers (Calculated from real sales data) */}
+      {/* 5. Homepage Best Sellers (Sales-ranked with is_bestseller fallback) */}
       <ProductGridSection
         id="best-sellers"
         tag="SIGNATURE CREATIONS"
@@ -58,7 +58,7 @@ export default function HomePage() {
         products={bestSellers}
         showFilterTabs={false}
         limit={8}
-        emptyMessage="No sales data yet."
+        emptyMessage="No best sellers available."
       />
 
       {/* 6. Featured Products (is_featured=true AND is_active=true) */}

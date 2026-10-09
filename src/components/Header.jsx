@@ -182,8 +182,11 @@ export default function Header() {
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         activeLink={location.pathname}
-        onSelectLink={(target) => {
+        onSelectLink={(target, name) => {
           setIsMobileMenuOpen(false);
+          if (name && !['Home', 'About Us', 'New Arrival', 'Offers', 'Track Order'].includes(name)) {
+            setSelectedCategory(name);
+          }
           if (target.startsWith('/')) {
             navigate(target);
           } else if (target === 'Home') {

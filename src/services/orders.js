@@ -126,6 +126,42 @@ export async function getOrders() {
   return getLocalOrders();
 }
 
+export async function getOrderByNumber(orderNumber) {
+  if (!orderNumber) return null;
+  const clean = orderNumber.trim();
+  const cleanUpper = clean.toUpperCase();
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*, order_items(*)')
+        .ilike('order_number', cleanUpper)
+        .maybeSingle();
+
+      if (!error && data) {
+        return {
+          ...data,
+          items: data.order_items || [],
+        };
+      }
+    } catch (e) {
+      console.warn('Supabase getOrderByNumber error:', e);
+    }
+  }
+
+  const local = getLocalOrders();
+  return (
+    local.find(
+      (o) =>
+        o.order_number?.toUpperCase() === cleanUpper ||
+        o.id?.toUpperCase() === cleanUpper ||
+        o.email?.toLowerCase() === clean.toLowerCase() ||
+        o.phone?.replace(/[^0-9]/g, '') === clean.replace(/[^0-9]/g, '')
+    ) || null
+  );
+}
+
 export async function createOrder(orderPayload) {
   const orderNumber = `PS-${Math.floor(100000 + Math.random() * 900000)}`;
   const orderId = `ord-${Date.now()}`;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams, useParams } from 'react-router-dom';
+import { useSearchParams, useParams, useLocation } from 'react-router-dom';
 import { Filter, SlidersHorizontal, X, ChevronDown, Check, RefreshCw } from 'lucide-react';
 import ProductCard from '../../components/ProductCard';
 import { getProducts } from '../../services/products';
@@ -31,6 +31,7 @@ const SORT_OPTIONS = [
 export default function ShopPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { slug } = useParams();
+  const location = useLocation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,6 +40,7 @@ export default function ShopPage() {
   const categoryParam = categoryFromSlug || searchParams.get('category') || 'ALL';
   const filterParam = searchParams.get('filter') || '';
   const genderParam = searchParams.get('gender') || 'ALL';
+  const isOffersRoute = location.pathname === '/offers' || filterParam === 'offers';
 
   const [selectedCategory, setSelectedCategory] = useState(categoryParam);
   const [selectedGender, setSelectedGender] = useState(genderParam);
@@ -47,6 +49,7 @@ export default function ShopPage() {
   const [onlyInStock, setOnlyInStock] = useState(false);
   const [onlyBestsellers, setOnlyBestsellers] = useState(filterParam === 'bestseller');
   const [onlyNewArrivals, setOnlyNewArrivals] = useState(filterParam === 'new_arrival');
+  const [onlyOffers, setOnlyOffers] = useState(isOffersRoute);
 
   // Mobile drawer state
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
@@ -56,7 +59,8 @@ export default function ShopPage() {
     if (genderParam) setSelectedGender(genderParam);
     if (filterParam === 'new_arrival') setOnlyNewArrivals(true);
     if (filterParam === 'bestseller') setOnlyBestsellers(true);
-  }, [categoryParam, genderParam, filterParam]);
+    if (location.pathname === '/offers' || filterParam === 'offers') setOnlyOffers(true);
+  }, [categoryParam, genderParam, filterParam, location.pathname]);
 
   useEffect(() => {
     let mounted = true;
@@ -117,6 +121,20 @@ export default function ShopPage() {
       result = result.filter((p) => p.new_arrival || p.isNewArrival);
     }
 
+    // Offers & Bundles
+    if (onlyOffers) {
+      const discounted = result.filter(
+        (p) =>
+          (p.compare_at_price && Number(p.compare_at_price) > Number(p.price)) ||
+          p.category?.toLowerCase() === 'combo pack' ||
+          p.discount ||
+          p.sale_price
+      );
+      if (discounted.length > 0) {
+        result = discounted;
+      }
+    }
+
     // Sort
     if (sortOption === 'price-low') {
       result.sort((a, b) => a.price - b.price);
@@ -137,6 +155,7 @@ export default function ShopPage() {
     onlyInStock,
     onlyBestsellers,
     onlyNewArrivals,
+    onlyOffers,
     sortOption,
   ]);
 
@@ -147,6 +166,7 @@ export default function ShopPage() {
     setOnlyInStock(false);
     setOnlyBestsellers(false);
     setOnlyNewArrivals(false);
+    setOnlyOffers(false);
     setSortOption('featured');
     setSearchParams({});
   };
@@ -156,10 +176,16 @@ export default function ShopPage() {
       {/* Header Banner */}
       <div className="ps-shop-hero-banner">
         <div className="ps-shop-hero-inner">
-          <span className="ps-shop-tag">HAUTE PARFUMERIE COLLECTION</span>
-          <h1 className="ps-shop-title">The Complete Fragrance Wardrobe</h1>
+          <span className="ps-shop-tag">
+            {onlyOffers ? 'SPECIAL ATELIER PRIVILEGE' : 'HAUTE PARFUMERIE COLLECTION'}
+          </span>
+          <h1 className="ps-shop-title">
+            {onlyOffers ? 'Curated Offers & Luxury Bundles' : 'The Complete Fragrance Wardrobe'}
+          </h1>
           <p className="ps-shop-sub">
-            Artisanal attars, pure extraits de parfum, and precious agarwood distillations.
+            {onlyOffers
+              ? 'Discover our exclusive combo collections, gift sets, and artisanal extraits with boutique privileges.'
+              : 'Artisanal attars, pure extraits de parfum, and precious agarwood distillations.'}
           </p>
         </div>
       </div>
