@@ -17,11 +17,24 @@ import SearchPage from './pages/Search/SearchPage';
 import InstagramPage from './pages/Instagram/InstagramPage';
 import TrackOrderPage from './pages/TrackOrder/TrackOrderPage';
 
-// Lazy-loaded Admin Pages (Code-split for maximum storefront performance)
 const AdminLogin = lazy(() => import('./admin/pages/AdminLogin'));
 const AdminRoute = lazy(() => import('./admin/components/AdminRoute'));
 const AdminLayout = lazy(() => import('./admin/layouts/AdminLayout'));
 const AdminDashboard = lazy(() => import('./admin/pages/AdminDashboard'));
+const AdminHero = lazy(() => import('./admin/pages/AdminHero'));
+const AdminHomepage = lazy(() => import('./admin/pages/AdminHomepage'));
+const AdminReels = lazy(() => import('./admin/pages/AdminReels'));
+const AdminProducts = lazy(() => import('./admin/pages/AdminProducts'));
+const AdminProductForm = lazy(() => import('./admin/pages/AdminProductForm'));
+const AdminCategories = lazy(() => import('./admin/pages/AdminCategories'));
+const AdminCombos = lazy(() => import('./admin/pages/AdminCombos'));
+const AdminInventory = lazy(() => import('./admin/pages/AdminInventory'));
+const AdminOrders = lazy(() => import('./admin/pages/AdminOrders'));
+const AdminCustomers = lazy(() => import('./admin/pages/AdminCustomers'));
+const AdminReviews = lazy(() => import('./admin/pages/AdminReviews'));
+const AdminCoupons = lazy(() => import('./admin/pages/AdminCoupons'));
+const AdminSettings = lazy(() => import('./admin/pages/AdminSettings'));
+const AdminUsers = lazy(() => import('./admin/pages/AdminUsers'));
 
 import './components/Sections.css';
 import './App.css';
@@ -114,6 +127,23 @@ export default function App() {
           }
         >
           <Route index element={<AdminDashboard />} />
+          <Route path="hero" element={<AdminHero />} />
+          <Route path="homepage" element={<AdminHomepage />} />
+          <Route path="reels" element={<AdminReels />} />
+          <Route path="products" element={<AdminProducts />} />
+          <Route path="products/new" element={<AdminProductForm />} />
+          <Route path="products/:id/edit" element={<AdminProductForm />} />
+          <Route path="products/edit/:id" element={<AdminProductForm />} />
+          <Route path="categories" element={<AdminCategories />} />
+          <Route path="combos" element={<AdminCombos />} />
+          <Route path="inventory" element={<AdminInventory />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="customers" element={<AdminCustomers />} />
+          <Route path="reviews" element={<AdminReviews />} />
+          <Route path="coupons" element={<AdminCoupons />} />
+          <Route path="settings" element={<AdminSettings />} />
+          <Route path="admin-users" element={<AdminUsers />} />
+          <Route path="users" element={<Navigate to="/admin/admin-users" replace />} />
           <Route path="*" element={<Navigate to="/admin" replace />} />
         </Route>
 

@@ -20,6 +20,7 @@ export const INITIAL_SETTINGS = {
   currency: 'INR',
   currency_symbol: '₹',
   store_status: 'open',
+  website_url: 'https://psperfumes.com',
 };
 
 function getLocalSettings() {

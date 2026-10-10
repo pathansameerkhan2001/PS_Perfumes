@@ -294,3 +294,28 @@ export async function verifyCategoriesConnection() {
     return { success: false, data: null, error: err?.message || 'Categories query failed' };
   }
 }
+
+/**
+ * Fetch Recent Orders from public.orders
+ * Returns up to limit (default 5) most recent orders.
+ * Returns empty array [] if no orders exist.
+ */
+export async function getRecentOrders(limit = 5) {
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('id, order_number, customer_name, email, total, order_status, payment_status, payment_method, created_at')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      if (import.meta.env.DEV) console.warn('getRecentOrders note:', error.message);
+      return { data: [], error: null };
+    }
+
+    return { data: data || [], error: null };
+  } catch (err) {
+    if (import.meta.env.DEV) console.warn('getRecentOrders catch:', err);
+    return { data: [], error: null };
+  }
+}

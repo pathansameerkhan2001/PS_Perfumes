@@ -37,30 +37,6 @@ export default function AdminCustomers() {
           }
         });
 
-        // Add default Kadapa patrons if list is empty
-        if (Object.keys(customerMap).length === 0) {
-          customerMap['patron1@psperfumes.com'] = {
-            name: 'K. Venkatesh Rao',
-            email: 'venkatesh.rao@gmail.com',
-            phone: '+91 94401 23456',
-            city: 'Kadapa',
-            state: 'Andhra Pradesh',
-            orderCount: 3,
-            totalSpend: 7497,
-            lastOrderDate: new Date(Date.now() - 86400000).toISOString(),
-          };
-          customerMap['patron2@psperfumes.com'] = {
-            name: 'Shaik Irfan',
-            email: 'shaik.irfan@yahoo.com',
-            phone: '+91 98480 98765',
-            city: 'Kadapa',
-            state: 'Andhra Pradesh',
-            orderCount: 2,
-            totalSpend: 3998,
-            lastOrderDate: new Date(Date.now() - 172800000).toISOString(),
-          };
-        }
-
         setCustomers(Object.values(customerMap));
       } catch (err) {
         console.error('Error fetching customers:', err);

@@ -23,6 +23,7 @@ export default function AdminSettings() {
     currency: 'INR',
     currency_symbol: '₹',
     store_status: 'open',
+    website_url: 'https://psperfumes.com',
   });
 
   const [loading, setLoading] = useState(true);
@@ -190,6 +191,19 @@ export default function AdminSettings() {
               <option value="open">Open (Accepting Orders)</option>
               <option value="maintenance">Private Atelier Maintenance Mode</option>
             </select>
+          </div>
+
+          <div className="ps-admin-input-group">
+            <label htmlFor="website_url">Official Website Domain (Live Website)</label>
+            <input
+              id="website_url"
+              name="website_url"
+              type="url"
+              value={settings.website_url || 'https://psperfumes.com'}
+              onChange={handleChange}
+              placeholder="https://psperfumes.com"
+            />
+            <span className="ps-admin-input-hint">Target production domain used by the Live Website link</span>
           </div>
         </div>
 

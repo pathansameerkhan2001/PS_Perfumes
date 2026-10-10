@@ -1,12 +1,23 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import PSPerfumesLogo from './common/PSPerfumesLogo';
-import { MapPin, Mail, ExternalLink, ShieldCheck } from 'lucide-react';
+import { MapPin, Mail, Phone, ArrowUp } from 'lucide-react';
+import { SITE_CONFIG } from '../config/siteConfig';
 import './Footer.css';
 
-function InstagramIcon({ size = 17, color = 'currentColor' }) {
+function InstagramIcon({ size = 16, color = 'currentColor' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
       <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
       <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
@@ -14,138 +25,187 @@ function InstagramIcon({ size = 17, color = 'currentColor' }) {
   );
 }
 
+/**
+ * PS PERFUMES — Premium Public Storefront Footer
+ * Strictly for public pages; excluded from administrative routes.
+ * 4-column balanced luxury layout on desktop; clean stacked layout on mobile.
+ */
 export default function Footer() {
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="ps-footer" aria-label="PS PERFUMES Footer">
+    <footer className="ps-public-footer" aria-label="PS PERFUMES Storefront Footer">
+      {/* Top Hairline Gold Accent Ribbon */}
       <div className="ps-footer-top-gold-bar" />
 
-      <div className="ps-footer-container">
-        <div className="ps-footer-grid">
-          {/* Column 1: Brand Summary */}
-          <div className="ps-footer-col ps-footer-brand-col">
-            <div className="ps-footer-logo-wrapper">
-              <Link to="/">
+      <div className="ps-footer-main-container">
+        <div className="ps-footer-four-col-grid">
+          {/* ==============================================================
+              COLUMN 1 — BRAND
+              ============================================================== */}
+          <div className="ps-footer-column ps-footer-brand-column">
+            <div className="ps-footer-logo-wrap">
+              <Link to="/" aria-label="PS PERFUMES Home">
                 <PSPerfumesLogo size="md" variant="footer" />
               </Link>
             </div>
-            <p className="ps-footer-brand-desc">
-              Haute Parfumerie & Artisanal Fragrances. Pure aged oud, rare botanical attars, bakhoor, and luxury extrait formulations distilled for enduring royal elegance.
+            <p className="ps-footer-brand-description">
+              Artisanal Haute Parfumerie crafting Arabian-inspired scents, rare botanical attars,
+              and pure aged oud formulations distilled for enduring luxury and regal elegance.
             </p>
-            <div className="ps-footer-socials">
+            <div className="ps-footer-social-links">
               <a
-                href="https://www.instagram.com/ps_perfumes_kadapa/?hl=en"
+                href={SITE_CONFIG.instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="ps-social-link"
-                aria-label="Instagram @ps_perfumes_kadapa"
+                className="ps-footer-social-pill"
+                aria-label="Official Instagram @ps_perfumes_kadapa"
                 title="Follow @ps_perfumes_kadapa on Instagram"
               >
-                <InstagramIcon size={18} />
-              </a>
-              <a
-                href="https://share.google/b0yildKJKTaGc365J"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ps-social-link"
-                aria-label="Google Maps Location"
-                title="View Store on Google Maps"
-              >
-                <ExternalLink size={18} />
+                <InstagramIcon size={16} color="#C9A96E" />
+                <span>Instagram</span>
               </a>
             </div>
           </div>
 
-          {/* Column 2: Shop */}
-          <div className="ps-footer-col">
-            <h4 className="ps-footer-heading">Shop</h4>
-            <ul className="ps-footer-links">
-              <li><Link to="/attar">Attar</Link></li>
-              <li><Link to="/perfume">Perfume</Link></li>
-              <li><Link to="/bakhoor">Bakhoor</Link></li>
-              <li><Link to="/musky">Musky</Link></li>
-              <li><Link to="/oud">Oud</Link></li>
-              <li><Link to="/floral">Floral</Link></li>
-              <li><Link to="/woody">Woody</Link></li>
-              <li><Link to="/shop">Shop All</Link></li>
+          {/* ==============================================================
+              COLUMN 2 — EXPLORE (No Shop All)
+              ============================================================== */}
+          <div className="ps-footer-column">
+            <h3 className="ps-footer-col-heading">Explore</h3>
+            <ul className="ps-footer-link-list">
+              <li>
+                <Link to="/">Home</Link>
+              </li>
+              <li>
+                <Link to="/about">About Us</Link>
+              </li>
+              <li>
+                <Link to="/attar">Attar</Link>
+              </li>
+              <li>
+                <Link to="/perfume">Perfume</Link>
+              </li>
+              <li>
+                <Link to="/bakhoor">Bakhoor</Link>
+              </li>
+              <li>
+                <Link to="/musky">Musky</Link>
+              </li>
+              <li>
+                <Link to="/oud">Oud</Link>
+              </li>
+              <li>
+                <Link to="/floral">Floral</Link>
+              </li>
+              <li>
+                <Link to="/woody">Woody</Link>
+              </li>
             </ul>
           </div>
 
-          {/* Column 3: About */}
-          <div className="ps-footer-col">
-            <h4 className="ps-footer-heading">About</h4>
-            <ul className="ps-footer-links">
-              <li><Link to="/about">Our Story & Heritage</Link></li>
-              <li><Link to="/about#craftsmanship">Art of Distillation</Link></li>
-              <li><Link to="/about#kadapa">Kadapa Atelier</Link></li>
-              <li><Link to="/instagram">Instagram Reels</Link></li>
-              <li><Link to="/admin/login">Admin Portal</Link></li>
+          {/* ==============================================================
+              COLUMN 3 — CUSTOMER SERVICE (Only existing functional routes)
+              ============================================================== */}
+          <div className="ps-footer-column">
+            <h3 className="ps-footer-col-heading">Customer Service</h3>
+            <ul className="ps-footer-link-list">
+              <li>
+                <Link to="/contact">Contact Us</Link>
+              </li>
+              <li>
+                <span className="ps-footer-unlinked-item" title="Page in development">
+                  FAQs
+                </span>
+              </li>
+              <li>
+                <span className="ps-footer-unlinked-item" title="Page in development">
+                  Shipping Information
+                </span>
+              </li>
+              <li>
+                <span className="ps-footer-unlinked-item" title="Page in development">
+                  Returns and Refunds
+                </span>
+              </li>
+              <li>
+                <Link to="/track-order">Track Order</Link>
+              </li>
             </ul>
           </div>
 
-          {/* Column 4: Customer Care */}
-          <div className="ps-footer-col">
-            <h4 className="ps-footer-heading">Customer Care</h4>
-            <ul className="ps-footer-links">
-              <li><Link to="/contact">Shipping Policy</Link></li>
-              <li><Link to="/contact">Returns & Exchanges</Link></li>
-              <li><Link to="/contact">Privacy Policy</Link></li>
-              <li><Link to="/contact">Terms & Conditions</Link></li>
-              <li><Link to="/contact">FAQ</Link></li>
-              <li><Link to="/contact">Contact Us</Link></li>
-            </ul>
-          </div>
-
-          {/* Column 5: Contact */}
-          <div className="ps-footer-col">
-            <h4 className="ps-footer-heading">Contact</h4>
-            <div className="ps-footer-contact-items">
-              <div className="ps-footer-contact-row">
-                <MapPin size={16} color="#c8a45d" className="ps-footer-contact-icon" />
-                <span>
-                  <strong>PS PERFUMES</strong><br />
-                  Kadapa, Andhra Pradesh – 516001, India
+          {/* ==============================================================
+              COLUMN 4 — CONTACT (Verified details only)
+              ============================================================== */}
+          <div className="ps-footer-column">
+            <h3 className="ps-footer-col-heading">Contact</h3>
+            <div className="ps-footer-contact-details">
+              <div className="ps-footer-contact-item">
+                <MapPin size={15} color="#C9A96E" className="ps-footer-icon" />
+                <span className="ps-footer-text">
+                  <strong>PS PERFUMES</strong>
+                  <br />
+                  Kadapa, 516001
                 </span>
               </div>
-              <div className="ps-footer-contact-row">
-                <Mail size={16} color="#c8a45d" className="ps-footer-contact-icon" />
-                <a href="mailto:brandnix.in@gmail.com" className="ps-contact-link">
-                  brandnix.in@gmail.com
-                </a>
-              </div>
-              <div className="ps-footer-contact-row">
-                <ExternalLink size={16} color="#c8a45d" className="ps-footer-contact-icon" />
+
+              <div className="ps-footer-contact-item">
+                <InstagramIcon size={15} color="#C9A96E" />
                 <a
-                  href="https://share.google/b0yildKJKTaGc365J"
+                  href={SITE_CONFIG.instagramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="ps-contact-link"
-                >
-                  Locate on Google Maps
-                </a>
-              </div>
-              <div className="ps-footer-contact-row">
-                <InstagramIcon size={16} color="#c8a45d" />
-                <a
-                  href="https://www.instagram.com/ps_perfumes_kadapa/?hl=en"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ps-contact-link"
+                  className="ps-footer-link"
                 >
                   @ps_perfumes_kadapa
                 </a>
               </div>
+
+              {SITE_CONFIG.contactEmail && (
+                <div className="ps-footer-contact-item">
+                  <Mail size={15} color="#C9A96E" className="ps-footer-icon" />
+                  <a href={`mailto:${SITE_CONFIG.contactEmail}`} className="ps-footer-link">
+                    {SITE_CONFIG.contactEmail}
+                  </a>
+                </div>
+              )}
+
+              {SITE_CONFIG.phone && (
+                <div className="ps-footer-contact-item">
+                  <Phone size={15} color="#C9A96E" className="ps-footer-icon" />
+                  <a href={`tel:${SITE_CONFIG.phone.replace(/\s+/g, '')}`} className="ps-footer-link">
+                    {SITE_CONFIG.phone}
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Bottom Bar: Copyright & Kadapa note */}
-        <div className="ps-footer-bottom">
-          <p className="ps-footer-copy">
-            © {new Date().getFullYear()} <strong>PS PERFUMES</strong>. All Rights Reserved. Crafted with pride in Kadapa, Andhra Pradesh.
-          </p>
-          <div className="ps-footer-trust-badge">
-            <ShieldCheck size={14} color="#c8a45d" />
-            <span>100% Authentic Artisanal Perfumes & Attars</span>
+        {/* ==============================================================
+            FOOTER BOTTOM BAR
+            ============================================================== */}
+        <div className="ps-footer-bottom-bar">
+          <div className="ps-footer-bottom-brand-info">
+            <p className="ps-footer-copyright">
+              © {currentYear} <strong>PS PERFUMES</strong>. All rights reserved.
+            </p>
+          </div>
+
+          <div className="ps-footer-bottom-actions">
+            <button
+              type="button"
+              onClick={scrollToTop}
+              className="ps-footer-back-to-top-btn"
+              aria-label="Scroll back to top"
+            >
+              <span>Back to top</span>
+              <ArrowUp size={13} strokeWidth={2} />
+            </button>
           </div>
         </div>
       </div>
