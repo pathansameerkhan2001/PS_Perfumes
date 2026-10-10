@@ -56,36 +56,59 @@ function saveLocalAdminUsers(users) {
   }
 }
 
+function normalizeAdminUser(u) {
+  const email = u.email || (u.user_id ? `admin-${u.user_id.slice(0, 8)}@psperfumes.com` : 'admin@psperfumes.com');
+  const fullName = u.full_name || (u.email ? u.email.split('@')[0] : 'Administrator');
+  const status = u.status || (u.is_active !== false ? 'active' : 'suspended');
+  return {
+    ...u,
+    email,
+    full_name: fullName,
+    status,
+    role: u.role || 'Admin',
+  };
+}
+
 export async function getAdminUsers() {
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase.from('admin_users').select('*').order('created_at', { ascending: false });
       if (!error && Array.isArray(data) && data.length > 0) {
-        return data;
+        return data.map(normalizeAdminUser);
       }
     } catch (e) {
       console.warn('Supabase getAdminUsers error, fallback:', e);
     }
   }
 
-  return getLocalAdminUsers();
+  return getLocalAdminUsers().map(normalizeAdminUser);
 }
 
 export async function createAdminUser(userData) {
-  const newUser = {
-    id: `admin-${Date.now()}`,
-    ...userData,
-    status: userData.status || 'active',
-    created_at: new Date().toISOString(),
-  };
+  let createdUser = null;
 
   if (isSupabaseConfigured && supabase) {
     try {
-      await supabase.from('admin_users').insert([newUser]);
+      const payload = {
+        role: userData.role || 'admin',
+        is_active: userData.status === 'active' || userData.is_active !== false,
+      };
+
+      const { data, error } = await supabase.from('admin_users').insert([payload]).select().single();
+      if (!error && data) {
+        createdUser = normalizeAdminUser({ ...userData, ...data });
+      }
     } catch (e) {
       console.warn('Supabase createAdminUser error:', e);
     }
   }
+
+  const newUser = createdUser || normalizeAdminUser({
+    id: `admin-${Date.now()}`,
+    ...userData,
+    status: userData.status || 'active',
+    created_at: new Date().toISOString(),
+  });
 
   const list = getLocalAdminUsers();
   list.unshift(newUser);
@@ -96,7 +119,12 @@ export async function createAdminUser(userData) {
 export async function updateAdminUser(id, updates) {
   if (isSupabaseConfigured && supabase) {
     try {
-      await supabase.from('admin_users').update(updates).eq('id', id);
+      const payload = {};
+      if (updates.role !== undefined) payload.role = updates.role;
+      if (updates.status !== undefined) payload.is_active = updates.status === 'active';
+      if (updates.is_active !== undefined) payload.is_active = updates.is_active;
+
+      await supabase.from('admin_users').update(payload).eq('id', id);
     } catch (e) {
       console.warn('Supabase updateAdminUser error:', e);
     }
@@ -105,7 +133,7 @@ export async function updateAdminUser(id, updates) {
   const list = getLocalAdminUsers();
   const idx = list.findIndex((u) => u.id === id);
   if (idx > -1) {
-    list[idx] = { ...list[idx], ...updates };
+    list[idx] = normalizeAdminUser({ ...list[idx], ...updates });
     saveLocalAdminUsers(list);
     return list[idx];
   }

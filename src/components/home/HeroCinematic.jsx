@@ -72,11 +72,6 @@ export default function HeroCinematic() {
           aria-label="PS PERFUMES Haute Parfumerie Video"
         >
           <source src={videoUrl} type="video/mp4" />
-          <img
-            src={posterFallback}
-            alt="PS PERFUMES Haute Parfumerie Campaign"
-            className="ps-hero-cinematic-video ps-hero-poster-fallback"
-          />
         </video>
       </div>
     </section>

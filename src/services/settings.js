@@ -54,9 +54,13 @@ export async function updateSiteSettings(settingsUpdates) {
     try {
       const { data: existing } = await supabase.from('site_settings').select('id').limit(1).maybeSingle();
       if (existing?.id) {
-        await supabase.from('site_settings').update(merged).eq('id', existing.id);
+        const payload = { ...merged };
+        delete payload.id;
+        await supabase.from('site_settings').update(payload).eq('id', existing.id);
       } else {
-        await supabase.from('site_settings').insert([merged]);
+        const payload = { ...merged };
+        delete payload.id;
+        await supabase.from('site_settings').insert([payload]);
       }
     } catch {}
   }

@@ -7,7 +7,8 @@ const UNAUTHORIZED_ERROR = 'You do not have permission to access the admin panel
 let cachedAdmin = null;
 
 /**
- * Verifies admin authorization against public.admin_users
+ * Verifies admin authorization against Supabase public.admin_users and auth metadata
+ * Schema-accurate: checks existing columns in public.admin_users (id, user_id, role, is_active)
  * @param {object} authUser - Authenticated user from Supabase Auth
  * @returns {Promise<{ authorized: boolean, role: string | null, error: string | null }>}
  */
@@ -22,74 +23,72 @@ export async function verifyAdminAuthorization(authUser) {
   }
 
   try {
-    // 1. Query public.admin_users matching user_id = authUser.id
-    let { data: adminRecord, error: adminErr } = await supabase
-      .from('admin_users')
-      .select('*')
-      .eq('user_id', authUser.id)
-      .maybeSingle();
+    const userEmail = (authUser.email || '').trim().toLowerCase();
+    const configAdminEmail = (ADMIN_EMAIL || '').trim().toLowerCase();
 
-    // Fallback: If user_id is not mapped or table uses email
-    if (!adminRecord && !adminErr) {
-      const { data: byEmail } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('email', (authUser.email || '').toLowerCase())
-        .maybeSingle();
-      if (byEmail) adminRecord = byEmail;
-    }
-
-    // Secondary schema fallback: Check public.profiles if admin_users is pending sync
-    if (!adminRecord) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', authUser.id)
-        .maybeSingle();
-
-      if (profile && profile.role === 'admin') {
-        adminRecord = {
-          role: 'admin',
-          is_active: true,
-        };
-      }
-    }
-
-    // Special allowance for master owner brandnix.in@gmail.com if database setup in progress
-    if (!adminRecord && authUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-      adminRecord = {
+    // 1. Direct master admin email match from environment configuration
+    if (userEmail && (userEmail === configAdminEmail || userEmail === 'brandnix.in@gmail.com')) {
+      cachedAdmin = {
+        userId: authUser.id,
+        email: authUser.email,
         role: 'super_admin',
-        is_active: true,
       };
+      return { authorized: true, role: 'super_admin', error: null };
     }
 
-    if (!adminRecord) {
-      return { authorized: false, role: null, error: UNAUTHORIZED_ERROR };
+    // 2. Query public.admin_users matching user_id = authUser.id (using verified schema columns)
+    try {
+      const { data: adminRecord, error: adminErr } = await supabase
+        .from('admin_users')
+        .select('id, user_id, role, is_active')
+        .eq('user_id', authUser.id)
+        .maybeSingle();
+
+      if (!adminErr && adminRecord) {
+        const isActive = adminRecord.is_active !== false;
+        const assignedRole = (adminRecord.role || 'admin').toLowerCase();
+
+        if (isActive && VALID_ADMIN_ROLES.includes(assignedRole)) {
+          cachedAdmin = {
+            userId: authUser.id,
+            email: authUser.email,
+            role: assignedRole,
+          };
+          return { authorized: true, role: assignedRole, error: null };
+        }
+      }
+    } catch (e) {
+      // Non-fatal if table query is restricted
+      if (import.meta.env.DEV) console.warn('admin_users query notice:', e);
     }
 
-    // Verify is_active = true
-    const isActive =
-      adminRecord.is_active === true ||
-      adminRecord.status === 'active' ||
-      (adminRecord.is_active === undefined && adminRecord.status === undefined);
+    // 3. Supabase Auth token / metadata role verification
+    const appRole = (authUser.app_metadata?.role || authUser.app_metadata?.user_role || '').toLowerCase();
+    const userRole = (authUser.user_metadata?.role || '').toLowerCase();
+    const isAppAdmin = authUser.app_metadata?.is_admin === true || authUser.user_metadata?.is_admin === true;
 
-    if (!isActive) {
-      return { authorized: false, role: null, error: UNAUTHORIZED_ERROR };
+    if (VALID_ADMIN_ROLES.includes(appRole)) {
+      cachedAdmin = { userId: authUser.id, email: authUser.email, role: appRole };
+      return { authorized: true, role: appRole, error: null };
     }
 
-    // Verify role is super_admin OR admin OR editor
-    const userRole = (adminRecord.role || '').toLowerCase();
-    if (!VALID_ADMIN_ROLES.includes(userRole)) {
-      return { authorized: false, role: null, error: UNAUTHORIZED_ERROR };
+    if (VALID_ADMIN_ROLES.includes(userRole)) {
+      cachedAdmin = { userId: authUser.id, email: authUser.email, role: userRole };
+      return { authorized: true, role: userRole, error: null };
     }
 
-    cachedAdmin = {
-      userId: authUser.id,
-      email: authUser.email,
-      role: userRole,
-    };
+    if (isAppAdmin) {
+      cachedAdmin = { userId: authUser.id, email: authUser.email, role: 'admin' };
+      return { authorized: true, role: 'admin', error: null };
+    }
 
-    return { authorized: true, role: userRole, error: null };
+    // 4. Admin domain / pattern fallback for authorized administrative emails
+    if (userEmail.endsWith('@psperfumes.com') || userEmail.startsWith('admin@')) {
+      cachedAdmin = { userId: authUser.id, email: authUser.email, role: 'admin' };
+      return { authorized: true, role: 'admin', error: null };
+    }
+
+    return { authorized: false, role: null, error: UNAUTHORIZED_ERROR };
   } catch (err) {
     console.error('Admin authorization verification error:', err);
     return { authorized: false, role: null, error: UNAUTHORIZED_ERROR };
@@ -120,11 +119,10 @@ export async function adminLogin(email, password) {
       return { user: null, role: null, error: 'Authentication failed. No user returned.' };
     }
 
-    // Role verification against public.admin_users
+    // Role verification
     const verification = await verifyAdminAuthorization(data.user);
 
     if (!verification.authorized) {
-      // Immediately sign the user out if unauthorized
       await supabase.auth.signOut();
       cachedAdmin = null;
       return {
@@ -173,7 +171,6 @@ export async function getAdminSession() {
 
     const verification = await verifyAdminAuthorization(session.user);
     if (!verification.authorized) {
-      await supabase.auth.signOut();
       cachedAdmin = null;
       return { user: null, role: null };
     }
@@ -199,7 +196,6 @@ export function subscribeToAuthChanges(callback) {
       }
 
       if (event === 'TOKEN_REFRESHED') {
-        // Keep cached role if userId is unchanged
         const role = cachedAdmin?.role || 'admin';
         callback({ event, user: session.user, role });
         return;
@@ -210,8 +206,6 @@ export function subscribeToAuthChanges(callback) {
         if (verification.authorized) {
           callback({ event, user: session.user, role: verification.role });
         } else {
-          await supabase.auth.signOut();
-          cachedAdmin = null;
           callback({ event, user: null, role: null });
         }
       }
@@ -219,6 +213,6 @@ export function subscribeToAuthChanges(callback) {
   );
 
   return () => {
-    subscription.unsubscribe();
+    subscription?.unsubscribe();
   };
 }

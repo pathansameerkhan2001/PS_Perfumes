@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { isValidUUID } from './products';
 
 const LOCAL_CATEGORIES_KEY = 'ps_db_categories';
 
@@ -11,7 +12,6 @@ export const INITIAL_CATEGORIES = [
     image_url: '/assets/combo-attar-set.webp',
     display_order: 1,
     is_active: true,
-    is_featured: true,
   },
   {
     id: 'cat-02',
@@ -21,7 +21,6 @@ export const INITIAL_CATEGORIES = [
     image_url: '/assets/prod-royal-amber.webp',
     display_order: 2,
     is_active: true,
-    is_featured: true,
   },
   {
     id: 'cat-03',
@@ -31,7 +30,6 @@ export const INITIAL_CATEGORIES = [
     image_url: '/assets/promo-banner.webp',
     display_order: 3,
     is_active: true,
-    is_featured: true,
   },
   {
     id: 'cat-04',
@@ -41,7 +39,6 @@ export const INITIAL_CATEGORIES = [
     image_url: '/assets/cat-unisex.webp',
     display_order: 4,
     is_active: true,
-    is_featured: true,
   },
   {
     id: 'cat-05',
@@ -51,7 +48,6 @@ export const INITIAL_CATEGORIES = [
     image_url: '/assets/combo-oud-trio.webp',
     display_order: 5,
     is_active: true,
-    is_featured: true,
   },
   {
     id: 'cat-06',
@@ -61,7 +57,6 @@ export const INITIAL_CATEGORIES = [
     image_url: '/assets/cat-women.webp',
     display_order: 6,
     is_active: true,
-    is_featured: true,
   },
   {
     id: 'cat-07',
@@ -71,7 +66,6 @@ export const INITIAL_CATEGORIES = [
     image_url: '/assets/prod-noir-absolu.webp',
     display_order: 7,
     is_active: true,
-    is_featured: true,
   },
 ];
 
@@ -113,26 +107,43 @@ export async function getCategories(all = false) {
 }
 
 export async function createCategory(cat) {
-  const newCat = {
-    ...cat,
-    id: cat.id || `cat-${Date.now()}`,
-    slug: cat.slug || cat.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-    display_order: Number(cat.display_order) || 1,
-    is_active: cat.is_active !== undefined ? cat.is_active : true,
-    is_featured: Boolean(cat.is_featured),
-    created_at: new Date().toISOString(),
-  };
+  let createdRecord = null;
 
   if (isSupabaseConfigured && supabase) {
     try {
-      const { data, error } = await supabase.from('categories').insert([newCat]).select().single();
+      const payload = {
+        name: cat.name,
+        slug: cat.slug || cat.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        description: cat.description || '',
+        image_url: cat.image_url || '',
+        display_order: Number(cat.display_order) || 1,
+        is_active: cat.is_active !== undefined ? Boolean(cat.is_active) : true,
+      };
+
+      const { data, error } = await supabase.from('categories').insert([payload]).select().single();
       if (!error && data) {
+        createdRecord = data;
         const list = getLocalCategories();
         saveLocalCategories([...list, data]);
         return { data, error: null };
+      } else if (error) {
+        console.error('Supabase createCategory error:', error.message);
+        throw new Error(error.message);
       }
-    } catch {}
+    } catch (e) {
+      console.error('Supabase createCategory exception:', e);
+      throw e;
+    }
   }
+
+  const newCat = createdRecord || {
+    ...cat,
+    id: `cat-${Date.now()}`,
+    slug: cat.slug || cat.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    display_order: Number(cat.display_order) || 1,
+    is_active: cat.is_active !== undefined ? Boolean(cat.is_active) : true,
+    created_at: new Date().toISOString(),
+  };
 
   const list = getLocalCategories();
   const updated = [...list, newCat];
@@ -141,15 +152,30 @@ export async function createCategory(cat) {
 }
 
 export async function updateCategory(id, updates) {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     try {
-      const { data, error } = await supabase.from('categories').update(updates).eq('id', id).select().single();
+      const payload = {};
+      if (updates.name !== undefined) payload.name = updates.name;
+      if (updates.slug !== undefined) payload.slug = updates.slug;
+      if (updates.description !== undefined) payload.description = updates.description;
+      if (updates.image_url !== undefined) payload.image_url = updates.image_url;
+      if (updates.display_order !== undefined) payload.display_order = Number(updates.display_order) || 1;
+      if (updates.is_active !== undefined) payload.is_active = Boolean(updates.is_active);
+      payload.updated_at = new Date().toISOString();
+
+      const { data, error } = await supabase.from('categories').update(payload).eq('id', id).select().single();
       if (!error && data) {
         const list = getLocalCategories();
         saveLocalCategories(list.map((c) => (c.id === id ? data : c)));
         return { data, error: null };
       }
-    } catch {}
+      if (error) {
+        throw new Error(error.message);
+      }
+    } catch (e) {
+      console.error('Supabase updateCategory error:', e);
+      throw e;
+    }
   }
 
   const list = getLocalCategories();
@@ -159,10 +185,28 @@ export async function updateCategory(id, updates) {
 }
 
 export async function deleteCategory(id) {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     try {
-      await supabase.from('categories').delete().eq('id', id);
-    } catch {}
+      // Check if products are currently linked to this category to protect foreign key relationships
+      const { count } = await supabase
+        .from('products')
+        .select('id', { count: 'exact', head: true })
+        .eq('category_id', id);
+
+      if (count && count > 0) {
+        return {
+          success: false,
+          error: `Cannot delete: ${count} product(s) are currently assigned to this category. Please reassign them to another category first.`,
+        };
+      }
+
+      const { error } = await supabase.from('categories').delete().eq('id', id);
+      if (error) {
+        return { success: false, error: error.message };
+      }
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
   }
 
   const list = getLocalCategories();

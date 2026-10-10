@@ -149,12 +149,14 @@ export default function AdminCombos() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const { url } = await uploadImage(file, 'combos', form.name ? form.name.toLowerCase().replace(/\s+/g, '-') : 'general');
-      if (url) {
+      const { url, error } = await uploadImage(file, 'combos', form.name ? form.name.toLowerCase().replace(/\s+/g, '-') : 'general');
+      if (error) {
+        setErrorMsg(`Image upload failed: ${error}`);
+      } else if (url) {
         setForm((prev) => ({ ...prev, image_url: url }));
       }
-    } catch {
-      setErrorMsg('Image upload failed');
+    } catch (err) {
+      setErrorMsg(`Image upload error: ${err?.message || 'Storage error'}`);
     }
   };
 

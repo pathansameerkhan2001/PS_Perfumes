@@ -1,0 +1,111 @@
+/* ==========================================================================
+   PS PERFUMES — LUXURY FLOATING CONTACT & CONCIERGE DOCK
+   Positioned on bottom-left, strictly opposite to floating bag (bottom-right).
+   ========================================================================== */
+
+.ps-floating-contact-dock {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  z-index: 9980;
+  pointer-events: auto;
+}
+
+.ps-contact-dock-btn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #0B0A09;
+  border: 1px solid rgba(201, 169, 110, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #F7F4EE;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.ps-contact-dock-btn:hover,
+.ps-contact-dock-btn:focus-visible {
+  transform: translateY(-2px) scale(1.06);
+  border-color: #C9A96E;
+  background: #141311;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6), 0 0 16px rgba(201, 169, 110, 0.25);
+}
+
+.ps-contact-dock-btn:focus-visible {
+  outline: 2px solid #C9A96E;
+  outline-offset: 3px;
+}
+
+/* Tooltip on hover/focus */
+.ps-contact-dock-tooltip {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%) translateX(-6px);
+  background: #0B0A09;
+  border: 1px solid rgba(201, 169, 110, 0.35);
+  color: #F7F4EE;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  padding: 5px 10px;
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ps-contact-dock-btn:hover .ps-contact-dock-tooltip,
+.ps-contact-dock-btn:focus-visible .ps-contact-dock-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* Subtle brand color accents on hover */
+.ps-contact-whatsapp:hover {
+  border-color: rgba(37, 211, 102, 0.5);
+}
+
+.ps-contact-instagram:hover {
+  border-color: rgba(225, 48, 108, 0.5);
+}
+
+.ps-contact-maps:hover {
+  border-color: rgba(201, 169, 110, 0.8);
+}
+
+/* ==========================================================================
+   RESPONSIVE ADJUSTMENTS
+   ========================================================================== */
+@media (max-width: 768px) {
+  .ps-floating-contact-dock {
+    bottom: 20px;
+    left: 16px;
+    gap: 8px;
+  }
+
+  .ps-contact-dock-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Suppress tooltips on touch devices to avoid sticking */
+  .ps-contact-dock-tooltip {
+    display: none;
+  }
+}

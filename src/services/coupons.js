@@ -104,27 +104,45 @@ export async function validateCoupon(code, subtotal) {
 }
 
 export async function createCoupon(coupon) {
-  const newCoupon = {
+  let createdCoupon = null;
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const payload = {
+        code: coupon.code.toUpperCase().trim(),
+        discount_type: coupon.discount_type || 'percentage',
+        discount_value: Number(coupon.discount_value) || 10,
+        min_order_amount: Number(coupon.min_order_amount) || 0,
+        max_discount_amount: coupon.max_discount_amount ? Number(coupon.max_discount_amount) : null,
+        usage_limit: coupon.usage_limit ? Number(coupon.usage_limit) : null,
+        is_active: coupon.is_active !== undefined ? coupon.is_active : true,
+      };
+
+      const { data, error } = await supabase.from('coupons').insert([payload]).select().single();
+      if (!error && data) {
+        createdCoupon = data;
+        const list = getLocalCoupons();
+        saveLocalCoupons([data, ...list]);
+        return { data, error: null };
+      } else if (error) {
+        console.warn('Supabase createCoupon note:', error.message);
+      }
+    } catch (e) {
+      console.warn('Supabase createCoupon error:', e);
+    }
+  }
+
+  const newCoupon = createdCoupon || {
     ...coupon,
     id: coupon.id || `cp-${Date.now()}`,
     code: coupon.code.toUpperCase().trim(),
+    discount_type: coupon.discount_type || 'percentage',
     discount_value: Number(coupon.discount_value) || 10,
     min_order_amount: Number(coupon.min_order_amount) || 0,
     max_discount_amount: coupon.max_discount_amount ? Number(coupon.max_discount_amount) : null,
     is_active: coupon.is_active !== undefined ? coupon.is_active : true,
     created_at: new Date().toISOString(),
   };
-
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { data, error } = await supabase.from('coupons').insert([newCoupon]).select().single();
-      if (!error && data) {
-        const list = getLocalCoupons();
-        saveLocalCoupons([data, ...list]);
-        return { data, error: null };
-      }
-    } catch {}
-  }
 
   const list = getLocalCoupons();
   saveLocalCoupons([newCoupon, ...list]);

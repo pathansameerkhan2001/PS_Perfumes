@@ -8,21 +8,32 @@ import ComboPackSection from '../../components/ComboPackSection';
 import InstagramReelsSection from '../../components/home/InstagramReelsSection';
 import ReviewsSection from '../../components/ReviewsSection';
 import { getHomepageProductSections } from '../../services/homepageService';
+import { getHomepageSections } from '../../services/homepage';
 
 export default function HomePage() {
   const [bestSellers, setBestSellers] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [sections, setSections] = useState([]);
   const [, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
 
-    async function fetchHomeProducts() {
+    async function fetchHomeData() {
       try {
-        const { bestSellers: bs, featuredProducts: fp } = await getHomepageProductSections();
+        const [{ bestSellers: bs, featuredProducts: fp }, rawSections] = await Promise.all([
+          getHomepageProductSections(),
+          getHomepageSections(),
+        ]);
         if (mounted) {
-          setBestSellers(bs);
-          setFeaturedProducts(fp);
+          setBestSellers(bs || []);
+          setFeaturedProducts(fp || []);
+          if (Array.isArray(rawSections) && rawSections.length > 0) {
+            const activeSorted = rawSections
+              .filter((s) => s.is_active !== false)
+              .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+            setSections(activeSorted);
+          }
           setLoading(false);
         }
       } catch {
@@ -30,27 +41,73 @@ export default function HomePage() {
       }
     }
 
-    fetchHomeProducts();
+    fetchHomeData();
     return () => {
       mounted = false;
     };
   }, []);
 
-  return (
-    <div className="ps-home-page">
-      {/* 1. Hero Section (Controlled dynamically through Admin) */}
+  // Section renderer based on section_key
+  const renderSection = (sec) => {
+    const key = sec.section_key || sec.id;
+    switch (key) {
+      case 'hero':
+        return <HeroCinematic key={sec.id} />;
+      case 'trust_strip':
+        return (
+          <React.Fragment key={sec.id}>
+            <AnnouncementTicker />
+            <BenefitsBar />
+          </React.Fragment>
+        );
+      case 'fragrance_categories':
+        return <ShopByFragrance key={sec.id} />;
+      case 'bestsellers':
+        return (
+          <ProductGridSection
+            key={sec.id}
+            id="best-sellers"
+            tag="SIGNATURE CREATIONS"
+            title={sec.title || 'Best Sellers'}
+            products={bestSellers}
+            showFilterTabs={false}
+            limit={8}
+            emptyMessage="No best sellers available."
+          />
+        );
+      case 'new_arrivals':
+      case 'featured_products':
+        return (
+          <ProductGridSection
+            key={sec.id}
+            id="featured-products"
+            tag="CURATED FORMULATIONS"
+            title={sec.title || 'Featured Products'}
+            products={featuredProducts}
+            showFilterTabs={false}
+            limit={8}
+            emptyMessage="No featured products available."
+          />
+        );
+      case 'combos':
+      case 'combo_pack':
+        return <ComboPackSection key={sec.id} />;
+      case 'instagram_reels':
+        return <InstagramReelsSection key={sec.id} />;
+      case 'reviews':
+        return <ReviewsSection key={sec.id} />;
+      default:
+        return null;
+    }
+  };
+
+  // Default fallback layout if sections aren't customized yet
+  const defaultLayout = (
+    <>
       <HeroCinematic />
-
-      {/* 2. Slim Luxury Champagne-Gold Marquee/Ticker */}
       <AnnouncementTicker />
-
-      {/* 3. Luxury 4-Pillar Benefits Bar */}
       <BenefitsBar />
-
-      {/* 4. Shop by Category (Database-driven, clean circular imagery) */}
       <ShopByFragrance />
-
-      {/* 5. Homepage Best Sellers (Sales-ranked with is_bestseller fallback) */}
       <ProductGridSection
         id="best-sellers"
         tag="SIGNATURE CREATIONS"
@@ -60,8 +117,6 @@ export default function HomePage() {
         limit={8}
         emptyMessage="No best sellers available."
       />
-
-      {/* 6. Featured Products (is_featured=true AND is_active=true) */}
       <ProductGridSection
         id="featured-products"
         tag="CURATED FORMULATIONS"
@@ -71,15 +126,15 @@ export default function HomePage() {
         limit={8}
         emptyMessage="No featured products available."
       />
-
-      {/* 7. Combo Collections (Dedicated Combo Section) */}
       <ComboPackSection />
-
-      {/* 8. Instagram Reels Section */}
       <InstagramReelsSection />
-
-      {/* 9. Patron Reviews Section */}
       <ReviewsSection />
+    </>
+  );
+
+  return (
+    <div className="ps-home-page">
+      {sections.length > 0 ? sections.map(renderSection) : defaultLayout}
     </div>
   );
 }

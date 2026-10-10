@@ -192,6 +192,8 @@ export default function ProductDetailPage() {
   // Gallery array
   const rawGallery = [
     product.main_image || product.image,
+    product.glass_image,
+    product.pvc_image,
     ...(Array.isArray(product.gallery_images) ? product.gallery_images : []),
     product.secondaryImage,
   ].filter(Boolean);
@@ -411,7 +413,12 @@ export default function ProductDetailPage() {
                   className={`ps-pdp-bottle-card ${
                     normalizeBottle(selectedBottleType) === 'Glass Bottle' ? 'is-selected' : ''
                   }`}
-                  onClick={() => setSelectedBottleType('Glass Bottle')}
+                  onClick={() => {
+                    setSelectedBottleType('Glass Bottle');
+                    if (product.glass_image) {
+                      setActiveImage(product.glass_image);
+                    }
+                  }}
                 >
                   <div className="ps-pdp-bottle-icon" aria-hidden="true">
                     <svg
@@ -441,7 +448,12 @@ export default function ProductDetailPage() {
                   className={`ps-pdp-bottle-card ${
                     normalizeBottle(selectedBottleType) === 'PVC Bottle' ? 'is-selected' : ''
                   }`}
-                  onClick={() => setSelectedBottleType('PVC Bottle')}
+                  onClick={() => {
+                    setSelectedBottleType('PVC Bottle');
+                    if (product.pvc_image) {
+                      setActiveImage(product.pvc_image);
+                    }
+                  }}
                 >
                   <div className="ps-pdp-bottle-icon" aria-hidden="true">
                     <svg

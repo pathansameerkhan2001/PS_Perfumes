@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Header from '../Header';
 import Footer from '../Footer';
 import FloatingCartButton from '../FloatingCartButton';
+import FloatingContactDock from '../common/FloatingContactDock';
 import Toast from '../Toast';
 import ScrollToTop from '../common/ScrollToTop';
 
@@ -27,7 +28,10 @@ export default function PublicLayout() {
       {/* Luxury Brand Footer */}
       <Footer />
 
-      {/* Quick Action Floating Cart Pill */}
+      {/* Luxury Floating Social & Contact Concierge (Bottom-Left) */}
+      <FloatingContactDock />
+
+      {/* Quick Action Floating Cart Pill (Bottom-Right) */}
       <FloatingCartButton />
 
       {/* Drawers & Dialogs */}

@@ -3,13 +3,12 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Upload,
   X,
-  Layers,
   FileText,
   Image as ImageIcon,
   Sliders,
-  Globe,
   Settings,
-  Check,
+  RotateCcw,
+  Loader2,
 } from 'lucide-react';
 import { getProductById, createProduct, updateProduct } from '../../services/products';
 import { uploadImage } from '../../lib/storage';
@@ -26,9 +25,18 @@ export default function AdminProductForm() {
   const [activeTab, setActiveTab] = useState('variants');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadingField, setUploadingField] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const [uploadProgress, setUploadProgress] = useState('');
+
+  // Local object URLs for immediate preview while uploading to Storage
+  const [localPreviews, setLocalPreviews] = useState({
+    main: '',
+    glass: '',
+    pvc: '',
+  });
 
   // Basic Info Form State
   const [form, setForm] = useState({
@@ -41,6 +49,8 @@ export default function AdminProductForm() {
     price: 1499,
     compare_at_price: 1899,
     main_image: '',
+    glass_image: '',
+    pvc_image: '',
     gallery_images: [],
     featured: false,
     new_arrival: false,
@@ -60,62 +70,72 @@ export default function AdminProductForm() {
     pvc: true,
   });
 
-  // Variants & Pricing Matrix (Screenshot 7)
+  // Variants & Pricing Matrix (Glass & PVC across 30, 50, 100 ml with stock & SKU)
   const [variantMatrix, setVariantMatrix] = useState({
-    '30 ml': { glassPrice: 1499, pvcPrice: 899, glassStock: 20, pvcStock: 40 },
-    '50 ml': { glassPrice: 2199, pvcPrice: 1299, glassStock: 15, pvcStock: 25 },
-    '100 ml': { glassPrice: 3299, pvcPrice: 1899, glassStock: 8, pvcStock: 12 },
+    '30 ml': { glassPrice: 1499, pvcPrice: 899, glassStock: 20, pvcStock: 40, glassSku: '', pvcSku: '' },
+    '50 ml': { glassPrice: 2199, pvcPrice: 1299, glassStock: 15, pvcStock: 25, glassSku: '', pvcSku: '' },
+    '100 ml': { glassPrice: 3299, pvcPrice: 1899, glassStock: 8, pvcStock: 12, glassSku: '', pvcSku: '' },
   });
 
   useEffect(() => {
     if (isEditing) {
       setLoading(true);
-      getProductById(id).then((p) => {
-        if (p) {
-          setForm({
-            name: p.name || '',
-            slug: p.slug || '',
-            category: p.category || 'Oud',
-            sku: p.sku || '',
-            short_description: p.short_description || '',
-            description: p.description || '',
-            price: p.price || 1499,
-            compare_at_price: p.compare_at_price || '',
-            main_image: p.main_image || p.image || '',
-            gallery_images: p.gallery_images || [],
-            featured: Boolean(p.featured),
-            new_arrival: Boolean(p.new_arrival),
-            bestseller: Boolean(p.bestseller),
-            active: p.status === 'active' || p.active !== false,
-            top_notes: Array.isArray(p.top_notes) ? p.top_notes.join(', ') : (p.top_notes || ''),
-            heart_notes: Array.isArray(p.heart_notes) ? p.heart_notes.join(', ') : (p.heart_notes || ''),
-            base_notes: Array.isArray(p.base_notes) ? p.base_notes.join(', ') : (p.base_notes || ''),
-            ingredients: p.ingredients || '',
-            meta_title: p.meta_title || p.name || '',
-            meta_description: p.meta_description || p.short_description || '',
-          });
-
-          // Populate variant matrix if available
-          if (Array.isArray(p.variants) && p.variants.length > 0) {
-            const nextMatrix = { ...variantMatrix };
-            p.variants.forEach((v) => {
-              const sz = v.size_ml?.includes('ml') ? v.size_ml : `${v.size_ml} ml`;
-              const isGlass = v.bottle_type?.toLowerCase().includes('glass');
-              if (nextMatrix[sz]) {
-                if (isGlass) {
-                  nextMatrix[sz].glassPrice = v.sale_price || v.price;
-                  nextMatrix[sz].glassStock = v.stock;
-                } else {
-                  nextMatrix[sz].pvcPrice = v.sale_price || v.price;
-                  nextMatrix[sz].pvcStock = v.stock;
-                }
-              }
+      getProductById(id)
+        .then((p) => {
+          if (p) {
+            setForm({
+              name: p.name || '',
+              slug: p.slug || '',
+              category: p.category || 'Oud',
+              sku: p.sku || '',
+              short_description: p.short_description || '',
+              description: p.description || '',
+              price: p.price || 1499,
+              compare_at_price: p.compare_at_price || '',
+              main_image: p.main_image || p.image || '',
+              glass_image: p.glass_image || '',
+              pvc_image: p.pvc_image || '',
+              gallery_images: p.gallery_images || [],
+              featured: Boolean(p.featured || p.is_featured),
+              new_arrival: Boolean(p.new_arrival || p.is_new_arrival),
+              bestseller: Boolean(p.bestseller || p.is_bestseller),
+              active: p.status === 'active' || p.active !== false || p.is_active !== false,
+              top_notes: Array.isArray(p.top_notes) ? p.top_notes.join(', ') : (p.top_notes || ''),
+              heart_notes: Array.isArray(p.heart_notes) ? p.heart_notes.join(', ') : (p.heart_notes || ''),
+              base_notes: Array.isArray(p.base_notes) ? p.base_notes.join(', ') : (p.base_notes || ''),
+              ingredients: p.ingredients || '',
+              meta_title: p.meta_title || p.name || '',
+              meta_description: p.meta_description || p.short_description || '',
             });
-            setVariantMatrix(nextMatrix);
+
+            // Populate variant matrix if available
+            if (Array.isArray(p.variants) && p.variants.length > 0) {
+              const nextMatrix = { ...variantMatrix };
+              p.variants.forEach((v) => {
+                const sz = v.size_ml?.includes('ml') ? v.size_ml : `${v.size_ml} ml`;
+                const isGlass = v.bottle_type?.toLowerCase().includes('glass');
+                if (nextMatrix[sz]) {
+                  if (isGlass) {
+                    nextMatrix[sz].glassPrice = v.sale_price || v.price;
+                    nextMatrix[sz].glassStock = v.stock_quantity !== undefined ? v.stock_quantity : (v.stock || 0);
+                    if (v.sku) nextMatrix[sz].glassSku = v.sku;
+                  } else {
+                    nextMatrix[sz].pvcPrice = v.sale_price || v.price;
+                    nextMatrix[sz].pvcStock = v.stock_quantity !== undefined ? v.stock_quantity : (v.stock || 0);
+                    if (v.sku) nextMatrix[sz].pvcSku = v.sku;
+                  }
+                }
+              });
+              setVariantMatrix(nextMatrix);
+            }
           }
-        }
-        setLoading(false);
-      });
+        })
+        .catch((err) => {
+          setErrorMsg(`Failed to load product details: ${err.message || 'Unknown error'}`);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     }
   }, [id, isEditing]);
 
@@ -132,54 +152,170 @@ export default function AdminProductForm() {
   };
 
   const handleMatrixChange = (size, field, val) => {
-    const num = Math.max(0, parseInt(val, 10) || 0);
+    const isTextField = field.toLowerCase().includes('sku');
+    const value = isTextField ? String(val) : Math.max(0, parseInt(val, 10) || 0);
     setVariantMatrix((prev) => ({
       ...prev,
       [size]: {
         ...prev[size],
-        [field]: num,
+        [field]: value,
       },
     }));
   };
 
+  // 1. Primary Campaign Image Upload Handler
   const handleMainImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Reset file input so re-selecting same file triggers change
+    e.target.value = '';
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    // Instant local preview
+    const localBlob = URL.createObjectURL(file);
+    setLocalPreviews((prev) => ({ ...prev, main: localBlob }));
+
+    setIsUploading(true);
+    setUploadingField('main');
     setUploadProgress('Uploading primary image to Supabase Storage...');
+
     try {
-      const { url, error } = await uploadImage(file, 'products', form.slug || 'general');
+      const { url, error } = await uploadImage(file, 'products', `${form.slug || 'prod'}-main`);
       if (error) {
-        setErrorMsg('Upload failed. Using image preview.');
+        URL.revokeObjectURL(localBlob);
+        setLocalPreviews((prev) => ({ ...prev, main: '' }));
+        setErrorMsg(`Primary image upload failed: ${error}`);
       } else {
         setForm((prev) => ({ ...prev, main_image: url }));
-        setUploadProgress('Primary image uploaded successfully.');
-        setTimeout(() => setUploadProgress(''), 2500);
+        setSuccessMsg('Primary image uploaded successfully to Supabase Storage.');
+        setTimeout(() => setSuccessMsg(''), 3000);
       }
-    } catch {
-      setErrorMsg('Image upload error.');
+    } catch (err) {
+      URL.revokeObjectURL(localBlob);
+      setLocalPreviews((prev) => ({ ...prev, main: '' }));
+      setErrorMsg(`Primary image upload error: ${err.message || 'Storage error'}`);
+    } finally {
+      setIsUploading(false);
+      setUploadingField(null);
+      setUploadProgress(''); // Crucial: clear loading state in finally block!
     }
   };
 
+  // 2. Glass Bottle Flacon Image Upload Handler
+  const handleGlassImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    e.target.value = '';
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    const localBlob = URL.createObjectURL(file);
+    setLocalPreviews((prev) => ({ ...prev, glass: localBlob }));
+
+    setIsUploading(true);
+    setUploadingField('glass');
+    setUploadProgress('Uploading Glass Bottle image to Supabase Storage...');
+
+    try {
+      const { url, error } = await uploadImage(file, 'products', `${form.slug || 'prod'}-glass`);
+      if (error) {
+        URL.revokeObjectURL(localBlob);
+        setLocalPreviews((prev) => ({ ...prev, glass: '' }));
+        setErrorMsg(`Glass Bottle upload failed: ${error}`);
+      } else {
+        setForm((prev) => ({ ...prev, glass_image: url }));
+        setSuccessMsg('Glass Bottle flacon image uploaded successfully.');
+        setTimeout(() => setSuccessMsg(''), 3000);
+      }
+    } catch (err) {
+      URL.revokeObjectURL(localBlob);
+      setLocalPreviews((prev) => ({ ...prev, glass: '' }));
+      setErrorMsg(`Glass Bottle upload error: ${err.message || 'Storage error'}`);
+    } finally {
+      setIsUploading(false);
+      setUploadingField(null);
+      setUploadProgress('');
+    }
+  };
+
+  // 3. PVC Bottle Flacon Image Upload Handler
+  const handlePvcImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    e.target.value = '';
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    const localBlob = URL.createObjectURL(file);
+    setLocalPreviews((prev) => ({ ...prev, pvc: localBlob }));
+
+    setIsUploading(true);
+    setUploadingField('pvc');
+    setUploadProgress('Uploading PVC Bottle image to Supabase Storage...');
+
+    try {
+      const { url, error } = await uploadImage(file, 'products', `${form.slug || 'prod'}-pvc`);
+      if (error) {
+        URL.revokeObjectURL(localBlob);
+        setLocalPreviews((prev) => ({ ...prev, pvc: '' }));
+        setErrorMsg(`PVC Bottle upload failed: ${error}`);
+      } else {
+        setForm((prev) => ({ ...prev, pvc_image: url }));
+        setSuccessMsg('PVC Bottle flacon image uploaded successfully.');
+        setTimeout(() => setSuccessMsg(''), 3000);
+      }
+    } catch (err) {
+      URL.revokeObjectURL(localBlob);
+      setLocalPreviews((prev) => ({ ...prev, pvc: '' }));
+      setErrorMsg(`PVC Bottle upload error: ${err.message || 'Storage error'}`);
+    } finally {
+      setIsUploading(false);
+      setUploadingField(null);
+      setUploadProgress('');
+    }
+  };
+
+  // 4. Gallery Images Upload Handler
   const handleGalleryUpload = async (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    setUploadProgress(`Uploading ${files.length} gallery images...`);
+    e.target.value = '';
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    setIsUploading(true);
+    setUploadingField('gallery');
+    setUploadProgress(`Uploading ${files.length} gallery images to Supabase Storage...`);
+
     try {
       const urls = [];
       for (const f of files) {
-        const { url } = await uploadImage(f, 'products', form.slug || 'general');
-        if (url) urls.push(url);
+        const { url, error } = await uploadImage(f, 'products', `${form.slug || 'prod'}-angle`);
+        if (error) {
+          setErrorMsg(`Partial upload issue: ${error}`);
+        } else if (url) {
+          urls.push(url);
+        }
       }
-      setForm((prev) => ({
-        ...prev,
-        gallery_images: [...prev.gallery_images, ...urls],
-      }));
-      setUploadProgress('Gallery images uploaded.');
-      setTimeout(() => setUploadProgress(''), 2500);
-    } catch {
-      setErrorMsg('Gallery upload error.');
+      if (urls.length > 0) {
+        setForm((prev) => ({
+          ...prev,
+          gallery_images: [...prev.gallery_images, ...urls],
+        }));
+        setSuccessMsg(`${urls.length} gallery image(s) uploaded successfully.`);
+        setTimeout(() => setSuccessMsg(''), 3000);
+      }
+    } catch (err) {
+      setErrorMsg(`Gallery upload error: ${err.message || 'Storage error'}`);
+    } finally {
+      setIsUploading(false);
+      setUploadingField(null);
+      setUploadProgress('');
     }
   };
 
@@ -190,11 +326,32 @@ export default function AdminProductForm() {
     }));
   };
 
+  // Form Save & Submit
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+
+    if (isUploading) {
+      setErrorMsg('Please wait for image uploads to complete before saving.');
+      return;
+    }
+
     if (!form.name.trim()) {
       setActiveTab('basic');
-      setErrorMsg('Please specify Product Name.');
+      setErrorMsg('Please specify a Product Name.');
+      return;
+    }
+
+    // Require primary image
+    if (!form.main_image) {
+      setActiveTab('images');
+      setErrorMsg('Primary campaign image is required. Please upload an image to Supabase Storage.');
+      return;
+    }
+
+    // Safety: ensure no blob URLs are submitted
+    if (form.main_image.startsWith('blob:') || form.glass_image?.startsWith('blob:') || form.pvc_image?.startsWith('blob:')) {
+      setActiveTab('images');
+      setErrorMsg('Temporary preview is still uploading. Please wait for upload to complete.');
       return;
     }
 
@@ -216,7 +373,8 @@ export default function AdminProductForm() {
           price: cfg.glassPrice,
           sale_price: cfg.glassPrice,
           stock: cfg.glassStock,
-          sku: `${form.sku}-GL-${sizeNum}`,
+          stock_quantity: cfg.glassStock,
+          sku: cfg.glassSku || `${form.sku}-GL-${sizeNum}`,
           active: form.active,
           is_active: form.active,
         });
@@ -230,7 +388,8 @@ export default function AdminProductForm() {
           price: cfg.pvcPrice,
           sale_price: cfg.pvcPrice,
           stock: cfg.pvcStock,
-          sku: `${form.sku}-PV-${sizeNum}`,
+          stock_quantity: cfg.pvcStock,
+          sku: cfg.pvcSku || `${form.sku}-PV-${sizeNum}`,
           active: form.active,
           is_active: form.active,
         });
@@ -245,7 +404,9 @@ export default function AdminProductForm() {
       top_notes: form.top_notes.split(',').map((s) => s.trim()).filter(Boolean),
       heart_notes: form.heart_notes.split(',').map((s) => s.trim()).filter(Boolean),
       base_notes: form.base_notes.split(',').map((s) => s.trim()).filter(Boolean),
-      main_image: form.main_image || '/assets/prod-royal-amber.webp',
+      main_image: form.main_image,
+      glass_image: form.glass_image || null,
+      pvc_image: form.pvc_image || null,
       variants: generatedVariants,
     };
 
@@ -255,24 +416,37 @@ export default function AdminProductForm() {
       } else {
         await createProduct(payload);
       }
-      setSuccessMsg('Product and variant matrix saved successfully!');
+      setSuccessMsg('Product, flacon images, and variant matrix saved successfully!');
       setTimeout(() => {
         navigate('/admin/products');
       }, 1200);
-    } catch {
-      setErrorMsg('Failed to save product in database.');
+    } catch (err) {
+      console.error('Save product error:', err);
+      setErrorMsg(`Failed to save product in database: ${err.message || 'Unknown database error'}`);
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return <div className="ps-admin-loading">Retrieving formulation details...</div>;
+    return (
+      <div className="ps-admin-product-builder">
+        <div className="ps-admin-loading" style={{ padding: '60px', textAlign: 'center' }}>
+          <Loader2 size={32} className="ps-spinner" style={{ margin: '0 auto 16px', display: 'block', animation: 'spin 1s linear infinite' }} />
+          <span>Retrieving formulation details...</span>
+        </div>
+      </div>
+    );
   }
+
+  // Active display URLs for preview
+  const activeMainImage = localPreviews.main || form.main_image;
+  const activeGlassImage = localPreviews.glass || form.glass_image;
+  const activePvcImage = localPreviews.pvc || form.pvc_image;
 
   return (
     <div className="ps-admin-product-builder">
-      {/* Top Breadcrumb & Actions Bar (Screenshot 7) */}
+      {/* Top Breadcrumb & Actions Bar */}
       <div className="ps-builder-top-bar">
         <div className="ps-builder-breadcrumbs">
           <Link to="/admin/products" className="ps-crumb-link">Products</Link>
@@ -287,6 +461,7 @@ export default function AdminProductForm() {
             type="button"
             className="ps-builder-btn-cancel"
             onClick={() => navigate('/admin/products')}
+            disabled={saving || isUploading}
           >
             Cancel
           </button>
@@ -294,20 +469,37 @@ export default function AdminProductForm() {
             type="button"
             className="ps-builder-btn-save"
             onClick={handleSubmit}
-            disabled={saving}
+            disabled={saving || isUploading}
           >
-            {saving ? 'Saving...' : 'Save Product'}
+            {saving ? 'Saving...' : isUploading ? 'Uploading Image...' : 'Save Product'}
           </button>
         </div>
       </div>
 
-      {errorMsg && <div className="ps-form-error-banner">{errorMsg}</div>}
+      {errorMsg && (
+        <div className="ps-form-error-banner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>{errorMsg}</span>
+          <button
+            type="button"
+            onClick={() => setErrorMsg('')}
+            style={{ background: 'transparent', border: 'none', color: '#DC2626', cursor: 'pointer', fontWeight: 600 }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {successMsg && <div className="ps-form-success-banner">{successMsg}</div>}
-      {uploadProgress && <div className="ps-form-progress-banner">{uploadProgress}</div>}
+      {uploadProgress && (
+        <div className="ps-form-progress-banner" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Loader2 size={16} className="ps-spin" style={{ animation: 'spin 1s linear infinite' }} />
+          <span>{uploadProgress}</span>
+        </div>
+      )}
 
       {/* Main Builder Grid: Left Tabs Sidebar + Right Form Panel */}
       <div className="ps-builder-workspace">
-        {/* Left Vertical Tabs (Screenshot 7) */}
+        {/* Left Vertical Tabs */}
         <aside className="ps-builder-tabs-sidebar">
           <button
             type="button"
@@ -341,8 +533,8 @@ export default function AdminProductForm() {
             className={`ps-tab-item ${activeTab === 'description' ? 'is-active' : ''}`}
             onClick={() => setActiveTab('description')}
           >
-            <Layers size={16} />
-            <span>Description</span>
+            <FileText size={16} />
+            <span>Notes & Olfactory</span>
           </button>
 
           <button
@@ -350,49 +542,43 @@ export default function AdminProductForm() {
             className={`ps-tab-item ${activeTab === 'seo' ? 'is-active' : ''}`}
             onClick={() => setActiveTab('seo')}
           >
-            <Globe size={16} />
-            <span>SEO</span>
-          </button>
-
-          <button
-            type="button"
-            className={`ps-tab-item ${activeTab === 'settings' ? 'is-active' : ''}`}
-            onClick={() => setActiveTab('settings')}
-          >
             <Settings size={16} />
-            <span>Settings</span>
+            <span>SEO</span>
           </button>
         </aside>
 
-        {/* Right Tab Content Container */}
-        <div className="ps-builder-content-card">
+        {/* Right Form Workspace */}
+        <div className="ps-builder-content">
           {/* ========================================================
-              TAB 1: VARIANTS & PRICING (SCREENSHOT 7 MATRIX)
+              TAB 1: VARIANTS & PRICING
               ======================================================== */}
           {activeTab === 'variants' && (
             <div className="ps-tab-pane">
-              <h2 className="ps-pane-title">Variants & Pricing</h2>
+              <h2 className="ps-pane-title">Variants & Pricing Matrix</h2>
+              <p className="ps-pane-desc">
+                Configure bespoke sizes (30ml, 50ml, 100ml) across Glass and PVC flacon styles with separate pricing and inventory.
+              </p>
 
-              {/* Matrix Table */}
-              <div className="ps-matrix-table-wrap">
+              <div className="ps-builder-section">
                 <table className="ps-variant-matrix-table">
                   <thead>
                     <tr>
                       <th>Size</th>
-                      <th>Glass Bottle</th>
-                      <th>PVC Bottle</th>
-                      <th>Stock (Glass)</th>
-                      <th>Stock (PVC)</th>
+                      <th>Glass Price (₹)</th>
+                      <th>PVC Price (₹)</th>
+                      <th>Glass Stock</th>
+                      <th>PVC Stock</th>
+                      <th>Glass SKU</th>
+                      <th>PVC SKU</th>
                     </tr>
                   </thead>
                   <tbody>
                     {SIZES.map((sz) => {
                       const cfg = variantMatrix[sz];
+                      const sizeNum = sz.replace(/\D/g, '');
                       return (
                         <tr key={sz}>
-                          <td className="ps-matrix-size-cell">
-                            <strong>{sz}</strong>
-                          </td>
+                          <td className="ps-matrix-size-cell">{sz}</td>
                           <td>
                             <input
                               type="number"
@@ -429,6 +615,26 @@ export default function AdminProductForm() {
                               placeholder="Qty"
                             />
                           </td>
+                          <td>
+                            <input
+                              type="text"
+                              className="ps-matrix-input"
+                              value={cfg.glassSku || ''}
+                              onChange={(e) => handleMatrixChange(sz, 'glassSku', e.target.value)}
+                              placeholder={`${form.sku || 'PS'}-GL-${sizeNum}`}
+                              style={{ width: '130px', fontSize: '11.5px' }}
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="text"
+                              className="ps-matrix-input"
+                              value={cfg.pvcSku || ''}
+                              onChange={(e) => handleMatrixChange(sz, 'pvcSku', e.target.value)}
+                              placeholder={`${form.sku || 'PS'}-PV-${sizeNum}`}
+                              style={{ width: '130px', fontSize: '11.5px' }}
+                            />
+                          </td>
                         </tr>
                       );
                     })}
@@ -436,7 +642,7 @@ export default function AdminProductForm() {
                 </table>
               </div>
 
-              {/* Bottle Type Options Checkboxes (Screenshot 7) */}
+              {/* Bottle Type Options Checkboxes */}
               <div className="ps-builder-section">
                 <h3 className="ps-sub-heading">Bottle Type Options</h3>
                 <div className="ps-checkbox-group">
@@ -459,9 +665,9 @@ export default function AdminProductForm() {
                 </div>
               </div>
 
-              {/* Other Settings Toggles (Screenshot 7) */}
+              {/* Other Settings Toggles */}
               <div className="ps-builder-section">
-                <h3 className="ps-sub-heading">Other Settings</h3>
+                <h3 className="ps-sub-heading">Product Badges & Visibility</h3>
                 <div className="ps-toggles-grid">
                   <div className="ps-toggle-row">
                     <label className="ps-switch">
@@ -484,7 +690,7 @@ export default function AdminProductForm() {
                       />
                       <span className="ps-slider" />
                     </label>
-                    <span className="ps-toggle-label">Active</span>
+                    <span className="ps-toggle-label">Active on Storefront</span>
                   </div>
 
                   <div className="ps-toggle-row">
@@ -526,7 +732,7 @@ export default function AdminProductForm() {
                 <label>Product Name *</label>
                 <input
                   type="text"
-                  placeholder="e.g. Oud Royal"
+                  placeholder="e.g. Royal Oud Extrait"
                   value={form.name}
                   onChange={handleNameChange}
                   required
@@ -535,33 +741,33 @@ export default function AdminProductForm() {
 
               <div className="ps-form-row">
                 <div className="ps-form-group">
-                  <label>SKU</label>
-                  <input
-                    type="text"
-                    value={form.sku}
-                    onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                  />
-                </div>
-                <div className="ps-form-group">
-                  <label>Category *</label>
+                  <label>Category</label>
                   <select
                     value={form.category}
                     onChange={(e) => setForm({ ...form, category: e.target.value })}
                   >
-                    {CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
+                </div>
+
+                <div className="ps-form-group">
+                  <label>Base SKU</label>
+                  <input
+                    type="text"
+                    value={form.sku}
+                    onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                    placeholder="PS-ROYAL-OUD"
+                  />
                 </div>
               </div>
 
               <div className="ps-form-group">
-                <label>Short Description</label>
+                <label>Short Headline / Subtitle</label>
                 <input
                   type="text"
-                  placeholder="A luxurious blend of traditional oud with modern elegance."
+                  placeholder="Imperial Artisanal Extractions in pure flacons"
                   value={form.short_description}
                   onChange={(e) => setForm({ ...form, short_description: e.target.value })}
                 />
@@ -580,44 +786,175 @@ export default function AdminProductForm() {
           )}
 
           {/* ========================================================
-              TAB 3: IMAGES
+              TAB 3: IMAGES (SUPABASE STORAGE CONNECTED)
               ======================================================== */}
           {activeTab === 'images' && (
             <div className="ps-tab-pane">
               <h2 className="ps-pane-title">Flacon Imagery</h2>
+              <p className="ps-pane-desc">
+                Upload luxury assets to Supabase Storage bucket <code>ps-perfumes</code>. Supports WebP, PNG, and JPEG.
+              </p>
 
-              {/* Main Image */}
+              {/* 1. Main Primary Campaign Image */}
               <div className="ps-builder-section">
-                <h3 className="ps-sub-heading">Primary Product Image</h3>
+                <h3 className="ps-sub-heading">Primary Campaign Image *</h3>
                 <div className="ps-image-upload-row">
-                  {form.main_image ? (
-                    <div className="ps-img-preview-card">
-                      <img src={form.main_image} alt={form.name} />
-                      <button
-                        type="button"
-                        className="ps-img-del-btn"
-                        onClick={() => setForm({ ...form, main_image: '' })}
-                      >
-                        <X size={14} />
-                      </button>
+                  {activeMainImage ? (
+                    <div className="ps-img-preview-card" style={{ position: 'relative' }}>
+                      <img src={activeMainImage} alt={form.name || 'Primary campaign'} />
+                      {uploadingField === 'main' ? (
+                        <div style={{
+                          position: 'absolute',
+                          inset: 0,
+                          background: 'rgba(0,0,0,0.6)',
+                          color: '#C9A96E',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          borderRadius: '8px'
+                        }}>
+                          Uploading...
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="ps-img-del-btn"
+                          title="Remove image"
+                          onClick={() => {
+                            setForm((prev) => ({ ...prev, main_image: '' }));
+                            setLocalPreviews((prev) => ({ ...prev, main: '' }));
+                          }}
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
                     </div>
                   ) : null}
 
-                  <label className="ps-upload-card">
+                  <label className="ps-upload-card" style={{ opacity: isUploading ? 0.6 : 1, cursor: isUploading ? 'not-allowed' : 'pointer' }}>
                     <Upload size={22} color="#c8a45d" />
-                    <span>Upload Main Flacon Image</span>
-                    <small>Supports PNG, JPG, WebP</small>
+                    <span>{activeMainImage ? 'Replace Primary Image' : 'Upload Main Campaign Image'}</span>
+                    <small>Supports PNG, JPG, WebP (Max 10MB)</small>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/png,image/jpeg,image/webp"
                       onChange={handleMainImageUpload}
+                      disabled={isUploading}
                       style={{ display: 'none' }}
                     />
                   </label>
                 </div>
               </div>
 
-              {/* Gallery Images */}
+              {/* 2. Glass Bottle Flacon Image */}
+              <div className="ps-builder-section">
+                <h3 className="ps-sub-heading">Glass Bottle Flacon Image</h3>
+                <div className="ps-image-upload-row">
+                  {activeGlassImage ? (
+                    <div className="ps-img-preview-card" style={{ position: 'relative' }}>
+                      <img src={activeGlassImage} alt={`${form.name} Glass Bottle`} />
+                      {uploadingField === 'glass' ? (
+                        <div style={{
+                          position: 'absolute',
+                          inset: 0,
+                          background: 'rgba(0,0,0,0.6)',
+                          color: '#C9A96E',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          borderRadius: '8px'
+                        }}>
+                          Uploading...
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="ps-img-del-btn"
+                          title="Remove image"
+                          onClick={() => {
+                            setForm((prev) => ({ ...prev, glass_image: '' }));
+                            setLocalPreviews((prev) => ({ ...prev, glass: '' }));
+                          }}
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  ) : null}
+
+                  <label className="ps-upload-card" style={{ opacity: isUploading ? 0.6 : 1, cursor: isUploading ? 'not-allowed' : 'pointer' }}>
+                    <Upload size={22} color="#c8a45d" />
+                    <span>{activeGlassImage ? 'Replace Glass Flacon Image' : 'Upload Glass Flacon Image'}</span>
+                    <small>Dedicated Glass Bottle Asset</small>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={handleGlassImageUpload}
+                      disabled={isUploading}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* 3. PVC Bottle Flacon Image */}
+              <div className="ps-builder-section">
+                <h3 className="ps-sub-heading">PVC Bottle Flacon Image</h3>
+                <div className="ps-image-upload-row">
+                  {activePvcImage ? (
+                    <div className="ps-img-preview-card" style={{ position: 'relative' }}>
+                      <img src={activePvcImage} alt={`${form.name} PVC Bottle`} />
+                      {uploadingField === 'pvc' ? (
+                        <div style={{
+                          position: 'absolute',
+                          inset: 0,
+                          background: 'rgba(0,0,0,0.6)',
+                          color: '#C9A96E',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          borderRadius: '8px'
+                        }}>
+                          Uploading...
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="ps-img-del-btn"
+                          title="Remove image"
+                          onClick={() => {
+                            setForm((prev) => ({ ...prev, pvc_image: '' }));
+                            setLocalPreviews((prev) => ({ ...prev, pvc: '' }));
+                          }}
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  ) : null}
+
+                  <label className="ps-upload-card" style={{ opacity: isUploading ? 0.6 : 1, cursor: isUploading ? 'not-allowed' : 'pointer' }}>
+                    <Upload size={22} color="#c8a45d" />
+                    <span>{activePvcImage ? 'Replace PVC Flacon Image' : 'Upload PVC Flacon Image'}</span>
+                    <small>Dedicated PVC Bottle Asset</small>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={handlePvcImageUpload}
+                      disabled={isUploading}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* 4. Gallery Images */}
               <div className="ps-builder-section">
                 <h3 className="ps-sub-heading">Gallery Angles</h3>
                 <div className="ps-gallery-grid">
@@ -634,14 +971,15 @@ export default function AdminProductForm() {
                     </div>
                   ))}
 
-                  <label className="ps-upload-card ps-upload-gallery-card">
+                  <label className="ps-upload-card ps-upload-gallery-card" style={{ opacity: isUploading ? 0.6 : 1, cursor: isUploading ? 'not-allowed' : 'pointer' }}>
                     <Upload size={20} color="#c8a45d" />
                     <span>Add Angle</span>
                     <input
                       type="file"
                       multiple
-                      accept="image/*"
+                      accept="image/png,image/jpeg,image/webp"
                       onChange={handleGalleryUpload}
+                      disabled={isUploading}
                       style={{ display: 'none' }}
                     />
                   </label>
@@ -734,26 +1072,6 @@ export default function AdminProductForm() {
                   onChange={(e) => setForm({ ...form, meta_description: e.target.value })}
                   placeholder="Discover Oud Royal by PS PERFUMES. Pure steam-distilled agarwood in bespoke flacons."
                 />
-              </div>
-            </div>
-          )}
-
-          {/* ========================================================
-              TAB 6: SETTINGS
-              ======================================================== */}
-          {activeTab === 'settings' && (
-            <div className="ps-tab-pane">
-              <h2 className="ps-pane-title">Settings & Status</h2>
-
-              <div className="ps-form-group">
-                <label>Product Status</label>
-                <select
-                  value={form.active ? 'active' : 'draft'}
-                  onChange={(e) => setForm({ ...form, active: e.target.value === 'active' })}
-                >
-                  <option value="active">Active (Visible on Storefront)</option>
-                  <option value="draft">Draft (Hidden)</option>
-                </select>
               </div>
             </div>
           )}

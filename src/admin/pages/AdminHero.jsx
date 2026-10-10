@@ -7,8 +7,9 @@ import {
   EyeOff,
   Upload,
   X,
-  Image as ImageIcon,
-  Check,
+  ArrowUp,
+  ArrowDown,
+  Loader2,
 } from 'lucide-react';
 import {
   getHeroSlides,
@@ -25,6 +26,8 @@ export default function AdminHero() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadingField, setUploadingField] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -46,7 +49,7 @@ export default function AdminHero() {
       const data = await getHeroSlides(false);
       setSlides(data);
     } catch {
-      console.error('Failed to load hero slides');
+      setErrorMsg('Failed to load hero slides from database.');
     } finally {
       setLoading(false);
     }
@@ -58,6 +61,8 @@ export default function AdminHero() {
 
   const handleOpenAdd = () => {
     setEditingId(null);
+    setErrorMsg('');
+    setSuccessMsg('');
     setForm({
       desktop_image: '',
       mobile_image: '',
@@ -74,14 +79,16 @@ export default function AdminHero() {
 
   const handleOpenEdit = (slide) => {
     setEditingId(slide.id);
+    setErrorMsg('');
+    setSuccessMsg('');
     setForm({
-      desktop_image: slide.desktop_image || '',
-      mobile_image: slide.mobile_image || '',
-      eyebrow: slide.eyebrow || '',
-      heading: slide.heading || '',
+      desktop_image: slide.desktop_image || slide.image_url || '',
+      mobile_image: slide.mobile_image || slide.mobile_image_url || '',
+      eyebrow: slide.eyebrow || slide.subtitle || '',
+      heading: slide.heading || slide.title || '',
       description: slide.description || '',
-      cta_text: slide.cta_text || '',
-      cta_link: slide.cta_link || '',
+      cta_text: slide.cta_text || slide.button_text || 'EXPLORE COLLECTION',
+      cta_link: slide.cta_link || slide.button_link || '/category/oud',
       display_order: slide.display_order || 1,
       is_active: slide.is_active !== false,
     });
@@ -90,18 +97,34 @@ export default function AdminHero() {
 
   const handleImageUpload = async (field, file) => {
     if (!file) return;
+    setErrorMsg('');
+    setIsUploading(true);
+    setUploadingField(field);
+
     try {
-      const { url } = await uploadImage(file, 'hero', `slide-${Date.now()}`);
-      if (url) {
+      const { url, error } = await uploadImage(file, 'hero', `hero-${field}`);
+      if (error) {
+        setErrorMsg(`Failed to upload ${field}: ${error}`);
+      } else if (url) {
         setForm((prev) => ({ ...prev, [field]: url }));
+        setSuccessMsg(`${field === 'desktop_image' ? 'Desktop' : 'Mobile'} media uploaded successfully.`);
+        setTimeout(() => setSuccessMsg(''), 3000);
       }
-    } catch {
-      setErrorMsg('Failed to upload image to Supabase Storage');
+    } catch (err) {
+      setErrorMsg(`Upload error: ${err.message || 'Storage error'}`);
+    } finally {
+      setIsUploading(false);
+      setUploadingField(null);
     }
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
+    if (!form.desktop_image) {
+      setErrorMsg('Desktop Media is required. Please provide a URL or upload an image.');
+      return;
+    }
+
     setSaving(true);
     setErrorMsg('');
     setSuccessMsg('');
@@ -117,28 +140,58 @@ export default function AdminHero() {
       setTimeout(async () => {
         setIsModalOpen(false);
         await loadSlides();
-      }, 900);
-    } catch {
-      setErrorMsg('Failed to save slide.');
+      }, 700);
+    } catch (err) {
+      console.error('Save hero slide error:', err);
+      setErrorMsg(`Failed to save slide: ${err.message || 'Database error'}`);
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Delete this hero showcase slide?')) {
-      await deleteHeroSlide(id);
-      await loadSlides();
+    if (window.confirm('Are you sure you want to delete this hero showcase slide?')) {
+      try {
+        await deleteHeroSlide(id);
+        setSuccessMsg('Hero slide deleted successfully.');
+        setTimeout(() => setSuccessMsg(''), 2500);
+        await loadSlides();
+      } catch (err) {
+        setErrorMsg(`Failed to delete slide: ${err.message}`);
+      }
     }
   };
 
   const handleToggleActive = async (slide) => {
-    await updateHeroSlide(slide.id, { is_active: !slide.is_active });
-    await loadSlides();
+    try {
+      await updateHeroSlide(slide.id, { is_active: !slide.is_active });
+      await loadSlides();
+    } catch (err) {
+      setErrorMsg(`Failed to update status: ${err.message}`);
+    }
+  };
+
+  const handleReorder = async (index, direction) => {
+    const targetIdx = direction === 'up' ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= slides.length) return;
+
+    const currentSlide = slides[index];
+    const targetSlide = slides[targetIdx];
+
+    try {
+      const currentOrder = currentSlide.display_order;
+      const targetOrder = targetSlide.display_order;
+
+      await updateHeroSlide(currentSlide.id, { display_order: targetOrder });
+      await updateHeroSlide(targetSlide.id, { display_order: currentOrder });
+      await loadSlides();
+    } catch (err) {
+      setErrorMsg(`Failed to reorder: ${err.message}`);
+    }
   };
 
   if (loading) {
-    return <div className="ps-admin-loading">Retrieving hero slides...</div>;
+    return <div className="ps-admin-loading" style={{ padding: '60px', textAlign: 'center' }}>Retrieving hero slides...</div>;
   }
 
   return (
@@ -168,16 +221,17 @@ export default function AdminHero() {
             <thead>
               <tr>
                 <th>Order</th>
-                <th>Desktop Image</th>
-                <th>Mobile Image</th>
-                <th>Heading</th>
-                <th>CTA Link</th>
+                <th>Desktop Media</th>
+                <th>Mobile Media</th>
+                <th>Heading & Tag</th>
+                <th>CTA Destination</th>
                 <th>Status</th>
+                <th>Reorder</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {slides.map((s) => (
+              {slides.map((s, idx) => (
                 <tr key={s.id}>
                   <td>
                     <strong style={{ color: '#c8a45d' }}>#{s.display_order}</strong>
@@ -185,13 +239,13 @@ export default function AdminHero() {
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <img
-                        src={s.desktop_image}
-                        alt={s.heading}
+                        src={s.desktop_image || s.image_url}
+                        alt={s.heading || 'Hero'}
                         style={{
-                          width: '80px',
-                          height: '42px',
+                          width: '90px',
+                          height: '48px',
                           objectFit: 'cover',
-                          borderRadius: '4px',
+                          borderRadius: '6px',
                           border: '1px solid rgba(255, 255, 255, 0.1)',
                         }}
                       />
@@ -199,29 +253,29 @@ export default function AdminHero() {
                   </td>
                   <td>
                     <img
-                      src={s.mobile_image || s.desktop_image}
-                      alt={s.heading}
+                      src={s.mobile_image || s.mobile_image_url || s.desktop_image}
+                      alt={s.heading || 'Mobile'}
                       style={{
-                        width: '32px',
-                        height: '42px',
+                        width: '36px',
+                        height: '48px',
                         objectFit: 'cover',
-                        borderRadius: '4px',
+                        borderRadius: '6px',
                         border: '1px solid rgba(255, 255, 255, 0.1)',
                       }}
                     />
                   </td>
                   <td>
                     <div>
-                      <strong>{s.heading || 'Hero Showcase'}</strong>
-                      {s.eyebrow && (
+                      <strong>{s.heading || s.title || 'Hero Showcase'}</strong>
+                      {(s.eyebrow || s.subtitle) && (
                         <span style={{ display: 'block', fontSize: '11px', color: '#8c847a' }}>
-                          {s.eyebrow}
+                          {s.eyebrow || s.subtitle}
                         </span>
                       )}
                     </div>
                   </td>
                   <td>
-                    <span className="ps-cell-muted">{s.cta_link || '/'}</span>
+                    <span className="ps-cell-muted">{s.cta_link || s.button_link || '/'}</span>
                   </td>
                   <td>
                     <span
@@ -231,6 +285,30 @@ export default function AdminHero() {
                     >
                       {s.is_active !== false ? 'Active' : 'Disabled'}
                     </span>
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button
+                        type="button"
+                        className="ps-action-icon-btn"
+                        disabled={idx === 0}
+                        onClick={() => handleReorder(idx, 'up')}
+                        title="Move Up"
+                        style={{ opacity: idx === 0 ? 0.3 : 1 }}
+                      >
+                        <ArrowUp size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        className="ps-action-icon-btn"
+                        disabled={idx === slides.length - 1}
+                        onClick={() => handleReorder(idx, 'down')}
+                        title="Move Down"
+                        style={{ opacity: idx === slides.length - 1 ? 0.3 : 1 }}
+                      >
+                        <ArrowDown size={14} />
+                      </button>
+                    </div>
                   </td>
                   <td>
                     <div className="ps-table-actions">
@@ -269,7 +347,7 @@ export default function AdminHero() {
 
       {/* Modal: Add / Edit Slide */}
       {isModalOpen && (
-        <div className="ps-admin-modal-overlay" onClick={() => setIsModalOpen(false)}>
+        <div className="ps-admin-modal-overlay" onClick={() => !saving && setIsModalOpen(false)}>
           <div
             className="ps-admin-modal-card"
             style={{ maxWidth: '640px' }}
@@ -281,6 +359,7 @@ export default function AdminHero() {
                 type="button"
                 className="ps-modal-close"
                 onClick={() => setIsModalOpen(false)}
+                disabled={saving}
               >
                 <X size={18} />
               </button>
@@ -289,7 +368,7 @@ export default function AdminHero() {
             <form onSubmit={handleSave}>
               <div className="ps-form-row">
                 <div className="ps-form-group">
-                  <label>Desktop Image *</label>
+                  <label>Desktop Media (Image/Video) *</label>
                   <input
                     type="text"
                     value={form.desktop_image}
@@ -297,33 +376,53 @@ export default function AdminHero() {
                     placeholder="/assets/hero-luxury-cinematic.png"
                     required
                   />
-                  <label className="ps-combo-upload-btn" style={{ marginTop: '6px' }}>
-                    <Upload size={14} color="#c8a45d" />
-                    <span>Upload Desktop Image</span>
+                  {form.desktop_image && (
+                    <div style={{ marginTop: '8px', height: '60px', borderRadius: '4px', overflow: 'hidden', border: '1px solid #ddd' }}>
+                      <img src={form.desktop_image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                  )}
+                  <label className="ps-combo-upload-btn" style={{ marginTop: '6px', cursor: isUploading ? 'not-allowed' : 'pointer' }}>
+                    {uploadingField === 'desktop_image' ? (
+                      <Loader2 size={14} className="ps-spin" style={{ animation: 'spin 1s linear infinite' }} />
+                    ) : (
+                      <Upload size={14} color="#c8a45d" />
+                    )}
+                    <span>{uploadingField === 'desktop_image' ? 'Uploading...' : 'Upload Desktop Media'}</span>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/*,video/mp4"
                       onChange={(e) => handleImageUpload('desktop_image', e.target.files?.[0])}
+                      disabled={isUploading}
                       style={{ display: 'none' }}
                     />
                   </label>
                 </div>
 
                 <div className="ps-form-group">
-                  <label>Mobile Image (Optional)</label>
+                  <label>Mobile Media (Optional)</label>
                   <input
                     type="text"
                     value={form.mobile_image}
                     onChange={(e) => setForm({ ...form, mobile_image: e.target.value })}
                     placeholder="/assets/hero-luxury-cinematic-mobile.png"
                   />
-                  <label className="ps-combo-upload-btn" style={{ marginTop: '6px' }}>
-                    <Upload size={14} color="#c8a45d" />
-                    <span>Upload Mobile Image</span>
+                  {form.mobile_image && (
+                    <div style={{ marginTop: '8px', height: '60px', width: '50px', borderRadius: '4px', overflow: 'hidden', border: '1px solid #ddd' }}>
+                      <img src={form.mobile_image} alt="Mobile preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                  )}
+                  <label className="ps-combo-upload-btn" style={{ marginTop: '6px', cursor: isUploading ? 'not-allowed' : 'pointer' }}>
+                    {uploadingField === 'mobile_image' ? (
+                      <Loader2 size={14} className="ps-spin" style={{ animation: 'spin 1s linear infinite' }} />
+                    ) : (
+                      <Upload size={14} color="#c8a45d" />
+                    )}
+                    <span>{uploadingField === 'mobile_image' ? 'Uploading...' : 'Upload Mobile Media'}</span>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/*,video/mp4"
                       onChange={(e) => handleImageUpload('mobile_image', e.target.files?.[0])}
+                      disabled={isUploading}
                       style={{ display: 'none' }}
                     />
                   </label>
@@ -408,13 +507,14 @@ export default function AdminHero() {
                   type="button"
                   className="ps-builder-btn-cancel"
                   onClick={() => setIsModalOpen(false)}
+                  disabled={saving}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   className="ps-builder-btn-save"
-                  disabled={saving}
+                  disabled={saving || isUploading}
                 >
                   {saving ? 'Saving...' : 'Save Slide'}
                 </button>

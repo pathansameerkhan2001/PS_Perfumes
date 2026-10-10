@@ -21,7 +21,7 @@ export async function getDashboardMetrics() {
     // 2. Revenue (Calculated strictly from paid or delivered orders)
     const { data: revenueData, error: revErr } = await supabase
       .from('orders')
-      .select('total, payment_status, order_status')
+      .select('total_amount, payment_status, order_status')
       .or('payment_status.eq.paid,order_status.eq.delivered');
 
     if (revErr && revErr.code !== 'PGRST116') {
@@ -29,7 +29,7 @@ export async function getDashboardMetrics() {
     }
 
     const totalRevenue = (revenueData || []).reduce(
-      (acc, order) => acc + (Number(order.total) || 0),
+      (acc, order) => acc + (Number(order.total_amount) || 0),
       0
     );
 
@@ -108,7 +108,7 @@ export async function getBestSellingProducts() {
   try {
     const { data: items, error } = await supabase
       .from('order_items')
-      .select('product_id, product_name, quantity, total, bottle_type, size_ml, product_image');
+      .select('product_id, product_name, quantity, total_price, unit_price, bottle_type, size_ml');
 
     if (error || !items || items.length === 0) {
       return { data: [], error: null };
@@ -119,6 +119,7 @@ export async function getBestSellingProducts() {
     for (const item of items) {
       const key = item.product_id || item.product_name;
       if (!key) continue;
+      const itemRev = Number(item.total_price) || (Number(item.unit_price || 0) * (Number(item.quantity) || 1));
       if (!salesMap[key]) {
         salesMap[key] = {
           id: key,
@@ -128,11 +129,11 @@ export async function getBestSellingProducts() {
           size: item.size_ml || '',
           sold: 0,
           revenue: 0,
-          image: item.product_image || '/assets/prod-royal-amber.webp',
+          image: '/assets/prod-royal-amber.webp',
         };
       }
       salesMap[key].sold += Number(item.quantity) || 1;
-      salesMap[key].revenue += Number(item.total) || 0;
+      salesMap[key].revenue += itemRev;
     }
 
     const sorted = Object.values(salesMap)
@@ -304,7 +305,7 @@ export async function getRecentOrders(limit = 5) {
   try {
     const { data, error } = await supabase
       .from('orders')
-      .select('id, order_number, customer_name, email, total, order_status, payment_status, payment_method, created_at')
+      .select('id, order_number, customer_name, shipping_address, total_amount, order_status, payment_status, payment_method, created_at')
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -313,7 +314,13 @@ export async function getRecentOrders(limit = 5) {
       return { data: [], error: null };
     }
 
-    return { data: data || [], error: null };
+    const formatted = (data || []).map((ord) => ({
+      ...ord,
+      total: Number(ord.total_amount) || 0,
+      email: ord.shipping_address?.email || ord.shipping_address?.customer_email || 'Direct Order',
+    }));
+
+    return { data: formatted, error: null };
   } catch (err) {
     if (import.meta.env.DEV) console.warn('getRecentOrders catch:', err);
     return { data: [], error: null };

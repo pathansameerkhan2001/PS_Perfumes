@@ -71,7 +71,10 @@ export default function AdminCategories() {
 
   const handleDelete = async (id) => {
     if (window.confirm('Delete this fragrance category?')) {
-      await deleteCategory(id);
+      const res = await deleteCategory(id);
+      if (res && res.success === false && res.error) {
+        alert(res.error);
+      }
       loadData();
     }
   };
@@ -79,9 +82,15 @@ export default function AdminCategories() {
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const { url } = await uploadImage(file, 'categories', formData.slug || 'cat');
-    if (url) {
-      setFormData((prev) => ({ ...prev, image_url: url }));
+    try {
+      const { url, error } = await uploadImage(file, 'categories', formData.slug || 'cat');
+      if (error) {
+        alert(`Category image upload failed: ${error}`);
+      } else if (url) {
+        setFormData((prev) => ({ ...prev, image_url: url }));
+      }
+    } catch (err) {
+      alert(`Category image upload error: ${err?.message || 'Storage error'}`);
     }
   };
 

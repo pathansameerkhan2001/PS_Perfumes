@@ -115,7 +115,17 @@ export async function getOrders() {
       if (!error && data && data.length > 0) {
         return data.map((ord) => ({
           ...ord,
-          items: ord.order_items || [],
+          total: Number(ord.total_amount || ord.total) || 0,
+          subtotal: Number(ord.subtotal) || 0,
+          shipping_fee: Number(ord.shipping_amount || ord.shipping_fee) || 0,
+          email: ord.shipping_address?.email || ord.email || '',
+          phone: ord.shipping_address?.phone || ord.phone || '',
+          items: (ord.order_items || []).map((it) => ({
+            ...it,
+            price: Number(it.unit_price || it.price) || 0,
+            total: Number(it.total_price || it.total) || 0,
+            size: it.size_ml || it.size || '50 ml',
+          })),
         }));
       }
     } catch (e) {
@@ -142,7 +152,17 @@ export async function getOrderByNumber(orderNumber) {
       if (!error && data) {
         return {
           ...data,
-          items: data.order_items || [],
+          total: Number(data.total_amount || data.total) || 0,
+          subtotal: Number(data.subtotal) || 0,
+          shipping_fee: Number(data.shipping_amount || data.shipping_fee) || 0,
+          email: data.shipping_address?.email || data.email || '',
+          phone: data.shipping_address?.phone || data.phone || '',
+          items: (data.order_items || []).map((it) => ({
+            ...it,
+            price: Number(it.unit_price || it.price) || 0,
+            total: Number(it.total_price || it.total) || 0,
+            size: it.size_ml || it.size || '50 ml',
+          })),
         };
       }
     } catch (e) {
@@ -202,18 +222,21 @@ export async function createOrder(orderPayload) {
 
   if (isSupabaseConfigured && supabase) {
     try {
+      const fullShippingAddress = {
+        ...(newOrder.shipping_address || {}),
+        email: newOrder.email,
+        phone: newOrder.phone,
+      };
+
       const { data: ord, error: ordErr } = await supabase
         .from('orders')
         .insert([{
           order_number: newOrder.order_number,
           customer_name: newOrder.customer_name,
-          email: newOrder.email,
-          phone: newOrder.phone,
-          shipping_address: newOrder.shipping_address,
-          subtotal: newOrder.subtotal,
-          shipping_fee: newOrder.shipping_fee,
-          discount: newOrder.discount,
-          total: newOrder.total,
+          shipping_address: fullShippingAddress,
+          subtotal: Number(newOrder.subtotal) || 0,
+          shipping_amount: Number(newOrder.shipping_fee) || 0,
+          total_amount: Number(newOrder.total) || 0,
           payment_method: newOrder.payment_method,
           payment_status: newOrder.payment_status,
           order_status: newOrder.order_status,
@@ -224,13 +247,13 @@ export async function createOrder(orderPayload) {
       if (!ordErr && ord) {
         const orderItems = newOrder.items.map((it) => ({
           order_id: ord.id,
-          product_id: it.product_id,
-          product_name: it.product_name,
-          quantity: it.quantity,
-          price: it.price,
-          total: it.total,
-          size: it.size,
-          product_image: it.product_image,
+          product_id: (it.product_id && String(it.product_id).length === 36) ? it.product_id : null,
+          product_name: it.product_name || 'Fragrance',
+          bottle_type: it.bottle_type || (it.size?.toLowerCase().includes('pvc') ? 'PVC Bottle' : 'Glass Bottle'),
+          size_ml: it.size || '100 ml',
+          quantity: Number(it.quantity) || 1,
+          unit_price: Number(it.price) || 0,
+          total_price: Number(it.total) || ((Number(it.price) || 0) * (Number(it.quantity) || 1)),
         }));
         await supabase.from('order_items').insert(orderItems);
         newOrder.id = ord.id;

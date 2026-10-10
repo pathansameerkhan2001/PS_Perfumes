@@ -76,19 +76,31 @@ export async function deleteReview(id) {
 }
 
 export async function createReview(review) {
-  const newRev = {
-    ...review,
-    id: `rev-${Date.now()}`,
-    status: 'pending',
-    created_at: new Date().toISOString(),
-  };
+  let createdRecord = null;
 
   if (isSupabaseConfigured && supabase) {
     try {
-      const { data, error } = await supabase.from('reviews').insert([newRev]).select().single();
-      if (!error && data) return { data, error: null };
+      const payload = {
+        customer_name: review.customer_name || 'Verified Patron',
+        customer_email: review.customer_email || null,
+        rating: Math.max(1, Math.min(5, Number(review.rating) || 5)),
+        title: review.title || '',
+        comment: review.comment || '',
+        status: review.status || 'pending',
+      };
+      if (review.product_id) payload.product_id = review.product_id;
+
+      const { data, error } = await supabase.from('reviews').insert([payload]).select().single();
+      if (!error && data) createdRecord = data;
     } catch {}
   }
+
+  const newRev = createdRecord || {
+    ...review,
+    id: `rev-${Date.now()}`,
+    status: review.status || 'pending',
+    created_at: new Date().toISOString(),
+  };
 
   const list = getLocalReviews();
   saveLocalReviews([newRev, ...list]);

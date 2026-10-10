@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { isValidUUID } from './products';
 import comboAttarSet from '../assets/combo-attar-set.webp';
 import comboAttar12Pcs from '../assets/combo-attar-12pcs.webp';
 import comboOudTrio from '../assets/combo-oud-trio.webp';
@@ -313,35 +314,59 @@ export async function getComboById(id) {
 }
 
 export async function createCombo(comboData) {
-  const newCombo = {
-    id: `combo-${Date.now()}`,
-    slug: comboData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-    ...comboData,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
+  const autoSlug =
+    comboData.slug ||
+    comboData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+  let createdCombo = null;
 
   if (isSupabaseConfigured && supabase) {
     try {
-      const { items, ...mainData } = newCombo;
-      const { data, error } = await supabase.from('combos').insert([mainData]).select().single();
+      const { items, ...mainData } = comboData;
+      const payload = {
+        name: mainData.name,
+        slug: autoSlug,
+        category: mainData.category || 'Combo Pack',
+        description: mainData.description || '',
+        image_url: mainData.image_url || '',
+        combo_price: Number(mainData.combo_price) || 0,
+        original_price: Number(mainData.original_price) || 0,
+        discount: Number(mainData.discount) || 0,
+        stock: Number(mainData.stock) || 10,
+        bestseller: Boolean(mainData.bestseller),
+        featured: Boolean(mainData.featured),
+        is_active: mainData.active !== undefined ? Boolean(mainData.active) : true,
+      };
+
+      const { data, error } = await supabase.from('combos').insert([payload]).select().single();
       if (!error && data) {
+        createdCombo = data;
         if (items && items.length > 0) {
           const itemRows = items.map((it) => ({
             combo_id: data.id,
             product_name: it.product_name,
-            bottle_type: it.bottle_type,
-            size_ml: it.size_ml,
-            quantity: it.quantity || 1,
-            product_image: it.image || it.product_image,
+            bottle_type: it.bottle_type || 'Glass Bottle',
+            size_ml: it.size_ml || '50 ml',
+            quantity: Number(it.quantity) || 1,
+            product_image: it.image || it.product_image || '',
           }));
           await supabase.from('combo_items').insert(itemRows);
         }
+      } else if (error) {
+        console.warn('Supabase createCombo note:', error.message);
       }
     } catch (e) {
       console.warn('Supabase createCombo error, saved locally:', e);
     }
   }
+
+  const newCombo = createdCombo ? { ...createdCombo, items: comboData.items || [] } : {
+    id: `combo-${Date.now()}`,
+    slug: autoSlug,
+    ...comboData,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
 
   const list = getLocalCombos();
   list.unshift(newCombo);
@@ -350,10 +375,39 @@ export async function createCombo(comboData) {
 }
 
 export async function updateCombo(id, updates) {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     try {
       const { items, ...mainUpdates } = updates;
-      await supabase.from('combos').update({ ...mainUpdates, updated_at: new Date().toISOString() }).eq('id', id);
+      const payload = {};
+      if (mainUpdates.name !== undefined) payload.name = mainUpdates.name;
+      if (mainUpdates.slug !== undefined) payload.slug = mainUpdates.slug;
+      if (mainUpdates.category !== undefined) payload.category = mainUpdates.category;
+      if (mainUpdates.description !== undefined) payload.description = mainUpdates.description;
+      if (mainUpdates.image_url !== undefined) payload.image_url = mainUpdates.image_url;
+      if (mainUpdates.combo_price !== undefined) payload.combo_price = Number(mainUpdates.combo_price);
+      if (mainUpdates.original_price !== undefined) payload.original_price = Number(mainUpdates.original_price);
+      if (mainUpdates.discount !== undefined) payload.discount = Number(mainUpdates.discount);
+      if (mainUpdates.stock !== undefined) payload.stock = Number(mainUpdates.stock);
+      if (mainUpdates.bestseller !== undefined) payload.bestseller = Boolean(mainUpdates.bestseller);
+      if (mainUpdates.featured !== undefined) payload.featured = Boolean(mainUpdates.featured);
+      if (mainUpdates.active !== undefined) payload.is_active = Boolean(mainUpdates.active);
+      if (mainUpdates.is_active !== undefined) payload.is_active = Boolean(mainUpdates.is_active);
+      payload.updated_at = new Date().toISOString();
+
+      await supabase.from('combos').update(payload).eq('id', id);
+
+      if (items && Array.isArray(items)) {
+        await supabase.from('combo_items').delete().eq('combo_id', id);
+        const itemRows = items.map((it) => ({
+          combo_id: id,
+          product_name: it.product_name,
+          bottle_type: it.bottle_type || 'Glass Bottle',
+          size_ml: it.size_ml || '50 ml',
+          quantity: Number(it.quantity) || 1,
+          product_image: it.image || it.product_image || '',
+        }));
+        await supabase.from('combo_items').insert(itemRows);
+      }
     } catch (e) {
       console.warn('Supabase updateCombo error:', e);
     }
@@ -370,8 +424,9 @@ export async function updateCombo(id, updates) {
 }
 
 export async function deleteCombo(id) {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     try {
+      await supabase.from('combo_items').delete().eq('combo_id', id);
       await supabase.from('combos').delete().eq('id', id);
     } catch (e) {
       console.warn('Supabase deleteCombo error:', e);
