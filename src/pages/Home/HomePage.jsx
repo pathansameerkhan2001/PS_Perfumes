@@ -132,8 +132,11 @@ export default function HomePage() {
     </>
   );
 
+  const hasHeroSection = sections.some((s) => (s.section_key || s.id) === 'hero');
+
   return (
     <div className="ps-home-page">
+      {sections.length > 0 && !hasHeroSection && <HeroCinematic />}
       {sections.length > 0 ? sections.map(renderSection) : defaultLayout}
     </div>
   );

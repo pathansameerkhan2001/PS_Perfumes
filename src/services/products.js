@@ -5,7 +5,9 @@ import { PRODUCTS } from '../data/products';
 const LOCAL_PRODUCTS_KEY = 'ps_db_products';
 
 export const STANDARD_SIZES = ['30 ml', '50 ml', '100 ml'];
+export const ATTAR_SIZES = ['6 ml', '10 ml'];
 export const STANDARD_BOTTLE_TYPES = ['Glass Bottle', 'PVC Bottle'];
+export const ATTAR_BOTTLE_TYPES = ['Glass Bottle'];
 
 /**
  * Validates whether an ID string is a valid PostgreSQL UUID
@@ -20,7 +22,7 @@ export function isValidUUID(id) {
 /**
  * Resolves a category name or slug to its Supabase UUID
  */
-async function resolveCategoryId(categoryNameOrSlug) {
+export async function resolveCategoryId(categoryNameOrSlug) {
   if (!categoryNameOrSlug) return null;
   if (isValidUUID(categoryNameOrSlug)) {
     return categoryNameOrSlug;
@@ -35,7 +37,6 @@ async function resolveCategoryId(categoryNameOrSlug) {
         (c) => c.slug?.toLowerCase() === clean || c.name?.toLowerCase() === clean
       );
       if (match) return match.id;
-      // Fallback: return the first category ID so FK constraint is satisfied
       return data[0].id;
     }
   } catch (e) {
@@ -45,12 +46,54 @@ async function resolveCategoryId(categoryNameOrSlug) {
 }
 
 /**
+ * Checks whether a given category string/slug represents an Attar
+ */
+export function isAttarCategory(categoryOrSlug) {
+  if (!categoryOrSlug) return false;
+  const clean = String(categoryOrSlug).toLowerCase().trim();
+  return clean === 'attar' || clean.includes('attar');
+}
+
+/**
  * Generate standard variant matrix for a product if variants don't exist
  */
 export function generateDefaultVariants(p) {
-  const basePrice = Number(p.price) || 1499;
+  const isAttar = isAttarCategory(p.category || p.categories?.slug || p.categories?.name);
+  const basePrice = Number(p.price) || (isAttar ? 799 : 1499);
   const baseCompare = Number(p.compare_at_price || p.originalPrice) || Math.round(basePrice * 1.33);
 
+  const variants = [];
+
+  if (isAttar) {
+    // Attars support 6 ml and 10 ml flacons in Glass Bottle
+    const attarRatios = {
+      '6 ml': { price: basePrice, compare: baseCompare, stock: 30 },
+      '10 ml': { price: Math.round(basePrice * 1.5), compare: Math.round(baseCompare * 1.5), stock: 20 },
+    };
+
+    ATTAR_SIZES.forEach((sz) => {
+      const config = attarRatios[sz];
+      const sizeNum = sz.replace(/\D/g, '');
+      variants.push({
+        id: `var-${p.id}-attar-${sizeNum}`,
+        product_id: p.id,
+        bottle_type: 'Glass Bottle',
+        size_ml: sz,
+        price: config.price,
+        sale_price: config.price,
+        compare_at_price: config.compare,
+        stock: config.stock,
+        stock_quantity: config.stock,
+        sku: `PS-${String(p.id).slice(0, 8).toUpperCase()}-AT-${sizeNum}`,
+        active: true,
+        is_active: true,
+      });
+    });
+
+    return variants;
+  }
+
+  // Perfumes support 30 ml, 50 ml, 100 ml across Glass and PVC
   const glassRatios = {
     '30 ml': { price: basePrice, compare: baseCompare, stock: 20 },
     '50 ml': { price: Math.round(basePrice * 1.467), compare: Math.round(baseCompare * 1.467), stock: 15 },
@@ -62,8 +105,6 @@ export function generateDefaultVariants(p) {
     '50 ml': { price: Math.round(basePrice * 0.867), compare: Math.round(baseCompare * 0.867), stock: 25 },
     '100 ml': { price: Math.round(basePrice * 1.267), compare: Math.round(baseCompare * 1.267), stock: 12 },
   };
-
-  const variants = [];
 
   // Glass Variants
   STANDARD_SIZES.forEach((sz) => {
@@ -160,7 +201,8 @@ export function formatProduct(p) {
     ? formattedVariants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0)
     : (Number(p.stock) || 30);
 
-  const categoryName = p.categories?.name || p.category || 'Perfume';
+  const categoryName = p.categories?.name || p.category || notesMetadata.category_name || 'Perfume';
+  const categorySlug = p.categories?.slug || (categoryName || '').toLowerCase().trim();
 
   return {
     ...p,
@@ -168,6 +210,7 @@ export function formatProduct(p) {
     name: p.name,
     slug,
     category: categoryName,
+    category_slug: categorySlug,
     category_id: p.category_id || p.categories?.id || null,
     price: p.price ? Number(p.price) : lowestVariantPrice,
     compare_at_price: p.compare_at_price ? Number(p.compare_at_price) : Math.round(lowestVariantPrice * 1.3),
@@ -183,6 +226,7 @@ export function formatProduct(p) {
     new_arrival: Boolean(p.is_new_arrival || p.new_arrival),
     is_new_arrival: Boolean(p.is_new_arrival || p.new_arrival),
     main_image: resolvedImage,
+    main_image_url: resolvedImage,
     image: resolvedImage,
     glass_image: glassImage,
     pvc_image: pvcImage,
@@ -284,13 +328,13 @@ export async function getProducts(options = {}) {
         query = query.eq('is_active', status === 'active');
       }
       if (featured !== undefined) {
-        query = query.eq('is_featured', featured);
+        query = query.eq('is_featured', Boolean(featured));
       }
       if (new_arrival !== undefined) {
-        query = query.eq('is_new_arrival', new_arrival);
+        query = query.eq('is_new_arrival', Boolean(new_arrival));
       }
       if (bestseller !== undefined) {
-        query = query.eq('is_bestseller', bestseller);
+        query = query.eq('is_bestseller', Boolean(bestseller));
       }
       if (search) {
         query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
@@ -308,7 +352,17 @@ export async function getProducts(options = {}) {
 
       const { data, error } = await query;
       if (!error && Array.isArray(data) && data.length > 0) {
-        return data.map((item) => formatProduct(item));
+        let list = data.map((item) => formatProduct(item));
+        if (category && category !== 'ALL') {
+          const catTerm = category.toLowerCase().trim();
+          list = list.filter(
+            (p) =>
+              p.category?.toLowerCase() === catTerm ||
+              p.category_slug?.toLowerCase() === catTerm ||
+              p.categories?.slug?.toLowerCase() === catTerm
+          );
+        }
+        return list;
       }
     } catch (e) {
       if (import.meta.env.DEV) console.warn('Supabase getProducts note:', e);
@@ -322,10 +376,11 @@ export async function getProducts(options = {}) {
     list = list.filter((p) => p.status === status);
   }
   if (category && category !== 'ALL') {
-    const term = category.toLowerCase();
+    const term = category.toLowerCase().trim();
     list = list.filter(
       (p) =>
         p.category?.toLowerCase().includes(term) ||
+        p.category_slug?.toLowerCase().includes(term) ||
         (p.subcategory && p.subcategory.toLowerCase().includes(term))
     );
   }
@@ -464,6 +519,8 @@ export async function createProduct(productData) {
         glass_image: productData.glass_image || null,
         pvc_image: productData.pvc_image || null,
         gallery_images: Array.isArray(productData.gallery_images) ? productData.gallery_images : [],
+        category_name: productData.category || 'Perfume',
+        sku: productData.sku || null,
       };
 
       const primaryImage =
@@ -472,7 +529,7 @@ export async function createProduct(productData) {
         productData.glass_image ||
         '/assets/prod-royal-amber.webp';
 
-      // Insert product with verified Supabase schema columns
+      // Insert product with verified live Supabase schema columns
       const dbProduct = {
         name: productData.name,
         slug: autoSlug,
@@ -505,8 +562,8 @@ export async function createProduct(productData) {
           const varRows = productData.variants.map((v) => ({
             product_id: data.id,
             bottle_type: v.bottle_type || 'Glass Bottle',
-            size_ml: v.size_ml || '50 ml',
-            price: Number(v.price) || 999,
+            size_ml: v.size_ml || (isAttarCategory(productData.category) ? '6 ml' : '50 ml'),
+            price: Number(v.price) || (isAttarCategory(productData.category) ? 799 : 1499),
             sale_price: v.sale_price ? Number(v.sale_price) : null,
             stock_quantity: Number(v.stock !== undefined ? v.stock : v.stock_quantity) || 10,
             sku: v.sku || null,
@@ -579,7 +636,9 @@ export async function updateProduct(id, updates) {
         updates.top_notes !== undefined ||
         updates.heart_notes !== undefined ||
         updates.base_notes !== undefined ||
-        updates.gallery_images !== undefined
+        updates.gallery_images !== undefined ||
+        updates.category !== undefined ||
+        updates.sku !== undefined
       ) {
         dbUpdates.fragrance_notes = {
           top: Array.isArray(updates.top_notes)
@@ -600,6 +659,8 @@ export async function updateProduct(id, updates) {
           glass_image: updates.glass_image || null,
           pvc_image: updates.pvc_image || null,
           gallery_images: Array.isArray(updates.gallery_images) ? updates.gallery_images : [],
+          category_name: updates.category || 'Perfume',
+          sku: updates.sku || null,
         };
       }
 
@@ -631,14 +692,17 @@ export async function updateProduct(id, updates) {
           .select('id, bottle_type, size_ml')
           .eq('product_id', id);
 
+        const currentVariantIds = new Set();
+
         for (const v of updates.variants) {
           const match = existingVariants?.find(
             (ev) =>
               ev.bottle_type?.toLowerCase() === v.bottle_type?.toLowerCase() &&
-              ev.size_ml === v.size_ml
+              ev.size_ml?.toLowerCase().replace(/\s+/g, '') === v.size_ml?.toLowerCase().replace(/\s+/g, '')
           );
 
           if (match) {
+            currentVariantIds.add(match.id);
             await supabase
               .from('product_variants')
               .update({
@@ -651,7 +715,7 @@ export async function updateProduct(id, updates) {
               })
               .eq('id', match.id);
           } else {
-            await supabase.from('product_variants').insert([{
+            const { data: insertedVar } = await supabase.from('product_variants').insert([{
               product_id: id,
               bottle_type: v.bottle_type || 'Glass Bottle',
               size_ml: v.size_ml || '50 ml',
@@ -660,7 +724,19 @@ export async function updateProduct(id, updates) {
               stock_quantity: Number(v.stock !== undefined ? v.stock : v.stock_quantity) || 10,
               sku: v.sku || null,
               is_active: v.active !== false && v.is_active !== false,
-            }]);
+            }]).select().single();
+
+            if (insertedVar) {
+              currentVariantIds.add(insertedVar.id);
+            }
+          }
+        }
+
+        // Clean up retired variants that are no longer part of the updated matrix
+        if (existingVariants && existingVariants.length > 0) {
+          const toDelete = existingVariants.filter((ev) => !currentVariantIds.has(ev.id));
+          for (const del of toDelete) {
+            await supabase.from('product_variants').delete().eq('id', del.id);
           }
         }
       }
@@ -726,3 +802,4 @@ export async function deleteProduct(id) {
   saveLocalProducts(filtered);
   return { success: true };
 }
+

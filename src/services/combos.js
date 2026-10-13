@@ -271,6 +271,8 @@ export async function getCombos(options = {}) {
       if (!error && Array.isArray(data) && data.length > 0) {
         return data.map((c) => ({
           ...c,
+          combo_price: Number(c.combo_price || c.price) || 0,
+          original_price: Number(c.original_price || (c.combo_price || c.price) * 1.25) || 0,
           items: c.combo_items || [],
         }));
       }
@@ -297,6 +299,8 @@ export async function getComboBySlug(slug) {
       if (!error && data) {
         return {
           ...data,
+          combo_price: Number(data.combo_price || data.price) || 0,
+          original_price: Number(data.original_price || (data.combo_price || data.price) * 1.25) || 0,
           items: data.combo_items || [],
         };
       }
@@ -323,13 +327,15 @@ export async function createCombo(comboData) {
   if (isSupabaseConfigured && supabase) {
     try {
       const { items, ...mainData } = comboData;
+      const priceNum = Number(mainData.combo_price || mainData.price) || 0;
       const payload = {
         name: mainData.name,
         slug: autoSlug,
         category: mainData.category || 'Combo Pack',
         description: mainData.description || '',
         image_url: mainData.image_url || '',
-        combo_price: Number(mainData.combo_price) || 0,
+        price: priceNum,
+        combo_price: priceNum,
         original_price: Number(mainData.original_price) || 0,
         discount: Number(mainData.discount) || 0,
         stock: Number(mainData.stock) || 10,
@@ -384,7 +390,11 @@ export async function updateCombo(id, updates) {
       if (mainUpdates.category !== undefined) payload.category = mainUpdates.category;
       if (mainUpdates.description !== undefined) payload.description = mainUpdates.description;
       if (mainUpdates.image_url !== undefined) payload.image_url = mainUpdates.image_url;
-      if (mainUpdates.combo_price !== undefined) payload.combo_price = Number(mainUpdates.combo_price);
+      if (mainUpdates.combo_price !== undefined || mainUpdates.price !== undefined) {
+        const p = Number(mainUpdates.combo_price || mainUpdates.price);
+        payload.price = p;
+        payload.combo_price = p;
+      }
       if (mainUpdates.original_price !== undefined) payload.original_price = Number(mainUpdates.original_price);
       if (mainUpdates.discount !== undefined) payload.discount = Number(mainUpdates.discount);
       if (mainUpdates.stock !== undefined) payload.stock = Number(mainUpdates.stock);

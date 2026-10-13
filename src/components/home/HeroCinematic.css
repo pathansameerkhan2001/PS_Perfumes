@@ -5,6 +5,7 @@
    - Zero text obstruction, overlays, or buttons
    - Clean autoplaying video playback
    - Native controls strictly suppressed
+   - Seamless placement beneath fixed luxury navigation
    ========================================================================== */
 
 .ps-hero-cinematic {
@@ -136,4 +137,42 @@
 .ps-hero-cinematic-video::-webkit-media-controls-enclosure {
   display: none !important;
   -webkit-appearance: none !important;
+}
+
+/* Delicate Ambient Vignette & Natural Gold Lighting Preservation */
+.ps-hero-delicate-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0) 50%,
+    rgba(5, 5, 5, 0.28) 80%,
+    rgba(5, 5, 5, 0.6) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Top Subtle Blend with Fixed Luxury Header */
+.ps-hero-top-blend {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(to bottom, rgba(5, 5, 5, 0.6) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Bottom Subtle Blend with Champagne Ticker Strip */
+.ps-hero-bottom-blend {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: linear-gradient(to top, rgba(5, 5, 5, 0.8) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 2;
 }

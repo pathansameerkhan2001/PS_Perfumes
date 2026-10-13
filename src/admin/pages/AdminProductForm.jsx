@@ -15,7 +15,15 @@ import { uploadImage } from '../../lib/storage';
 import './AdminProductForm.css';
 
 const CATEGORIES = ['Attar', 'Perfume', 'Bakhoor', 'Musky', 'Oud', 'Floral', 'Woody', 'Combo Pack'];
-const SIZES = ['30 ml', '50 ml', '100 ml'];
+const ALL_POSSIBLE_SIZES = ['6 ml', '10 ml', '30 ml', '50 ml', '100 ml'];
+
+const DEFAULT_VARIANT_MATRIX = {
+  '6 ml': { glassPrice: 499, pvcPrice: 399, glassStock: 50, pvcStock: 0, glassSku: '', pvcSku: '' },
+  '10 ml': { glassPrice: 799, pvcPrice: 649, glassStock: 30, pvcStock: 0, glassSku: '', pvcSku: '' },
+  '30 ml': { glassPrice: 1499, pvcPrice: 899, glassStock: 20, pvcStock: 40, glassSku: '', pvcSku: '' },
+  '50 ml': { glassPrice: 2199, pvcPrice: 1299, glassStock: 15, pvcStock: 25, glassSku: '', pvcSku: '' },
+  '100 ml': { glassPrice: 3299, pvcPrice: 1899, glassStock: 8, pvcStock: 12, glassSku: '', pvcSku: '' },
+};
 
 export default function AdminProductForm() {
   const { id } = useParams();
@@ -64,18 +72,17 @@ export default function AdminProductForm() {
     meta_description: '',
   });
 
+  // Selected sizes for this specific product
+  const [selectedSizes, setSelectedSizes] = useState(['30 ml', '50 ml', '100 ml']);
+
   // Bottle Type Checkboxes
   const [bottleOptions, setBottleOptions] = useState({
     glass: true,
     pvc: true,
   });
 
-  // Variants & Pricing Matrix (Glass & PVC across 30, 50, 100 ml with stock & SKU)
-  const [variantMatrix, setVariantMatrix] = useState({
-    '30 ml': { glassPrice: 1499, pvcPrice: 899, glassStock: 20, pvcStock: 40, glassSku: '', pvcSku: '' },
-    '50 ml': { glassPrice: 2199, pvcPrice: 1299, glassStock: 15, pvcStock: 25, glassSku: '', pvcSku: '' },
-    '100 ml': { glassPrice: 3299, pvcPrice: 1899, glassStock: 8, pvcStock: 12, glassSku: '', pvcSku: '' },
-  });
+  // Variants & Pricing Matrix
+  const [variantMatrix, setVariantMatrix] = useState(DEFAULT_VARIANT_MATRIX);
 
   useEffect(() => {
     if (isEditing) {
@@ -83,6 +90,7 @@ export default function AdminProductForm() {
       getProductById(id)
         .then((p) => {
           if (p) {
+            const isAttar = p.category?.toLowerCase() === 'attar';
             setForm({
               name: p.name || '',
               slug: p.slug || '',
@@ -108,25 +116,52 @@ export default function AdminProductForm() {
               meta_description: p.meta_description || p.short_description || '',
             });
 
-            // Populate variant matrix if available
+            // Populate variant matrix and dynamic sizes if available
             if (Array.isArray(p.variants) && p.variants.length > 0) {
-              const nextMatrix = { ...variantMatrix };
+              const nextMatrix = { ...DEFAULT_VARIANT_MATRIX };
+              const foundSizes = [];
+              let hasPvc = false;
+
               p.variants.forEach((v) => {
-                const sz = v.size_ml?.includes('ml') ? v.size_ml : `${v.size_ml} ml`;
+                const rawSz = String(v.size_ml || '').trim();
+                const numOnly = rawSz.replace(/[^\d]/g, '');
+                const sz = numOnly ? `${numOnly} ml` : rawSz;
+
+                if (!foundSizes.includes(sz) && ALL_POSSIBLE_SIZES.includes(sz)) {
+                  foundSizes.push(sz);
+                }
+
                 const isGlass = v.bottle_type?.toLowerCase().includes('glass');
+                const isPvc = v.bottle_type?.toLowerCase().includes('pvc');
+                if (isPvc) hasPvc = true;
+
                 if (nextMatrix[sz]) {
                   if (isGlass) {
                     nextMatrix[sz].glassPrice = v.sale_price || v.price;
                     nextMatrix[sz].glassStock = v.stock_quantity !== undefined ? v.stock_quantity : (v.stock || 0);
                     if (v.sku) nextMatrix[sz].glassSku = v.sku;
-                  } else {
+                  } else if (isPvc) {
                     nextMatrix[sz].pvcPrice = v.sale_price || v.price;
                     nextMatrix[sz].pvcStock = v.stock_quantity !== undefined ? v.stock_quantity : (v.stock || 0);
                     if (v.sku) nextMatrix[sz].pvcSku = v.sku;
                   }
                 }
               });
+
+              if (foundSizes.length > 0) {
+                setSelectedSizes(ALL_POSSIBLE_SIZES.filter((s) => foundSizes.includes(s)));
+              } else if (isAttar) {
+                setSelectedSizes(['6 ml', '10 ml']);
+              }
+
+              setBottleOptions({
+                glass: true,
+                pvc: isAttar ? hasPvc : true,
+              });
               setVariantMatrix(nextMatrix);
+            } else if (isAttar) {
+              setSelectedSizes(['6 ml', '10 ml']);
+              setBottleOptions({ glass: true, pvc: false });
             }
           }
         })
@@ -149,6 +184,38 @@ export default function AdminProductForm() {
       sku: isEditing ? prev.sku : `PS-${autoSlug.slice(0, 10).toUpperCase()}`,
       meta_title: isEditing ? prev.meta_title : val,
     }));
+  };
+
+  const handleCategoryChange = (e) => {
+    const newCat = e.target.value;
+    const isAttar = newCat?.toLowerCase() === 'attar';
+    setForm((prev) => ({ ...prev, category: newCat }));
+
+    if (isAttar) {
+      setSelectedSizes(['6 ml', '10 ml']);
+      setBottleOptions({ glass: true, pvc: false });
+    } else {
+      setSelectedSizes((prev) => {
+        const hasOnlyAttar = prev.every((s) => s === '6 ml' || s === '10 ml');
+        return hasOnlyAttar ? ['30 ml', '50 ml', '100 ml'] : prev;
+      });
+      setBottleOptions({ glass: true, pvc: true });
+    }
+  };
+
+  const toggleSize = (sz) => {
+    setSelectedSizes((prev) => {
+      if (prev.includes(sz)) {
+        if (prev.length <= 1) {
+          setErrorMsg('At least one size must remain active for the product.');
+          return prev;
+        }
+        return prev.filter((s) => s !== sz);
+      } else {
+        const next = [...prev, sz];
+        return ALL_POSSIBLE_SIZES.filter((s) => next.includes(s));
+      }
+    });
   };
 
   const handleMatrixChange = (size, field, val) => {
@@ -359,10 +426,10 @@ export default function AdminProductForm() {
     setErrorMsg('');
     setSuccessMsg('');
 
-    // Generate exact variant records for both Glass and PVC across 30, 50, 100 ml
+    // Generate exact variant records for enabled bottle types across selectedSizes
     const generatedVariants = [];
-    SIZES.forEach((sz) => {
-      const cfg = variantMatrix[sz];
+    selectedSizes.forEach((sz) => {
+      const cfg = variantMatrix[sz] || DEFAULT_VARIANT_MATRIX[sz];
       const sizeNum = sz.replace(/\D/g, '');
 
       if (bottleOptions.glass) {
@@ -396,17 +463,22 @@ export default function AdminProductForm() {
       }
     });
 
+    // Compute lowest variant price as base price, and total stock across active variants
+    const allPrices = generatedVariants.map((v) => Number(v.sale_price || v.price)).filter((p) => p > 0);
+    const minPrice = allPrices.length > 0 ? Math.min(...allPrices) : form.price;
+    const totalStock = generatedVariants.reduce((sum, v) => sum + (Number(v.stock_quantity) || 0), 0);
+
     const payload = {
       ...form,
-      price: variantMatrix['30 ml'].glassPrice || form.price,
+      price: minPrice,
       status: form.active ? 'active' : 'draft',
-      stock: Object.values(variantMatrix).reduce((sum, item) => sum + item.glassStock + item.pvcStock, 0),
+      stock: totalStock,
       top_notes: form.top_notes.split(',').map((s) => s.trim()).filter(Boolean),
       heart_notes: form.heart_notes.split(',').map((s) => s.trim()).filter(Boolean),
       base_notes: form.base_notes.split(',').map((s) => s.trim()).filter(Boolean),
       main_image: form.main_image,
-      glass_image: form.glass_image || null,
-      pvc_image: form.pvc_image || null,
+      glass_image: bottleOptions.glass ? (form.glass_image || null) : null,
+      pvc_image: bottleOptions.pvc ? (form.pvc_image || null) : null,
       variants: generatedVariants,
     };
 
@@ -556,85 +628,138 @@ export default function AdminProductForm() {
             <div className="ps-tab-pane">
               <h2 className="ps-pane-title">Variants & Pricing Matrix</h2>
               <p className="ps-pane-desc">
-                Configure bespoke sizes (30ml, 50ml, 100ml) across Glass and PVC flacon styles with separate pricing and inventory.
+                Configure bespoke sizes (6 ml, 10 ml for Attars; 30 ml, 50 ml, 100 ml for Perfumes) with individual pricing, inventory, and SKU management.
               </p>
 
+              {/* 1. Size Configuration Pill Controls */}
+              <div className="ps-builder-section" style={{ borderTop: 'none', paddingTop: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                  <h3 className="ps-sub-heading" style={{ margin: 0 }}>Offered Sizes (Toggle to Enable / Disable)</h3>
+                  <span style={{ fontSize: '12px', color: '#8C8479' }}>
+                    {form.category === 'Attar' ? 'Attar Defaults: 6 ml & 10 ml' : 'Perfume Defaults: 30, 50, 100 ml'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {ALL_POSSIBLE_SIZES.map((sz) => {
+                    const isSelected = selectedSizes.includes(sz);
+                    const isAttarSize = sz === '6 ml' || sz === '10 ml';
+                    return (
+                      <button
+                        key={sz}
+                        type="button"
+                        onClick={() => toggleSize(sz)}
+                        style={{
+                          padding: '7px 16px',
+                          borderRadius: '20px',
+                          fontSize: '12px',
+                          fontWeight: isSelected ? 600 : 400,
+                          cursor: 'pointer',
+                          border: isSelected ? '1px solid #C9A96E' : '1px solid #E5E0D8',
+                          backgroundColor: isSelected ? '#1A1714' : '#FFFFFF',
+                          color: isSelected ? '#C9A96E' : '#6F675E',
+                          transition: 'all 0.2s ease',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        <span>{sz}</span>
+                        {isAttarSize && <span style={{ fontSize: '10px', opacity: 0.8 }}>(Attar)</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 2. Dynamic Matrix Table */}
               <div className="ps-builder-section">
                 <table className="ps-variant-matrix-table">
                   <thead>
                     <tr>
                       <th>Size</th>
-                      <th>Glass Price (₹)</th>
-                      <th>PVC Price (₹)</th>
-                      <th>Glass Stock</th>
-                      <th>PVC Stock</th>
-                      <th>Glass SKU</th>
-                      <th>PVC SKU</th>
+                      {bottleOptions.glass && <th>Glass Price (₹)</th>}
+                      {bottleOptions.pvc && <th>PVC Price (₹)</th>}
+                      {bottleOptions.glass && <th>Glass Stock</th>}
+                      {bottleOptions.pvc && <th>PVC Stock</th>}
+                      {bottleOptions.glass && <th>Glass SKU</th>}
+                      {bottleOptions.pvc && <th>PVC SKU</th>}
                     </tr>
                   </thead>
                   <tbody>
-                    {SIZES.map((sz) => {
-                      const cfg = variantMatrix[sz];
+                    {selectedSizes.map((sz) => {
+                      const cfg = variantMatrix[sz] || DEFAULT_VARIANT_MATRIX[sz];
                       const sizeNum = sz.replace(/\D/g, '');
                       return (
                         <tr key={sz}>
                           <td className="ps-matrix-size-cell">{sz}</td>
-                          <td>
-                            <input
-                              type="number"
-                              className="ps-matrix-input"
-                              value={cfg.glassPrice}
-                              onChange={(e) => handleMatrixChange(sz, 'glassPrice', e.target.value)}
-                              placeholder="₹"
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="number"
-                              className="ps-matrix-input"
-                              value={cfg.pvcPrice}
-                              onChange={(e) => handleMatrixChange(sz, 'pvcPrice', e.target.value)}
-                              placeholder="₹"
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="number"
-                              className="ps-matrix-input"
-                              value={cfg.glassStock}
-                              onChange={(e) => handleMatrixChange(sz, 'glassStock', e.target.value)}
-                              placeholder="Qty"
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="number"
-                              className="ps-matrix-input"
-                              value={cfg.pvcStock}
-                              onChange={(e) => handleMatrixChange(sz, 'pvcStock', e.target.value)}
-                              placeholder="Qty"
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="text"
-                              className="ps-matrix-input"
-                              value={cfg.glassSku || ''}
-                              onChange={(e) => handleMatrixChange(sz, 'glassSku', e.target.value)}
-                              placeholder={`${form.sku || 'PS'}-GL-${sizeNum}`}
-                              style={{ width: '130px', fontSize: '11.5px' }}
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="text"
-                              className="ps-matrix-input"
-                              value={cfg.pvcSku || ''}
-                              onChange={(e) => handleMatrixChange(sz, 'pvcSku', e.target.value)}
-                              placeholder={`${form.sku || 'PS'}-PV-${sizeNum}`}
-                              style={{ width: '130px', fontSize: '11.5px' }}
-                            />
-                          </td>
+                          {bottleOptions.glass && (
+                            <td>
+                              <input
+                                type="number"
+                                className="ps-matrix-input"
+                                value={cfg.glassPrice}
+                                onChange={(e) => handleMatrixChange(sz, 'glassPrice', e.target.value)}
+                                placeholder="₹"
+                              />
+                            </td>
+                          )}
+                          {bottleOptions.pvc && (
+                            <td>
+                              <input
+                                type="number"
+                                className="ps-matrix-input"
+                                value={cfg.pvcPrice}
+                                onChange={(e) => handleMatrixChange(sz, 'pvcPrice', e.target.value)}
+                                placeholder="₹"
+                              />
+                            </td>
+                          )}
+                          {bottleOptions.glass && (
+                            <td>
+                              <input
+                                type="number"
+                                className="ps-matrix-input"
+                                value={cfg.glassStock}
+                                onChange={(e) => handleMatrixChange(sz, 'glassStock', e.target.value)}
+                                placeholder="Qty"
+                              />
+                            </td>
+                          )}
+                          {bottleOptions.pvc && (
+                            <td>
+                              <input
+                                type="number"
+                                className="ps-matrix-input"
+                                value={cfg.pvcStock}
+                                onChange={(e) => handleMatrixChange(sz, 'pvcStock', e.target.value)}
+                                placeholder="Qty"
+                              />
+                            </td>
+                          )}
+                          {bottleOptions.glass && (
+                            <td>
+                              <input
+                                type="text"
+                                className="ps-matrix-input"
+                                value={cfg.glassSku || ''}
+                                onChange={(e) => handleMatrixChange(sz, 'glassSku', e.target.value)}
+                                placeholder={`${form.sku || 'PS'}-GL-${sizeNum}`}
+                                style={{ width: '130px', fontSize: '11.5px' }}
+                              />
+                            </td>
+                          )}
+                          {bottleOptions.pvc && (
+                            <td>
+                              <input
+                                type="text"
+                                className="ps-matrix-input"
+                                value={cfg.pvcSku || ''}
+                                onChange={(e) => handleMatrixChange(sz, 'pvcSku', e.target.value)}
+                                placeholder={`${form.sku || 'PS'}-PV-${sizeNum}`}
+                                style={{ width: '130px', fontSize: '11.5px' }}
+                              />
+                            </td>
+                          )}
                         </tr>
                       );
                     })}
@@ -642,7 +767,7 @@ export default function AdminProductForm() {
                 </table>
               </div>
 
-              {/* Bottle Type Options Checkboxes */}
+              {/* 3. Bottle Type Options Checkboxes */}
               <div className="ps-builder-section">
                 <h3 className="ps-sub-heading">Bottle Type Options</h3>
                 <div className="ps-checkbox-group">
@@ -652,7 +777,7 @@ export default function AdminProductForm() {
                       checked={bottleOptions.glass}
                       onChange={(e) => setBottleOptions({ ...bottleOptions, glass: e.target.checked })}
                     />
-                    <span>Glass Bottle</span>
+                    <span>Glass Bottle {form.category === 'Attar' ? '(Standard for Attars)' : ''}</span>
                   </label>
                   <label className="ps-checkbox-label">
                     <input
@@ -663,6 +788,11 @@ export default function AdminProductForm() {
                     <span>PVC Bottle</span>
                   </label>
                 </div>
+                {form.category === 'Attar' && !bottleOptions.pvc && (
+                  <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#8C8479' }}>
+                    Notice: PVC spray flacons are disabled by default for Attars (oil extractions).
+                  </p>
+                )}
               </div>
 
               {/* Other Settings Toggles */}
@@ -744,7 +874,7 @@ export default function AdminProductForm() {
                   <label>Category</label>
                   <select
                     value={form.category}
-                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                    onChange={handleCategoryChange}
                   >
                     {CATEGORIES.map((c) => (
                       <option key={c} value={c}>{c}</option>
@@ -902,57 +1032,66 @@ export default function AdminProductForm() {
               </div>
 
               {/* 3. PVC Bottle Flacon Image */}
-              <div className="ps-builder-section">
-                <h3 className="ps-sub-heading">PVC Bottle Flacon Image</h3>
-                <div className="ps-image-upload-row">
-                  {activePvcImage ? (
-                    <div className="ps-img-preview-card" style={{ position: 'relative' }}>
-                      <img src={activePvcImage} alt={`${form.name} PVC Bottle`} />
-                      {uploadingField === 'pvc' ? (
-                        <div style={{
-                          position: 'absolute',
-                          inset: 0,
-                          background: 'rgba(0,0,0,0.6)',
-                          color: '#C9A96E',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '11px',
-                          fontWeight: 600,
-                          borderRadius: '8px'
-                        }}>
-                          Uploading...
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          className="ps-img-del-btn"
-                          title="Remove image"
-                          onClick={() => {
-                            setForm((prev) => ({ ...prev, pvc_image: '' }));
-                            setLocalPreviews((prev) => ({ ...prev, pvc: '' }));
-                          }}
-                        >
-                          <X size={14} />
-                        </button>
-                      )}
-                    </div>
-                  ) : null}
+              {bottleOptions.pvc ? (
+                <div className="ps-builder-section">
+                  <h3 className="ps-sub-heading">PVC Bottle Flacon Image</h3>
+                  <div className="ps-image-upload-row">
+                    {activePvcImage ? (
+                      <div className="ps-img-preview-card" style={{ position: 'relative' }}>
+                        <img src={activePvcImage} alt={`${form.name} PVC Bottle`} />
+                        {uploadingField === 'pvc' ? (
+                          <div style={{
+                            position: 'absolute',
+                            inset: 0,
+                            background: 'rgba(0,0,0,0.6)',
+                            color: '#C9A96E',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            borderRadius: '8px'
+                          }}>
+                            Uploading...
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="ps-img-del-btn"
+                            title="Remove image"
+                            onClick={() => {
+                              setForm((prev) => ({ ...prev, pvc_image: '' }));
+                              setLocalPreviews((prev) => ({ ...prev, pvc: '' }));
+                            }}
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                      </div>
+                    ) : null}
 
-                  <label className="ps-upload-card" style={{ opacity: isUploading ? 0.6 : 1, cursor: isUploading ? 'not-allowed' : 'pointer' }}>
-                    <Upload size={22} color="#c8a45d" />
-                    <span>{activePvcImage ? 'Replace PVC Flacon Image' : 'Upload PVC Flacon Image'}</span>
-                    <small>Dedicated PVC Bottle Asset</small>
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      onChange={handlePvcImageUpload}
-                      disabled={isUploading}
-                      style={{ display: 'none' }}
-                    />
-                  </label>
+                    <label className="ps-upload-card" style={{ opacity: isUploading ? 0.6 : 1, cursor: isUploading ? 'not-allowed' : 'pointer' }}>
+                      <Upload size={22} color="#c8a45d" />
+                      <span>{activePvcImage ? 'Replace PVC Flacon Image' : 'Upload PVC Flacon Image'}</span>
+                      <small>Dedicated PVC Bottle Asset</small>
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        onChange={handlePvcImageUpload}
+                        disabled={isUploading}
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="ps-builder-section" style={{ opacity: 0.75 }}>
+                  <h3 className="ps-sub-heading">PVC Bottle Flacon Image (Disabled)</h3>
+                  <p style={{ fontSize: '12px', color: '#8C8479', margin: 0 }}>
+                    PVC Bottle option is not enabled for this product. You can enable it in Variants &amp; Pricing if needed.
+                  </p>
+                </div>
+              )}
 
               {/* 4. Gallery Images */}
               <div className="ps-builder-section">

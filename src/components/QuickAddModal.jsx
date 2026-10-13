@@ -37,13 +37,16 @@ export default function QuickAddModal({ product, isOpen, onClose }) {
     return product.variants.filter((v) => v.active !== false && v.is_active !== false);
   }, [product]);
 
+  const isAttar = product?.category?.toLowerCase() === 'attar';
+
   // Available bottle types
   const availableBottles = useMemo(() => {
     const set = new Set();
     variants.forEach((v) => set.add(normalizeBottle(v.bottle_type)));
     const list = Array.from(set);
-    return list.length > 0 ? list : ['Glass', 'PVC'];
-  }, [variants]);
+    if (list.length > 0) return list;
+    return isAttar ? ['Glass'] : ['Glass', 'PVC'];
+  }, [variants, isAttar]);
 
   // Reset defaults when product opens
   useEffect(() => {
@@ -51,11 +54,15 @@ export default function QuickAddModal({ product, isOpen, onClose }) {
       const defaultBottle = availableBottles.includes('Glass') ? 'Glass' : availableBottles[0] || 'Glass';
       setSelectedBottle(defaultBottle);
 
-      // Look for 50 ML in that bottle or first available
+      // Look for appropriate size in that bottle or first available
       const sizesForBottle = variants
         .filter((v) => normalizeBottle(v.bottle_type) === defaultBottle)
         .map((v) => normalizeSize(v.size_ml));
-      const defaultSize = sizesForBottle.includes('50 ML') ? '50 ML' : sizesForBottle[0] || '50 ML';
+      const fallbackSize = isAttar ? '6 ML' : '50 ML';
+      const defaultSize = sizesForBottle.length > 0
+        ? (sizesForBottle.includes(fallbackSize) ? fallbackSize : sizesForBottle[0])
+        : fallbackSize;
+
       setSelectedSize(defaultSize);
       setQuantity(1);
       setIsAddedAnim(false);
@@ -67,7 +74,7 @@ export default function QuickAddModal({ product, isOpen, onClose }) {
         document.body.style.overflow = originalOverflow;
       };
     }
-  }, [isOpen, product, availableBottles, variants]);
+  }, [isOpen, product, availableBottles, variants, isAttar]);
 
   // Close on Escape key
   useEffect(() => {
@@ -89,8 +96,9 @@ export default function QuickAddModal({ product, isOpen, onClose }) {
         if (!list.includes(norm)) list.push(norm);
       });
     list.sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0));
-    return list.length > 0 ? list : ['30 ML', '50 ML', '100 ML'];
-  }, [variants, selectedBottle]);
+    if (list.length > 0) return list;
+    return isAttar ? ['6 ML', '10 ML'] : ['30 ML', '50 ML', '100 ML'];
+  }, [variants, selectedBottle, isAttar]);
 
   // Keep size valid when bottle changes
   const handleBottleChange = (bottle) => {
@@ -98,8 +106,9 @@ export default function QuickAddModal({ product, isOpen, onClose }) {
     const newSizes = variants
       .filter((v) => normalizeBottle(v.bottle_type) === bottle)
       .map((v) => normalizeSize(v.size_ml));
+    const fallbackSize = isAttar ? '6 ML' : '50 ML';
     if (!newSizes.includes(selectedSize)) {
-      setSelectedSize(newSizes.includes('50 ML') ? '50 ML' : newSizes[0] || '50 ML');
+      setSelectedSize(newSizes.includes(fallbackSize) ? fallbackSize : (newSizes[0] || fallbackSize));
     }
   };
 
@@ -230,27 +239,29 @@ export default function QuickAddModal({ product, isOpen, onClose }) {
         {/* Variant Selectors */}
         <div className="ps-quickadd-options">
           {/* 1. Bottle Type */}
-          <div className="ps-quickadd-section">
-            <div className="ps-quickadd-label-row">
-              <span className="ps-quickadd-label">BOTTLE TYPE</span>
-              <span className="ps-quickadd-selected-val">{selectedBottle}</span>
+          {availableBottles.length > 1 && (
+            <div className="ps-quickadd-section">
+              <div className="ps-quickadd-label-row">
+                <span className="ps-quickadd-label">BOTTLE TYPE</span>
+                <span className="ps-quickadd-selected-val">{selectedBottle}</span>
+              </div>
+              <div className="ps-quickadd-pills">
+                {availableBottles.map((bt) => {
+                  const isSelected = selectedBottle === bt;
+                  return (
+                    <button
+                      key={bt}
+                      type="button"
+                      className={`ps-quickadd-pill ${isSelected ? 'is-selected' : ''}`}
+                      onClick={() => handleBottleChange(bt)}
+                    >
+                      {bt}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="ps-quickadd-pills">
-              {availableBottles.map((bt) => {
-                const isSelected = selectedBottle === bt;
-                return (
-                  <button
-                    key={bt}
-                    type="button"
-                    className={`ps-quickadd-pill ${isSelected ? 'is-selected' : ''}`}
-                    onClick={() => handleBottleChange(bt)}
-                  >
-                    {bt}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          )}
 
           {/* 2. Size */}
           <div className="ps-quickadd-section">

@@ -95,3 +95,46 @@ CREATE POLICY "Admin Delete Access for ps-perfumes"
     bucket_id = 'ps-perfumes' 
     AND (auth.role() = 'authenticated' OR public.is_admin())
   );
+
+-- 4. Enable RLS and configure idempotent access policies on core tables
+DO $$
+DECLARE
+  tbl text;
+  tables text[] := ARRAY[
+    'products',
+    'product_variants',
+    'categories',
+    'hero_slides',
+    'instagram_reels',
+    'combos',
+    'combo_items',
+    'homepage_sections'
+  ];
+BEGIN
+  FOREACH tbl IN ARRAY tables LOOP
+    -- Check if table exists in public schema
+    IF EXISTS (
+      SELECT 1 FROM information_schema.tables 
+      WHERE table_schema = 'public' AND table_name = tbl
+    ) THEN
+      EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+
+      -- Public Read policy (storefront visitors)
+      EXECUTE format('DROP POLICY IF EXISTS "Public Read %I" ON public.%I', tbl, tbl);
+      EXECUTE format('CREATE POLICY "Public Read %I" ON public.%I FOR SELECT USING (true)', tbl, tbl);
+
+      -- Admin Insert policy
+      EXECUTE format('DROP POLICY IF EXISTS "Admin Insert %I" ON public.%I', tbl, tbl);
+      EXECUTE format('CREATE POLICY "Admin Insert %I" ON public.%I FOR INSERT WITH CHECK (auth.role() = ''authenticated'' OR public.is_admin())', tbl, tbl);
+
+      -- Admin Update policy
+      EXECUTE format('DROP POLICY IF EXISTS "Admin Update %I" ON public.%I', tbl, tbl);
+      EXECUTE format('CREATE POLICY "Admin Update %I" ON public.%I FOR UPDATE USING (auth.role() = ''authenticated'' OR public.is_admin())', tbl, tbl);
+
+      -- Admin Delete policy
+      EXECUTE format('DROP POLICY IF EXISTS "Admin Delete %I" ON public.%I', tbl, tbl);
+      EXECUTE format('CREATE POLICY "Admin Delete %I" ON public.%I FOR DELETE USING (auth.role() = ''authenticated'' OR public.is_admin())', tbl, tbl);
+    END IF;
+  END LOOP;
+END;
+$$;

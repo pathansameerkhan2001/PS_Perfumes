@@ -159,7 +159,10 @@ export default function CollectionPage({ category: categoryProp }) {
   // Strict Category-Specific Product Filtering
   const categoryProducts = useMemo(() => {
     const slug = activeCategory.slug.toLowerCase();
+    const dynamicCatId = dynamicCategory?.id;
     return allProducts.filter((p) => {
+      if (dynamicCatId && p.category_id === dynamicCatId) return true;
+      if (p.category_slug && p.category_slug.toLowerCase() === slug) return true;
       const cat = p.category?.toLowerCase() || '';
       const sub = p.subcategory?.toLowerCase() || '';
       const subs = Array.isArray(p.subcategories)
@@ -167,7 +170,7 @@ export default function CollectionPage({ category: categoryProp }) {
         : [];
       return cat === slug || sub === slug || subs.includes(slug);
     });
-  }, [allProducts, activeCategory.slug]);
+  }, [allProducts, activeCategory.slug, dynamicCategory]);
 
   // Applied User Filters + Sorting
   const filteredProducts = useMemo(() => {

@@ -85,13 +85,14 @@ export default function ProductDetailPage() {
           setActiveImage(prod.main_image || prod.image || '/assets/prod-royal-amber.webp');
 
           // Initialize variant defaults from real product data
+          const isAttar = prod.category?.toLowerCase() === 'attar';
           if (Array.isArray(prod.variants) && prod.variants.length > 0) {
             const firstVar = prod.variants[0];
             setSelectedBottleType(normalizeBottle(firstVar.bottle_type));
             setSelectedSize(normalizeSize(firstVar.size_ml));
           } else {
             setSelectedBottleType('Glass Bottle');
-            setSelectedSize('50 ml');
+            setSelectedSize(isAttar ? '6 ml' : '50 ml');
           }
           setQuantity(1);
 
@@ -208,8 +209,33 @@ export default function ProductDetailPage() {
   const categoryName = (product.category || 'WOODY').toUpperCase();
   const genderName = (product.gender || 'UNISEX').toUpperCase();
 
-  // Standard sizes to display
-  const standardSizes = ['30 ml', '50 ml', '100 ml'];
+  const isAttar = product.category?.toLowerCase() === 'attar';
+
+  // Distinct bottle types offered in active variants
+  const availableBottleTypes = (() => {
+    if (activeVariants.length > 0) {
+      const distinct = [];
+      activeVariants.forEach((v) => {
+        const norm = normalizeBottle(v.bottle_type);
+        if (norm && !distinct.includes(norm)) distinct.push(norm);
+      });
+      if (distinct.length > 0) return distinct;
+    }
+    return isAttar ? ['Glass Bottle'] : ['Glass Bottle', 'PVC Bottle'];
+  })();
+
+  // Distinct sizes offered in active variants (or sensible fallback per category)
+  const availableSizes = (() => {
+    if (activeVariants.length > 0) {
+      const distinct = [];
+      activeVariants.forEach((v) => {
+        const norm = normalizeSize(v.size_ml);
+        if (norm && !distinct.includes(norm)) distinct.push(norm);
+      });
+      if (distinct.length > 0) return distinct;
+    }
+    return isAttar ? ['6 ml', '10 ml'] : ['30 ml', '50 ml', '100 ml'];
+  })();
 
   // Add to cart handler
   const handleAddToCart = () => {
@@ -404,86 +430,96 @@ export default function ProductDetailPage() {
             <div className="ps-pdp-divider" />
 
             {/* BOTTLE TYPE SELECTOR */}
-            <div className="ps-pdp-selector-section">
-              <span className="ps-pdp-section-heading">BOTTLE TYPE:</span>
-              <div className="ps-pdp-bottle-grid">
-                {/* Glass Bottle Option */}
-                <button
-                  type="button"
-                  className={`ps-pdp-bottle-card ${
-                    normalizeBottle(selectedBottleType) === 'Glass Bottle' ? 'is-selected' : ''
-                  }`}
-                  onClick={() => {
-                    setSelectedBottleType('Glass Bottle');
-                    if (product.glass_image) {
-                      setActiveImage(product.glass_image);
-                    }
-                  }}
-                >
-                  <div className="ps-pdp-bottle-icon" aria-hidden="true">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M10 2h4v3h-4z" />
-                      <path d="M7 8a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z" />
-                      <line x1="7" y1="12" x2="17" y2="12" />
-                    </svg>
-                  </div>
-                  <div className="ps-pdp-bottle-text">
-                    <span className="ps-pdp-card-title">Glass Bottle</span>
-                    <span className="ps-pdp-card-subtitle">Premium quality</span>
-                  </div>
-                </button>
+            {availableBottleTypes.length > 1 ? (
+              <div className="ps-pdp-selector-section">
+                <span className="ps-pdp-section-heading">BOTTLE TYPE:</span>
+                <div className="ps-pdp-bottle-grid">
+                  {/* Glass Bottle Option */}
+                  <button
+                    type="button"
+                    className={`ps-pdp-bottle-card ${
+                      normalizeBottle(selectedBottleType) === 'Glass Bottle' ? 'is-selected' : ''
+                    }`}
+                    onClick={() => {
+                      setSelectedBottleType('Glass Bottle');
+                      if (product.glass_image) {
+                        setActiveImage(product.glass_image);
+                      }
+                    }}
+                  >
+                    <div className="ps-pdp-bottle-icon" aria-hidden="true">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M10 2h4v3h-4z" />
+                        <path d="M7 8a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z" />
+                        <line x1="7" y1="12" x2="17" y2="12" />
+                      </svg>
+                    </div>
+                    <div className="ps-pdp-bottle-text">
+                      <span className="ps-pdp-card-title">Glass Bottle</span>
+                      <span className="ps-pdp-card-subtitle">Premium quality</span>
+                    </div>
+                  </button>
 
-                {/* PVC Bottle Option */}
-                <button
-                  type="button"
-                  className={`ps-pdp-bottle-card ${
-                    normalizeBottle(selectedBottleType) === 'PVC Bottle' ? 'is-selected' : ''
-                  }`}
-                  onClick={() => {
-                    setSelectedBottleType('PVC Bottle');
-                    if (product.pvc_image) {
-                      setActiveImage(product.pvc_image);
-                    }
-                  }}
-                >
-                  <div className="ps-pdp-bottle-icon" aria-hidden="true">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="8" y="2" width="8" height="4" rx="1" />
-                      <path d="M7 7h10l-1 14a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1z" />
-                      <line x1="12" y1="11" x2="12" y2="17" />
-                    </svg>
-                  </div>
-                  <div className="ps-pdp-bottle-text">
-                    <span className="ps-pdp-card-title">PVC Bottle</span>
-                    <span className="ps-pdp-card-subtitle">Regular quality</span>
-                  </div>
-                </button>
+                  {/* PVC Bottle Option */}
+                  <button
+                    type="button"
+                    className={`ps-pdp-bottle-card ${
+                      normalizeBottle(selectedBottleType) === 'PVC Bottle' ? 'is-selected' : ''
+                    }`}
+                    onClick={() => {
+                      setSelectedBottleType('PVC Bottle');
+                      if (product.pvc_image) {
+                        setActiveImage(product.pvc_image);
+                      }
+                    }}
+                  >
+                    <div className="ps-pdp-bottle-icon" aria-hidden="true">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect x="8" y="2" width="8" height="4" rx="1" />
+                        <path d="M7 7h10l-1 14a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1z" />
+                        <line x1="12" y1="11" x2="12" y2="17" />
+                      </svg>
+                    </div>
+                    <div className="ps-pdp-bottle-text">
+                      <span className="ps-pdp-card-title">PVC Bottle</span>
+                      <span className="ps-pdp-card-subtitle">Regular quality</span>
+                    </div>
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="ps-pdp-selector-section">
+                <span className="ps-pdp-section-heading">FLACON TYPE:</span>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 14px', background: '#F7F4EE', borderRadius: '6px', fontSize: '13px', color: '#171411', border: '1px solid #E5D7C3' }}>
+                  <span style={{ fontWeight: 600 }}>{availableBottleTypes[0] || 'Glass Bottle'}</span>
+                  <span style={{ fontSize: '11px', color: '#8C8479' }}>{isAttar ? '(Artisanal Oil Roll-On)' : '(Luxury Flacon)'}</span>
+                </div>
+              </div>
+            )}
 
             {/* SIZE SELECTOR */}
             <div className="ps-pdp-selector-section">
               <span className="ps-pdp-section-heading">SIZE:</span>
               <div className="ps-pdp-sizes-grid">
-                {standardSizes.map((sz) => {
+                {availableSizes.map((sz) => {
                   const vForSz = activeVariants.find(
                     (v) =>
                       normalizeBottle(v.bottle_type) === normalizeBottle(selectedBottleType) &&
