@@ -154,7 +154,19 @@ export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS,
 
   const filePath = `${cleanFolder}/${finalFileName}`;
 
-  // 5. Upload with verified contentType and upsert
+  // 5. Pre-flight Session Verification
+  const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+  const session = sessionData?.session;
+
+  if (sessionErr || !session || !session.user) {
+    return {
+      url: '',
+      path: '',
+      error: 'Storage authentication required: No active administrator session found in browser. Please sign in at /admin/login before uploading media.',
+    };
+  }
+
+  // 6. Upload with verified contentType and upsert
   try {
     const { data, error } = await supabase.storage
       .from(STORAGE_BUCKET)
@@ -166,14 +178,17 @@ export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS,
 
     if (error) {
       console.error('Supabase Storage upload error:', error);
-      let userFriendlyMsg = error.message;
+      const rawMsg = error.message || error.error || 'Storage upload rejected';
+      const statusCode = error.statusCode || error.status || '';
+      let userFriendlyMsg = rawMsg;
 
-      if (error.message?.includes('Invalid key') || error.message?.includes('statusCode: "400"')) {
+      if (rawMsg.includes('row-level security') || rawMsg.includes('AccessDenied') || statusCode === '403' || statusCode === 403) {
+        const userEmail = session.user.email || 'current user';
+        userFriendlyMsg = `Storage permission denied by database RLS policies (${statusCode || '403'}: ${rawMsg}). Administrator account [${userEmail}] lacks write privileges on storage.objects for bucket "${STORAGE_BUCKET}".`;
+      } else if (rawMsg.includes('Invalid key') || rawMsg.includes('statusCode: "400"')) {
         userFriendlyMsg = `Invalid storage object key: "${filePath}". Please check the file name and path.`;
-      } else if (error.message?.includes('row-level security') || error.statusCode === '403' || error.message?.includes('Unauthorized')) {
-        userFriendlyMsg = 'Storage permission denied. Ensure you are signed in as administrator.';
-      } else if (error.message?.includes('mime type') || error.message?.includes('not allowed')) {
-        userFriendlyMsg = `MIME type "${contentType}" is rejected by the bucket. Only WebP, JPEG, PNG, and MP4 are allowed.`;
+      } else if (rawMsg.includes('mime type') || rawMsg.includes('not allowed')) {
+        userFriendlyMsg = `MIME type "${contentType}" is rejected by the bucket "${STORAGE_BUCKET}". Allowed formats: WebP, JPEG, PNG, MP4.`;
       }
 
       return { url: '', path: '', error: userFriendlyMsg };
