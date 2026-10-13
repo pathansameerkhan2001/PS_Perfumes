@@ -44,11 +44,62 @@ CREATE TRIGGER on_auth_user_created
 -- Helper function to check if current user is admin
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN AS $$
+DECLARE
+  v_uid UUID;
+  v_email TEXT;
 BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE id = auth.uid() AND role = 'admin'
-  );
+  IF auth.role() IS NULL OR auth.role() != 'authenticated' THEN
+    RETURN false;
+  END IF;
+
+  v_uid := auth.uid();
+  IF v_uid IS NULL THEN
+    RETURN false;
+  END IF;
+
+  v_email := lower(coalesce(auth.jwt() ->> 'email', ''));
+
+  IF v_email = 'brandnix.in@gmail.com' THEN
+    RETURN true;
+  END IF;
+
+  IF v_email LIKE '%@psperfumes.com' OR v_email LIKE 'admin@%' THEN
+    RETURN true;
+  END IF;
+
+  IF lower(coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '')) IN ('admin', 'super_admin', 'editor')
+     OR lower(coalesce(auth.jwt() -> 'user_metadata' ->> 'role', '')) IN ('admin', 'super_admin', 'editor')
+     OR (auth.jwt() -> 'app_metadata' ->> 'is_admin') = 'true'
+     OR (auth.jwt() -> 'user_metadata' ->> 'is_admin') = 'true' THEN
+    RETURN true;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM public.admin_users
+    WHERE user_id = v_uid
+      AND is_active = true
+      AND lower(coalesce(role, 'admin')) IN ('admin', 'super_admin', 'editor')
+  ) THEN
+    RETURN true;
+  END IF;
+
+  BEGIN
+    IF EXISTS (
+      SELECT 1 FROM auth.users
+      WHERE id = v_uid
+        AND (
+          lower(email) = 'brandnix.in@gmail.com'
+          OR lower(email) LIKE '%@psperfumes.com'
+          OR lower(coalesce(raw_app_meta_data ->> 'role', '')) IN ('admin', 'super_admin', 'editor')
+        )
+    ) THEN
+      RETURN true;
+    END IF;
+  EXCEPTION WHEN OTHERS THEN
+    NULL;
+  END;
+
+  RETURN false;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
@@ -502,24 +553,85 @@ CREATE POLICY "Admin manage enquiries" ON public.contact_enquiries
 -- Bucket: ps-perfumes
 -- ============================================================================
 
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('ps-perfumes', 'ps-perfumes', true)
-ON CONFLICT (id) DO UPDATE SET public = true;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'ps-perfumes',
+  'ps-perfumes',
+  true,
+  52428800,
+  ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'video/mp4']
+)
+ON CONFLICT (id) DO UPDATE SET
+  public = true,
+  file_size_limit = 52428800,
+  allowed_mime_types = ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'video/mp4'];
 
 -- Storage RLS: Public read
-CREATE POLICY "Public Read Access for ps-perfumes"
+DROP POLICY IF EXISTS "Public Read Access for ps-perfumes" ON storage.objects;
+DROP POLICY IF EXISTS "ps_perfumes_select_policy" ON storage.objects;
+CREATE POLICY "ps_perfumes_select_policy"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'ps-perfumes');
 
 -- Storage RLS: Admin Insert / Update / Delete
-CREATE POLICY "Admin Upload Access for ps-perfumes"
+DROP POLICY IF EXISTS "Admin Upload Access for ps-perfumes" ON storage.objects;
+DROP POLICY IF EXISTS "ps_perfumes_insert_policy" ON storage.objects;
+CREATE POLICY "ps_perfumes_insert_policy"
   ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'ps-perfumes' AND (public.is_admin() OR auth.role() = 'authenticated'));
+  TO authenticated
+  WITH CHECK (
+    bucket_id = 'ps-perfumes'
+    AND (
+      split_part(name, '/', 1) IN ('products', 'hero', 'reels', 'categories', 'combos', 'logo', 'reviews', 'homepage', 'banners')
+      OR (storage.foldername(name))[1] IN ('products', 'hero', 'reels', 'categories', 'combos', 'logo', 'reviews', 'homepage', 'banners')
+    )
+    AND (
+      public.is_admin()
+      OR lower(coalesce(auth.jwt() ->> 'email', '')) = 'brandnix.in@gmail.com'
+    )
+  );
 
-CREATE POLICY "Admin Update Access for ps-perfumes"
+DROP POLICY IF EXISTS "Admin Update Access for ps-perfumes" ON storage.objects;
+DROP POLICY IF EXISTS "ps_perfumes_update_policy" ON storage.objects;
+CREATE POLICY "ps_perfumes_update_policy"
   ON storage.objects FOR UPDATE
-  USING (bucket_id = 'ps-perfumes' AND (public.is_admin() OR auth.role() = 'authenticated'));
+  TO authenticated
+  USING (
+    bucket_id = 'ps-perfumes'
+    AND (
+      split_part(name, '/', 1) IN ('products', 'hero', 'reels', 'categories', 'combos', 'logo', 'reviews', 'homepage', 'banners')
+      OR (storage.foldername(name))[1] IN ('products', 'hero', 'reels', 'categories', 'combos', 'logo', 'reviews', 'homepage', 'banners')
+    )
+    AND (
+      public.is_admin()
+      OR lower(coalesce(auth.jwt() ->> 'email', '')) = 'brandnix.in@gmail.com'
+    )
+  )
+  WITH CHECK (
+    bucket_id = 'ps-perfumes'
+    AND (
+      split_part(name, '/', 1) IN ('products', 'hero', 'reels', 'categories', 'combos', 'logo', 'reviews', 'homepage', 'banners')
+      OR (storage.foldername(name))[1] IN ('products', 'hero', 'reels', 'categories', 'combos', 'logo', 'reviews', 'homepage', 'banners')
+    )
+    AND (
+      public.is_admin()
+      OR lower(coalesce(auth.jwt() ->> 'email', '')) = 'brandnix.in@gmail.com'
+    )
+  );
 
-CREATE POLICY "Admin Delete Access for ps-perfumes"
+DROP POLICY IF EXISTS "Admin Delete Access for ps-perfumes" ON storage.objects;
+DROP POLICY IF EXISTS "ps_perfumes_delete_policy" ON storage.objects;
+CREATE POLICY "ps_perfumes_delete_policy"
   ON storage.objects FOR DELETE
-  USING (bucket_id = 'ps-perfumes' AND (public.is_admin() OR auth.role() = 'authenticated'));
+  TO authenticated
+  USING (
+    bucket_id = 'ps-perfumes'
+    AND (
+      split_part(name, '/', 1) IN ('products', 'hero', 'reels', 'categories', 'combos', 'logo', 'reviews', 'homepage', 'banners')
+      OR (storage.foldername(name))[1] IN ('products', 'hero', 'reels', 'categories', 'combos', 'logo', 'reviews', 'homepage', 'banners')
+    )
+    AND (
+      public.is_admin()
+      OR lower(coalesce(auth.jwt() ->> 'email', '')) = 'brandnix.in@gmail.com'
+    )
+  );
