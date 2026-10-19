@@ -20,6 +20,7 @@ import { getReviews } from '../../services/reviews';
 import { useCart } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatCurrency';
 import ProductCard from '../../components/ProductCard';
+import { useSeo, SITE_URL } from '../../utils/useSeo';
 import './ProductDetailPage.css';
 
 /**
@@ -80,14 +81,15 @@ export default function ProductDetailPage() {
       setLoading(true);
       try {
         const prod = await getProductBySlug(slug);
+        if (mounted) setProduct(prod || null);
         if (mounted && prod) {
-          setProduct(prod);
           setActiveImage(prod.main_image || prod.image || '/assets/ps-perfumes-logo.webp');
 
           // Initialize variant defaults from real product data
           const isAttar = prod.category?.toLowerCase() === 'attar';
-          if (Array.isArray(prod.variants) && prod.variants.length > 0) {
-            const firstVar = prod.variants[0];
+          const firstActive = (prod.variants || []).find((v) => v.active !== false && v.is_active !== false);
+          if (firstActive) {
+            const firstVar = firstActive;
             setSelectedBottleType(normalizeBottle(firstVar.bottle_type));
             setSelectedSize(normalizeSize(firstVar.size_ml));
           } else {
@@ -127,6 +129,58 @@ export default function ProductDetailPage() {
     };
   }, [slug]);
 
+  // SEO: hooks must run before the early returns below
+  const seoVariants = (product?.variants || []).filter(
+    (v) => v.is_active !== false && Number(v.sale_price || v.price) > 0
+  );
+  const seoPrices = seoVariants.map((v) => Number(v.sale_price || v.price));
+  const seoDescription =
+    product?.meta_description ||
+    product?.short_description ||
+    product?.description ||
+    (product ? `${product.name} by PS PERFUMES, ${product.category || 'fragrance'} available in glass and PVC bottles.` : '');
+  useSeo({
+    title: product
+      ? product.meta_title || `${product.name} – ${product.category || 'Fragrance'}`
+      : loading
+      ? ''
+      : 'Fragrance not found',
+    description: seoDescription,
+    path: product ? `/product/${product.slug}` : `/product/${slug}`,
+    image: product?.main_image,
+    type: product ? 'product' : 'website',
+    noindex: !loading && !product,
+    jsonLd: product
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: product.name,
+          image: [product.main_image, product.glass_image, product.pvc_image]
+            .filter((u) => u && !u.endsWith('ps-perfumes-logo.webp'))
+            .filter((u, i, a) => a.indexOf(u) === i),
+          description: seoDescription,
+          sku: product.sku || undefined,
+          brand: { '@type': 'Brand', name: product.brand || 'PS PERFUMES' },
+          category: product.category,
+          url: `${SITE_URL}/product/${product.slug}`,
+          ...(seoPrices.length > 0
+            ? {
+                offers: {
+                  '@type': 'AggregateOffer',
+                  priceCurrency: 'INR',
+                  lowPrice: Math.min(...seoPrices),
+                  highPrice: Math.max(...seoPrices),
+                  offerCount: seoPrices.length,
+                  availability: seoVariants.some((v) => Number(v.stock_quantity ?? v.stock) > 0)
+                    ? 'https://schema.org/InStock'
+                    : 'https://schema.org/OutOfStock',
+                },
+              }
+            : {}),
+        }
+      : null,
+  });
+
   if (loading) {
     return (
       <div className="ps-pdp-page ps-pdp-loading-screen">
@@ -154,17 +208,15 @@ export default function ProductDetailPage() {
     : [];
 
   // Match active variant based on selected bottle & size
+  // Exact match only: falling back to another size would sell a different variant than the
+  // one highlighted. Bottle changes re-select an available size (selectBottle below).
   const currentVariant =
     activeVariants.find(
       (v) =>
         normalizeBottle(v.bottle_type) === normalizeBottle(selectedBottleType) &&
         normalizeSize(v.size_ml) === normalizeSize(selectedSize)
-    ) ||
-    activeVariants.find(
-      (v) => normalizeBottle(v.bottle_type) === normalizeBottle(selectedBottleType)
-    ) ||
-    activeVariants[0] ||
-    null;
+    ) || null;
+  const variantUnavailable = activeVariants.length > 0 && !currentVariant;
 
   const price = currentVariant
     ? Number(currentVariant.sale_price || currentVariant.price)
@@ -183,7 +235,7 @@ export default function ProductDetailPage() {
     currentVariant && currentVariant.stock !== undefined
       ? Number(currentVariant.stock)
       : Number(product.stock ?? 0);
-  const isOutOfStock = currentStock <= 0;
+  const isOutOfStock = variantUnavailable || currentStock <= 0;
 
   const isWishlisted = isInWishlist(product.id);
 
@@ -207,7 +259,7 @@ export default function ProductDetailPage() {
 
   // Eyebrow
   const categoryName = (product.category || 'WOODY').toUpperCase();
-  const genderName = (product.gender || 'UNISEX').toUpperCase();
+  const genderName = product.gender ? String(product.gender).toUpperCase() : '';
 
   const isAttar = product.category?.toLowerCase() === 'attar';
 
@@ -236,6 +288,22 @@ export default function ProductDetailPage() {
     }
     return isAttar ? ['6 ml', '10 ml'] : ['30 ml', '50 ml', '100 ml'];
   })();
+
+  const sizeAvailableFor = (bottle, sz) =>
+    activeVariants.some(
+      (v) => normalizeBottle(v.bottle_type) === normalizeBottle(bottle) && normalizeSize(v.size_ml) === normalizeSize(sz)
+    );
+
+  // Switch bottle type and keep the size selection valid for that bottle
+  const selectBottle = (bottle, image) => {
+    setSelectedBottleType(bottle);
+    if (activeVariants.length > 0 && !sizeAvailableFor(bottle, selectedSize)) {
+      const firstForBottle = activeVariants.find((v) => normalizeBottle(v.bottle_type) === bottle);
+      if (firstForBottle) setSelectedSize(normalizeSize(firstForBottle.size_ml));
+    }
+    setQuantity(1);
+    if (image) setActiveImage(image);
+  };
 
   // Add to cart handler
   const handleAddToCart = () => {
@@ -381,8 +449,12 @@ export default function ProductDetailPage() {
             {/* Category · Gender Eyebrow */}
             <div className="ps-pdp-eyebrow">
               <span>{categoryName}</span>
-              <span className="ps-pdp-eyebrow-dot">·</span>
-              <span>{genderName}</span>
+              {genderName && (
+                <>
+                  <span className="ps-pdp-eyebrow-dot">·</span>
+                  <span>{genderName}</span>
+                </>
+              )}
             </div>
 
             {/* Product Title */}
@@ -440,12 +512,8 @@ export default function ProductDetailPage() {
                     className={`ps-pdp-bottle-card ${
                       normalizeBottle(selectedBottleType) === 'Glass Bottle' ? 'is-selected' : ''
                     }`}
-                    onClick={() => {
-                      setSelectedBottleType('Glass Bottle');
-                      if (product.glass_image) {
-                        setActiveImage(product.glass_image);
-                      }
-                    }}
+                    aria-pressed={normalizeBottle(selectedBottleType) === 'Glass Bottle'}
+                    onClick={() => selectBottle('Glass Bottle', product.glass_image)}
                   >
                     <div className="ps-pdp-bottle-icon" aria-hidden="true">
                       <svg
@@ -475,12 +543,8 @@ export default function ProductDetailPage() {
                     className={`ps-pdp-bottle-card ${
                       normalizeBottle(selectedBottleType) === 'PVC Bottle' ? 'is-selected' : ''
                     }`}
-                    onClick={() => {
-                      setSelectedBottleType('PVC Bottle');
-                      if (product.pvc_image) {
-                        setActiveImage(product.pvc_image);
-                      }
-                    }}
+                    aria-pressed={normalizeBottle(selectedBottleType) === 'PVC Bottle'}
+                    onClick={() => selectBottle('PVC Bottle', product.pvc_image)}
                   >
                     <div className="ps-pdp-bottle-icon" aria-hidden="true">
                       <svg
@@ -527,13 +591,20 @@ export default function ProductDetailPage() {
                   );
                   const priceForSz = vForSz ? Number(vForSz.sale_price || vForSz.price) : null;
                   const isSelected = normalizeSize(selectedSize) === normalizeSize(sz);
+                  const notOffered = activeVariants.length > 0 && !vForSz;
 
                   return (
                     <button
                       key={sz}
                       type="button"
                       className={`ps-pdp-size-card ${isSelected ? 'is-selected' : ''}`}
-                      onClick={() => setSelectedSize(sz)}
+                      aria-pressed={isSelected}
+                      disabled={notOffered}
+                      title={notOffered ? `${sz} is not available in ${selectedBottleType}` : undefined}
+                      onClick={() => {
+                        setSelectedSize(sz);
+                        setQuantity(1);
+                      }}
                     >
                       <span className="ps-pdp-size-name">{sz}</span>
                       {priceForSz && (
@@ -557,6 +628,8 @@ export default function ProductDetailPage() {
                     In Stock &amp; Ready for Express Dispatch from Kadapa{' '}
                     {currentStock ? `(${currentStock} available)` : ''}
                   </>
+                ) : variantUnavailable ? (
+                  <>Not available in this bottle and size</>
                 ) : (
                   <>Out of Stock</>
                 )}

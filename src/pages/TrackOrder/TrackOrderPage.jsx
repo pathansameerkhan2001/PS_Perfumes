@@ -13,6 +13,7 @@ import {
 import { getOrderByNumber } from '../../services/orders';
 import { formatINR } from '../../utils/formatCurrency';
 import './TrackOrderPage.css';
+import { useSeo } from '../../utils/useSeo';
 
 const STEPS = [
   { key: 'confirmed', label: 'Order Confirmed', icon: CheckCircle2, desc: 'Flacon formula queued' },
@@ -30,6 +31,7 @@ function getStepIndex(status) {
 }
 
 export default function TrackOrderPage() {
+  useSeo({ title: 'Track Your Order', path: '/track-order', noindex: true });
   const [searchParams] = useSearchParams();
   const initialRef = searchParams.get('ref') || '';
   const [orderQuery, setOrderQuery] = useState(initialRef);

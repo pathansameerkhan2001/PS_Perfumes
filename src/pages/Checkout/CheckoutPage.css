@@ -321,3 +321,54 @@
   text-align: center;
   padding: 100px 20px;
 }
+
+/* --------------------------------------------------------------------------
+   Form layout owned by the checkout page (it previously relied on .ps-form-row
+   rules defined in ContactPage.css / AdminProductForm.css)
+   -------------------------------------------------------------------------- */
+.ps-checkout-page .ps-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.ps-checkout-page .ps-form-group input {
+  min-height: 44px;
+}
+
+.ps-checkout-page .ps-form-group input[aria-invalid='true'] {
+  border-color: #DC2626;
+}
+
+.ps-checkout-grid > * {
+  min-width: 0;
+}
+
+.ps-mini-info {
+  min-width: 0;
+}
+
+.ps-mini-name,
+.ps-mini-size {
+  overflow-wrap: anywhere;
+}
+
+.ps-success-text a {
+  color: var(--color-gold);
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .ps-checkout-page .ps-form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .ps-checkout-card {
+    padding: 20px 16px;
+  }
+
+  .ps-checkout-title {
+    font-size: 28px;
+  }
+}

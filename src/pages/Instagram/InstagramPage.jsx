@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ExternalLink, Play } from 'lucide-react';
 import { getReels } from '../../services/reels';
 import './InstagramPage.css';
+import { useSeo } from '../../utils/useSeo';
 
 function InstagramIcon({ size = 18 }) {
   return (
@@ -14,6 +15,11 @@ function InstagramIcon({ size = 18 }) {
 }
 
 export default function InstagramPage() {
+  useSeo({
+    title: 'Instagram Reels',
+    description: 'Watch PS PERFUMES reels: new launches, unboxings and fragrance stories from our Kadapa store.',
+    path: '/instagram',
+  });
   const [reels, setReels] = useState([]);
   const [loading, setLoading] = useState(true);
 

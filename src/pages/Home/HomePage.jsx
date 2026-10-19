@@ -9,8 +9,30 @@ import InstagramReelsSection from '../../components/home/InstagramReelsSection';
 import ReviewsSection from '../../components/ReviewsSection';
 import { getHomepageProductSections } from '../../services/homepageService';
 import { getHomepageSections } from '../../services/homepage';
+import { useSeo } from '../../utils/useSeo';
 
 export default function HomePage() {
+  useSeo({
+    path: '/',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Store',
+      name: 'PS PERFUMES',
+      url: 'https://psperfumes.com/',
+      logo: 'https://psperfumes.com/assets/ps-perfumes-logo.png',
+      image: 'https://psperfumes.com/assets/ps-perfumes-logo.png',
+      telephone: '+91-9494951600',
+      email: 'brandnix.in@gmail.com',
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'Kadapa',
+        addressRegion: 'Andhra Pradesh',
+        postalCode: '516001',
+        addressCountry: 'IN',
+      },
+      sameAs: ['https://www.instagram.com/ps_perfumes_kadapa/'],
+    },
+  });
   const [bestSellers, setBestSellers] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [sections, setSections] = useState([]);

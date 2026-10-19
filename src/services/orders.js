@@ -11,7 +11,9 @@ import { redeemCoupon } from './coupons';
  *   order_items (id, order_id, product_id, variant_id, product_name, bottle_type, size_ml,
  *                quantity, unit_price, total_price)
  *
- * Anonymous shoppers can INSERT orders but cannot read them back (RLS), so the order id is
+ * Orders are created by the place_order() database function (migration 20261022), which
+ * prices them from the database. Until it is installed, the legacy direct insert is used:
+ * anonymous shoppers can INSERT orders but cannot read them back (RLS), so the order id is
  * generated in the browser and the insert does not request the row back. A copy of the
  * shopper's own order is kept in their browser so /track-order can show it on that device.
  */
@@ -90,10 +92,86 @@ function newOrderNumber() {
   return `PS-${String(100000 + (bytes[0] % 900000))}`;
 }
 
+function isComboItem(it) {
+  return it.product?.category === 'Combo Pack' || String(it.variant_id || '').startsWith('combo-');
+}
+
+/**
+ * Preferred path: place_order() (migration 20261022) prices every line, the shipping fee and
+ * the coupon from the database in one transaction. Returns null when the function is not
+ * installed yet, so the caller can use the direct insert below.
+ */
+async function placeOrderOnServer(orderPayload, items) {
+  const lines = items.map((it) =>
+    isComboItem(it)
+      ? { type: 'combo', combo_id: it.product_id || it.product?.id, quantity: Number(it.quantity) }
+      : { type: 'variant', variant_id: it.variant_id, quantity: Number(it.quantity) }
+  );
+
+  const { data, error } = await supabase.rpc('place_order', {
+    p_customer: {
+      first_name: orderPayload.firstName,
+      last_name: orderPayload.lastName,
+      email: orderPayload.email,
+      phone: orderPayload.phone,
+      address: orderPayload.address,
+      city: orderPayload.city,
+      state: orderPayload.state,
+      pincode: orderPayload.pincode,
+      landmark: orderPayload.landmark || '',
+    },
+    p_items: lines,
+    p_coupon_code: String(orderPayload.couponCode || '').trim().toUpperCase() || null,
+    p_payment_method: orderPayload.paymentMethod || 'COD',
+  });
+
+  if (error) {
+    if (error.code === 'PGRST202') return null;
+    console.error('place_order failed:', error);
+    // Validation messages raised by place_order are written for shoppers
+    throw new Error(error.code === 'P0001' ? error.message : `Your order could not be placed (${error.message}). Please try again or contact us on WhatsApp.`);
+  }
+  if (!data?.order_number) {
+    throw new Error('The order was not confirmed by the server. Please try again or contact us on WhatsApp.');
+  }
+
+  const order = formatOrder({
+    id: data.order_id,
+    order_number: data.order_number,
+    customer_name: data.customer_name,
+    customer_email: data.customer_email,
+    customer_phone: data.customer_phone,
+    shipping_address: {
+      address: orderPayload.address,
+      city: orderPayload.city,
+      state: orderPayload.state,
+      pincode: orderPayload.pincode,
+      landmark: orderPayload.landmark || '',
+      email: data.customer_email,
+      phone: data.customer_phone,
+    },
+    subtotal: data.subtotal,
+    shipping_amount: data.shipping_amount,
+    discount_amount: data.discount_amount,
+    total_amount: data.total_amount,
+    payment_method: data.payment_method,
+    payment_status: data.payment_status,
+    order_status: data.order_status,
+    created_at: new Date().toISOString(),
+    order_items: data.items || [],
+  });
+  saveLocalOrder(order);
+  return { order, error: null };
+}
+
 export async function createOrder(orderPayload) {
   const items = (orderPayload.items || []).filter((it) => Number(it.quantity) > 0);
   if (items.length === 0) throw new Error('Your cart is empty.');
 
+  const serverResult = await placeOrderOnServer(orderPayload, items);
+  if (serverResult) return serverResult;
+
+  // Legacy path, used only until place_order is installed: prices come from the cart
   const orderId = crypto.randomUUID();
   const orderNumber = newOrderNumber();
   const customerName = `${orderPayload.firstName || ''} ${orderPayload.lastName || ''}`.trim();
@@ -102,7 +180,7 @@ export async function createOrder(orderPayload) {
   const itemRows = items.map((it) => {
     const unitPrice = Number(it.price ?? it.product?.price) || 0;
     const quantity = Math.max(1, Number(it.quantity) || 1);
-    const isCombo = it.product?.category === 'Combo Pack' || String(it.variant_id || '').startsWith('combo-');
+    const isCombo = isComboItem(it);
     return {
       order_id: orderId,
       product_id: !isCombo && isValidUUID(it.product_id || it.product?.id) ? (it.product_id || it.product?.id) : null,

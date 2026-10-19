@@ -62,12 +62,12 @@ export default function AdminHeader({
           <Search size={14} className="ps-header-search-icon" />
           <input
             type="text"
-            placeholder="Search products, orders, customers..."
+            placeholder="Search products..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearchSubmit}
             className="ps-header-search-input"
-            aria-label="Global Admin Search"
+            aria-label="Search products"
           />
         </div>
 

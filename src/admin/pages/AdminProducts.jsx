@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Plus,
   Search,
@@ -19,7 +19,9 @@ import './AdminProducts.css';
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  // The admin header search links here with ?search=
+  const [searchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get('search') || '');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [bottleFilter, setBottleFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -47,6 +49,11 @@ export default function AdminProducts() {
   useEffect(() => {
     fetchList();
   }, []);
+
+  useEffect(() => {
+    const q = searchParams.get('search');
+    if (q !== null) setSearchTerm(q);
+  }, [searchParams]);
 
   const deleteTarget = products.find((p) => p.id === deleteConfirmId) || null;
 
@@ -101,7 +108,7 @@ export default function AdminProducts() {
       pvc_image_path: prod.stored_images?.pvc_path || null,
       name: `${prod.name} (Copy)`,
       slug: `${prod.slug}-copy-${Math.floor(Math.random() * 1000)}`,
-      sku: `${prod.sku}-COPY`,
+      sku: prod.sku ? `${prod.sku}-COPY` : '',
     };
     setBusyId(prod.id);
     setNotice(null);

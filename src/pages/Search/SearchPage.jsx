@@ -3,10 +3,12 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { Search, X, Tag } from 'lucide-react';
 import { getProducts } from '../../services/products';
 import ProductCard from '../../components/ProductCard';
+import { useSeo } from '../../utils/useSeo';
 
 const POPULAR_SEARCHES = ['Royal Amber', 'Noir Absolu', 'Oud', 'Attar', 'Bakhoor', 'Musk', 'Sandalwood'];
 
 export default function SearchPage() {
+  useSeo({ title: 'Search', path: '/search', noindex: true });
   const [searchParams, setSearchParams] = useSearchParams();
   const queryParam = searchParams.get('q') || '';
   const [searchTerm, setSearchTerm] = useState(queryParam);

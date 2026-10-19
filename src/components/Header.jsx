@@ -59,6 +59,8 @@ export default function Header() {
               type="button"
               className="ps-mobile-toggle-btn"
               onClick={() => setIsMobileMenuOpen(true)}
+              aria-expanded={isMobileMenuOpen}
+              aria-haspopup="dialog"
               aria-label="Open Navigation Menu"
             >
               <Menu size={24} color="#ffffff" />

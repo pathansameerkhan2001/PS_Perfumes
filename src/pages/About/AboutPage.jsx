@@ -4,8 +4,14 @@ import { MapPin, Compass, ShieldCheck, ArrowRight } from 'lucide-react';
 import promoBanner from '../../assets/promo-banner.webp';
 import catBestSellers from '../../assets/cat-bestsellers.webp';
 import './AboutPage.css';
+import { useSeo } from '../../utils/useSeo';
 
 export default function AboutPage() {
+  useSeo({
+    title: 'About Us',
+    description: 'The story of PS PERFUMES, a fragrance house in Kadapa, Andhra Pradesh, crafting attars, perfumes and bakhoor.',
+    path: '/about',
+  });
   return (
     <div className="ps-about-page">
       {/* Editorial Hero */}

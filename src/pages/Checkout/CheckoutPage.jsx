@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Lock, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatCurrency';
 import { createOrder } from '../../services/orders';
 import './CheckoutPage.css';
+import { useSeo } from '../../utils/useSeo';
 
 export default function CheckoutPage() {
+  useSeo({ title: 'Checkout', path: '/checkout', noindex: true });
   const { cartItems, subtotal, shipping, discountAmount, total, clearCart, promoCode } = useCart();
 
   const [formData, setFormData] = useState({
@@ -25,26 +27,46 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [orderConfirmed, setOrderConfirmed] = useState(null);
+  // Blocks a second submit before React re-renders the disabled button (double click / Enter)
+  const submitLock = useRef(false);
 
   const validate = () => {
     const errs = {};
+    // Indian mobile number: 10 digits, optionally written with +91 / 0 and spaces
+    const phoneDigits = formData.phone.replace(/\D/g, '').replace(/^(91|0)(?=\d{10}$)/, '');
     if (!formData.firstName.trim()) errs.firstName = 'First name is required';
     if (!formData.lastName.trim()) errs.lastName = 'Last name is required';
-    if (!formData.phone.trim() || formData.phone.length < 10) errs.phone = 'Valid 10-digit phone number is required';
-    if (!formData.email.trim() || !formData.email.includes('@')) errs.email = 'Valid email is required';
+    if (!/^[6-9]\d{9}$/.test(phoneDigits)) errs.phone = 'Enter a valid 10-digit mobile number';
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(formData.email.trim())) errs.email = 'Enter a valid email address';
     if (!formData.address.trim()) errs.address = 'Delivery address is required';
     if (!formData.city.trim()) errs.city = 'City is required';
     if (!formData.state.trim()) errs.state = 'State is required';
-    if (!formData.pincode.trim() || formData.pincode.length < 6) errs.pincode = 'Valid 6-digit Pincode is required';
+    if (!/^[1-9]\d{5}$/.test(formData.pincode.trim())) errs.pincode = 'Enter a valid 6-digit PIN code';
     setErrors(errs);
+    const firstInvalid = Object.keys(errs)[0];
+    if (firstInvalid) {
+      const ids = {
+        firstName: 'chk-fname',
+        lastName: 'chk-lname',
+        phone: 'chk-phone',
+        email: 'chk-email',
+        address: 'chk-address',
+        city: 'chk-city',
+        state: 'chk-state',
+        pincode: 'chk-pincode',
+      };
+      document.getElementById(ids[firstInvalid])?.focus();
+    }
     return Object.keys(errs).length === 0;
   };
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
+    if (submitLock.current) return;
     if (!validate()) return;
     if (cartItems.length === 0) return;
 
+    submitLock.current = true;
     setSubmitting(true);
     try {
       const orderPayload = {
@@ -74,6 +96,7 @@ export default function CheckoutPage() {
     } catch (err) {
       setErrors({ form: err?.message || 'An error occurred while confirming order. Please try again.' });
     } finally {
+      submitLock.current = false;
       setSubmitting(false);
     }
   };
@@ -83,13 +106,15 @@ export default function CheckoutPage() {
       <div className="ps-checkout-success-page">
         <div className="ps-checkout-success-card">
           <CheckCircle2 size={56} color="#c8a45d" className="ps-success-icon" />
-          <span className="ps-success-tag">ROYAL DISPATCH CONFIRMED</span>
+          <span className="ps-success-tag">ORDER RECEIVED</span>
           <h1 className="ps-success-title">Thank You For Your Patronage</h1>
           <p className="ps-success-order-num">
             Order Reference: <strong>{orderConfirmed.order_number}</strong>
           </p>
           <p className="ps-success-text">
-            Your flacons are being hand-prepared and sealed in our Kadapa atelier. A confirmation receipt has been dispatched to <strong>{orderConfirmed.email}</strong>.
+            Your order has been received and is awaiting confirmation by our Kadapa team. We will contact you on{' '}
+            <strong>{orderConfirmed.phone || orderConfirmed.email}</strong> to confirm delivery. Keep your order
+            reference to follow it on the <Link to="/track-order">Track Order</Link> page.
           </p>
           <div className="ps-success-details">
             <div className="ps-success-row">
@@ -106,7 +131,7 @@ export default function CheckoutPage() {
             </div>
             <div className="ps-success-row">
               <span>Payment Mode:</span>
-              <span>{orderConfirmed.payment_method}</span>
+              <span>{orderConfirmed.payment_method === 'COD' ? 'Cash on Delivery' : orderConfirmed.payment_method}</span>
             </div>
           </div>
           <Link to="/" className="ps-btn-gold-primary ps-success-home-btn">
@@ -140,7 +165,7 @@ export default function CheckoutPage() {
           <h1 className="ps-checkout-title">Express Secure Checkout</h1>
           <div className="ps-checkout-secure-badge">
             <Lock size={14} color="#c8a45d" />
-            <span>Encrypted 256-Bit SSL</span>
+            <span>Secure HTTPS checkout</span>
           </div>
         </div>
 
@@ -156,7 +181,8 @@ export default function CheckoutPage() {
                   <input
                     id="chk-fname"
                     type="text"
-                    placeholder="Sameer"
+                    autoComplete="given-name"
+                    aria-invalid={Boolean(errors.firstName)}
                     value={formData.firstName}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                   />
@@ -168,7 +194,8 @@ export default function CheckoutPage() {
                   <input
                     id="chk-lname"
                     type="text"
-                    placeholder="Khan"
+                    autoComplete="family-name"
+                    aria-invalid={Boolean(errors.lastName)}
                     value={formData.lastName}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                   />
@@ -182,7 +209,10 @@ export default function CheckoutPage() {
                   <input
                     id="chk-phone"
                     type="tel"
-                    placeholder="+91 94949 51600"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="10-digit mobile number"
+                    aria-invalid={Boolean(errors.phone)}
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   />
@@ -194,7 +224,9 @@ export default function CheckoutPage() {
                   <input
                     id="chk-email"
                     type="email"
-                    placeholder="brandnix.in@gmail.com"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    aria-invalid={Boolean(errors.email)}
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
@@ -212,7 +244,9 @@ export default function CheckoutPage() {
                 <input
                   id="chk-address"
                   type="text"
-                  placeholder="7/242 Royal Enclave, Near RTC Bus Stand"
+                  autoComplete="street-address"
+                  placeholder="House / flat number, street, area"
+                  aria-invalid={Boolean(errors.address)}
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 />
@@ -225,7 +259,8 @@ export default function CheckoutPage() {
                   <input
                     id="chk-city"
                     type="text"
-                    placeholder="Kadapa"
+                    autoComplete="address-level2"
+                    aria-invalid={Boolean(errors.city)}
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                   />
@@ -237,7 +272,8 @@ export default function CheckoutPage() {
                   <input
                     id="chk-state"
                     type="text"
-                    placeholder="Andhra Pradesh"
+                    autoComplete="address-level1"
+                    aria-invalid={Boolean(errors.state)}
                     value={formData.state}
                     onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                   />
@@ -251,8 +287,10 @@ export default function CheckoutPage() {
                   <input
                     id="chk-pincode"
                     type="text"
-                    placeholder="516001"
+                    inputMode="numeric"
+                    autoComplete="postal-code"
                     maxLength={6}
+                    aria-invalid={Boolean(errors.pincode)}
                     value={formData.pincode}
                     onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
                   />
@@ -264,7 +302,7 @@ export default function CheckoutPage() {
                   <input
                     id="chk-landmark"
                     type="text"
-                    placeholder="Opposite Grand Palace"
+                    placeholder="Nearby landmark"
                     value={formData.landmark}
                     onChange={(e) => setFormData({ ...formData, landmark: e.target.value })}
                   />
@@ -300,19 +338,22 @@ export default function CheckoutPage() {
               <h2 className="ps-summary-heading">Order Breakdown</h2>
 
               <div className="ps-checkout-items-list">
-                {cartItems.map((item, idx) => (
-                  <div key={idx} className="ps-checkout-item-mini">
+                {cartItems.map((item) => (
+                  <div key={item.cartItemId || `${item.product_id}-${item.variant_id}`} className="ps-checkout-item-mini">
                     <img
-                      src={item.product.main_image || item.product.image}
-                      alt={item.product.name}
+                      src={item.image || item.product?.main_image || item.product?.image}
+                      alt={item.name || item.product?.name}
                       className="ps-mini-thumb"
+                      loading="lazy"
                     />
                     <div className="ps-mini-info">
-                      <span className="ps-mini-name">{item.product.name}</span>
-                      <span className="ps-mini-size">{item.size} • Qty: {item.quantity}</span>
+                      <span className="ps-mini-name">{item.name || item.product?.name}</span>
+                      <span className="ps-mini-size">
+                        {[item.bottle_type, item.size_ml || item.size].filter(Boolean).join(' • ')} • Qty: {item.quantity}
+                      </span>
                     </div>
                     <span className="ps-mini-price">
-                      {formatINR(item.product.price * item.quantity)}
+                      {formatINR((Number(item.price) || Number(item.product?.price) || 0) * item.quantity)}
                     </span>
                   </div>
                 ))}
@@ -339,7 +380,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {errors.form && <div className="ps-form-error-banner">{errors.form}</div>}
+              {errors.form && <div className="ps-form-error-banner" role="alert">{errors.form}</div>}
 
               <button
                 type="submit"

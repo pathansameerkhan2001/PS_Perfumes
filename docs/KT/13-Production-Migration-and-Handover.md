@@ -1,5 +1,13 @@
 # 13 — Production Migration and Handover
 
+> **Update (2026-10-19, audit pass, uncommitted):** two further migrations were prepared and are **not applied**:
+> `supabase/migrations/20261022_server_side_checkout.sql` (adds `place_order()`: order prices, shipping and coupon computed in the database) and
+> `supabase/migrations/20261023_lock_direct_order_inserts.sql` (removes direct browser inserts into orders/order_items).
+> Order: 20261019 → 20261022 → deploy the new frontend → one test COD order → 20261023. Running 20261023 before the new frontend is live breaks checkout.
+> Until 20261022 is applied the frontend falls back to the old direct insert (browser-computed prices).
+>
+> **Update (latest):** commit `7baa580` is deployed (clean working tree at the time). The live admin reports `is_admin() = false` for the primary admin with a valid session, and neither the migration nor the repair is applied (their functions are absent). The full migration is required: the repair would fix uploads but not product saves, because existing table policies rely on the current `is_admin()`.
+>
 > **Update 2026-10-21 (later):** the changes were committed as `76f182b` and pushed; production now runs the new code. The migration is **still not applied** (functions absent), which causes the admin upload error "Storage rejected the upload (403 …)". Apply the migration (§4 step 5) — or, if it cannot be applied yet, the narrow storage repair `supabase/repairs/20261021_storage_upload_repair.sql` — then re-test uploads.
 >
 > **Earlier status (2026-10-21):** working-tree changes on `main` were uncommitted and not deployed. Production (https://psperfumes.com, Vercel) still runs the **old** bundle — verified: it contains the old demo-data key `ps_db_products` and none of the new code; it points at the expected Supabase project. The migration is **not applied** (its functions are absent). No browser test has been run. **Not approved for handover.**
@@ -43,7 +51,7 @@ The migration runs `alter table … enable row level security` on: admin_users, 
 
 **Prerequisites**
 - Supabase Owner/Admin access to the production project **`jnrmmhzhhmjxefapkemv`**. Confirm before every SQL run: the dashboard URL contains `/project/jnrmmhzhhmjxefapkemv/`, and Settings → General → Reference ID matches. Diagnostics section `00` also shows the bucket — it must exist.
-- A recoverable backup (step 2). Do not continue without one.
+- A **confirmed recoverable backup** (step 1) and **passing pre-migration diagnostics** (steps 3–5). Do not continue without both.
 - The SQL Editor only shows the result of the **last statement** of a script. Both diagnostics files are built for that: run each file **in full** (do not highlight part of it), then export the result grid as CSV (results panel → Export → Download CSV; if that option is not shown, select all cells in the grid and copy them into a spreadsheet) and keep it.
 
 **Steps**

@@ -5,6 +5,7 @@ import ProductCard from '../../components/ProductCard';
 import { getProducts } from '../../services/products';
 import { formatINR } from '../../utils/formatCurrency';
 import './ShopPage.css';
+import { useSeo } from '../../utils/useSeo';
 
 const CATEGORIES = [
   'ALL',
@@ -29,9 +30,15 @@ const SORT_OPTIONS = [
 ];
 
 export default function ShopPage() {
+  const location = useLocation();
+  useSeo({
+    title: location.pathname === '/offers' ? 'Offers & Combo Deals' : 'Shop All Fragrances',
+    description:
+      'Browse every PS PERFUMES attar, perfume, oud and bakhoor. Choose glass or PVC bottles and your size, with cash on delivery across India.',
+    path: location.pathname === '/offers' ? '/offers' : '/shop',
+  });
   const [searchParams, setSearchParams] = useSearchParams();
   const { slug } = useParams();
-  const location = useLocation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 

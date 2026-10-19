@@ -484,3 +484,88 @@ input:checked + .ps-slider:before {
 .ps-img-del-btn:hover {
   background: #DC2626;
 }
+
+/* --------------------------------------------------------------------------
+   Content pane + responsive behaviour
+   (.ps-builder-content had no styles, so the form pane rendered without its card)
+   -------------------------------------------------------------------------- */
+.ps-builder-content {
+  min-width: 0; /* lets wide children (variant table) scroll inside the grid cell */
+  background: #FFFFFF;
+  border: 1px solid #ECE7DF;
+  border-radius: 12px;
+  padding: 26px 28px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.ps-matrix-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ps-matrix-scroll:focus-visible {
+  outline: 2px solid #C9A96E;
+  outline-offset: 2px;
+}
+
+.ps-matrix-scroll .ps-variant-matrix-table {
+  min-width: 520px;
+}
+
+.ps-tab-item:focus-visible,
+.ps-builder-btn-save:focus-visible,
+.ps-builder-btn-cancel:focus-visible,
+.ps-upload-card:focus-within {
+  outline: 2px solid #C9A96E;
+  outline-offset: 2px;
+}
+
+.ps-builder-btn-save:disabled,
+.ps-builder-btn-cancel:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  /* Tabs become a horizontal, scrollable strip above the form */
+  .ps-builder-tabs-sidebar {
+    flex-direction: row;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 6px;
+  }
+
+  .ps-tab-item {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    min-height: 44px;
+  }
+
+  .ps-tab-item.is-active {
+    border-left: none;
+    border-bottom: 2px solid #C9A96E;
+    border-radius: 6px 6px 0 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .ps-builder-content {
+    padding: 18px 14px;
+  }
+
+  .ps-builder-top-actions {
+    width: 100%;
+  }
+
+  .ps-builder-btn-cancel,
+  .ps-builder-btn-save {
+    flex: 1;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 600px) {
+  .ps-admin-product-builder .ps-form-row {
+    grid-template-columns: 1fr;
+  }
+}

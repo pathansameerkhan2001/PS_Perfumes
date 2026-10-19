@@ -4,8 +4,10 @@ import { Trash2, ArrowRight, ShieldCheck, Tag, ArrowLeft, ShoppingBag } from 'lu
 import { useCart } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatCurrency';
 import './CartPage.css';
+import { useSeo } from '../../utils/useSeo';
 
 export default function CartPage() {
+  useSeo({ title: 'Your Bag', path: '/cart', noindex: true });
   const {
     cartItems,
     updateQuantity,

@@ -58,17 +58,20 @@ export async function getDashboardMetrics() {
         .from('customers')
         .select('*', { count: 'exact', head: true });
 
-      if (!custErr && typeof custCount === 'number') {
+      if (!custErr && typeof custCount === 'number' && custCount > 0) {
         customersCount = custCount;
       } else {
-        // Fallback: Check unique customers from orders table
+        // Checkout does not write to public.customers, so count the distinct shoppers on orders
+        // (the column is customer_email; the previous query asked for a non-existent "email")
         const { data: orderCusts } = await supabase
           .from('orders')
-          .select('email, customer_id');
+          .select('customer_email, customer_id');
 
         if (orderCusts && orderCusts.length > 0) {
           const uniqueSet = new Set(
-            orderCusts.map((o) => o.customer_id || o.email).filter(Boolean)
+            orderCusts
+              .map((o) => o.customer_id || (o.customer_email || '').trim().toLowerCase())
+              .filter(Boolean)
           );
           customersCount = uniqueSet.size;
         }

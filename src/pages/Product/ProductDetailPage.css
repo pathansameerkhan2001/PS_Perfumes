@@ -1018,3 +1018,17 @@
     font-size: 17px;
   }
 }
+
+/* Size not offered in the selected bottle type */
+.ps-pdp-size-card:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.ps-pdp-size-card:focus-visible,
+.ps-pdp-bottle-card:focus-visible,
+.ps-pdp-thumb-item:focus-visible {
+  outline: 2px solid #C9A96E;
+  outline-offset: 2px;
+}

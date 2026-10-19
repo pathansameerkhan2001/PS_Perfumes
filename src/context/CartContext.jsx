@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { PRODUCTS, COMBO_PRODUCTS } from '../data/products';
 import { getSiteSettings } from '../services/settings';
 import { validateCouponCode, computeCouponDiscount } from '../services/coupons';
 
@@ -124,10 +123,17 @@ export function CartProvider({ children }) {
     let sizeMl = '50 ml';
     let unitPrice = Number(product.price) || 0;
 
+    const isCombo = product.category === 'Combo Pack';
+
     if (variantOrSize && typeof variantOrSize === 'object') {
       selectedVariant = variantOrSize;
-      bottleType = normalizeBottleType(selectedVariant.bottle_type || selectedVariant.bottleType);
-      sizeMl = normalizeSize(selectedVariant.size_ml || selectedVariant.size);
+      // Combos are sold as a set: keep their labels instead of forcing a bottle/ml format
+      bottleType = isCombo
+        ? selectedVariant.bottle_type || 'Combo Collection'
+        : normalizeBottleType(selectedVariant.bottle_type || selectedVariant.bottleType);
+      sizeMl = isCombo
+        ? selectedVariant.size_ml || 'Complete Set'
+        : normalizeSize(selectedVariant.size_ml || selectedVariant.size);
       unitPrice = Number(selectedVariant.sale_price || selectedVariant.price || product.price);
     } else if (typeof variantOrSize === 'string') {
       sizeMl = normalizeSize(variantOrSize);
@@ -278,15 +284,6 @@ export function CartProvider({ children }) {
 
   const removePromoCode = () => setAppliedCoupon(null);
 
-  // Helper to open product by ID (supports catalog and combo products)
-  const openProductById = (id) => {
-    const all = [...PRODUCTS, ...COMBO_PRODUCTS];
-    const match = all.find((p) => p.id === id);
-    if (match) {
-      setSelectedProduct(match);
-    }
-  };
-
   // Calculations
   const itemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const subtotal = cartItems.reduce(
@@ -338,7 +335,6 @@ export function CartProvider({ children }) {
         setIsSearchOpen,
         selectedProduct,
         setSelectedProduct,
-        openProductById,
         selectedCategory,
         setSelectedCategory,
         toastMessage,

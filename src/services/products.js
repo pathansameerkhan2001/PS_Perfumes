@@ -251,6 +251,9 @@ export function formatProduct(p) {
     heart_notes: notesMetadata.heart || p.heart_notes || p.heartNotes || [],
     base_notes: notesMetadata.base || p.base_notes || p.baseNotes || [],
     ingredients: p.ingredients || '',
+    sku: p.sku || notesMetadata.sku || '',
+    meta_title: p.meta_title || notesMetadata.meta_title || '',
+    meta_description: p.meta_description || notesMetadata.meta_description || '',
     variants: formattedVariants,
     product_variants: formattedVariants,
     // Values actually stored in the database (no display fallbacks), used by the admin form
@@ -284,6 +287,9 @@ function buildNotesMetadata(data) {
     gallery_images: Array.isArray(data.gallery_images) ? data.gallery_images : [],
     category_name: data.category || 'Perfume',
     sku: data.sku || null,
+    // SEO fields from Admin → Products → SEO (no dedicated columns exist in the live schema)
+    meta_title: data.meta_title || null,
+    meta_description: data.meta_description || null,
   };
 }
 
@@ -402,7 +408,10 @@ export async function getProducts(options = {}) {
         query = query.eq('is_bestseller', Boolean(bestseller));
       }
       if (search) {
-        query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+        // Characters that have meaning inside a PostgREST or() filter are replaced, so user
+        // input can never add conditions to the query
+        const term = String(search).replace(/[,()*%\\:"']/g, ' ').trim().slice(0, 80);
+        if (term) query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%`);
       }
 
       if (sort === 'newest') {
@@ -532,7 +541,8 @@ export async function getProductBySlug(slugOrId, { includeInactive = false } = {
             sku
           )
         `)
-        .or(isUUID ? `id.eq.${slugOrId},slug.eq.${slugOrId}` : `slug.eq.${slugOrId}`);
+        // slug comes from the URL: compare with eq() so it cannot add filter conditions
+        .eq(isUUID ? 'id' : 'slug', String(slugOrId || ''));
 
       const { data, error } = await query.maybeSingle();
       if (error) {
@@ -695,7 +705,9 @@ export async function updateProduct(id, updates) {
       updates.base_notes !== undefined ||
       updates.gallery_images !== undefined ||
       updates.category !== undefined ||
-      updates.sku !== undefined
+      updates.sku !== undefined ||
+      updates.meta_title !== undefined ||
+      updates.meta_description !== undefined
     ) {
       dbUpdates.fragrance_notes = buildNotesMetadata(updates);
     }

@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import AdminSidebar from '../components/AdminSidebar';
 import AdminHeader from '../components/AdminHeader';
 import { useAdminAuth } from '../hooks/useAdminAuth';
+import { supabase } from '../../lib/supabase';
 import '../styles/adminTheme.css';
+// Shared admin page styles (page header, tables, modals). Loaded here so every admin page has
+// them, not only pages opened after the Products page.
+import '../pages/AdminProducts.css';
 import './AdminLayout.css';
 
 /**
@@ -14,6 +18,41 @@ export default function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { user, role, logout } = useAdminAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Mobile drawer: close on navigation and on Escape
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isSidebarOpen) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setIsSidebarOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isSidebarOpen]);
+
+  // The UI may admit the primary admin by e-mail, but every write is authorised by the
+  // database's is_admin(). Check it once so a mismatch is visible before saves fail.
+  // null = checking / unknown, true = recognised, false = not recognised
+  const [dbAdmin, setDbAdmin] = useState(null);
+
+  useEffect(() => {
+    if (!user?.id) return undefined;
+    let mounted = true;
+    supabase
+      .rpc('is_admin')
+      .then(({ data, error }) => {
+        if (!mounted) return;
+        setDbAdmin(error ? null : data === true);
+      })
+      .catch(() => mounted && setDbAdmin(null));
+    return () => {
+      mounted = false;
+    };
+  }, [user?.id]);
 
   const handleLogout = async () => {
     await logout();
@@ -47,6 +86,14 @@ export default function AdminLayout() {
         />
 
         <main className="ps-admin-main-viewport">
+          {dbAdmin === false && (
+            <div className="ps-form-error-banner" role="alert">
+              The database's administrator check (is_admin()) currently returns false for {email || 'this account'}.
+              Image uploads and other changes are likely to be rejected until database-side administrator
+              authorization is corrected (see docs/KT/09-Troubleshooting-Runbook.md, R-2). Reload this page after a fix
+              to re-check.
+            </div>
+          )}
           <Outlet />
         </main>
       </div>

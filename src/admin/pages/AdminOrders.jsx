@@ -114,13 +114,14 @@ export default function AdminOrders() {
                       className="ps-status-select"
                       value={ord.order_status}
                       onChange={(e) => handleStatusChange(ord.id, e.target.value)}
+                      aria-label={`Status of order ${ord.order_number}`}
                       style={{
-                        background: '#050505',
-                        border: '1px solid var(--color-border)',
-                        color: 'var(--color-ivory)',
-                        padding: '4px 8px',
-                        fontSize: 11,
-                        borderRadius: 3,
+                        background: '#FFFFFF',
+                        border: '1px solid #E5E0D8',
+                        color: '#1A1714',
+                        padding: '6px 8px',
+                        fontSize: 12,
+                        borderRadius: 6,
                         cursor: 'pointer',
                       }}
                     >
@@ -137,6 +138,7 @@ export default function AdminOrders() {
                       className="ps-action-icon-btn"
                       onClick={() => setSelectedOrder(ord)}
                       title="Inspect Order Details"
+                      aria-label={`View order ${ord.order_number}`}
                     >
                       <Eye size={15} />
                     </button>
@@ -150,8 +152,14 @@ export default function AdminOrders() {
 
       {/* Order Detail Modal */}
       {selectedOrder && (
-        <div className="ps-admin-modal-overlay">
-          <div className="ps-admin-modal-card" style={{ maxWidth: 640, textAlign: 'left', maxHeight: '85vh', overflowY: 'auto' }}>
+        <div className="ps-admin-modal-overlay" onClick={(e) => e.target === e.currentTarget && setSelectedOrder(null)}>
+          <div
+            className="ps-admin-modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Order ${selectedOrder.order_number}`}
+            style={{ maxWidth: 640, textAlign: 'left', maxHeight: '85vh', overflowY: 'auto' }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div>
                 <span className="ps-admin-eyebrow">ORDER BREAKDOWN</span>
@@ -163,13 +171,14 @@ export default function AdminOrders() {
                 type="button"
                 className="ps-action-icon-btn"
                 onClick={() => setSelectedOrder(null)}
+                aria-label="Close order details"
               >
                 <X size={16} />
               </button>
             </div>
 
             {/* Customer & Shipping Details */}
-            <div style={{ background: '#050505', border: '1px solid var(--color-border)', borderRadius: 4, padding: 18, marginBottom: 20 }}>
+            <div style={{ background: '#FAF8F5', border: '1px solid var(--color-border)', borderRadius: 8, padding: 18, marginBottom: 20, overflowWrap: 'anywhere' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
                 <div><strong>Patron Name:</strong> {selectedOrder.customer_name}</div>
                 <div><strong>Email:</strong> {selectedOrder.email}</div>
@@ -195,7 +204,7 @@ export default function AdminOrders() {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, fontSize: 13 }}>{it.product_name}</div>
                     <div style={{ fontSize: 11, color: 'var(--color-muted)' }}>
-                      Variant: {it.size || '—'} • Qty: {it.quantity}
+                      Variant: {it.size || '—'} • Qty: {it.quantity} • {formatINR(it.price)} each
                     </div>
                   </div>
                   <strong style={{ color: 'var(--color-gold-bright)' }}>
@@ -221,16 +230,24 @@ export default function AdminOrders() {
                 <span>Shipping Fee</span>
                 <span>{selectedOrder.shipping_fee === 0 ? 'FREE' : formatINR(selectedOrder.shipping_fee)}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: 'var(--color-gold-bright)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
-                <span>Total Paid / Due</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Payment</span>
+                <span>
+                  {selectedOrder.payment_method === 'COD' ? 'Cash on Delivery' : selectedOrder.payment_method} ·{' '}
+                  {String(selectedOrder.payment_status || 'pending').toUpperCase()}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: 'var(--color-gold-bright)', borderTop: '1px solid #ECE7DF', paddingTop: 8 }}>
+                <span>{selectedOrder.payment_status === 'paid' ? 'Total Paid' : 'Total Due'}</span>
                 <span>{formatINR(selectedOrder.total)}</span>
               </div>
             </div>
 
             {/* Status Control */}
-            <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 14 }}>
-              <span style={{ fontSize: 12, color: 'var(--color-muted)' }}>Update Order Status:</span>
+            <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+              <label htmlFor="order-detail-status" style={{ fontSize: 12, color: 'var(--color-muted)' }}>Update Order Status:</label>
               <select
+                id="order-detail-status"
                 value={selectedOrder.order_status}
                 onChange={(e) => handleStatusChange(selectedOrder.id, e.target.value)}
                 style={{

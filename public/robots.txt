@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /wishlist
+Disallow: /search
+Disallow: /track-order
+
+Sitemap: https://psperfumes.com/sitemap.xml

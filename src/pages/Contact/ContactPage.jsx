@@ -3,6 +3,7 @@ import { MapPin, Mail, ExternalLink, Send, CheckCircle2, Clock, ShieldCheck } fr
 import { submitEnquiry, isEnquiryStorageAvailable } from '../../services/enquiries';
 import { SITE_CONFIG } from '../../config/siteConfig';
 import './ContactPage.css';
+import { useSeo } from '../../utils/useSeo';
 
 function InstagramIcon({ size = 18 }) {
   return (
@@ -15,6 +16,11 @@ function InstagramIcon({ size = 18 }) {
 }
 
 export default function ContactPage() {
+  useSeo({
+    title: 'Contact Us',
+    description: 'Contact PS PERFUMES in Kadapa, Andhra Pradesh by phone, WhatsApp, e-mail or Instagram for orders and fragrance advice.',
+    path: '/contact',
+  });
   const [formData, setFormData] = useState({
     name: '',
     email: '',

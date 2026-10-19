@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Static storefront routes. Product pages (/product/<slug>) are created in the admin panel and are
+     not listed here; see docs/KT for how to extend this file or generate it from the database. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://psperfumes.com/</loc></url>
+  <url><loc>https://psperfumes.com/shop</loc></url>
+  <url><loc>https://psperfumes.com/offers</loc></url>
+  <url><loc>https://psperfumes.com/about</loc></url>
+  <url><loc>https://psperfumes.com/contact</loc></url>
+  <url><loc>https://psperfumes.com/instagram</loc></url>
+  <url><loc>https://psperfumes.com/attar</loc></url>
+  <url><loc>https://psperfumes.com/perfume</loc></url>
+  <url><loc>https://psperfumes.com/bakhoor</loc></url>
+  <url><loc>https://psperfumes.com/musky</loc></url>
+  <url><loc>https://psperfumes.com/oud</loc></url>
+  <url><loc>https://psperfumes.com/floral</loc></url>
+  <url><loc>https://psperfumes.com/woody</loc></url>
+</urlset>

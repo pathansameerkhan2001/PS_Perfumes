@@ -10,7 +10,7 @@ import ScrollToTop from '../common/ScrollToTop';
 // Lazy-loaded drawers and interactive dialogs
 const ProductDetailModal = React.lazy(() => import('../ProductDetailModal'));
 const CartDrawer = React.lazy(() => import('../CartDrawer'));
-// CheckoutModal (a simulated card/UPI checkout that saved nothing) is intentionally not mounted:
+// The former CheckoutModal (a simulated card/UPI checkout that saved nothing) was removed:
 // all purchases go through the /checkout page, which records the order.
 const WishlistDrawer = React.lazy(() => import('../WishlistDrawer'));
 

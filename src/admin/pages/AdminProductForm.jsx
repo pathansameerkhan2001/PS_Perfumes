@@ -106,13 +106,19 @@ export default function AdminProductForm() {
     getCategories(true)
       .then((cats) => {
         const names = (cats || []).map((c) => c.name).filter(Boolean);
-        if (active && names.length > 0) setCategoryOptions(names);
+        if (active && names.length > 0) {
+          setCategoryOptions(names);
+          // A new product must start with a category that exists in the database
+          if (!isEditing) {
+            setForm((prev) => (names.includes(prev.category) ? prev : { ...prev, category: names[0] }));
+          }
+        }
       })
       .catch(() => {});
     return () => {
       active = false;
     };
-  }, []);
+  }, [isEditing]);
 
   useEffect(() => {
     if (isEditing) {
@@ -159,6 +165,7 @@ export default function AdminProductForm() {
               const nextMatrix = cloneDefaultMatrix();
               const foundSizes = [];
               let hasPvc = false;
+              let hasGlass = false;
 
               p.variants.forEach((v) => {
                 const rawSz = String(v.size_ml || '').trim();
@@ -172,6 +179,7 @@ export default function AdminProductForm() {
                 const isGlass = v.bottle_type?.toLowerCase().includes('glass');
                 const isPvc = v.bottle_type?.toLowerCase().includes('pvc');
                 if (isPvc) hasPvc = true;
+                if (isGlass) hasGlass = true;
 
                 if (nextMatrix[sz]) {
                   if (isGlass) {
@@ -192,9 +200,11 @@ export default function AdminProductForm() {
                 setSelectedSizes(['6 ml', '10 ml']);
               }
 
+              // Offer exactly the bottle types this product already has. Defaulting PVC to "on"
+              // for a glass-only perfume would create PVC variants with placeholder prices on save.
               setBottleOptions({
-                glass: true,
-                pvc: isAttar ? hasPvc : true,
+                glass: hasGlass || !hasPvc,
+                pvc: hasPvc,
               });
               setVariantMatrix(nextMatrix);
             } else if (isAttar) {
@@ -243,17 +253,14 @@ export default function AdminProductForm() {
   };
 
   const toggleSize = (sz) => {
+    if (selectedSizes.includes(sz) && selectedSizes.length <= 1) {
+      setErrorMsg('At least one size must remain active for the product.');
+      return;
+    }
     setSelectedSizes((prev) => {
-      if (prev.includes(sz)) {
-        if (prev.length <= 1) {
-          setErrorMsg('At least one size must remain active for the product.');
-          return prev;
-        }
-        return prev.filter((s) => s !== sz);
-      } else {
-        const next = [...prev, sz];
-        return sizesForCategory(form.category).filter((s) => next.includes(s));
-      }
+      if (prev.includes(sz)) return prev.filter((s) => s !== sz);
+      const next = [...prev, sz];
+      return sizesForCategory(form.category).filter((s) => next.includes(s));
     });
   };
 
@@ -381,6 +388,22 @@ export default function AdminProductForm() {
       return;
     }
 
+    const cleanSlug = String(form.slug || form.name)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+    if (!cleanSlug) {
+      setActiveTab('seo');
+      setErrorMsg('Please enter a URL slug using letters or numbers.');
+      return;
+    }
+
+    if (!bottleOptions.glass && !bottleOptions.pvc) {
+      setActiveTab('variants');
+      setErrorMsg('Select at least one bottle type (Glass or PVC).');
+      return;
+    }
+
     // Require primary image
     if (!form.main_image) {
       setActiveTab('images');
@@ -444,6 +467,7 @@ export default function AdminProductForm() {
 
     const payload = {
       ...form,
+      slug: cleanSlug,
       price: minPrice,
       status: form.active ? 'active' : 'draft',
       stock: totalStock,
@@ -526,11 +550,12 @@ export default function AdminProductForm() {
       </div>
 
       {errorMsg && (
-        <div className="ps-form-error-banner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="ps-form-error-banner" role="alert" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
           <span>{errorMsg}</span>
           <button
             type="button"
             onClick={() => setErrorMsg('')}
+            aria-label="Dismiss error"
             style={{ background: 'transparent', border: 'none', color: '#DC2626', cursor: 'pointer', fontWeight: 600 }}
           >
             ✕
@@ -538,7 +563,7 @@ export default function AdminProductForm() {
         </div>
       )}
 
-      {successMsg && <div className="ps-form-success-banner">{successMsg}</div>}
+      {successMsg && <div className="ps-form-success-banner" role="status">{successMsg}</div>}
       {uploadProgress && (
         <div className="ps-form-progress-banner" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Loader2 size={16} className="ps-spin" style={{ animation: 'spin 1s linear infinite' }} />
@@ -613,7 +638,7 @@ export default function AdminProductForm() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                   <h3 className="ps-sub-heading" style={{ margin: 0 }}>Offered Sizes (Toggle to Enable / Disable)</h3>
                   <span style={{ fontSize: '12px', color: '#8C8479' }}>
-                    {form.category === 'Attar' ? 'Attar Defaults: 6 ml & 10 ml' : 'Perfume Defaults: 30, 50, 100 ml'}
+                    {isAttarName(form.category) ? 'Attar sizes: 6 ml & 10 ml' : 'Perfume sizes: 30, 50, 100 ml'}
                   </span>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -649,7 +674,7 @@ export default function AdminProductForm() {
               </div>
 
               {/* 2. Dynamic Matrix Table */}
-              <div className="ps-builder-section">
+              <div className="ps-builder-section ps-matrix-scroll" role="region" aria-label="Variant pricing table" tabIndex={0}>
                 <table className="ps-variant-matrix-table">
                   <thead>
                     <tr>
@@ -754,7 +779,7 @@ export default function AdminProductForm() {
                       checked={bottleOptions.glass}
                       onChange={(e) => setBottleOptions({ ...bottleOptions, glass: e.target.checked })}
                     />
-                    <span>Glass Bottle {form.category === 'Attar' ? '(Standard for Attars)' : ''}</span>
+                    <span>Glass Bottle {isAttarName(form.category) ? '(Standard for Attars)' : ''}</span>
                   </label>
                   <label className="ps-checkbox-label">
                     <input
@@ -765,7 +790,7 @@ export default function AdminProductForm() {
                     <span>PVC Bottle</span>
                   </label>
                 </div>
-                {form.category === 'Attar' && !bottleOptions.pvc && (
+                {isAttarName(form.category) && !bottleOptions.pvc && (
                   <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#8C8479' }}>
                     Notice: PVC spray flacons are disabled by default for Attars (oil extractions).
                   </p>
@@ -836,8 +861,9 @@ export default function AdminProductForm() {
               <h2 className="ps-pane-title">Basic Info</h2>
 
               <div className="ps-form-group">
-                <label>Product Name *</label>
+                <label htmlFor="pf-name">Product Name *</label>
                 <input
+                  id="pf-name"
                   type="text"
                   placeholder="e.g. Royal Oud Extrait"
                   value={form.name}
@@ -848,8 +874,9 @@ export default function AdminProductForm() {
 
               <div className="ps-form-row">
                 <div className="ps-form-group">
-                  <label>Category</label>
+                  <label htmlFor="pf-category">Category</label>
                   <select
+                    id="pf-category"
                     value={form.category}
                     onChange={handleCategoryChange}
                   >
@@ -863,8 +890,9 @@ export default function AdminProductForm() {
                 </div>
 
                 <div className="ps-form-group">
-                  <label>Base SKU</label>
+                  <label htmlFor="pf-sku">Base SKU</label>
                   <input
+                    id="pf-sku"
                     type="text"
                     value={form.sku}
                     onChange={(e) => setForm({ ...form, sku: e.target.value })}
@@ -874,8 +902,9 @@ export default function AdminProductForm() {
               </div>
 
               <div className="ps-form-group">
-                <label>Short Headline / Subtitle</label>
+                <label htmlFor="pf-short">Short Headline / Subtitle</label>
                 <input
+                  id="pf-short"
                   type="text"
                   placeholder="Imperial Artisanal Extractions in pure flacons"
                   value={form.short_description}
@@ -884,8 +913,9 @@ export default function AdminProductForm() {
               </div>
 
               <div className="ps-form-group">
-                <label>Full Editorial Description</label>
+                <label htmlFor="pf-desc">Full Editorial Description</label>
                 <textarea
+                  id="pf-desc"
                   rows={5}
                   placeholder="Describe the fragrance character, inspiration, and mood..."
                   value={form.description}
@@ -932,6 +962,7 @@ export default function AdminProductForm() {
                           type="button"
                           className="ps-img-del-btn"
                           title="Remove image"
+                          aria-label="Remove image"
                           onClick={() => {
                             setForm((prev) => ({ ...prev, main_image: '', main_image_path: '' }));
                             setLocalPreviews((prev) => ({ ...prev, main: '' }));
@@ -985,6 +1016,7 @@ export default function AdminProductForm() {
                           type="button"
                           className="ps-img-del-btn"
                           title="Remove image"
+                          aria-label="Remove image"
                           onClick={() => {
                             setForm((prev) => ({ ...prev, glass_image: '', glass_image_path: '' }));
                             setLocalPreviews((prev) => ({ ...prev, glass: '' }));
@@ -1039,6 +1071,7 @@ export default function AdminProductForm() {
                             type="button"
                             className="ps-img-del-btn"
                             title="Remove image"
+                          aria-label="Remove image"
                             onClick={() => {
                               setForm((prev) => ({ ...prev, pvc_image: '', pvc_image_path: '' }));
                               setLocalPreviews((prev) => ({ ...prev, pvc: '' }));
@@ -1084,6 +1117,7 @@ export default function AdminProductForm() {
                         type="button"
                         className="ps-img-del-btn"
                         onClick={() => removeGalleryImage(idx)}
+                        aria-label={`Remove gallery image ${idx + 1}`}
                       >
                         <X size={14} />
                       </button>
@@ -1164,8 +1198,9 @@ export default function AdminProductForm() {
               <h2 className="ps-pane-title">Search Engine Optimization (SEO)</h2>
 
               <div className="ps-form-group">
-                <label>URL Slug *</label>
+                <label htmlFor="pf-slug">URL Slug *</label>
                 <input
+                  id="pf-slug"
                   type="text"
                   value={form.slug}
                   onChange={(e) => setForm({ ...form, slug: e.target.value })}
@@ -1174,8 +1209,9 @@ export default function AdminProductForm() {
               </div>
 
               <div className="ps-form-group">
-                <label>Meta Title</label>
+                <label htmlFor="pf-meta-title">Meta Title</label>
                 <input
+                  id="pf-meta-title"
                   type="text"
                   value={form.meta_title}
                   onChange={(e) => setForm({ ...form, meta_title: e.target.value })}
@@ -1184,8 +1220,9 @@ export default function AdminProductForm() {
               </div>
 
               <div className="ps-form-group">
-                <label>Meta Description</label>
+                <label htmlFor="pf-meta-desc">Meta Description</label>
                 <textarea
+                  id="pf-meta-desc"
                   rows={3}
                   value={form.meta_description}
                   onChange={(e) => setForm({ ...form, meta_description: e.target.value })}

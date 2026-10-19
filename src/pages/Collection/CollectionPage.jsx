@@ -16,6 +16,7 @@ import { getCategories } from '../../services/categories';
 import { formatINR } from '../../utils/formatCurrency';
 import { CATEGORY_CONFIG } from './categoryConfig';
 import './CollectionPage.css';
+import { useSeo } from '../../utils/useSeo';
 
 const SORT_OPTIONS = [
   { value: 'alpha-asc', label: 'Alphabetically, A-Z' },
@@ -27,6 +28,9 @@ const SORT_OPTIONS = [
 ];
 
 const PAGE_SIZE = 12;
+
+// Collections that have their own short route in App.jsx
+const SHORT_ROUTES = new Set(['attar', 'perfume', 'bakhoor', 'musky', 'oud', 'floral', 'woody']);
 
 export default function CollectionPage({ category: categoryProp }) {
   const { slug: routeSlug } = useParams();
@@ -139,26 +143,14 @@ export default function CollectionPage({ category: categoryProp }) {
     };
   }, [baseConfig, dynamicCategory]);
 
-  // SEO Management
-  useEffect(() => {
-    document.title = activeCategory.metaTitle;
-
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (!metaDesc) {
-      metaDesc = document.createElement('meta');
-      metaDesc.name = 'description';
-      document.head.appendChild(metaDesc);
-    }
-    metaDesc.content = activeCategory.metaDescription;
-
-    let canonical = document.querySelector('link[rel="canonical"]');
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.rel = 'canonical';
-      document.head.appendChild(canonical);
-    }
-    canonical.href = window.location.href;
-  }, [activeCategory]);
+  // SEO: one canonical URL per collection (the short route when it exists, no query string)
+  const canonicalSlug = String(activeCategory.slug || categoryKey).toLowerCase();
+  useSeo({
+    title: `${activeCategory.title || activeCategory.name} Collection`,
+    description: activeCategory.metaDescription,
+    path: SHORT_ROUTES.has(canonicalSlug) ? `/${canonicalSlug}` : `/category/${canonicalSlug}`,
+    image: activeCategory.heroImage,
+  });
 
   // Strict Category-Specific Product Filtering
   const categoryProducts = useMemo(() => {

@@ -373,3 +373,92 @@
   color: #6F675E;
   font-size: 13px;
 }
+
+/* --------------------------------------------------------------------------
+   Shared admin building blocks (this file is loaded by the admin layout for every page)
+   -------------------------------------------------------------------------- */
+.ps-admin-eyebrow {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #8A6A2E;
+  margin-bottom: 4px;
+}
+
+.ps-admin-loading {
+  padding: 40px 16px;
+  text-align: center;
+  color: #6F675E;
+  font-size: 13px;
+}
+
+.ps-action-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  border: 1px solid #E5E0D8;
+  background: #FFFFFF;
+  color: #6F675E;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.ps-action-icon-btn:hover {
+  border-color: #C9A96E;
+  color: #1A1714;
+}
+
+/* Tables keep a readable width and scroll horizontally inside their card on small screens */
+.ps-admin-table-container {
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+.ps-admin-products-table {
+  min-width: 760px;
+}
+
+.ps-admin-modal-card {
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+@media (max-width: 640px) {
+  .ps-admin-page-title {
+    font-size: 22px;
+  }
+
+  .ps-admin-products-toolbar {
+    padding: 12px;
+  }
+
+  .ps-admin-search-input-wrap,
+  .ps-admin-filter-dropdowns,
+  .ps-admin-filter-select {
+    width: 100%;
+  }
+
+  .ps-admin-filter-select,
+  .ps-admin-search-input-wrap {
+    min-height: 44px;
+  }
+
+  .ps-action-icon-btn,
+  .ps-table-action-btn {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .ps-admin-modal-overlay {
+    padding: 12px;
+  }
+
+  .ps-admin-modal-card {
+    width: 100%;
+  }
+}

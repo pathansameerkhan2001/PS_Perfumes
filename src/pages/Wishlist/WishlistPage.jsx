@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import { Heart, ArrowRight } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import ProductCard from '../../components/ProductCard';
+import { useSeo } from '../../utils/useSeo';
 
 export default function WishlistPage() {
+  useSeo({ title: 'Wishlist', path: '/wishlist', noindex: true });
   const { wishlist } = useCart();
 
   return (

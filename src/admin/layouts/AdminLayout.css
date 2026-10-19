@@ -30,3 +30,60 @@
   flex-direction: column;
   min-width: 0;
 }
+
+/* --------------------------------------------------------------------------
+   Storefront colour tokens remapped for the light admin workspace.
+   Several admin pages use var(--color-champagne / --color-gold-bright / --color-ivory) inline;
+   those are light-on-dark storefront colours and were nearly invisible on white cards.
+   -------------------------------------------------------------------------- */
+.ps-admin-master-layout {
+  --color-champagne: #7A5C24;
+  --color-gold-bright: #8A6A2E;
+  --color-ivory: #1A1714;
+  --color-secondary: #FFFFFF;
+  --color-muted: #6F675E;
+  --color-border: #E5E0D8;
+}
+
+/* Page padding. Only the Dashboard wrapped itself in .ps-admin-page-container; every other
+   admin page rendered flush against the edges. The viewport now owns the padding. */
+.ps-admin-main-viewport {
+  padding: 32px 36px 48px;
+  box-sizing: border-box;
+}
+
+.ps-admin-main-viewport > .ps-admin-page-container {
+  padding: 0;
+  min-height: 0;
+}
+
+@media (max-width: 1024px) {
+  .ps-admin-main-viewport {
+    padding: 24px 20px 40px;
+  }
+}
+
+@media (max-width: 640px) {
+  .ps-admin-main-viewport {
+    padding: 16px 14px 32px;
+  }
+}
+
+/* Visible keyboard focus inside the admin */
+.ps-admin-master-layout a:focus-visible,
+.ps-admin-master-layout button:focus-visible,
+.ps-admin-master-layout select:focus-visible,
+.ps-admin-master-layout input:focus-visible,
+.ps-admin-master-layout textarea:focus-visible {
+  outline: 2px solid #C9A96E;
+  outline-offset: 2px;
+}
+
+/* Consistent vertical rhythm for admin pages that do not define their own layout */
+.ps-admin-main-viewport > [class$="-page"] {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  min-width: 0;
+}
