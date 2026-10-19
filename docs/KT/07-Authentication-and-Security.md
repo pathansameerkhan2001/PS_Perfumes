@@ -28,7 +28,7 @@ The browser check only controls what the UI shows; the database check is what pr
 | S-2b | Old repo policies let any admin write `admin_users` (self-promotion) | **Fixed in migration (pending)** — those policies are dropped; remaining write policies are reported as NOTICEs |
 | S-3 | Storage upload/delete rules missing in production | **Fixed in migration (pending)** |
 | S-4 | Order totals, discount and coupon are computed in the browser | **Open (mitigated)**: subtotal recomputed from lines; discount ≤ subtotal; payment always pending; policy checks pending/unpaid/total ≥ 0. Prices are still not re-checked against `product_variants` in the database |
-| S-5 | Public read of drafts, coupons, order items | **Fixed in migration (pending)** for the `ps_*` scope; review any older permissive policies listed by diagnostics §2 |
+| S-5 | Public read of drafts, coupons, order items | **Fixed in migration (pending)** for the `ps_*` scope; review any older permissive policies listed by diagnostics section 02 |
 | S-6 | Spam vectors (anonymous inserts) | Reduced: order_items only for fresh pending orders; coupons only via RPC; reviews have no public insert from the app. No CAPTCHA / rate limiting |
 | S-7 | Simulated card checkout | **Fixed (code)**: modal unmounted; COD only |
 | S-8 | `SECURITY DEFINER` without `search_path` | New/replaced functions set `search_path` |

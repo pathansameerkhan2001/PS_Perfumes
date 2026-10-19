@@ -28,9 +28,9 @@
 
 **Do not exist live:** `site_settings`, `contact_enquiries` (optional migration creates it), `profiles`, `wishlists`, `cart_items`, `inventory`.
 
-**Functions already in production (not in repo):** `is_admin()`, `is_super_admin()` (definitions unknown — captured by diagnostics §3).
+**Functions already in production (not in repo):** `is_admin()`, `is_super_admin()` (definitions unknown — captured by diagnostics section 03).
 
-## 3. Relationships (inferred from columns and code; confirm FKs with diagnostics §6)
+## 3. Relationships (inferred from columns and code; confirm FKs with diagnostics section 06)
 
 ```mermaid
 erDiagram
@@ -67,7 +67,7 @@ Data conventions:
 | admin_users | none | read; writes **only** via super_admin RPCs |
 | storage.objects (`ps-perfumes`) | none (files served by public URL) | select, insert, delete in allowed folders |
 
-The migration adds policies (named `ps_*`); permissive policies are OR-ed, so **existing live policies remain in effect** and are listed by diagnostics §2 for review.
+The migration adds policies (named `ps_*`); permissive policies are OR-ed, so **existing live policies remain in effect** and are listed by diagnostics section 02 for review.
 
 ## 5. Database functions (created by the migration)
 
@@ -92,4 +92,7 @@ The migration adds policies (named `ps_*`); permissive policies are OR-ed, so **
 
 ## 7. Read-only checks
 
-Use `supabase/diagnostics/20261019_media_and_product_delete_diagnostics.sql` (policies, functions, RLS state, triggers, constraints, coupons list, hero file). It modifies nothing (its simulation block is rolled back) and prints no customer data.
+- `supabase/diagnostics/20261019_media_and_product_delete_diagnostics.sql` — one SELECT statement (one result grid): database/bucket, policies, admin functions with owners, admin rows, foreign keys, migration functions, hero file, RLS state and table owners, auth triggers, constraints, coupons, row counts. Writes nothing; prints no customer data (admin rows appear as ids and roles only; plus coupon rules and row counts).
+- `supabase/diagnostics/20261021_storage_insert_simulation.sql` — one DO block + one SELECT: simulates anonymous and admin uploads and lists who is an admin under the current `is_admin()` (staff e-mails only). Every test is forced to roll back; no rows or files remain.
+
+The Supabase SQL Editor shows only the last statement's result, which is why each file ends in a single result grid. Run each file in full and export the grid.

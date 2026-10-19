@@ -1,6 +1,8 @@
 # 13 — Production Migration and Handover
 
-> **Status (2026-10-21):** working-tree changes on `main` are uncommitted and not deployed. Production (https://psperfumes.com, Vercel) still runs the **old** bundle — verified: it contains the old demo-data key `ps_db_products` and none of the new code; it points at the expected Supabase project. The migration is **not applied** (its functions are absent). No browser test has been run. **Not approved for handover.**
+> **Update 2026-10-21 (later):** the changes were committed as `76f182b` and pushed; production now runs the new code. The migration is **still not applied** (functions absent), which causes the admin upload error "Storage rejected the upload (403 …)". Apply the migration (§4 step 5) — or, if it cannot be applied yet, the narrow storage repair `supabase/repairs/20261021_storage_upload_repair.sql` — then re-test uploads.
+>
+> **Earlier status (2026-10-21):** working-tree changes on `main` were uncommitted and not deployed. Production (https://psperfumes.com, Vercel) still runs the **old** bundle — verified: it contains the old demo-data key `ps_db_products` and none of the new code; it points at the expected Supabase project. The migration is **not applied** (its functions are absent). No browser test has been run. **Not approved for handover.**
 
 ## 1. Facts this plan is based on (verified read-only, 2026-10-20/21)
 
@@ -35,39 +37,62 @@ The migration runs `alter table … enable row level security` on: admin_users, 
 
 - If RLS was already on (likely, given the anonymous 0-row results), this is a no-op and only `ps_*` policies are added.
 - If RLS was **off**, every client that is not an admin loses access except through the new `ps_*` policies. Within this app that is intended. Any external tool using the publishable key (e.g. an automation reading orders) would stop working — none is known in the repo.
-- Diagnostics §9 (before) records the state; restore with `alter table … disable row level security` only if a confirmed dependency breaks (not recommended).
+- Diagnostics section 09 (before) records the state; restore with `alter table … disable row level security` only if a confirmed dependency breaks (not recommended).
 
 ## 4. Execution procedure (requires your approval at each ⛔)
 
-1. ⛔ **Approve and commit** the working tree (do not push yet if Vercel auto-deploys from `main`).
-2. ⛔ **Backup:** Supabase → Database → Backups: record the latest restorable backup time. If none is available on the plan, export the affected tables first. **Stop if there is no recoverable copy.**
-3. ⛔ **Auth (recommended, independent):** Authentication → Sign In / Providers → turn **off** *Allow new users to sign up*. Admins are created with *Add user*.
-4. **Diagnostics (before):** SQL Editor → run `supabase/diagnostics/20261019_media_and_product_delete_diagnostics.sql`. Save the **full** output (file/screenshot). It is read-only: only `select` statements, plus one block that sets a local role and is always `rollback`-ed.
-5. ⛔ **Migration:** paste `supabase/migrations/20261019_admin_media_and_product_delete.sql` → Run. One transaction; any error leaves the database unchanged — stop and send the message. Save the NOTICE output.
-6. **Diagnostics (after):** run the same file again; compare with §5.
-7. ⛔ **Deploy** the approved commit (push to the branch Vercel builds from, or deploy it in Vercel). Then verify: Vercel shows the commit SHA; the live `/assets/index-*.js` contains `validate_coupon`; it still references the expected Supabase host.
-8. **Smoke test** ([11](11-Testing-and-Operations.md) §3), then T-1 … T-24.
-9. ⛔ **Optional:** `supabase/migrations/20261020_contact_enquiries_optional.sql` only after approval (see [12](12-Future-Implementation-Roadmap.md) §3).
+**Prerequisites**
+- Supabase Owner/Admin access to the production project **`jnrmmhzhhmjxefapkemv`**. Confirm before every SQL run: the dashboard URL contains `/project/jnrmmhzhhmjxefapkemv/`, and Settings → General → Reference ID matches. Diagnostics section `00` also shows the bucket — it must exist.
+- A recoverable backup (step 2). Do not continue without one.
+- The SQL Editor only shows the result of the **last statement** of a script. Both diagnostics files are built for that: run each file **in full** (do not highlight part of it), then export the result grid as CSV (results panel → Export → Download CSV; if that option is not shown, select all cells in the grid and copy them into a spreadsheet) and keep it.
+
+**Steps**
+1. ⛔ **Backup:** Database → Backups — note the latest restorable backup time (or export the affected tables if the plan has no backups).
+2. ⛔ **Recommended:** Authentication → Sign In / Providers → turn off *Allow new users to sign up*.
+3. **Before — diagnostics:** SQL Editor → New query → paste all of `supabase/diagnostics/20261019_media_and_product_delete_diagnostics.sql` → Run → export the grid as `before-diagnostics.csv`. One SELECT statement; writes nothing.
+4. **Before — simulation:** new query → paste all of `supabase/diagnostics/20261021_storage_insert_simulation.sql` → Run → export as `before-simulation.csv`. Expected now: `admin_insert = REJECTED …42501…`. It leaves nothing behind (every test sub-block is forced to roll back).
+5. **Go / no-go review** (send me both CSVs if unsure). **STOP** — do not run step 6 — if any of these is true:
+   1. **No recoverable backup** confirmed in step 1.
+   2. **Signature or ownership mismatch:** `03` shows an `is_admin`/`is_super_admin` entry with non-empty `args` or `can_manage = false`; `00` shows `can_manage_storage_policies = false`; or `09` shows `can_manage = false` for any of the 16 tables in §3. (The migration also refuses to run in these cases.)
+   3. **Unexpected order-status constraints:** `13` does not allow `order_status = 'pending'` and `payment_status = 'pending'` (and `discount_type` values other than `percentage`/`fixed` exist).
+   4. **Broken login trigger:** `10` lists an `auth.users` trigger that writes to a table that does not exist (e.g. `profiles`) or to a function not in the project.
+   5. **Restrictive Storage policy:** `01` contains any entry with `permissive = RESTRICTIVE` (it would still block uploads).
+   6. **Admins who would lose access:** simulation `users_admin_under_current_is_admin` contains an e-mail that is **not** in `users_in_admin_users_table`. Decide first: accept (re-grant later in Admin → Admin Users) or stop.
+   Also stop if `00` does not show the `ps-perfumes` bucket, or any simulation row ends in `_setup_error`.
+6. ⛔ **Apply the full migration:** new query → paste all of `supabase/migrations/20261019_admin_media_and_product_delete.sql` → Run. It is one transaction; if any statement fails, **nothing** is changed — copy the error and stop. Save the NOTICE messages.
+7. **After:** re-run steps 3 and 4 (`after-diagnostics.csv`, `after-simulation.csv`) and compare with §5.
+8. **Browser:** admin login → Products → upload a primary image → save → reload (T-2/T-3).
+9. Continue with T-1 … T-24.
+
+**Fallback (only if step 6 fails and the cause cannot be fixed quickly):** ⛔ apply `supabase/repairs/20261021_storage_upload_repair.sql` (fixes uploads only; product saves/deletes still need the full migration), re-run step 4, then retry step 6 later. The full migration later replaces the repair's policies and drops its helper function.
+
+⛔ **Optional enquiries table:** `supabase/migrations/20261020_contact_enquiries_optional.sql`, only after the full migration and only if approved.
 
 ## 5. Diagnostics comparison checklist
 
-| § | Before (record) | After (expected) |
+| Section | Before (record) | After (expected) |
 |---|---|---|
-| 1 Storage policies | List current ones | `ps_perfumes_admin_select`, `_insert`, `_delete` present; old repo names absent |
-| 2 Table policies | List current ones | `ps_admin_manage_*`, `ps_public_read_*`, `ps_checkout_insert_*`, `ps_admin_users_*` present; earlier policies still listed (review any permissive public writes) |
-| 3 `is_admin` / `is_super_admin` | **Save both definitions (rollback copy)** | New definitions: admin_users / app_metadata only — no `user_metadata`, no e-mail patterns |
-| 4 Primary admin | User exists; admin_users row may be missing | Row with role `super_admin` (or `admin`), `is_active = true` |
-| 5 Simulated `is_admin()` | Record value | `true` |
-| 6 Foreign keys to products/variants | Record ON DELETE actions | Unchanged |
-| 7 / 7b / 7c Functions | `admin_delete_product`… absent | All present: admin_delete_product, is_super_admin, admin_list_admin_users, admin_grant_admin, admin_update_admin, admin_revoke_admin, validate_coupon, redeem_coupon, ps_order_accepts_items |
-| 8 Hero object | Present | Present |
-| 9 RLS per table | **Save** | `true` for the 16 tables in §3 |
-| 10 `auth.users` triggers | Record (a trigger writing to the missing `profiles` table would break new logins) | Unchanged |
-| 11 admin_users columns/constraints | Record | Unchanged |
+| 00 database | Bucket `ps-perfumes` present; `can_manage_storage_policies` true | Unchanged |
+| 01 storage policies | Current list; note RESTRICTIVE ones | `ps_perfumes_admin_select`, `_insert`, `_delete` present; repo-era names absent |
+| 02 table policies | Current list | `ps_admin_manage_*`, `ps_public_read_*`, `ps_checkout_insert_*`, `ps_admin_users_*` present; earlier ones still listed (review permissive public writes) |
+| 03 admin functions | **Rollback copy**; `args` empty; `can_manage` true | New definitions (admin_users / app_metadata only); `ps_is_media_admin` absent |
+| 04 primary admin | Auth user present; admin_users row may be missing | Row with role `super_admin` (or `admin`), `is_active = true` |
+| 05 admin_users rows | Record | Primary admin added/updated; other rows unchanged |
+| 06 foreign keys | Record | Unchanged |
+| 07 migration functions | `[]` | All 8 listed |
+| 08 hero video | Present | Present |
+| 09 RLS / owner | **Rollback record**; `can_manage` true for the 16 tables | `rls_enabled = true` for the 16 tables in §3 |
+| 10 auth.users triggers | Record | Unchanged |
+| 11 / 11b admin_users | Record | Unchanged |
 | 12 store_settings keys | Record | Unchanged |
-| 13 status / discount_type constraints | Must allow `pending` and `percentage`/`fixed` | Unchanged |
-| 14 Coupons | Record codes | Unchanged |
+| 13 check constraints | Must allow `pending`, `percentage`, `fixed` | Unchanged |
+| 14 coupons | Record | Unchanged |
 | 15 contact_enquiries | `null` | `null` unless the optional migration was approved |
+| 16 row counts | Record | **Identical** (the migration deletes nothing) |
+| Simulation `anon_insert` | REJECTED | REJECTED |
+| Simulation `admin_is_admin` | Record | `true` |
+| Simulation `admin_insert` / `admin_insert_returning` | REJECTED (the current 403) | ALLOWED |
+| Simulation `admin_insert_wrong_folder` | Record | REJECTED |
 
 ## 6. Rollback
 

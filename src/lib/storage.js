@@ -185,7 +185,21 @@ export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS,
       let userFriendlyMsg = `Storage upload failed${statusCode ? ` (${statusCode})` : ''}: ${rawMsg}`;
 
       if (rawMsg.includes('row-level security') || rawMsg.includes('AccessDenied') || String(statusCode) === '403') {
-        userFriendlyMsg = `Storage rejected the upload (${statusCode || '403'}: ${rawMsg}). The live Storage policies for bucket "${STORAGE_BUCKET}" do not allow ${userEmail} to upload to "${cleanFolder}/". Apply supabase/migrations/20261019_admin_media_and_product_delete.sql in the Supabase SQL Editor.`;
+        // Tell the admin which side is missing: the admin record or the Storage upload policy
+        let adminCheck = 'unknown';
+        try {
+          const { data: isAdmin, error: rpcErr } = await supabase.rpc('is_admin');
+          if (!rpcErr) adminCheck = isAdmin === true ? 'yes' : 'no';
+        } catch {
+          // keep 'unknown'
+        }
+        const cause =
+          adminCheck === 'no'
+            ? `The database's is_admin() check returns false for ${userEmail}, and no Storage policy accepts this upload.`
+            : adminCheck === 'yes'
+            ? `${userEmail} is an administrator, but no Storage policy allows uploads to "${STORAGE_BUCKET}/${cleanFolder}/".`
+            : `The Storage policies for bucket "${STORAGE_BUCKET}" do not allow ${userEmail} to upload to "${cleanFolder}/".`;
+        userFriendlyMsg = `Storage rejected the upload (${statusCode || '403'}: ${rawMsg}). ${cause} Fix: apply supabase/migrations/20261019_admin_media_and_product_delete.sql (or the narrow supabase/repairs/20261021_storage_upload_repair.sql) in the Supabase SQL Editor.`;
       } else if (rawMsg.includes('Invalid key')) {
         userFriendlyMsg = `Invalid storage object key "${filePath}" (${rawMsg}).`;
       } else if (rawMsg.includes('mime type') || rawMsg.includes('not allowed')) {

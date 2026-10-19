@@ -92,6 +92,32 @@ begin
   if not exists (select 1 from auth.users where lower(email) = 'brandnix.in@gmail.com') then
     raise exception 'No auth user brandnix.in@gmail.com in this project — wrong project?';
   end if;
+  -- "create or replace function public.is_admin()" only replaces the zero-argument version.
+  -- If a version with parameters exists, a second overload would make policy calls ambiguous.
+  if exists (select 1 from pg_proc
+             where pronamespace = 'public'::regnamespace
+               and proname in ('is_admin', 'is_super_admin')
+               and pronargs > 0) then
+    raise exception 'public.is_admin / is_super_admin has a version with parameters — review diagnostics section 03 before applying';
+  end if;
+  -- Ownership: policies on storage.objects, RLS on tables and replacing functions all require
+  -- the current role to own the object or be a member of its owner role.
+  if not (select pg_has_role(current_user, c.relowner, 'MEMBER') from pg_class c where c.oid = 'storage.objects'::regclass) then
+    raise exception 'Current role % cannot manage policies on storage.objects (diagnostics section 00) — run as the project owner role (postgres)', current_user;
+  end if;
+  if exists (select 1 from pg_class c
+             where c.relnamespace = 'public'::regnamespace and c.relkind = 'r'
+               and c.relname in ('admin_users', 'products', 'product_variants', 'product_images', 'categories',
+                                 'combos', 'combo_items', 'hero_slides', 'instagram_reels', 'homepage_sections',
+                                 'reviews', 'store_settings', 'coupons', 'customers', 'orders', 'order_items')
+               and not pg_has_role(current_user, c.relowner, 'MEMBER')) then
+    raise exception 'Current role % does not own one of the application tables (diagnostics section 09, can_manage = false)', current_user;
+  end if;
+  if exists (select 1 from pg_proc p
+             where p.pronamespace = 'public'::regnamespace and p.proname in ('is_admin', 'is_super_admin')
+               and not pg_has_role(current_user, p.proowner, 'MEMBER')) then
+    raise exception 'Current role % does not own is_admin / is_super_admin (diagnostics section 03, can_manage = false)', current_user;
+  end if;
 end $$;
 
 -- ---------------------------------------------------------------------------
@@ -746,19 +772,25 @@ grant execute on function public.admin_revoke_admin(uuid) to authenticated;
 
 drop function if exists pg_temp.ps_policies(text, text, boolean);
 
+-- Helper created by the optional storage-only repair script (supabase/repairs/20261021_storage_upload_repair.sql).
+-- Its policies were replaced in section 4 above, so it is no longer referenced.
+drop function if exists public.ps_is_media_admin();
+
 commit;
 
 -- ============================================================================
--- EXPECTED AFTER APPLYING (re-run the diagnostics file)
---   §4  brandnix.in@gmail.com has an admin_users row: role super_admin (or admin), is_active true
---   §5  is_admin_result = true
---   §7  is_admin, admin_delete_product listed; §7b is_super_admin, admin_list_admin_users,
---       admin_grant_admin, admin_update_admin, admin_revoke_admin listed
---   §7c validate_coupon, redeem_coupon, ps_order_accepts_items listed
---   §1  ps_perfumes_admin_select / _insert / _delete exist on storage.objects
+-- EXPECTED AFTER APPLYING (re-run both diagnostics files)
+--   diagnostics 01  ps_perfumes_admin_select / _insert / _delete exist on storage.objects
+--   diagnostics 03  is_admin / is_super_admin: new definitions (admin_users / app_metadata only);
+--                   ps_is_media_admin absent
+--   diagnostics 04  brandnix.in@gmail.com: admin_users row, role super_admin (or admin), is_active true
+--   diagnostics 07  all 8 functions listed
+--   diagnostics 09  rls_enabled = true for the 16 tables in section 5
+--   simulation      anon_insert REJECTED, admin_is_admin true, admin_insert ALLOWED,
+--                   admin_insert_returning ALLOWED, admin_insert_wrong_folder REJECTED
 --
 -- ROLLBACK (only if needed; run as one script)
---   1. Restore the previous is_admin(): paste the definition saved from diagnostics §3.
+--   1. Restore the previous is_admin(): paste the definition saved from diagnostics section 03.
 --   2. drop function if exists public.admin_delete_product(uuid);
 --      drop function if exists public.admin_list_admin_users();
 --      drop function if exists public.admin_grant_admin(text, text);
@@ -767,11 +799,11 @@ commit;
 --      drop function if exists public.validate_coupon(text, numeric);
 --      drop function if exists public.redeem_coupon(text, uuid);
 --      (drop the two checkout policies below before dropping ps_order_accepts_items)
---      Restore the previous is_super_admin() from diagnostics §3 (it existed before this migration).
+--      Restore the previous is_super_admin() from diagnostics section 03 (it existed before this migration).
 --   3. drop policy if exists "ps_perfumes_admin_select" on storage.objects;
 --      drop policy if exists "ps_perfumes_admin_insert" on storage.objects;
 --      drop policy if exists "ps_perfumes_admin_delete" on storage.objects;
---      then re-create the storage policies listed in diagnostics §1 (saved output).
+--      then re-create the storage policies listed in diagnostics section 01 (saved output).
 --   4. For each table T in products, product_variants, product_images, categories, combos,
 --      combo_items, hero_slides, instagram_reels, homepage_sections, reviews, store_settings,
 --      coupons, customers, orders, order_items:
@@ -781,7 +813,7 @@ commit;
 --            drop policy if exists "ps_checkout_insert_order_items" on public.order_items;
 --            drop policy if exists "ps_admin_users_read_own" on public.admin_users;
 --            drop policy if exists "ps_admin_users_admin_read" on public.admin_users;
---      If diagnostics §9 showed RLS disabled on a table before, restore that with
+--      If diagnostics section 09 showed RLS disabled on a table before, restore that with
 --        alter table public.T disable row level security;   (not recommended)
 --   The admin_users row for the primary administrator can stay.
 -- ============================================================================
