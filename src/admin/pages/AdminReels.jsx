@@ -58,6 +58,7 @@ export default function AdminReels() {
     setFormData({
       instagram_url: reel.instagram_url || '',
       thumbnail_url: reel.thumbnail_url || '',
+      thumbnail_path: reel.thumbnail_path || '',
       caption: reel.caption || reel.title || '',
       display_order: reel.display_order || 1,
       is_active: reel.is_active !== false,
@@ -74,11 +75,11 @@ export default function AdminReels() {
     setIsUploading(true);
 
     try {
-      const { url, error } = await uploadImage(file, 'reels', 'thumb');
-      if (error) {
-        setErrorMsg(`Failed to upload thumbnail: ${error}`);
-      } else if (url) {
-        setFormData((prev) => ({ ...prev, thumbnail_url: url }));
+      const { url, path, error } = await uploadImage(file, 'reels', 'thumb');
+      if (error || !url) {
+        setErrorMsg(`Failed to upload thumbnail: ${error || 'Storage did not return the uploaded file.'}`);
+      } else {
+        setFormData((prev) => ({ ...prev, thumbnail_url: url, thumbnail_path: path }));
         setSuccessMsg('Thumbnail uploaded to Supabase Storage.');
         setTimeout(() => setSuccessMsg(''), 2500);
       }

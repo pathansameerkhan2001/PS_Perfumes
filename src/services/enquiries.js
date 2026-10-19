@@ -1,75 +1,53 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
+import { dbError, assertRows } from './dbErrors';
 
-const LOCAL_ENQUIRIES_KEY = 'ps_db_enquiries';
+/*
+ * The live database (verified 2026-10-19) has NO contact_enquiries table, so contact-form
+ * submissions cannot be stored yet. submitEnquiry() therefore reports the failure honestly
+ * (the Contact page then shows the e-mail / WhatsApp fallback message) instead of pretending
+ * the message was sent. Creating the table is a schema decision for the store owner.
+ * The insert below does not request the row back, so it will work for anonymous visitors
+ * once a table with an anonymous INSERT policy exists.
+ */
 
-export const INITIAL_ENQUIRIES = [
-  {
-    id: 'enq-01',
-    name: 'Mohammed Rizwan',
-    email: 'rizwan.m@outlook.com',
-    phone: '+91 97001 23456',
-    subject: 'Bespoke Wedding Attar Orders in Kadapa',
-    message: 'Hello PS Perfumes team, We would like to inquire about customized 50-pack Royal Amber and Oud miniature gift sets for an upcoming wedding in Kadapa. Please connect with pricing.',
-    status: 'unread',
-    created_at: new Date(Date.now() - 7200000).toISOString(),
-  },
-];
-
-function getLocalEnquiries() {
-  try {
-    const raw = localStorage.getItem(LOCAL_ENQUIRIES_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch {}
-  return INITIAL_ENQUIRIES;
-}
-
-function saveLocalEnquiries(enqs) {
-  try {
-    localStorage.setItem(LOCAL_ENQUIRIES_KEY, JSON.stringify(enqs));
-  } catch {}
+/**
+ * True when the contact_enquiries table exists. Visitors cannot read it (insert-only),
+ * but PostgREST answers PGRST205 only when the table itself is missing.
+ */
+export async function isEnquiryStorageAvailable() {
+  const { error } = await supabase.from('contact_enquiries').select('id').limit(0);
+  if (error && (error.code === 'PGRST205' || error.code === '42P01')) return false;
+  return true;
 }
 
 export async function getEnquiries() {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { data, error } = await supabase.from('contact_enquiries').select('*').order('created_at', { ascending: false });
-      if (!error && data && data.length > 0) return data;
-    } catch {}
-  }
-  return getLocalEnquiries();
+  const { data, error } = await supabase
+    .from('contact_enquiries')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw dbError('Could not load enquiries', error);
+  return data || [];
 }
 
 export async function submitEnquiry(enquiry) {
-  const newEnq = {
-    ...enquiry,
-    id: `enq-${Date.now()}`,
-    status: 'unread',
-    created_at: new Date().toISOString(),
+  const row = {
+    name: enquiry.name,
+    email: enquiry.email,
+    phone: enquiry.phone || null,
+    subject: enquiry.subject || null,
+    message: enquiry.message,
   };
-
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { data, error } = await supabase.from('contact_enquiries').insert([newEnq]).select().single();
-      if (!error && data) return { data, error: null };
-    } catch {}
+  const { error } = await supabase.from('contact_enquiries').insert([row]);
+  if (error) {
+    console.error('Enquiry could not be stored:', error);
+    throw dbError('Enquiry was not sent', error);
   }
-
-  const list = getLocalEnquiries();
-  saveLocalEnquiries([newEnq, ...list]);
-  return { data: newEnq, error: null };
+  return { data: row, error: null };
 }
 
 export async function updateEnquiryStatus(id, status) {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase.from('contact_enquiries').update({ status }).eq('id', id);
-    } catch {}
-  }
-
-  const list = getLocalEnquiries();
-  saveLocalEnquiries(list.map((e) => (e.id === id ? { ...e, status } : e)));
+  const { data, error } = await supabase.from('contact_enquiries').update({ status }).eq('id', id).select('id');
+  if (error) throw dbError('Enquiry was not updated', error);
+  assertRows(data, 'Enquiry was not updated');
   return { success: true };
 }

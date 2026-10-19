@@ -1,283 +1,191 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
+import { isValidUUID } from './products';
+import { dbError, assertRows } from './dbErrors';
+import { redeemCoupon } from './coupons';
 
-const LOCAL_ORDERS_KEY = 'ps_db_orders';
+/*
+ * Live schema (verified 2026-10-19):
+ *   orders      (id, order_number, customer_id, customer_name, customer_email, customer_phone,
+ *                shipping_address, subtotal, shipping_amount, discount_amount, total_amount,
+ *                payment_method, payment_status, order_status, notes, created_at, updated_at)
+ *   order_items (id, order_id, product_id, variant_id, product_name, bottle_type, size_ml,
+ *                quantity, unit_price, total_price)
+ *
+ * Anonymous shoppers can INSERT orders but cannot read them back (RLS), so the order id is
+ * generated in the browser and the insert does not request the row back. A copy of the
+ * shopper's own order is kept in their browser so /track-order can show it on that device.
+ */
 
-export const INITIAL_ORDERS = [
-  {
-    id: 'ord-01',
-    order_number: 'PS-892401',
-    customer_name: 'Dr. Sameer Khan',
-    email: 'brandnix.in@gmail.com',
-    phone: '+91 94949 51600',
-    shipping_address: {
-      address: '7/242 Luxury Enclave, Near RTC Bus Stand',
-      city: 'Kadapa',
-      state: 'Andhra Pradesh',
-      pincode: '516001',
-      landmark: 'Opposite Royal Palace',
-    },
-    subtotal: 2998,
-    shipping_fee: 0,
-    discount: 299,
-    total: 2699,
-    payment_method: 'UPI / Online Payment',
-    payment_status: 'paid',
-    order_status: 'processing',
-    created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
-    items: [
-      {
-        id: 'item-01',
-        product_id: 'ps-01',
-        product_name: 'Royal Amber Extrait',
-        quantity: 1,
-        price: 1499,
-        total: 1499,
-        size: '100ml',
-        product_image: '/assets/prod-royal-amber.webp',
-      },
-      {
-        id: 'item-02',
-        product_id: 'ps-02',
-        product_name: 'Noir Absolu',
-        quantity: 1,
-        price: 1499,
-        total: 1499,
-        size: '100ml',
-        product_image: '/assets/prod-noir-absolu.webp',
-      },
-    ],
-  },
-  {
-    id: 'ord-02',
-    order_number: 'PS-892398',
-    customer_name: 'Ayesha Rahman',
-    email: 'ayesha.r@gmail.com',
-    phone: '+91 98845 12040',
-    shipping_address: {
-      address: 'Plot 42, Jubilee Hills Road 10',
-      city: 'Hyderabad',
-      state: 'Telangana',
-      pincode: '500033',
-      landmark: 'Near Apollo Cradle',
-    },
-    subtotal: 1499,
-    shipping_fee: 0,
-    discount: 0,
-    total: 1499,
-    payment_method: 'Cash On Delivery (COD)',
-    payment_status: 'pending',
-    order_status: 'confirmed',
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-    items: [
-      {
-        id: 'item-03',
-        product_id: 'combo-01',
-        product_name: 'PS Attar Gift Set (Pack of 4)',
-        quantity: 1,
-        price: 1499,
-        total: 1499,
-        size: '4 x 12ml Roll-on',
-        product_image: '/assets/combo-attar-set.webp',
-      },
-    ],
-  },
-];
+const LOCAL_ORDERS_KEY = 'ps_my_orders';
 
 function getLocalOrders() {
   try {
-    const raw = localStorage.getItem(LOCAL_ORDERS_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch {}
-
-  try {
-    localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify(INITIAL_ORDERS));
-  } catch {}
-  return INITIAL_ORDERS;
-}
-
-function saveLocalOrders(orders) {
-  try {
-    localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify(orders));
-  } catch {}
-}
-
-export async function getOrders() {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*, order_items(*)')
-        .order('created_at', { ascending: false });
-
-      if (!error && data && data.length > 0) {
-        return data.map((ord) => ({
-          ...ord,
-          total: Number(ord.total_amount || ord.total) || 0,
-          subtotal: Number(ord.subtotal) || 0,
-          shipping_fee: Number(ord.shipping_amount || ord.shipping_fee) || 0,
-          email: ord.shipping_address?.email || ord.email || '',
-          phone: ord.shipping_address?.phone || ord.phone || '',
-          items: (ord.order_items || []).map((it) => ({
-            ...it,
-            price: Number(it.unit_price || it.price) || 0,
-            total: Number(it.total_price || it.total) || 0,
-            size: it.size_ml || it.size || '50 ml',
-          })),
-        }));
-      }
-    } catch (e) {
-      console.warn('Supabase getOrders error:', e);
-    }
+    const parsed = JSON.parse(localStorage.getItem(LOCAL_ORDERS_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
   }
-
-  return getLocalOrders();
 }
 
+function saveLocalOrder(order) {
+  try {
+    const list = getLocalOrders().filter((o) => o.id !== order.id);
+    localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify([order, ...list].slice(0, 20)));
+  } catch {}
+}
+
+function formatOrder(ord) {
+  return {
+    ...ord,
+    total: Number(ord.total_amount ?? ord.total) || 0,
+    subtotal: Number(ord.subtotal) || 0,
+    shipping_fee: Number(ord.shipping_amount ?? ord.shipping_fee) || 0,
+    discount: Number(ord.discount_amount ?? ord.discount) || 0,
+    email: ord.customer_email || ord.shipping_address?.email || ord.email || '',
+    phone: ord.customer_phone || ord.shipping_address?.phone || ord.phone || '',
+    items: (ord.order_items || ord.items || []).map((it) => ({
+      ...it,
+      price: Number(it.unit_price ?? it.price) || 0,
+      total: Number(it.total_price ?? it.total) || 0,
+      size: [it.bottle_type, it.size_ml || it.size].filter(Boolean).join(' · '),
+    })),
+  };
+}
+
+/** Admin: all orders from the database (no demo data). */
+export async function getOrders() {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*, order_items(*)')
+    .order('created_at', { ascending: false });
+  if (error) throw dbError('Could not load orders', error);
+  return (data || []).map(formatOrder);
+}
+
+/**
+ * Track order. Admins can read any order; anonymous shoppers cannot read orders under RLS,
+ * so for them only orders placed from this browser are found.
+ */
 export async function getOrderByNumber(orderNumber) {
   if (!orderNumber) return null;
   const clean = orderNumber.trim();
   const cleanUpper = clean.toUpperCase();
 
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*, order_items(*)')
-        .ilike('order_number', cleanUpper)
-        .maybeSingle();
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*, order_items(*)')
+    .eq('order_number', cleanUpper)
+    .maybeSingle();
+  if (!error && data) return formatOrder(data);
 
-      if (!error && data) {
-        return {
-          ...data,
-          total: Number(data.total_amount || data.total) || 0,
-          subtotal: Number(data.subtotal) || 0,
-          shipping_fee: Number(data.shipping_amount || data.shipping_fee) || 0,
-          email: data.shipping_address?.email || data.email || '',
-          phone: data.shipping_address?.phone || data.phone || '',
-          items: (data.order_items || []).map((it) => ({
-            ...it,
-            price: Number(it.unit_price || it.price) || 0,
-            total: Number(it.total_price || it.total) || 0,
-            size: it.size_ml || it.size || '50 ml',
-          })),
-        };
-      }
-    } catch (e) {
-      console.warn('Supabase getOrderByNumber error:', e);
-    }
-  }
-
-  const local = getLocalOrders();
-  return (
-    local.find(
-      (o) =>
-        o.order_number?.toUpperCase() === cleanUpper ||
-        o.id?.toUpperCase() === cleanUpper ||
-        o.email?.toLowerCase() === clean.toLowerCase() ||
-        o.phone?.replace(/[^0-9]/g, '') === clean.replace(/[^0-9]/g, '')
-    ) || null
+  const local = getLocalOrders().find(
+    (o) => o.order_number?.toUpperCase() === cleanUpper || o.email?.toLowerCase() === clean.toLowerCase()
   );
+  return local ? formatOrder(local) : null;
+}
+
+function newOrderNumber() {
+  const bytes = new Uint32Array(1);
+  crypto.getRandomValues(bytes);
+  return `PS-${String(100000 + (bytes[0] % 900000))}`;
 }
 
 export async function createOrder(orderPayload) {
-  const orderNumber = `PS-${Math.floor(100000 + Math.random() * 900000)}`;
-  const orderId = `ord-${Date.now()}`;
-  const now = new Date().toISOString();
+  const items = (orderPayload.items || []).filter((it) => Number(it.quantity) > 0);
+  if (items.length === 0) throw new Error('Your cart is empty.');
 
-  const newOrder = {
-    id: orderId,
-    order_number: orderNumber,
-    customer_name: `${orderPayload.firstName || ''} ${orderPayload.lastName || ''}`.trim(),
+  const orderId = crypto.randomUUID();
+  const orderNumber = newOrderNumber();
+  const customerName = `${orderPayload.firstName || ''} ${orderPayload.lastName || ''}`.trim();
+
+  // Each line uses the price of the variant the shopper actually selected
+  const itemRows = items.map((it) => {
+    const unitPrice = Number(it.price ?? it.product?.price) || 0;
+    const quantity = Math.max(1, Number(it.quantity) || 1);
+    const isCombo = it.product?.category === 'Combo Pack' || String(it.variant_id || '').startsWith('combo-');
+    return {
+      order_id: orderId,
+      product_id: !isCombo && isValidUUID(it.product_id || it.product?.id) ? (it.product_id || it.product?.id) : null,
+      variant_id: !isCombo && isValidUUID(it.variant_id) ? it.variant_id : null,
+      product_name: it.name || it.product?.name || 'Product',
+      bottle_type: it.bottle_type || null,
+      size_ml: it.size_ml || it.size || null,
+      quantity,
+      unit_price: unitPrice,
+      total_price: unitPrice * quantity,
+    };
+  });
+
+  const subtotal = itemRows.reduce((sum, r) => sum + r.total_price, 0);
+  const shipping = Number(orderPayload.shipping) || 0;
+  const couponCode = String(orderPayload.couponCode || '').trim().toUpperCase();
+  // A discount is only recorded together with the coupon that produced it, and never exceeds the subtotal
+  const discount = couponCode ? Math.min(subtotal, Math.max(0, Number(orderPayload.discountAmount) || 0)) : 0;
+  const total = Math.max(0, subtotal - discount + shipping);
+
+  const shippingAddress = {
+    address: orderPayload.address,
+    city: orderPayload.city,
+    state: orderPayload.state,
+    pincode: orderPayload.pincode,
+    landmark: orderPayload.landmark || '',
     email: orderPayload.email,
     phone: orderPayload.phone,
-    shipping_address: {
-      address: orderPayload.address,
-      city: orderPayload.city,
-      state: orderPayload.state,
-      pincode: orderPayload.pincode,
-      landmark: orderPayload.landmark || '',
-    },
-    subtotal: orderPayload.subtotal,
-    shipping_fee: orderPayload.shipping || 0,
-    discount: orderPayload.discountAmount || 0,
-    total: orderPayload.total,
-    payment_method: orderPayload.paymentMethod || 'COD',
-    payment_status: orderPayload.paymentMethod === 'ONLINE' ? 'paid' : 'pending',
-    order_status: 'pending',
-    created_at: now,
-    items: (orderPayload.items || []).map((it, idx) => ({
-      id: `item-${Date.now()}-${idx}`,
-      product_id: it.product?.id,
-      product_name: it.product?.name,
-      quantity: it.quantity,
-      price: it.product?.price,
-      total: it.product?.price * it.quantity,
-      size: it.size || '100ml',
-      product_image: it.product?.main_image || it.product?.image,
-    })),
   };
 
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const fullShippingAddress = {
-        ...(newOrder.shipping_address || {}),
-        email: newOrder.email,
-        phone: newOrder.phone,
-      };
+  const orderRow = {
+    id: orderId,
+    order_number: orderNumber,
+    customer_name: customerName,
+    customer_email: orderPayload.email,
+    customer_phone: orderPayload.phone,
+    shipping_address: shippingAddress,
+    subtotal,
+    shipping_amount: shipping,
+    discount_amount: discount,
+    total_amount: total,
+    payment_method: orderPayload.paymentMethod || 'COD',
+    // No payment gateway is integrated: every order starts unpaid until confirmed by the store
+    payment_status: 'pending',
+    order_status: 'pending',
+    notes: couponCode ? `Coupon: ${couponCode}` : null,
+  };
 
-      const { data: ord, error: ordErr } = await supabase
-        .from('orders')
-        .insert([{
-          order_number: newOrder.order_number,
-          customer_name: newOrder.customer_name,
-          shipping_address: fullShippingAddress,
-          subtotal: Number(newOrder.subtotal) || 0,
-          shipping_amount: Number(newOrder.shipping_fee) || 0,
-          total_amount: Number(newOrder.total) || 0,
-          payment_method: newOrder.payment_method,
-          payment_status: newOrder.payment_status,
-          order_status: newOrder.order_status,
-        }])
-        .select()
-        .single();
-
-      if (!ordErr && ord) {
-        const orderItems = newOrder.items.map((it) => ({
-          order_id: ord.id,
-          product_id: (it.product_id && String(it.product_id).length === 36) ? it.product_id : null,
-          product_name: it.product_name || 'Fragrance',
-          bottle_type: it.bottle_type || (it.size?.toLowerCase().includes('pvc') ? 'PVC Bottle' : 'Glass Bottle'),
-          size_ml: it.size || '100 ml',
-          quantity: Number(it.quantity) || 1,
-          unit_price: Number(it.price) || 0,
-          total_price: Number(it.total) || ((Number(it.price) || 0) * (Number(it.quantity) || 1)),
-        }));
-        await supabase.from('order_items').insert(orderItems);
-        newOrder.id = ord.id;
-      }
-    } catch (e) {
-      console.warn('Supabase order creation fallback:', e);
-    }
+  const { error: orderErr } = await supabase.from('orders').insert([orderRow]);
+  if (orderErr) {
+    console.error('Order insert failed:', orderErr);
+    throw new Error(`Your order could not be placed (${orderErr.message}). Please try again or contact us on WhatsApp.`);
   }
 
-  // Update local storage
-  const list = getLocalOrders();
-  saveLocalOrders([newOrder, ...list]);
-  return { order: newOrder, error: null };
+  const { error: itemsErr } = await supabase.from('order_items').insert(itemRows);
+  if (itemsErr) {
+    console.error('Order items insert failed:', itemsErr);
+    throw new Error(
+      `Order ${orderNumber} was received but its item list could not be saved (${itemsErr.message}). Please contact us with this order number.`
+    );
+  }
+
+  if (couponCode && discount > 0) {
+    // Counts one use of the coupon; a failure here does not affect the stored order
+    await redeemCoupon(couponCode, orderId);
+  }
+
+  const order = formatOrder({
+    ...orderRow,
+    created_at: new Date().toISOString(),
+    order_items: itemRows,
+  });
+  saveLocalOrder(order);
+  return { order, error: null };
 }
 
 export async function updateOrderStatus(orderId, status) {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase.from('orders').update({ order_status: status }).eq('id', orderId);
-    } catch {}
-  }
-
-  const list = getLocalOrders();
-  const updated = list.map((o) => (o.id === orderId ? { ...o, order_status: status } : o));
-  saveLocalOrders(updated);
+  const { data, error } = await supabase
+    .from('orders')
+    .update({ order_status: status, updated_at: new Date().toISOString() })
+    .eq('id', orderId)
+    .select('id');
+  if (error) throw dbError('Order status was not updated', error);
+  assertRows(data, 'Order status was not updated');
   return { success: true };
 }

@@ -1,7 +1,14 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
+import { dbError } from './dbErrors';
 
-const LOCAL_SETTINGS_KEY = 'ps_db_site_settings';
+/*
+ * Live schema (verified 2026-10-19): settings are key/value rows
+ *   store_settings (id, setting_key, setting_value, created_at, updated_at)
+ * There is no site_settings table. Each field below is stored under its own setting_key.
+ * Values are written as text and converted back to numbers for numeric fields.
+ */
 
+// Defaults shown until a value is saved in the database (real business contact details)
 export const INITIAL_SETTINGS = {
   brand_name: 'PS PERFUMES',
   tagline: 'Haute Parfumerie & Luxury Fragrances',
@@ -15,7 +22,7 @@ export const INITIAL_SETTINGS = {
   instagram_url: 'https://www.instagram.com/ps_perfumes_kadapa/?hl=en',
   google_maps_url: 'https://share.google/b0yildKJKTaGc365J',
   whatsapp_url: 'https://wa.me/919494951600',
-  free_shipping_threshold: 999,
+  free_shipping_threshold: 1500, // matches the cart rule used before this setting is saved
   standard_shipping_fee: 99,
   currency: 'INR',
   currency_symbol: '₹',
@@ -23,48 +30,80 @@ export const INITIAL_SETTINGS = {
   website_url: 'https://psperfumes.com',
 };
 
-function getLocalSettings() {
-  try {
-    const raw = localStorage.getItem(LOCAL_SETTINGS_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return INITIAL_SETTINGS;
+const SETTING_KEYS = Object.keys(INITIAL_SETTINGS);
+const NUMERIC_KEYS = new Set(['free_shipping_threshold', 'standard_shipping_fee']);
+
+function decodeValue(key, raw) {
+  let value = raw;
+  // jsonb columns may return a JSON string; text columns return plain text
+  if (value && typeof value === 'object' && 'value' in value) value = value.value;
+  if (NUMERIC_KEYS.has(key)) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : INITIAL_SETTINGS[key];
+  }
+  return value === null || value === undefined ? '' : String(value);
 }
 
-function saveLocalSettings(settings) {
-  try {
-    localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(settings));
-  } catch {}
-}
-
+/**
+ * Returns all settings: stored values override the defaults.
+ * `_storedKeys` lists the keys that actually exist in the database.
+ */
 export async function getSiteSettings() {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { data, error } = await supabase.from('site_settings').select('*').limit(1).maybeSingle();
-      if (!error && data) return data;
-    } catch {}
-  }
-  return getLocalSettings();
+  const { data, error } = await supabase
+    .from('store_settings')
+    .select('setting_key, setting_value')
+    .in('setting_key', SETTING_KEYS);
+  if (error) throw dbError('Could not load store settings', error);
+
+  const merged = { ...INITIAL_SETTINGS };
+  const storedKeys = [];
+  (data || []).forEach((row) => {
+    if (SETTING_KEYS.includes(row.setting_key)) {
+      merged[row.setting_key] = decodeValue(row.setting_key, row.setting_value);
+      storedKeys.push(row.setting_key);
+    }
+  });
+  return { ...merged, _storedKeys: storedKeys };
 }
 
+/** Saves every known setting; updates existing keys and inserts missing ones. */
 export async function updateSiteSettings(settingsUpdates) {
-  const merged = { ...getLocalSettings(), ...settingsUpdates, updated_at: new Date().toISOString() };
+  const { data: existing, error: readErr } = await supabase
+    .from('store_settings')
+    .select('id, setting_key')
+    .in('setting_key', SETTING_KEYS);
+  if (readErr) throw dbError('Could not read store settings', readErr);
 
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { data: existing } = await supabase.from('site_settings').select('id').limit(1).maybeSingle();
-      if (existing?.id) {
-        const payload = { ...merged };
-        delete payload.id;
-        await supabase.from('site_settings').update(payload).eq('id', existing.id);
-      } else {
-        const payload = { ...merged };
-        delete payload.id;
-        await supabase.from('site_settings').insert([payload]);
+  const idByKey = new Map((existing || []).map((r) => [r.setting_key, r.id]));
+  const now = new Date().toISOString();
+  const inserts = [];
+
+  for (const key of SETTING_KEYS) {
+    if (settingsUpdates[key] === undefined) continue;
+    const value = String(settingsUpdates[key] ?? '');
+    const id = idByKey.get(key);
+    if (id) {
+      const { data, error } = await supabase
+        .from('store_settings')
+        .update({ setting_value: value, updated_at: now })
+        .eq('id', id)
+        .select('id');
+      if (error) throw dbError(`Setting "${key}" was not saved`, error);
+      if (!data || data.length === 0) {
+        throw new Error(`Setting "${key}" was not saved: no row changed (permission denied?).`);
       }
-    } catch {}
+    } else {
+      inserts.push({ setting_key: key, setting_value: value });
+    }
   }
 
-  saveLocalSettings(merged);
-  return { data: merged, error: null };
+  if (inserts.length > 0) {
+    const { data, error } = await supabase.from('store_settings').insert(inserts).select('id');
+    if (error) throw dbError('New settings were not saved', error);
+    if ((data || []).length !== inserts.length) {
+      throw new Error('Some new settings were not saved (permission denied?).');
+    }
+  }
+
+  return { data: await getSiteSettings(), error: null };
 }

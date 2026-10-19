@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Heart, Star, ShoppingBag, Zap, ShieldCheck, Truck, Sparkles, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
 import './ProductDetailModal.css';
@@ -11,9 +12,10 @@ export default function ProductDetailModal() {
     addToCart,
     toggleWishlist,
     isInWishlist,
-    setIsCheckoutOpen,
+    freeShippingThreshold,
   } = useCart();
 
+  const navigate = useNavigate();
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(null);
@@ -47,7 +49,7 @@ export default function ProductDetailModal() {
   const handleBuyNow = () => {
     addToCart(selectedProduct, quantity, selectedSize);
     setSelectedProduct(null);
-    setIsCheckoutOpen(true);
+    navigate('/checkout');
   };
 
   return (
@@ -138,7 +140,7 @@ export default function ProductDetailModal() {
               {selectedProduct.discountPercent && (
                 <span className="ps-pdetail-discount-tag">{selectedProduct.discountPercent}</span>
               )}
-              <span className="ps-pdetail-tax-note">Inclusive of all taxes • Free Delivery Over ₹999</span>
+              <span className="ps-pdetail-tax-note">Inclusive of all taxes • Free Delivery Over {formatINR(freeShippingThreshold)}</span>
             </div>
 
             {/* Narrative Description */}
@@ -270,7 +272,7 @@ export default function ProductDetailModal() {
             <div className="ps-pdetail-perks">
               <div className="ps-perk-item">
                 <Truck size={15} color="#c5a059" />
-                <span>Free Express Shipping Across India Over ₹999</span>
+                <span>Free Shipping Across India Over {formatINR(freeShippingThreshold)}</span>
               </div>
               <div className="ps-perk-item">
                 <ShieldCheck size={15} color="#c5a059" />

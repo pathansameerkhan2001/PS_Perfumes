@@ -7,7 +7,7 @@ import { createOrder } from '../../services/orders';
 import './CheckoutPage.css';
 
 export default function CheckoutPage() {
-  const { cartItems, subtotal, shipping, discountAmount, total, clearCart } = useCart();
+  const { cartItems, subtotal, shipping, discountAmount, total, clearCart, promoCode } = useCart();
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -61,6 +61,7 @@ export default function CheckoutPage() {
         subtotal,
         shipping,
         discountAmount,
+        couponCode: discountAmount > 0 ? promoCode : '',
         total,
         items: cartItems,
       };
@@ -70,8 +71,8 @@ export default function CheckoutPage() {
         setOrderConfirmed(result.order);
         clearCart();
       }
-    } catch {
-      setErrors({ form: 'An error occurred while confirming order. Please try again.' });
+    } catch (err) {
+      setErrors({ form: err?.message || 'An error occurred while confirming order. Please try again.' });
     } finally {
       setSubmitting(false);
     }
@@ -285,23 +286,10 @@ export default function CheckoutPage() {
                   />
                   <div className="ps-payment-text">
                     <strong>Cash on Delivery (COD)</strong>
-                    <span>Pay in cash or UPI upon package inspection</span>
+                    <span>Pay when your order is delivered</span>
                   </div>
                 </label>
-
-                <label className={`ps-payment-option ${formData.paymentMethod === 'ONLINE' ? 'is-selected' : ''}`}>
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="ONLINE"
-                    checked={formData.paymentMethod === 'ONLINE'}
-                    onChange={() => setFormData({ ...formData, paymentMethod: 'ONLINE' })}
-                  />
-                  <div className="ps-payment-text">
-                    <strong>Instant UPI / Card / NetBanking</strong>
-                    <span>Fast prepaid checkout via secure gateway</span>
-                  </div>
-                </label>
+                {/* Online payment is not offered: no payment gateway is integrated yet. */}
               </div>
             </div>
           </div>

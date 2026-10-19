@@ -225,11 +225,11 @@ export default function TrackOrderPage() {
                     <div key={idx} className="ps-track-item-row">
                       <div className="ps-track-item-img-wrap">
                         <img
-                          src={it.product_image || '/assets/prod-royal-amber.webp'}
+                          src={it.product_image || '/assets/ps-perfumes-logo.webp'}
                           alt={it.product_name}
                           className="ps-track-item-img"
                           onError={(e) => {
-                            e.currentTarget.src = '/assets/prod-royal-amber.webp';
+                            e.currentTarget.src = '/assets/ps-perfumes-logo.webp';
                           }}
                         />
                       </div>

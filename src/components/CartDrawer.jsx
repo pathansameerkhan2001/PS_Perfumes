@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Trash2, ShoppingBag, ArrowRight, Tag, Check, Truck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
 import './CartDrawer.css';
@@ -18,11 +19,13 @@ export default function CartDrawer() {
     discountPercent,
     promoCode,
     applyPromoCode,
+    removePromoCode,
+    couponNotice,
     total,
-    setIsCheckoutOpen,
     itemCount,
   } = useCart();
 
+  const navigate = useNavigate();
   const [inputCode, setInputCode] = useState('');
   const [promoFeedback, setPromoFeedback] = useState(null);
 
@@ -39,16 +42,23 @@ export default function CartDrawer() {
 
   if (!isCartOpen) return null;
 
-  const handleApplyPromo = (e) => {
+  const [applying, setApplying] = useState(false);
+
+  const handleApplyPromo = async (e) => {
     e.preventDefault();
-    if (!inputCode.trim()) return;
-    const res = applyPromoCode(inputCode);
-    setPromoFeedback(res);
+    if (!inputCode.trim() || applying) return;
+    setApplying(true);
+    try {
+      setPromoFeedback(await applyPromoCode(inputCode));
+    } finally {
+      setApplying(false);
+    }
   };
 
+  // The checkout page is the only flow that actually records the order
   const handleProceedCheckout = () => {
     setIsCartOpen(false);
-    setIsCheckoutOpen(true);
+    navigate('/checkout');
   };
 
   const amountNeededForFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
@@ -86,11 +96,11 @@ export default function CartDrawer() {
             <Truck size={14} color="#c5a059" />
             {amountNeededForFreeShipping > 0 ? (
               <span>
-                Add <strong>{formatINR(amountNeededForFreeShipping)}</strong> more to enjoy <strong>Free Express Delivery Across India</strong>
+                Add <strong>{formatINR(amountNeededForFreeShipping)}</strong> more to enjoy <strong>Free Delivery Across India</strong>
               </span>
             ) : (
               <span className="ps-shipping-unlocked">
-                🎉 Congratulations! You have unlocked <strong>Free Express Delivery Across India</strong>!
+                🎉 Congratulations! You have unlocked <strong>Free Delivery Across India</strong>!
               </span>
             )}
           </div>
@@ -125,7 +135,7 @@ export default function CartDrawer() {
             <div className="ps-cart-items-list">
               {cartItems.map((item, index) => {
                 const prod = item.product || item;
-                const img = item.image || prod.main_image || prod.image || '/assets/prod-royal-amber.webp';
+                const img = item.image || prod.main_image || prod.image || '/assets/ps-perfumes-logo.webp';
                 const itemPrice = Number(item.price) || Number(prod.price) || 0;
                 const identifier = item.cartItemId || item.variant_id || item.size_ml || item.size;
 
@@ -198,14 +208,14 @@ export default function CartDrawer() {
                   <Tag size={14} color="#888" className="ps-cart-promo-icon" />
                   <input
                     type="text"
-                    placeholder="Promo code (e.g. PS10, WELCOME20)"
+                    placeholder="Promo code"
                     className="ps-cart-promo-input"
                     value={inputCode}
                     onChange={(e) => setInputCode(e.target.value)}
                   />
                 </div>
-                <button type="submit" className="ps-cart-promo-btn">
-                  APPLY
+                <button type="submit" className="ps-cart-promo-btn" disabled={applying}>
+                  {applying ? '…' : 'APPLY'}
                 </button>
               </div>
 
@@ -213,6 +223,12 @@ export default function CartDrawer() {
                 <div className={`ps-promo-alert ${promoFeedback.success ? 'is-success' : 'is-error'}`}>
                   {promoFeedback.message}
                 </div>
+              )}
+              {couponNotice && <div className="ps-promo-alert is-error">{couponNotice}</div>}
+              {promoCode && (
+                <button type="button" className="ps-promo-alert" onClick={() => { removePromoCode(); setPromoFeedback(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+                  Remove code {promoCode}
+                </button>
               )}
             </form>
 
@@ -225,7 +241,7 @@ export default function CartDrawer() {
 
               {discountAmount > 0 && (
                 <div className="ps-summary-row ps-discount-row">
-                  <span>Discount ({promoCode} - {discountPercent}%)</span>
+                  <span>Discount ({promoCode}{discountPercent ? ` - ${discountPercent}%` : ''})</span>
                   <span>-{formatINR(discountAmount)}</span>
                 </div>
               )}

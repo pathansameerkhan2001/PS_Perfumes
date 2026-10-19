@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { getHomepageSections, updateHomepageSection, reorderSections } from '../../services/homepage';
+import {
+  getHomepageSections,
+  updateHomepageSection,
+  reorderSections,
+  initializeHomepageSections,
+} from '../../services/homepage';
 import { ArrowUp, ArrowDown, Eye, EyeOff, Save, CheckCircle, AlertCircle, RefreshCw, LayoutTemplate } from 'lucide-react';
 import './AdminProducts.css';
 
@@ -15,9 +20,26 @@ export default function AdminHomepage() {
       const data = await getHomepageSections();
       setSections(data.sort((a, b) => a.display_order - b.display_order));
     } catch (err) {
-      console.error(err);
+      setStatusMessage({ type: 'error', text: err.message });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // True while the database has no homepage_sections rows (built-in layout is shown)
+  const isDefaultLayout = sections.length > 0 && sections.every((s) => s._default);
+
+  const handleInitialize = async () => {
+    setSaving(true);
+    setStatusMessage({ type: '', text: '' });
+    try {
+      const data = await initializeHomepageSections();
+      setSections(data.sort((a, b) => a.display_order - b.display_order));
+      setStatusMessage({ type: 'success', text: 'Homepage layout saved to the database. You can now reorder and hide sections.' });
+    } catch (err) {
+      setStatusMessage({ type: 'error', text: err.message });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -27,10 +49,16 @@ export default function AdminHomepage() {
 
   const handleToggleActive = async (id, currentActive) => {
     const updated = !currentActive;
-    setSections((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, is_active: updated } : s))
-    );
-    await updateHomepageSection(id, { is_active: updated });
+    setStatusMessage({ type: '', text: '' });
+    try {
+      await updateHomepageSection(id, { is_active: updated });
+      setSections((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, is_active: updated } : s))
+      );
+      setStatusMessage({ type: 'success', text: updated ? 'Section is now visible on the homepage.' : 'Section hidden from the homepage.' });
+    } catch (err) {
+      setStatusMessage({ type: 'error', text: err.message });
+    }
   };
 
   const handleMove = async (index, direction) => {
@@ -47,9 +75,14 @@ export default function AdminHomepage() {
     reordered[index] = reordered[targetIndex];
     reordered[targetIndex] = temp;
 
-    setSections(reordered);
-    const orderedIds = reordered.map((s) => s.id);
-    await reorderSections(orderedIds);
+    setStatusMessage({ type: '', text: '' });
+    try {
+      await reorderSections(reordered.map((s) => s.id));
+      setSections(reordered);
+    } catch (err) {
+      setStatusMessage({ type: 'error', text: `Reorder failed: ${err.message}` });
+      loadData();
+    }
   };
 
   const handleTitleChange = (id, newTitle) => {
@@ -98,12 +131,24 @@ export default function AdminHomepage() {
             <RefreshCw size={16} />
             <span>Reset</span>
           </button>
-          <button type="button" onClick={handleSaveAll} disabled={saving} className="ps-admin-btn-primary">
+          <button type="button" onClick={handleSaveAll} disabled={saving || isDefaultLayout} className="ps-admin-btn-primary">
             {saving ? <RefreshCw size={16} className="ps-spin" /> : <Save size={16} />}
             <span>{saving ? 'Saving...' : 'Save All Layouts'}</span>
           </button>
         </div>
       </div>
+
+      {isDefaultLayout && (
+        <div className="ps-form-error-banner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+          <span>
+            The homepage is using its built-in layout: no sections are stored in the database yet, so changes here
+            cannot be saved. Save the layout to the database first.
+          </span>
+          <button type="button" onClick={handleInitialize} disabled={saving} className="ps-admin-btn-primary">
+            Save layout to database
+          </button>
+        </div>
+      )}
 
       {statusMessage.text && (
         <div className={`ps-admin-alert ${statusMessage.type === 'error' ? 'ps-alert-danger' : 'ps-alert-success'}`}>

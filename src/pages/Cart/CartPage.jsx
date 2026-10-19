@@ -17,18 +17,24 @@ export default function CartPage() {
     total,
     promoCode,
     applyPromoCode,
-    setIsCheckoutOpen,
+    removePromoCode,
+    couponNotice,
   } = useCart();
 
   const [inputCode, setInputCode] = useState('');
   const [promoMessage, setPromoMessage] = useState(null);
+  const [applying, setApplying] = useState(false);
   const navigate = useNavigate();
 
-  const handleApply = (e) => {
+  const handleApply = async (e) => {
     e.preventDefault();
-    if (!inputCode) return;
-    const res = applyPromoCode(inputCode);
-    setPromoMessage(res);
+    if (!inputCode.trim() || applying) return;
+    setApplying(true);
+    try {
+      setPromoMessage(await applyPromoCode(inputCode));
+    } finally {
+      setApplying(false);
+    }
   };
 
   if (cartItems.length === 0) {
@@ -71,7 +77,7 @@ export default function CartPage() {
             <div className="ps-cart-items-list">
               {cartItems.map((item, idx) => {
                 const prod = item.product || item;
-                const img = item.image || prod.main_image || prod.image || '/assets/prod-royal-amber.webp';
+                const img = item.image || prod.main_image || prod.image || '/assets/ps-perfumes-logo.webp';
                 const itemPrice = Number(item.price) || Number(prod.price) || 0;
                 const lineTotal = itemPrice * item.quantity;
                 const identifier = item.cartItemId || item.variant_id || item.size_ml || item.size;
@@ -162,20 +168,28 @@ export default function CartPage() {
                   <Tag size={15} color="#c8a45d" />
                   <input
                     type="text"
-                    placeholder="Enter Coupon (e.g. PS10, WELCOME20)"
+                    placeholder="Enter coupon code"
                     value={inputCode}
                     onChange={(e) => setInputCode(e.target.value)}
                   />
-                  <button type="submit">Apply</button>
+                  <button type="submit" disabled={applying}>{applying ? '…' : 'Apply'}</button>
                 </div>
                 {promoMessage && (
                   <p className={`ps-promo-feedback ${promoMessage.success ? 'is-valid' : 'is-err'}`}>
                     {promoMessage.message}
                   </p>
                 )}
+                {couponNotice && <p className="ps-promo-feedback is-err">{couponNotice}</p>}
                 {promoCode && (
                   <span className="ps-active-code-tag">
-                    Active Code: <strong>{promoCode}</strong>
+                    Active Code: <strong>{promoCode}</strong>{' '}
+                    <button
+                      type="button"
+                      onClick={() => { removePromoCode(); setPromoMessage(null); }}
+                      style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
+                    >
+                      remove
+                    </button>
                   </span>
                 )}
               </form>

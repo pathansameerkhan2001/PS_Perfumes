@@ -92,14 +92,12 @@ function saveLocalCategories(cats) {
 
 export async function getCategories(all = false) {
   if (isSupabaseConfigured && supabase) {
-    try {
-      let query = supabase.from('categories').select('*').order('display_order', { ascending: true });
-      if (!all) query = query.eq('is_active', true);
-      const { data, error } = await query;
-      if (!error && data && data.length > 0) return data;
-    } catch (e) {
-      console.warn('Supabase getCategories fallback:', e);
-    }
+    let query = supabase.from('categories').select('*').order('display_order', { ascending: true });
+    if (!all) query = query.eq('is_active', true);
+    const { data, error } = await query;
+    if (error) throw new Error(`Could not load categories: ${error.message}`);
+    // The database answered: real categories only, never demo data
+    return data || [];
   }
 
   const list = getLocalCategories();
@@ -116,6 +114,7 @@ export async function createCategory(cat) {
         slug: cat.slug || cat.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         description: cat.description || '',
         image_url: cat.image_url || '',
+        image_path: cat.image_path || null,
         display_order: Number(cat.display_order) || 1,
         is_active: cat.is_active !== undefined ? Boolean(cat.is_active) : true,
       };
@@ -159,19 +158,19 @@ export async function updateCategory(id, updates) {
       if (updates.slug !== undefined) payload.slug = updates.slug;
       if (updates.description !== undefined) payload.description = updates.description;
       if (updates.image_url !== undefined) payload.image_url = updates.image_url;
+      if (updates.image_path !== undefined) payload.image_path = updates.image_path || null;
       if (updates.display_order !== undefined) payload.display_order = Number(updates.display_order) || 1;
       if (updates.is_active !== undefined) payload.is_active = Boolean(updates.is_active);
       payload.updated_at = new Date().toISOString();
 
-      const { data, error } = await supabase.from('categories').update(payload).eq('id', id).select().single();
-      if (!error && data) {
-        const list = getLocalCategories();
-        saveLocalCategories(list.map((c) => (c.id === id ? data : c)));
-        return { data, error: null };
-      }
+      const { data, error } = await supabase.from('categories').update(payload).eq('id', id).select();
       if (error) {
         throw new Error(error.message);
       }
+      if (!data || data.length === 0) {
+        throw new Error('No row was changed (missing record or no permission).');
+      }
+      return { data: data[0], error: null };
     } catch (e) {
       console.error('Supabase updateCategory error:', e);
       throw e;
@@ -200,10 +199,14 @@ export async function deleteCategory(id) {
         };
       }
 
-      const { error } = await supabase.from('categories').delete().eq('id', id);
+      const { data: deleted, error } = await supabase.from('categories').delete().eq('id', id).select('id');
       if (error) {
         return { success: false, error: error.message };
       }
+      if (!deleted || deleted.length === 0) {
+        return { success: false, error: 'Category was not deleted: no row changed (missing record or no permission).' };
+      }
+      return { success: true };
     } catch (e) {
       return { success: false, error: e.message };
     }

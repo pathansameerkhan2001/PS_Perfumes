@@ -89,7 +89,11 @@ export default function CollectionPage({ category: categoryProp }) {
       setLoading(true);
       try {
         const [cats, prods] = await Promise.all([
-          getCategories(false),
+          // A categories error must not hide the products
+          getCategories(false).catch((err) => {
+            console.error('Could not load categories:', err);
+            return [];
+          }),
           getProducts({ allStatuses: false }),
         ]);
 

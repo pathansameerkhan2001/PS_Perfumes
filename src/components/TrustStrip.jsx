@@ -22,7 +22,8 @@ export default function TrustStrip() {
     {
       icon: Truck,
       title: 'Free Express Delivery',
-      desc: 'Complimentary express delivery across India on orders over ₹999',
+      // Not currently rendered anywhere; kept free of a hard-coded threshold
+      desc: 'Complimentary delivery across India on qualifying orders',
     },
     {
       icon: ShieldCheck,

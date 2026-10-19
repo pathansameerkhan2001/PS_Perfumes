@@ -65,7 +65,9 @@ export default function AdminHero() {
     setSuccessMsg('');
     setForm({
       desktop_image: '',
+      desktop_image_path: '',
       mobile_image: '',
+      mobile_image_path: '',
       eyebrow: 'ROYAL OUD ATELIER',
       heading: 'Imperial Artisanal Extractions',
       description: 'Centuries-old steam distillation in pure sandalwood and amber bases.',
@@ -83,7 +85,9 @@ export default function AdminHero() {
     setSuccessMsg('');
     setForm({
       desktop_image: slide.desktop_image || slide.image_url || '',
+      desktop_image_path: slide.desktop_image_path || '',
       mobile_image: slide.mobile_image || slide.mobile_image_url || '',
+      mobile_image_path: slide.mobile_image_path || '',
       eyebrow: slide.eyebrow || slide.subtitle || '',
       heading: slide.heading || slide.title || '',
       description: slide.description || '',
@@ -102,11 +106,11 @@ export default function AdminHero() {
     setUploadingField(field);
 
     try {
-      const { url, error } = await uploadImage(file, 'hero', `hero-${field}`);
-      if (error) {
-        setErrorMsg(`Failed to upload ${field}: ${error}`);
-      } else if (url) {
-        setForm((prev) => ({ ...prev, [field]: url }));
+      const { url, path, error } = await uploadImage(file, 'hero', `hero-${field}`);
+      if (error || !url) {
+        setErrorMsg(`Failed to upload ${field}: ${error || 'Storage did not return the uploaded file.'}`);
+      } else {
+        setForm((prev) => ({ ...prev, [field]: url, [`${field}_path`]: path }));
         setSuccessMsg(`${field === 'desktop_image' ? 'Desktop' : 'Mobile'} media uploaded successfully.`);
         setTimeout(() => setSuccessMsg(''), 3000);
       }

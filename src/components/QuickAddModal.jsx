@@ -128,10 +128,10 @@ export default function QuickAddModal({ product, isOpen, onClose }) {
 
   if (!isOpen || !product) return null;
 
-  const imageSrc = product.main_image || product.image || '/assets/prod-royal-amber.webp';
+  const imageSrc = product.main_image || product.image || '/assets/ps-perfumes-logo.webp';
   const price = selectedVariant
     ? Number(selectedVariant.sale_price || selectedVariant.price)
-    : Number(product.price || 999);
+    : Number(product.price) || 0;
   const comparePrice = selectedVariant?.compare_at_price
     ? Number(selectedVariant.compare_at_price)
     : Number(product.compare_at_price || product.originalPrice || null);

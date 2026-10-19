@@ -18,7 +18,7 @@ export default function AdminSettings() {
     instagram_url: 'https://www.instagram.com/ps_perfumes_kadapa/?hl=en',
     google_maps_url: 'https://share.google/b0yildKJKTaGc365J',
     whatsapp_url: 'https://wa.me/919494951600',
-    free_shipping_threshold: 999,
+    free_shipping_threshold: 1500,
     standard_shipping_fee: 99,
     currency: 'INR',
     currency_symbol: '₹',

@@ -8,21 +8,29 @@ export default function AdminCoupons() {
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const [form, setForm] = useState({
+  const EMPTY_COUPON = {
     code: '',
     discount_type: 'percentage',
     discount_value: 10,
-    min_order_amount: 999,
-    max_discount_amount: 500,
-    usage_limit: 500,
+    min_order_amount: 0,
+    usage_limit: '',
+    expires_at: '',
     is_active: true,
-  });
+  };
+  const [form, setForm] = useState(EMPTY_COUPON);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [notice, setNotice] = useState(null); // { type: 'success' | 'error', text }
 
   const loadData = async () => {
     setLoading(true);
-    const data = await getCoupons();
-    setCoupons(data);
-    setLoading(false);
+    try {
+      setCoupons(await getCoupons());
+    } catch (err) {
+      setNotice({ type: 'error', text: err.message });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -32,28 +40,45 @@ export default function AdminCoupons() {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!form.code) return;
-    await createCoupon(form);
-    setIsFormOpen(false);
-    setForm({
-      code: '',
-      discount_type: 'percentage',
-      discount_value: 10,
-      min_order_amount: 999,
-      max_discount_amount: 500,
-      usage_limit: 500,
-      is_active: true,
-    });
-    loadData();
+    setSaving(true);
+    setFormError('');
+    try {
+      await createCoupon({
+        ...form,
+        expires_at: form.expires_at ? new Date(`${form.expires_at}T23:59:59`).toISOString() : null,
+      });
+      setIsFormOpen(false);
+      setForm(EMPTY_COUPON);
+      setNotice({ type: 'success', text: `Coupon ${form.code} created.` });
+      loadData();
+    } catch (err) {
+      setFormError(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleToggle = async (id, current) => {
-    await toggleCouponActive(id, !current);
-    loadData();
+    setNotice(null);
+    try {
+      await toggleCouponActive(id, !current);
+      setNotice({ type: 'success', text: `Coupon ${current ? 'disabled' : 'activated'}.` });
+    } catch (err) {
+      setNotice({ type: 'error', text: err.message });
+    } finally {
+      loadData();
+    }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Delete this coupon code?')) {
+    if (!window.confirm('Delete this coupon code?')) return;
+    setNotice(null);
+    try {
       await deleteCoupon(id);
+      setNotice({ type: 'success', text: 'Coupon deleted.' });
+    } catch (err) {
+      setNotice({ type: 'error', text: err.message });
+    } finally {
       loadData();
     }
   };
@@ -75,6 +100,16 @@ export default function AdminCoupons() {
         </button>
       </div>
 
+      <p style={{ fontSize: 12, color: 'var(--color-muted)', margin: '0 0 12px' }}>
+        Note: coupons saved here are not yet applied at checkout — the cart currently accepts only its built-in codes.
+      </p>
+
+      {notice && (
+        <div className={notice.type === 'error' ? 'ps-form-error-banner' : 'ps-form-success-banner'} role="status">
+          {notice.text}
+        </div>
+      )}
+
       {loading ? (
         <div className="ps-admin-loading">Loading Coupons...</div>
       ) : coupons.length === 0 ? (
@@ -87,7 +122,7 @@ export default function AdminCoupons() {
                 <th>Coupon Code</th>
                 <th>Discount</th>
                 <th>Min Order</th>
-                <th>Max Cap</th>
+                <th>Expires</th>
                 <th>Usage Count</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -110,7 +145,7 @@ export default function AdminCoupons() {
                     </span>
                   </td>
                   <td>{formatINR(cp.min_order_amount || 0)}</td>
-                  <td>{cp.max_discount_amount ? formatINR(cp.max_discount_amount) : 'No Cap'}</td>
+                  <td>{cp.expires_at ? new Date(cp.expires_at).toLocaleDateString() : 'Never'}</td>
                   <td>
                     {cp.used_count || 0} / {cp.usage_limit || '∞'}
                   </td>
@@ -189,11 +224,11 @@ export default function AdminCoupons() {
                   />
                 </div>
                 <div className="ps-form-group">
-                  <label>Max Discount Cap (₹)</label>
+                  <label>Expires On (optional)</label>
                   <input
-                    type="number"
-                    value={form.max_discount_amount}
-                    onChange={(e) => setForm({ ...form, max_discount_amount: Number(e.target.value) })}
+                    type="date"
+                    value={form.expires_at}
+                    onChange={(e) => setForm({ ...form, expires_at: e.target.value })}
                   />
                 </div>
               </div>
@@ -202,17 +237,21 @@ export default function AdminCoupons() {
                 <label>Usage Limit (Total redeems allowed)</label>
                 <input
                   type="number"
+                  min="0"
+                  placeholder="Unlimited"
                   value={form.usage_limit}
-                  onChange={(e) => setForm({ ...form, usage_limit: Number(e.target.value) })}
+                  onChange={(e) => setForm({ ...form, usage_limit: e.target.value })}
                 />
               </div>
 
+              {formError && <div className="ps-form-error-banner">{formError}</div>}
+
               <div className="ps-modal-actions" style={{ marginTop: 8 }}>
-                <button type="button" className="ps-btn-cancel" onClick={() => setIsFormOpen(false)}>
+                <button type="button" className="ps-btn-cancel" onClick={() => { setIsFormOpen(false); setFormError(''); }}>
                   Cancel
                 </button>
-                <button type="submit" className="ps-btn-gold-primary" style={{ padding: '10px 18px' }}>
-                  Save Coupon
+                <button type="submit" className="ps-btn-gold-primary" style={{ padding: '10px 18px' }} disabled={saving}>
+                  {saving ? 'Saving…' : 'Save Coupon'}
                 </button>
               </div>
             </form>

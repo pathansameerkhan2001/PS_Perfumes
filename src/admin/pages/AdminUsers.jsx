@@ -5,6 +5,7 @@ import {
   createAdminUser,
   updateAdminUser,
   deleteAdminUser,
+  ADMIN_ROLES,
 } from '../../services/adminUsers';
 import './AdminProductForm.css';
 
@@ -14,12 +15,12 @@ export default function AdminUsers() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [notice, setNotice] = useState(null); // { type: 'success' | 'error', text }
+  const [busyId, setBusyId] = useState(null);
 
   const [form, setForm] = useState({
     email: '',
-    full_name: '',
-    role: 'Store Manager',
-    status: 'active',
+    role: 'admin',
   });
 
   const loadData = async () => {
@@ -27,8 +28,8 @@ export default function AdminUsers() {
     try {
       const data = await getAdminUsers();
       setUsers(data);
-    } catch {
-      console.error('Failed to load admin users');
+    } catch (err) {
+      setNotice({ type: 'error', text: err.message });
     } finally {
       setLoading(false);
     }
@@ -41,17 +42,16 @@ export default function AdminUsers() {
   const handleOpenAdd = () => {
     setForm({
       email: '',
-      full_name: '',
-      role: 'Store Manager',
-      status: 'active',
+      role: 'admin',
     });
+    setErrorMsg('');
     setIsModalOpen(true);
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!form.email.trim() || !form.full_name.trim()) {
-      setErrorMsg('Please specify Name and Email.');
+    if (!form.email.trim()) {
+      setErrorMsg('Please specify the e-mail of an existing Supabase Auth user.');
       return;
     }
 
@@ -60,25 +60,43 @@ export default function AdminUsers() {
     try {
       await createAdminUser(form);
       setIsModalOpen(false);
+      setNotice({ type: 'success', text: `Admin access granted to ${form.email.trim()}.` });
       await loadData();
-    } catch {
-      setErrorMsg('Failed to create admin user.');
+    } catch (err) {
+      setErrorMsg(err.message);
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id, email) => {
-    if (window.confirm(`Remove admin access for ${email}?`)) {
+    if (!window.confirm(`Remove admin access for ${email}?`)) return;
+    setBusyId(id);
+    setNotice(null);
+    try {
       await deleteAdminUser(id);
+      setNotice({ type: 'success', text: `Admin access removed for ${email}.` });
+    } catch (err) {
+      setNotice({ type: 'error', text: err.message });
+    } finally {
+      setBusyId(null);
       await loadData();
     }
   };
 
   const handleToggleStatus = async (user) => {
     const newStatus = user.status === 'active' ? 'suspended' : 'active';
-    await updateAdminUser(user.id, { status: newStatus });
-    await loadData();
+    setBusyId(user.id);
+    setNotice(null);
+    try {
+      await updateAdminUser(user.id, { status: newStatus });
+      setNotice({ type: 'success', text: `${user.email} is now ${newStatus}.` });
+    } catch (err) {
+      setNotice({ type: 'error', text: err.message });
+    } finally {
+      setBusyId(null);
+      await loadData();
+    }
   };
 
   if (loading) {
@@ -102,6 +120,17 @@ export default function AdminUsers() {
           <span>INVITE ADMIN</span>
         </button>
       </div>
+
+      <p style={{ fontSize: 12, color: 'var(--color-muted)', margin: '0 0 12px' }}>
+        Only a super_admin can grant, suspend or remove access. The person must first have a login created in
+        Supabase Dashboard → Authentication → Users.
+      </p>
+
+      {notice && (
+        <div className={notice.type === 'error' ? 'ps-form-error-banner' : 'ps-form-success-banner'} role="status">
+          {notice.text}
+        </div>
+      )}
 
       <div className="ps-admin-table-card">
         <div className="ps-admin-table-wrap">
@@ -172,6 +201,7 @@ export default function AdminUsers() {
                         type="button"
                         className="ps-action-icon-btn"
                         onClick={() => handleToggleStatus(u)}
+                        disabled={busyId === u.id}
                         title={u.status === 'active' ? 'Suspend Access' : 'Activate Access'}
                       >
                         <UserCheck size={16} />
@@ -180,6 +210,7 @@ export default function AdminUsers() {
                         type="button"
                         className="ps-action-icon-btn is-delete"
                         onClick={() => handleDelete(u.id, u.email)}
+                        disabled={busyId === u.id}
                         title="Revoke Clearance"
                       >
                         <Trash2 size={16} />
@@ -212,21 +243,10 @@ export default function AdminUsers() {
 
             <form onSubmit={handleSave}>
               <div className="ps-form-group">
-                <label>Full Name *</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Sameer Khan"
-                  value={form.full_name}
-                  onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="ps-form-group">
                 <label>Email Address *</label>
                 <input
                   type="email"
-                  placeholder="admin@psperfumes.in"
+                  placeholder="person@example.com"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   required
@@ -239,10 +259,9 @@ export default function AdminUsers() {
                   value={form.role}
                   onChange={(e) => setForm({ ...form, role: e.target.value })}
                 >
-                  <option value="Super Admin">Super Admin</option>
-                  <option value="Store Manager">Store Manager</option>
-                  <option value="Inventory Specialist">Inventory Specialist</option>
-                  <option value="Support Agent">Support Agent</option>
+                  {ADMIN_ROLES.map((r) => (
+                    <option key={r} value={r}>{r.replace('_', ' ')}</option>
+                  ))}
                 </select>
               </div>
 
@@ -259,7 +278,7 @@ export default function AdminUsers() {
                   className="ps-builder-btn-save"
                   disabled={saving}
                 >
-                  {saving ? 'Inviting...' : 'Create Admin'}
+                  {saving ? 'Granting...' : 'Grant Access'}
                 </button>
               </div>
             </form>

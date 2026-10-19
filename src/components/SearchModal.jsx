@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, ArrowRight } from 'lucide-react';
-import { PRODUCTS, COMBO_PRODUCTS } from '../data/products';
+import { getProducts } from '../services/products';
 import { formatINR } from '../utils/formatCurrency';
 import { useCart } from '../context/CartContext';
 import './SearchModal.css';
@@ -11,7 +11,21 @@ export default function SearchModal({ isOpen, onClose }) {
   const [searchTerm, setSearchTerm] = useState('');
   const { setSelectedProduct } = useCart();
 
-  const allItems = useMemo(() => [...PRODUCTS, ...COMBO_PRODUCTS], []);
+  // Active products from the database (loaded when the search opens)
+  const [allItems, setAllItems] = useState([]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    let mounted = true;
+    getProducts({ allStatuses: false })
+      .then((list) => {
+        if (mounted) setAllItems(Array.isArray(list) ? list : []);
+      })
+      .catch((err) => console.error('Could not load products for search:', err));
+    return () => {
+      mounted = false;
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {

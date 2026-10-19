@@ -20,7 +20,7 @@ function formatHomepageProduct(item) {
     resolvedImage = getPublicImageUrl(item.main_image);
   }
   if (!resolvedImage) {
-    resolvedImage = '/assets/prod-royal-amber.webp';
+    resolvedImage = '/assets/ps-perfumes-logo.webp';
   }
 
   // Active variants
@@ -56,8 +56,9 @@ function formatHomepageProduct(item) {
     main_image: resolvedImage,
     main_image_url: resolvedImage,
     image: resolvedImage,
-    price: salePrice || price || 1499,
-    compare_at_price: salePrice ? price : (item.compare_at_price ? Number(item.compare_at_price) : Math.round((price || 1499) * 1.3)),
+    // Real variant prices only: a strike-through price appears only for a genuine sale price
+    price: salePrice || price || 0,
+    compare_at_price: salePrice && salePrice < price ? price : null,
     is_featured: Boolean(item.is_featured || item.featured),
     is_bestseller: Boolean(item.is_bestseller || item.bestseller),
     featured: Boolean(item.is_featured || item.featured),

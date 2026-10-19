@@ -30,7 +30,7 @@ import './ProductDetailPage.css';
 export default function ProductDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { addToCart, toggleWishlist, isInWishlist, setIsCheckoutOpen } = useCart();
+  const { addToCart, toggleWishlist, isInWishlist } = useCart();
 
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
@@ -82,7 +82,7 @@ export default function ProductDetailPage() {
         const prod = await getProductBySlug(slug);
         if (mounted && prod) {
           setProduct(prod);
-          setActiveImage(prod.main_image || prod.image || '/assets/prod-royal-amber.webp');
+          setActiveImage(prod.main_image || prod.image || '/assets/ps-perfumes-logo.webp');
 
           // Initialize variant defaults from real product data
           const isAttar = prod.category?.toLowerCase() === 'attar';
@@ -98,16 +98,13 @@ export default function ProductDetailPage() {
 
           // Fetch real customer reviews
           try {
-            const allRevs = await getReviews();
-            if (Array.isArray(allRevs)) {
-              const matched = allRevs.filter(
-                (r) =>
-                  r.product_name?.toLowerCase() === prod.name?.toLowerCase() ||
-                  r.product_id === prod.id
-              );
-              setProductReviews(matched.length > 0 ? matched : allRevs.slice(0, 4));
-            }
-          } catch {}
+            // Only this product's approved reviews — never reviews of other products
+            const ownRevs = await getReviews(false, { productId: prod.id });
+            if (mounted) setProductReviews(Array.isArray(ownRevs) ? ownRevs : []);
+          } catch (err) {
+            console.error('Could not load reviews:', err);
+            if (mounted) setProductReviews([]);
+          }
 
           // Fetch curated companions
           try {
@@ -171,7 +168,7 @@ export default function ProductDetailPage() {
 
   const price = currentVariant
     ? Number(currentVariant.sale_price || currentVariant.price)
-    : Number(product.price || 1149);
+    : Number(product.price) || 0;
 
   const comparePrice = currentVariant?.compare_at_price
     ? Number(currentVariant.compare_at_price)
@@ -185,7 +182,7 @@ export default function ProductDetailPage() {
   const currentStock =
     currentVariant && currentVariant.stock !== undefined
       ? Number(currentVariant.stock)
-      : Number(product.stock ?? 20);
+      : Number(product.stock ?? 0);
   const isOutOfStock = currentStock <= 0;
 
   const isWishlisted = isInWishlist(product.id);
@@ -201,9 +198,12 @@ export default function ProductDetailPage() {
   const gallery = Array.from(new Set(rawGallery));
 
   // Rating & review counts
-  const rating = Number(product.rating || 4.8);
-  const reviewCount = Number(product.review_count || product.reviewCount || 39);
+  // Rating and count come only from this product's approved reviews (nothing invented)
+  const reviewCount = productReviews.length;
   const hasReviews = reviewCount > 0;
+  const rating = hasReviews
+    ? Math.round((productReviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / reviewCount) * 10) / 10
+    : 0;
 
   // Eyebrow
   const categoryName = (product.category || 'WOODY').toUpperCase();
@@ -263,7 +263,7 @@ export default function ProductDetailPage() {
       stock: currentStock,
     };
     addToCart(product, quantity, variantPayload);
-    setIsCheckoutOpen(true);
+    navigate('/checkout');
   };
 
   const hasFragranceNotes = Boolean(
@@ -400,9 +400,9 @@ export default function ProductDetailPage() {
                   />
                 ))}
               </div>
-              <span className="ps-pdp-rating-number">{rating}</span>
+              {hasReviews && <span className="ps-pdp-rating-number">{rating}</span>}
               <span className="ps-pdp-reviews-count">
-                {hasReviews ? `(${reviewCount} verified patron reviews)` : 'No reviews yet'}
+                {hasReviews ? `(${reviewCount} review${reviewCount === 1 ? '' : 's'})` : 'No reviews yet'}
               </span>
             </div>
 
@@ -725,11 +725,11 @@ export default function ProductDetailPage() {
                     <li>
                       <strong>Atelier Origin:</strong> Handcrafted in Kadapa, Andhra Pradesh, India (516001)
                     </li>
-                    <li>
-                      <strong>Ingredients:</strong>{' '}
-                      {product.ingredients ||
-                        'Alcohol Denat., Parfum (Fragrance), Aqua (Water), Limonene, Linalool, Citronellol, Geraniol.'}
-                    </li>
+                    {product.ingredients && (
+                      <li>
+                        <strong>Ingredients:</strong> {product.ingredients}
+                      </li>
+                    )}
                   </ul>
                 </div>
               )}
@@ -814,7 +814,7 @@ export default function ProductDetailPage() {
                   {/* Reviews Overview Score */}
                   <div className="ps-pdp-reviews-overview">
                     <div className="ps-pdp-score-block">
-                      <span className="ps-pdp-score-big">{rating}</span>
+                      <span className="ps-pdp-score-big">{hasReviews ? rating : '—'}</span>
                       <div className="ps-pdp-stars">
                         {[...Array(5)].map((_, i) => (
                           <Star
@@ -827,7 +827,7 @@ export default function ProductDetailPage() {
                       </div>
                     </div>
                     <span className="ps-pdp-verified-note">
-                      Based on {reviewCount || 0} verified patron reviews
+                      {hasReviews ? `Based on ${reviewCount} review${reviewCount === 1 ? '' : 's'}` : 'No reviews yet'}
                     </span>
                   </div>
 

@@ -18,7 +18,7 @@ export default function ProductCard({ product, priority = false }) {
   const navigate = useNavigate();
 
   const isWishlisted = isInWishlist(product.id);
-  const imageSrc = product.main_image || product.image || '/assets/prod-royal-amber.webp';
+  const imageSrc = product.main_image || product.image || '/assets/ps-perfumes-logo.webp';
   const slug = product.slug || product.id;
 
   // Normalization helpers
@@ -57,7 +57,7 @@ export default function ProductCard({ product, priority = false }) {
   // Dynamic database prices
   const displayPrice = defaultVariant
     ? Number(defaultVariant.sale_price || defaultVariant.price)
-    : Number(product.price || 999);
+    : Number(product.price) || 0;
 
   const displayComparePrice = defaultVariant?.compare_at_price
     ? Number(defaultVariant.compare_at_price)

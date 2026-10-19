@@ -18,7 +18,7 @@ export default function CollectionProductCard({
 
   const isWishlisted = isInWishlist(product.id);
   const imageSrc =
-    product.main_image || product.image || '/assets/prod-royal-amber.webp';
+    product.main_image || product.image || '/assets/ps-perfumes-logo.webp';
 
   const normalizeBottle = (b) => (b && String(b).toLowerCase().includes('pvc') ? 'PVC' : 'Glass');
   const normalizeSz = (s) => (s ? String(s).toLowerCase().replace(/\s+/g, '') : '50ml');
@@ -28,7 +28,7 @@ export default function CollectionProductCard({
     normalizeSz(v.size_ml) === normalizeSz(selectedSize)
   ) || product.variants?.[0] || null;
 
-  const price = currentVariant ? Number(currentVariant.sale_price || currentVariant.price) : (Number(product.price) || 999);
+  const price = currentVariant ? Number(currentVariant.sale_price || currentVariant.price) : (Number(product.price) || 0);
   const comparePrice = currentVariant?.compare_at_price
     ? Number(currentVariant.compare_at_price)
     : Number(product.compare_at_price || product.originalPrice || null);
@@ -39,8 +39,10 @@ export default function CollectionProductCard({
     ? product.discountPercent
     : null;
 
-  const rating = Number(product.rating) || 5.0;
-  const reviewCount = product.review_count || product.reviewCount || 24;
+  // Only real rating data is shown; products currently have no stored rating, so the row is hidden
+  const rating = Number(product.rating) || 0;
+  const reviewCount = Number(product.review_count || product.reviewCount || 0);
+  const hasReviews = reviewCount > 0 && rating > 0;
   const slug = product.slug || product.id;
   const brand = product.brand || 'PS PERFUMES';
 
@@ -149,6 +151,7 @@ export default function CollectionProductCard({
         )}
 
         {/* Rating Row */}
+        {hasReviews && (
         <div className="ps-col-card-rating">
           <div className="ps-col-card-stars" aria-hidden="true">
             {[...Array(5)].map((_, i) => (
@@ -164,6 +167,7 @@ export default function CollectionProductCard({
             {rating} ({reviewCount})
           </span>
         </div>
+        )}
 
         {/* Pricing Row */}
         <div className="ps-col-card-pricing">

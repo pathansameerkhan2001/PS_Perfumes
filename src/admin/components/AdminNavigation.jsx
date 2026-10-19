@@ -15,6 +15,7 @@ import {
   Tag,
   Settings,
   ShieldCheck,
+  Mail,
   Globe,
   ExternalLink,
 } from 'lucide-react';
@@ -51,6 +52,7 @@ export const ADMIN_NAV_ITEMS = [
   { name: 'Orders', path: '/admin/orders', icon: FileText },
   { name: 'Customers', path: '/admin/customers', icon: Users },
   { name: 'Reviews', path: '/admin/reviews', icon: Star },
+  { name: 'Enquiries', path: '/admin/enquiries', icon: Mail },
   { name: 'Coupons', path: '/admin/coupons', icon: Tag },
   { name: 'Store Settings', path: '/admin/settings', icon: Settings },
   { name: 'Admin Users', path: '/admin/admin-users', icon: ShieldCheck },

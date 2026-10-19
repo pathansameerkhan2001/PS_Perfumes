@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Mail, ExternalLink, Send, CheckCircle2, Clock, ShieldCheck } from 'lucide-react';
-import { submitEnquiry } from '../../services/enquiries';
+import { submitEnquiry, isEnquiryStorageAvailable } from '../../services/enquiries';
+import { SITE_CONFIG } from '../../config/siteConfig';
 import './ContactPage.css';
 
 function InstagramIcon({ size = 18 }) {
@@ -24,6 +25,18 @@ export default function ContactPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  // null = checking; false = the database cannot store messages yet, so the form is disabled
+  const [formAvailable, setFormAvailable] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    isEnquiryStorageAvailable()
+      .then((ok) => mounted && setFormAvailable(ok))
+      .catch(() => mounted && setFormAvailable(false));
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,7 +52,7 @@ export default function ContactPage() {
       setSubmitted(true);
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
     } catch {
-      setErrorMsg('Unable to transmit enquiry. Please reach out via email or Instagram.');
+      setErrorMsg(`Your message could not be sent. Please email us at ${SITE_CONFIG.contactEmail} or message us on Instagram or WhatsApp.`);
     } finally {
       setSubmitting(false);
     }
@@ -159,6 +172,31 @@ export default function ContactPage() {
                     SEND ANOTHER INQUIRY
                   </button>
                 </div>
+              ) : formAvailable === false ? (
+                <div className="ps-contact-form" role="status">
+                  <div className="ps-form-error-banner" style={{ marginBottom: 16 }}>
+                    Online enquiries are not available at the moment. Please contact us directly — we reply to every
+                    message.
+                  </div>
+                  <p style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 10px' }}>
+                    <Mail size={16} />
+                    <a href={`mailto:${SITE_CONFIG.contactEmail}`} className="ps-contact-email-link">
+                      {SITE_CONFIG.contactEmail}
+                    </a>
+                  </p>
+                  <p style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 10px' }}>
+                    <InstagramIcon size={16} />
+                    <a href={SITE_CONFIG.instagramUrl} target="_blank" rel="noopener noreferrer">
+                      Instagram @ps_perfumes_kadapa
+                    </a>
+                  </p>
+                  <p style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
+                    <ExternalLink size={16} />
+                    <a href={SITE_CONFIG.whatsappUrl} target="_blank" rel="noopener noreferrer">
+                      WhatsApp {SITE_CONFIG.phone}
+                    </a>
+                  </p>
+                </div>
               ) : (
                 <form className="ps-contact-form" onSubmit={handleSubmit}>
                   {errorMsg && <div className="ps-form-error-banner">{errorMsg}</div>}
@@ -228,7 +266,7 @@ export default function ContactPage() {
                   <button
                     type="submit"
                     className="ps-btn-gold-primary ps-contact-submit-btn"
-                    disabled={submitting}
+                    disabled={submitting || formAvailable !== true}
                   >
                     {submitting ? (
                       <span>TRANSMITTING...</span>

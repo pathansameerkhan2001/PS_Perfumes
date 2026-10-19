@@ -1,41 +1,79 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Plus, Minus, Check, Archive } from 'lucide-react';
-import { getProducts, updateProduct } from '../../services/products';
+import { Plus, Minus } from 'lucide-react';
+import { getProducts, updateVariantStock, isValidUUID } from '../../services/products';
 import { formatINR } from '../../utils/formatCurrency';
 
+const LOW_STOCK_LIMIT = 5;
+
+/**
+ * Inventory is tracked per variant (product_variants.stock_quantity), so each row here is
+ * one bottle type × size of a product. Changing stock never changes product visibility.
+ */
 export default function AdminInventory() {
-  const [products, setProducts] = useState([]);
+  const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState('ALL');
+  const [busyId, setBusyId] = useState(null);
+  const [notice, setNotice] = useState(null); // { type: 'success' | 'error', text }
 
   const fetchList = async () => {
     setLoading(true);
-    const data = await getProducts({ allStatuses: true });
-    setProducts(data);
-    setLoading(false);
+    try {
+      const products = await getProducts({ allStatuses: true, throwOnError: true });
+      const variantRows = [];
+      products.forEach((prod) => {
+        (prod.variants || [])
+          .filter((v) => isValidUUID(v.id))
+          .forEach((v) => {
+            variantRows.push({
+              id: v.id,
+              productName: prod.name,
+              productActive: prod.is_active !== false,
+              category: prod.category,
+              image: prod.main_image,
+              bottle: v.bottle_type,
+              size: v.size_ml,
+              sku: v.sku,
+              price: Number(v.sale_price || v.price) || 0,
+              stock: Number(v.stock_quantity) || 0,
+              variantActive: v.is_active !== false,
+            });
+          });
+      });
+      setRows(variantRows);
+    } catch (err) {
+      setNotice({ type: 'error', text: `Could not load inventory: ${err.message}` });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchList();
   }, []);
 
-  const handleAdjustStock = async (prod, delta) => {
-    const newStock = Math.max(0, (prod.stock || 0) + delta);
-    const newStatus = newStock === 0 ? 'out_of_stock' : (prod.status === 'out_of_stock' ? 'active' : prod.status);
-    await updateProduct(prod.id, { stock: newStock, status: newStatus });
-    fetchList();
+  const saveStock = async (row, newStock) => {
+    const target = Math.max(0, Math.floor(Number(newStock) || 0));
+    if (target === row.stock) return;
+    setBusyId(row.id);
+    setNotice(null);
+    try {
+      const saved = await updateVariantStock(row.id, target);
+      setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, stock: saved } : r)));
+      setNotice({
+        type: 'success',
+        text: `${row.productName} — ${row.bottle} ${row.size}: stock saved as ${saved}.`,
+      });
+    } catch (err) {
+      setNotice({ type: 'error', text: `${row.productName} — ${row.bottle} ${row.size}: ${err.message}` });
+    } finally {
+      setBusyId(null);
+    }
   };
 
-  const handleDirectSetStock = async (prod, val) => {
-    const newStock = Math.max(0, Number(val) || 0);
-    const newStatus = newStock === 0 ? 'out_of_stock' : (prod.status === 'out_of_stock' ? 'active' : prod.status);
-    await updateProduct(prod.id, { stock: newStock, status: newStatus });
-    fetchList();
-  };
-
-  const filtered = products.filter((p) => {
-    if (filterType === 'LOW') return p.stock > 0 && p.stock <= 5;
-    if (filterType === 'OUT') return p.stock <= 0 || p.status === 'out_of_stock';
+  const filtered = rows.filter((r) => {
+    if (filterType === 'LOW') return r.stock > 0 && r.stock <= LOW_STOCK_LIMIT;
+    if (filterType === 'OUT') return r.stock <= 0;
     return true;
   });
 
@@ -52,14 +90,14 @@ export default function AdminInventory() {
             className={`ps-toolbar-pill ${filterType === 'ALL' ? 'is-active' : ''}`}
             onClick={() => setFilterType('ALL')}
           >
-            All Stock ({products.length})
+            All Variants ({rows.length})
           </button>
           <button
             type="button"
             className={`ps-toolbar-pill ${filterType === 'LOW' ? 'is-active' : ''}`}
             onClick={() => setFilterType('LOW')}
           >
-            Low Stock (&le; 5)
+            Low Stock (&le; {LOW_STOCK_LIMIT})
           </button>
           <button
             type="button"
@@ -71,8 +109,18 @@ export default function AdminInventory() {
         </div>
       </div>
 
+      {notice && (
+        <div className={notice.type === 'error' ? 'ps-form-error-banner' : 'ps-form-success-banner'} role="status">
+          {notice.text}
+        </div>
+      )}
+
       {loading ? (
         <div className="ps-admin-loading">Loading Inventory...</div>
+      ) : filtered.length === 0 ? (
+        <div className="ps-admin-loading">
+          {rows.length === 0 ? 'No product variants in the database yet.' : 'No variants match this filter.'}
+        </div>
       ) : (
         <div className="ps-admin-table-container">
           <table className="ps-admin-products-table">
@@ -80,7 +128,7 @@ export default function AdminInventory() {
               <tr>
                 <th>Flacon</th>
                 <th>Product</th>
-                <th>Category</th>
+                <th>Variant</th>
                 <th>Price</th>
                 <th>Current Stock</th>
                 <th>Status</th>
@@ -88,28 +136,43 @@ export default function AdminInventory() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((prod) => (
-                <tr key={prod.id}>
+              {filtered.map((row) => (
+                <tr key={row.id}>
                   <td>
-                    <img src={prod.main_image || prod.image} alt={prod.name} className="ps-prod-table-thumb" />
+                    {row.image ? <img src={row.image} alt={row.productName} className="ps-prod-table-thumb" /> : null}
                   </td>
                   <td>
-                    <strong>{prod.name}</strong>
-                    <div style={{ fontSize: 11, color: 'var(--color-muted)' }}>{prod.sku}</div>
+                    <strong>{row.productName}</strong>
+                    <div style={{ fontSize: 11, color: 'var(--color-muted)' }}>
+                      {row.category}
+                      {!row.productActive ? ' · product inactive' : ''}
+                    </div>
                   </td>
-                  <td>{prod.category}</td>
                   <td>
-                    <strong style={{ color: 'var(--color-gold-bright)' }}>{formatINR(prod.price)}</strong>
+                    {row.bottle} · {row.size}
+                    <div style={{ fontSize: 11, color: 'var(--color-muted)' }}>
+                      {row.sku || '—'}
+                      {!row.variantActive ? ' · variant inactive' : ''}
+                    </div>
+                  </td>
+                  <td>
+                    <strong style={{ color: 'var(--color-gold-bright)' }}>{formatINR(row.price)}</strong>
                   </td>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <input
                         type="number"
-                        defaultValue={prod.stock}
-                        key={prod.stock}
-                        onBlur={(e) => handleDirectSetStock(prod, e.target.value)}
+                        min="0"
+                        defaultValue={row.stock}
+                        key={`${row.id}-${row.stock}`}
+                        disabled={busyId === row.id}
+                        onBlur={(e) => saveStock(row, e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') e.currentTarget.blur();
+                        }}
+                        aria-label={`Stock for ${row.productName} ${row.bottle} ${row.size}`}
                         style={{
-                          width: 60,
+                          width: 70,
                           padding: '4px 6px',
                           background: '#050505',
                           border: '1px solid var(--color-border)',
@@ -118,20 +181,20 @@ export default function AdminInventory() {
                           borderRadius: 3,
                         }}
                       />
-                      <span style={{ fontSize: 11, color: 'var(--color-muted)' }}>Flacons</span>
+                      <span style={{ fontSize: 11, color: 'var(--color-muted)' }}>units</span>
                     </div>
                   </td>
                   <td>
                     <span
                       className={`ps-status-pill ${
-                        prod.stock <= 0
+                        row.stock <= 0
                           ? 'ps-status-cancelled'
-                          : prod.stock <= 5
+                          : row.stock <= LOW_STOCK_LIMIT
                           ? 'ps-status-pending'
                           : 'ps-status-delivered'
                       }`}
                     >
-                      {prod.stock <= 0 ? 'OUT OF STOCK' : prod.stock <= 5 ? 'LOW STOCK' : 'OPTIMAL'}
+                      {row.stock <= 0 ? 'OUT OF STOCK' : row.stock <= LOW_STOCK_LIMIT ? 'LOW STOCK' : 'IN STOCK'}
                     </span>
                   </td>
                   <td>
@@ -139,24 +202,27 @@ export default function AdminInventory() {
                       <button
                         type="button"
                         className="ps-action-icon-btn"
-                        onClick={() => handleAdjustStock(prod, -1)}
-                        title="Reduce Stock by 1"
+                        onClick={() => saveStock(row, row.stock - 1)}
+                        disabled={busyId === row.id || row.stock <= 0}
+                        title="Reduce stock by 1"
                       >
                         <Minus size={14} />
                       </button>
                       <button
                         type="button"
                         className="ps-action-icon-btn"
-                        onClick={() => handleAdjustStock(prod, 1)}
-                        title="Increase Stock by 1"
+                        onClick={() => saveStock(row, row.stock + 1)}
+                        disabled={busyId === row.id}
+                        title="Increase stock by 1"
                       >
                         <Plus size={14} />
                       </button>
                       <button
                         type="button"
                         className="ps-action-icon-btn"
-                        onClick={() => handleAdjustStock(prod, 10)}
-                        title="Add 10 Flacons Batch"
+                        onClick={() => saveStock(row, row.stock + 10)}
+                        disabled={busyId === row.id}
+                        title="Add 10 units"
                         style={{ width: 'auto', padding: '0 8px', fontSize: 11 }}
                       >
                         +10

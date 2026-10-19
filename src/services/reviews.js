@@ -1,108 +1,81 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { REVIEWS } from '../data/reviews';
+import { supabase } from '../lib/supabase';
+import { dbError, assertRows } from './dbErrors';
 
-const LOCAL_REVIEWS_KEY = 'ps_db_reviews';
+/*
+ * Live schema (verified 2026-10-19):
+ *   reviews (id, product_id, customer_name, rating, title, review_text,
+ *            is_approved, is_featured, created_at, updated_at)
+ * The admin UI works with status 'approved' | 'pending'; it maps to is_approved.
+ */
 
-function getLocalReviews() {
-  try {
-    const raw = localStorage.getItem(LOCAL_REVIEWS_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch {}
-
-  const initial = REVIEWS.map((r, i) => ({
-    id: `rev-${i + 1}`,
-    product_name: r.productName,
-    customer_name: r.author,
-    location: r.location,
-    rating: r.rating || 5,
-    title: r.title,
-    comment: r.comment,
-    status: 'approved',
-    created_at: new Date(Date.now() - i * 86400000 * 3).toISOString(),
-  }));
-
-  try {
-    localStorage.setItem(LOCAL_REVIEWS_KEY, JSON.stringify(initial));
-  } catch {}
-  return initial;
+function formatReview(row, productNames) {
+  return {
+    ...row,
+    comment: row.review_text || '',
+    status: row.is_approved ? 'approved' : 'pending',
+    product_name: productNames.get(row.product_id) || '',
+    featured: Boolean(row.is_featured),
+  };
 }
 
-function saveLocalReviews(revs) {
-  try {
-    localStorage.setItem(LOCAL_REVIEWS_KEY, JSON.stringify(revs));
-  } catch {}
+async function loadProductNames(rows) {
+  const ids = [...new Set(rows.map((r) => r.product_id).filter(Boolean))];
+  const names = new Map();
+  if (ids.length === 0) return names;
+  const { data, error } = await supabase.from('products').select('id, name').in('id', ids);
+  if (error) throw dbError('Could not load review products', error);
+  (data || []).forEach((p) => names.set(p.id, p.name));
+  return names;
 }
 
-export async function getReviews(all = false) {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      let query = supabase.from('reviews').select('*').order('created_at', { ascending: false });
-      if (!all) query = query.eq('status', 'approved');
-      const { data, error } = await query;
-      if (!error && data && data.length > 0) return data;
-    } catch {}
-  }
+/**
+ * @param {boolean} all - true for admin (every review), false for storefront (approved only)
+ * @param {{ productId?: string, featuredOnly?: boolean, limit?: number }} [options]
+ */
+export async function getReviews(all = false, options = {}) {
+  const { productId, featuredOnly, limit } = options;
+  let query = supabase.from('reviews').select('*').order('created_at', { ascending: false });
+  if (!all) query = query.eq('is_approved', true);
+  if (productId) query = query.eq('product_id', productId);
+  if (featuredOnly) query = query.eq('is_featured', true);
+  if (limit) query = query.limit(limit);
 
-  const list = getLocalReviews();
-  return all ? list : list.filter((r) => r.status === 'approved');
+  const { data, error } = await query;
+  if (error) throw dbError('Could not load reviews', error);
+  const rows = data || [];
+  const names = await loadProductNames(rows);
+  return rows.map((r) => formatReview(r, names));
 }
 
 export async function updateReviewStatus(id, status) {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase.from('reviews').update({ status }).eq('id', id);
-    } catch {}
-  }
-
-  const list = getLocalReviews();
-  const updated = list.map((r) => (r.id === id ? { ...r, status } : r));
-  saveLocalReviews(updated);
+  const { data, error } = await supabase
+    .from('reviews')
+    .update({ is_approved: status === 'approved', updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('id');
+  if (error) throw dbError('Review was not updated', error);
+  assertRows(data, 'Review was not updated');
   return { success: true };
 }
 
 export async function deleteReview(id) {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase.from('reviews').delete().eq('id', id);
-    } catch {}
-  }
-
-  const list = getLocalReviews();
-  saveLocalReviews(list.filter((r) => r.id !== id));
+  const { data, error } = await supabase.from('reviews').delete().eq('id', id).select('id');
+  if (error) throw dbError('Review was not deleted', error);
+  assertRows(data, 'Review was not deleted');
   return { success: true };
 }
 
 export async function createReview(review) {
-  let createdRecord = null;
-
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const payload = {
-        customer_name: review.customer_name || 'Verified Patron',
-        customer_email: review.customer_email || null,
-        rating: Math.max(1, Math.min(5, Number(review.rating) || 5)),
-        title: review.title || '',
-        comment: review.comment || '',
-        status: review.status || 'pending',
-      };
-      if (review.product_id) payload.product_id = review.product_id;
-
-      const { data, error } = await supabase.from('reviews').insert([payload]).select().single();
-      if (!error && data) createdRecord = data;
-    } catch {}
-  }
-
-  const newRev = createdRecord || {
-    ...review,
-    id: `rev-${Date.now()}`,
-    status: review.status || 'pending',
-    created_at: new Date().toISOString(),
+  const payload = {
+    customer_name: review.customer_name || 'Customer',
+    rating: Math.max(1, Math.min(5, Number(review.rating) || 5)),
+    title: review.title || '',
+    review_text: review.comment || review.review_text || '',
+    is_approved: false,
   };
+  if (review.product_id) payload.product_id = review.product_id;
 
-  const list = getLocalReviews();
-  saveLocalReviews([newRev, ...list]);
-  return { data: newRev, error: null };
+  const { data, error } = await supabase.from('reviews').insert([payload]).select().single();
+  if (error || !data) throw dbError('Review was not submitted', error);
+  return { data: formatReview(data, new Map()), error: null };
 }

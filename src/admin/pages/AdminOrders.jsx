@@ -17,12 +17,17 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [notice, setNotice] = useState(null); // { type: 'success' | 'error', text }
 
   const fetchOrders = async () => {
     setLoading(true);
-    const data = await getOrders();
-    setOrders(data);
-    setLoading(false);
+    try {
+      setOrders(await getOrders());
+    } catch (err) {
+      setNotice({ type: 'error', text: err.message });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -30,11 +35,18 @@ export default function AdminOrders() {
   }, []);
 
   const handleStatusChange = async (orderId, newStatus) => {
-    await updateOrderStatus(orderId, newStatus);
-    if (selectedOrder && selectedOrder.id === orderId) {
-      setSelectedOrder((prev) => ({ ...prev, order_status: newStatus }));
+    setNotice(null);
+    try {
+      await updateOrderStatus(orderId, newStatus);
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder((prev) => ({ ...prev, order_status: newStatus }));
+      }
+      setNotice({ type: 'success', text: `Order status changed to ${newStatus.replace(/_/g, ' ')}.` });
+    } catch (err) {
+      setNotice({ type: 'error', text: err.message });
+    } finally {
+      fetchOrders();
     }
-    fetchOrders();
   };
 
   return (
@@ -45,6 +57,12 @@ export default function AdminOrders() {
           <h1 className="ps-admin-page-title">Patron Dispatches & Orders</h1>
         </div>
       </div>
+
+      {notice && (
+        <div className={notice.type === 'error' ? 'ps-form-error-banner' : 'ps-form-success-banner'} role="status">
+          {notice.text}
+        </div>
+      )}
 
       {loading ? (
         <div className="ps-admin-loading">Loading Orders...</div>
@@ -177,7 +195,7 @@ export default function AdminOrders() {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, fontSize: 13 }}>{it.product_name}</div>
                     <div style={{ fontSize: 11, color: 'var(--color-muted)' }}>
-                      Volume: {it.size || '100ml'} • Qty: {it.quantity}
+                      Variant: {it.size || '—'} • Qty: {it.quantity}
                     </div>
                   </div>
                   <strong style={{ color: 'var(--color-gold-bright)' }}>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Star, ShoppingBag, Heart, Check } from 'lucide-react';
-import { getCombos, INITIAL_COMBOS } from '../services/combos';
+import { ShoppingBag, Heart, Check } from 'lucide-react';
+import { getCombos } from '../services/combos';
 import { formatINR } from '../utils/formatCurrency';
 import { useCart } from '../context/CartContext';
 import OptimizedImage from './OptimizedImage';
@@ -8,7 +8,8 @@ import './ComboPackSection.css';
 
 export default function ComboPackSection() {
   const { addToCart, toggleWishlist, isInWishlist, setSelectedProduct } = useCart();
-  const [combos, setCombos] = useState(INITIAL_COMBOS);
+  const [combos, setCombos] = useState([]);
+  const [loaded, setLoaded] = useState(false);
   const [addedIds, setAddedIds] = useState({});
 
   useEffect(() => {
@@ -16,24 +17,27 @@ export default function ComboPackSection() {
     async function loadCombos() {
       try {
         const data = await getCombos({ activeOnly: true });
-        if (mounted && Array.isArray(data) && data.length > 0) {
-          setCombos(data);
-        }
+        if (mounted) setCombos(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.warn('Using local fallback combos:', err);
+        console.error('Could not load combos:', err);
+      } finally {
+        if (mounted) setLoaded(true);
       }
     }
     loadCombos();
     return () => { mounted = false; };
   }, []);
 
+  // Nothing to show (no active combos in the database): hide the section
+  if (loaded && combos.length === 0) return null;
+
   const handleAddToCart = (e, combo) => {
     e.stopPropagation();
     const comboProduct = {
       id: combo.id,
       name: combo.name,
-      price: Number(combo.combo_price || combo.price || 1999),
-      compare_at_price: Number(combo.original_price || combo.originalPrice || 2499),
+      price: Number(combo.combo_price) || 0,
+      compare_at_price: combo.original_price ? Number(combo.original_price) : null,
       image: combo.image_url || combo.image,
       main_image: combo.image_url || combo.image,
       category: 'Combo Pack',
@@ -74,8 +78,8 @@ export default function ComboPackSection() {
           {combos.map((combo) => {
             const isWishlisted = isInWishlist(combo.id);
             const isAdded = !!addedIds[combo.id];
-            const currentPrice = Number(combo.combo_price || combo.price || 1999);
-            const origPrice = Number(combo.original_price || combo.originalPrice || 0);
+            const currentPrice = Number(combo.combo_price) || 0;
+            const origPrice = Number(combo.original_price) || 0;
             const discountPct = combo.discount || (origPrice > currentPrice ? Math.round(((origPrice - currentPrice) / origPrice) * 100) : null);
 
             return (
@@ -100,9 +104,9 @@ export default function ComboPackSection() {
 
                   {/* Badges: Bestseller & Discount */}
                   <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', flexDirection: 'column', gap: 6, zIndex: 3 }}>
-                    {combo.bestseller && (
+                    {combo.featured && (
                       <span className="ps-pcard-badge ps-badge-primary" style={{ background: '#000', color: '#c8a45d', border: '1px solid #c8a45d', fontSize: '10px', padding: '3px 8px', letterSpacing: '0.08em', fontWeight: 600 }}>
-                        BESTSELLER
+                        FEATURED
                       </span>
                     )}
                     {discountPct && (
@@ -140,29 +144,12 @@ export default function ComboPackSection() {
                         {combo.items.map((it, idx) => (
                           <li key={idx}>
                             <strong>{it.product_name}</strong>
-                            <span> ({it.size_ml || '50 ml'} - {it.bottle_type ? it.bottle_type.replace(' Bottle', '') : 'Glass'})</span>
+                            {Number(it.quantity) > 1 && <span> × {it.quantity}</span>}
                           </li>
                         ))}
                       </ul>
                     </div>
                   )}
-
-                  {/* Star Rating Row */}
-                  <div className="ps-combopack-rating-row">
-                    <div className="ps-combopack-stars">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          size={13}
-                          fill={i < Math.floor(combo.rating || 5) ? '#f59e0b' : '#e5e7eb'}
-                          color={i < Math.floor(combo.rating || 5) ? '#f59e0b' : '#e5e7eb'}
-                        />
-                      ))}
-                    </div>
-                    <span className="ps-combopack-review-count">
-                      {combo.review_count || 124} reviews
-                    </span>
-                  </div>
 
                   {/* Pricing Row in Indian Rupees */}
                   <div className="ps-combopack-prices">

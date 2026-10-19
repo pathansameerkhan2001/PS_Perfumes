@@ -35,6 +35,9 @@ export default function InstagramReelsSection() {
     return () => { mounted = false; };
   }, []);
 
+  // No active reels in the database: hide the section instead of showing an empty carousel
+  if (!loading && reels.length === 0) return null;
+
   const scroll = (direction) => {
     if (trackRef.current) {
       const scrollAmount = trackRef.current.clientWidth * 0.7;

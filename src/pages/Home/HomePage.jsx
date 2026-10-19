@@ -23,7 +23,11 @@ export default function HomePage() {
       try {
         const [{ bestSellers: bs, featuredProducts: fp }, rawSections] = await Promise.all([
           getHomepageProductSections(),
-          getHomepageSections(),
+          // A sections error falls back to the default layout without hiding the products
+          getHomepageSections().catch((err) => {
+            console.error('Could not load homepage sections:', err);
+            return [];
+          }),
         ]);
         if (mounted) {
           setBestSellers(bs || []);

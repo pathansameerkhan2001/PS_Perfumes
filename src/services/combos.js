@@ -1,450 +1,241 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { isValidUUID } from './products';
-import comboAttarSet from '../assets/combo-attar-set.webp';
-import comboAttar12Pcs from '../assets/combo-attar-12pcs.webp';
-import comboOudTrio from '../assets/combo-oud-trio.webp';
-import comboSolidPerfume from '../assets/combo-solid-perfume.webp';
-import promoBanner from '../assets/promo-banner.webp';
-import prodRoyalAmber from '../assets/prod-royal-amber.webp';
-import prodNoirAbsolu from '../assets/prod-noir-absolu.webp';
+import { getPublicImageUrl } from '../lib/storage';
+import { dbError, assertRows } from './dbErrors';
 
-const LOCAL_COMBOS_KEY = 'ps_db_combos';
+/*
+ * Live schema (verified 2026-10-19):
+ *   combos      (id, name, slug, description, image_url, image_path, price, sale_price,
+ *                stock_quantity, is_featured, is_active, display_order, created_at, updated_at)
+ *   combo_items (id, combo_id, product_id, quantity, created_at)
+ *
+ * Pricing convention: `price` is the regular (original) price and `sale_price` the combo
+ * price when it is lower. Combo items reference real products; bottle type and size are
+ * not stored because the table has no columns for them.
+ */
 
-export const INITIAL_COMBOS = [
-  {
-    id: 'combo-01',
-    name: 'Premium Oud Collection',
-    slug: 'premium-oud-collection',
-    category: 'Combo Pack',
-    description: 'A perfect combination of our signature Oud, Musky, and Bakhoor fragrances in bespoke artisanal flacons.',
-    image_url: promoBanner,
-    combo_price: 2499,
-    original_price: 3199,
-    discount: 22,
-    stock: 25,
-    bestseller: true,
-    featured: true,
-    is_active: true,
-    display_order: 1,
-    rating: 5.0,
-    review_count: 156,
-    items: [
-      {
-        product_name: 'Oud Royal',
-        bottle_type: 'Glass Bottle',
-        size_ml: '50 ml',
-        quantity: 1,
-        subtitle: 'Premium quality glass flacon with 18k gold detailing',
-        image: prodRoyalAmber,
-      },
-      {
-        product_name: 'Musky Noir',
-        bottle_type: 'PVC Bottle',
-        size_ml: '50 ml',
-        quantity: 1,
-        subtitle: 'Travel-safe luxury flacon for daily wear',
-        image: prodNoirAbsolu,
-      },
-      {
-        product_name: 'Bakhoor Classic',
-        bottle_type: 'Glass Bottle',
-        size_ml: '50 ml',
-        quantity: 1,
-        subtitle: 'Pure royal agarwood incense extraction',
-        image: promoBanner,
-      },
-    ],
-  },
-  {
-    id: 'combo-02',
-    name: 'PS Attar Gift Set (Pack of 4)',
-    slug: 'ps-attar-gift-set-pack-of-4',
-    category: 'Combo Pack',
-    description: 'Four royal concentrated non-alcoholic roll-ons in a luxury gold coffret.',
-    image_url: comboAttarSet,
-    combo_price: 549,
-    original_price: 996,
-    discount: 45,
-    stock: 40,
-    bestseller: true,
-    featured: false,
-    is_active: true,
-    display_order: 2,
-    rating: 4.9,
-    review_count: 82,
-    items: [
-      {
-        product_name: 'White London Attar',
-        bottle_type: 'Glass Bottle',
-        size_ml: '6 ml',
-        quantity: 1,
-        subtitle: 'Pure concentrated attar roll-on',
-        image: comboAttarSet,
-      },
-      {
-        product_name: 'Dehn Al Oud Attar',
-        bottle_type: 'Glass Bottle',
-        size_ml: '6 ml',
-        quantity: 1,
-        subtitle: 'Traditional wood-distilled extraction',
-        image: comboAttarSet,
-      },
-      {
-        product_name: 'Musk Rijali Attar',
-        bottle_type: 'Glass Bottle',
-        size_ml: '6 ml',
-        quantity: 1,
-        subtitle: 'Powdery soft royal deer musk note',
-        image: comboAttarSet,
-      },
-      {
-        product_name: 'Mogra Floral Attar',
-        bottle_type: 'Glass Bottle',
-        size_ml: '6 ml',
-        quantity: 1,
-        subtitle: 'Fresh blooming night jasmine extract',
-        image: comboAttarSet,
-      },
-    ],
-  },
-  {
-    id: 'combo-03',
-    name: 'Hashmi Oud & White Oud Trio',
-    slug: 'hashmi-oud-white-oud-trio',
-    category: 'Combo Pack',
-    description: 'Three timeless agarwood extractions, hand-distilled in vintage brass cauldrons.',
-    image_url: comboOudTrio,
-    combo_price: 549,
-    original_price: 747,
-    discount: 26,
-    stock: 18,
-    bestseller: false,
-    featured: true,
-    is_active: true,
-    display_order: 3,
-    rating: 5.0,
-    review_count: 24,
-    items: [
-      {
-        product_name: 'Hashmi Oud',
-        bottle_type: 'Glass Bottle',
-        size_ml: '50 ml',
-        quantity: 1,
-        subtitle: 'Spiced ambergris and Hindi agarwood',
-        image: comboOudTrio,
-      },
-      {
-        product_name: 'Ameer Al Oud',
-        bottle_type: 'Glass Bottle',
-        size_ml: '50 ml',
-        quantity: 1,
-        subtitle: 'Smoky caramel and Cambodian oud wood',
-        image: comboOudTrio,
-      },
-      {
-        product_name: 'White Oud',
-        bottle_type: 'PVC Bottle',
-        size_ml: '50 ml',
-        quantity: 1,
-        subtitle: 'Silken clean musk and white oud',
-        image: comboOudTrio,
-      },
-    ],
-  },
-  {
-    id: 'combo-04',
-    name: 'Luxury Solid Wax Perfume Set',
-    slug: 'luxury-solid-wax-perfume-set',
-    category: 'Combo Pack',
-    description: 'Four handcrafted pocket-sized solid wax perfumes in luxury pastel sliding tins.',
-    image_url: comboSolidPerfume,
-    combo_price: 1050,
-    original_price: 2000,
-    discount: 47,
-    stock: 15,
-    bestseller: false,
-    featured: false,
-    is_active: true,
-    display_order: 4,
-    rating: 4.8,
-    review_count: 19,
-    items: [
-      {
-        product_name: 'Jasmin Étoilé Wax',
-        bottle_type: 'Metal Tin',
-        size_ml: '10g',
-        quantity: 1,
-        subtitle: 'Natural beeswax with pure night jasmine',
-        image: comboSolidPerfume,
-      },
-      {
-        product_name: 'Néroli Doux Wax',
-        bottle_type: 'Metal Tin',
-        size_ml: '10g',
-        quantity: 1,
-        subtitle: 'Sweet orange blossom and citrus note',
-        image: comboSolidPerfume,
-      },
-      {
-        product_name: 'Cèdre Royal Wax',
-        bottle_type: 'Metal Tin',
-        size_ml: '10g',
-        quantity: 1,
-        subtitle: 'Smoked cedarwood and earthy patchouli',
-        image: comboSolidPerfume,
-      },
-      {
-        product_name: 'Rose Velours Wax',
-        bottle_type: 'Metal Tin',
-        size_ml: '10g',
-        quantity: 1,
-        subtitle: 'Velvet damask rose with honeyed amber',
-        image: comboSolidPerfume,
-      },
-    ],
-  },
-  {
-    id: 'combo-05',
-    name: 'Imperial 12 Attar Master Collection',
-    slug: 'imperial-12-attar-master-collection',
-    category: 'Combo Pack',
-    description: 'Complete olfactory wardrobe featuring twelve pure attar flacons in an imperial velvet coffret.',
-    image_url: comboAttar12Pcs,
-    combo_price: 1899,
-    original_price: 3600,
-    discount: 47,
-    stock: 12,
-    bestseller: true,
-    featured: true,
-    is_active: true,
-    display_order: 5,
-    rating: 5.0,
-    review_count: 47,
-    items: [
-      {
-        product_name: '12-Piece Artisanal Attar Set',
-        bottle_type: 'Glass Bottle',
-        size_ml: '12 x 3 ml',
-        quantity: 1,
-        subtitle: 'Full spectrum from floral, musky, to deep smoky agarwood',
-        image: comboAttar12Pcs,
-      },
-    ],
-  },
-];
-
-function getLocalCombos() {
-  try {
-    const raw = localStorage.getItem(LOCAL_COMBOS_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch (e) {
-    console.error('Error reading local combos', e);
-  }
-  try {
-    localStorage.setItem(LOCAL_COMBOS_KEY, JSON.stringify(INITIAL_COMBOS));
-  } catch {}
-  return INITIAL_COMBOS;
+function slugify(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
 }
 
-function saveLocalCombos(combos) {
-  try {
-    localStorage.setItem(LOCAL_COMBOS_KEY, JSON.stringify(combos));
-  } catch (e) {
-    console.error('Error saving local combos', e);
+function formatCombo(row, items, productMap) {
+  const price = Number(row.price) || 0;
+  const sale = row.sale_price !== null && row.sale_price !== undefined ? Number(row.sale_price) : null;
+  const hasSale = sale !== null && sale > 0 && sale < price;
+  const comboPrice = hasSale ? sale : price;
+  const originalPrice = hasSale ? price : null;
+
+  return {
+    ...row,
+    image_url: row.image_url ? getPublicImageUrl(row.image_url) : '',
+    image_path: row.image_path || '',
+    combo_price: comboPrice,
+    original_price: originalPrice,
+    discount: originalPrice ? Math.round(((originalPrice - comboPrice) / originalPrice) * 100) : null,
+    stock: Number(row.stock_quantity) || 0,
+    stock_quantity: Number(row.stock_quantity) || 0,
+    featured: Boolean(row.is_featured),
+    is_featured: Boolean(row.is_featured),
+    is_active: row.is_active !== false,
+    items: items.map((it) => {
+      const p = productMap.get(it.product_id);
+      return {
+        id: it.id,
+        product_id: it.product_id,
+        quantity: Number(it.quantity) || 1,
+        product_name: p?.name || 'Product unavailable',
+        image: p?.image || '',
+        product_active: Boolean(p?.is_active),
+      };
+    }),
+  };
+}
+
+async function attachItems(rows) {
+  if (rows.length === 0) return [];
+  const comboIds = rows.map((r) => r.id);
+  const { data: items, error: itemErr } = await supabase
+    .from('combo_items')
+    .select('id, combo_id, product_id, quantity, created_at')
+    .in('combo_id', comboIds)
+    .order('created_at', { ascending: true });
+  if (itemErr) throw dbError('Could not load combo items', itemErr);
+
+  const productIds = [...new Set((items || []).map((i) => i.product_id).filter(Boolean))];
+  const productMap = new Map();
+  if (productIds.length > 0) {
+    const { data: prods, error: prodErr } = await supabase
+      .from('products')
+      .select('id, name, main_image_url, is_active')
+      .in('id', productIds);
+    if (prodErr) throw dbError('Could not load combo products', prodErr);
+    (prods || []).forEach((p) =>
+      productMap.set(p.id, { ...p, image: p.main_image_url ? getPublicImageUrl(p.main_image_url) : '' })
+    );
   }
+
+  return rows.map((row) =>
+    formatCombo(row, (items || []).filter((i) => i.combo_id === row.id), productMap)
+  );
 }
 
 export async function getCombos(options = {}) {
-  const { bestseller, featured, activeOnly = true } = options;
+  const { featured, activeOnly = true } = options;
+  let query = supabase.from('combos').select('*').order('display_order', { ascending: true });
+  if (activeOnly) query = query.eq('is_active', true);
+  if (featured !== undefined) query = query.eq('is_featured', Boolean(featured));
 
-  if (isSupabaseConfigured && supabase) {
-    try {
-      let query = supabase.from('combos').select('*, combo_items(*)').order('display_order', { ascending: true });
-      if (activeOnly) query = query.eq('is_active', true);
-      if (bestseller !== undefined) query = query.eq('bestseller', bestseller);
-      if (featured !== undefined) query = query.eq('featured', featured);
-
-      const { data, error } = await query;
-      if (!error && Array.isArray(data) && data.length > 0) {
-        return data.map((c) => ({
-          ...c,
-          combo_price: Number(c.combo_price || c.price) || 0,
-          original_price: Number(c.original_price || (c.combo_price || c.price) * 1.25) || 0,
-          items: c.combo_items || [],
-        }));
-      }
-    } catch (e) {
-      console.warn('Falling back to local combos:', e);
-    }
-  }
-
-  let list = getLocalCombos();
-  if (activeOnly) list = list.filter((c) => c.is_active !== false);
-  if (bestseller !== undefined) list = list.filter((c) => Boolean(c.bestseller) === bestseller);
-  if (featured !== undefined) list = list.filter((c) => Boolean(c.featured) === featured);
-  return list;
+  const { data, error } = await query;
+  if (error) throw dbError('Could not load combos', error);
+  return attachItems(data || []);
 }
 
-export async function getComboBySlug(slug) {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('combos')
-        .select('*, combo_items(*)')
-        .eq('slug', slug)
-        .single();
-      if (!error && data) {
-        return {
-          ...data,
-          combo_price: Number(data.combo_price || data.price) || 0,
-          original_price: Number(data.original_price || (data.combo_price || data.price) * 1.25) || 0,
-          items: data.combo_items || [],
-        };
-      }
-    } catch (e) {
-      console.warn('Supabase getComboBySlug error, falling back:', e);
-    }
-  }
-
-  const list = getLocalCombos();
-  return list.find((c) => c.slug === slug || c.id === slug) || null;
+export async function getComboBySlug(slugOrId) {
+  const column = isValidUUID(slugOrId) ? 'id' : 'slug';
+  const { data, error } = await supabase.from('combos').select('*').eq(column, slugOrId).maybeSingle();
+  if (error) throw dbError('Could not load combo', error);
+  if (!data) return null;
+  const [combo] = await attachItems([data]);
+  return combo;
 }
 
 export async function getComboById(id) {
   return getComboBySlug(id);
 }
 
-export async function createCombo(comboData) {
-  const autoSlug =
-    comboData.slug ||
-    comboData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+/** Convert the admin form (combo_price / original_price) to the live price columns. */
+function toComboRow(comboData) {
+  const row = {};
+  if (comboData.name !== undefined) row.name = comboData.name.trim();
+  if (comboData.slug !== undefined || comboData.name !== undefined) {
+    row.slug = comboData.slug || slugify(comboData.name);
+  }
+  if (comboData.description !== undefined) row.description = comboData.description || '';
+  if (comboData.image_url !== undefined) row.image_url = comboData.image_url || null;
+  if (comboData.image_path !== undefined) row.image_path = comboData.image_path || null;
 
-  let createdCombo = null;
-
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { items, ...mainData } = comboData;
-      const priceNum = Number(mainData.combo_price || mainData.price) || 0;
-      const payload = {
-        name: mainData.name,
-        slug: autoSlug,
-        category: mainData.category || 'Combo Pack',
-        description: mainData.description || '',
-        image_url: mainData.image_url || '',
-        price: priceNum,
-        combo_price: priceNum,
-        original_price: Number(mainData.original_price) || 0,
-        discount: Number(mainData.discount) || 0,
-        stock: Number(mainData.stock) || 10,
-        bestseller: Boolean(mainData.bestseller),
-        featured: Boolean(mainData.featured),
-        is_active: mainData.active !== undefined ? Boolean(mainData.active) : true,
-      };
-
-      const { data, error } = await supabase.from('combos').insert([payload]).select().single();
-      if (!error && data) {
-        createdCombo = data;
-        if (items && items.length > 0) {
-          const itemRows = items.map((it) => ({
-            combo_id: data.id,
-            product_name: it.product_name,
-            bottle_type: it.bottle_type || 'Glass Bottle',
-            size_ml: it.size_ml || '50 ml',
-            quantity: Number(it.quantity) || 1,
-            product_image: it.image || it.product_image || '',
-          }));
-          await supabase.from('combo_items').insert(itemRows);
-        }
-      } else if (error) {
-        console.warn('Supabase createCombo note:', error.message);
-      }
-    } catch (e) {
-      console.warn('Supabase createCombo error, saved locally:', e);
+  if (comboData.combo_price !== undefined || comboData.original_price !== undefined) {
+    const comboPrice = Number(comboData.combo_price) || 0;
+    const original = Number(comboData.original_price) || 0;
+    if (original > comboPrice) {
+      row.price = original;
+      row.sale_price = comboPrice;
+    } else {
+      row.price = comboPrice;
+      row.sale_price = null;
     }
   }
+  if (comboData.stock !== undefined) row.stock_quantity = Math.max(0, Number(comboData.stock) || 0);
+  if (comboData.featured !== undefined) row.is_featured = Boolean(comboData.featured);
+  if (comboData.is_active !== undefined) row.is_active = Boolean(comboData.is_active);
+  else if (comboData.active !== undefined) row.is_active = Boolean(comboData.active);
+  if (comboData.display_order !== undefined) row.display_order = Number(comboData.display_order) || 0;
+  return row;
+}
 
-  const newCombo = createdCombo ? { ...createdCombo, items: comboData.items || [] } : {
-    id: `combo-${Date.now()}`,
-    slug: autoSlug,
-    ...comboData,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
+function validateItems(items) {
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new Error('Add at least one product to the combo.');
+  }
+  const bad = items.find((it) => !isValidUUID(it.product_id));
+  if (bad) {
+    throw new Error(`"${bad.product_name || 'An item'}" is not a database product. Remove it and add it again.`);
+  }
+}
 
-  const list = getLocalCombos();
-  list.unshift(newCombo);
-  saveLocalCombos(list);
-  return newCombo;
+function toItemRows(comboId, items) {
+  return items.map((it) => ({
+    combo_id: comboId,
+    product_id: it.product_id,
+    quantity: Math.max(1, Number(it.quantity) || 1),
+  }));
+}
+
+export async function createCombo(comboData) {
+  const row = toComboRow(comboData);
+  if (!row.name) throw new Error('Combo name is required.');
+  if (!row.image_url) throw new Error('A combo image is required.');
+  if (!(Number(row.price) > 0)) throw new Error('Combo price must be greater than 0.');
+  validateItems(comboData.items);
+
+  const { data, error } = await supabase
+    .from('combos')
+    .insert([{ is_active: true, display_order: 0, ...row }])
+    .select()
+    .single();
+  if (error || !data) throw dbError('Combo was not created', error);
+
+  const itemRows = toItemRows(data.id, comboData.items);
+  const { data: inserted, error: itemErr } = await supabase.from('combo_items').insert(itemRows).select('id');
+  if (itemErr || (inserted || []).length !== itemRows.length) {
+    const { error: cleanupErr } = await supabase.from('combos').delete().eq('id', data.id);
+    throw new Error(
+      `Combo items were not saved, so the combo was not created: ${itemErr?.message || 'items not returned'}` +
+        (cleanupErr ? `. Cleanup failed (${cleanupErr.message}); delete combo "${data.name}" manually.` : '')
+    );
+  }
+
+  return getComboById(data.id);
 }
 
 export async function updateCombo(id, updates) {
-  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
-    try {
-      const { items, ...mainUpdates } = updates;
-      const payload = {};
-      if (mainUpdates.name !== undefined) payload.name = mainUpdates.name;
-      if (mainUpdates.slug !== undefined) payload.slug = mainUpdates.slug;
-      if (mainUpdates.category !== undefined) payload.category = mainUpdates.category;
-      if (mainUpdates.description !== undefined) payload.description = mainUpdates.description;
-      if (mainUpdates.image_url !== undefined) payload.image_url = mainUpdates.image_url;
-      if (mainUpdates.combo_price !== undefined || mainUpdates.price !== undefined) {
-        const p = Number(mainUpdates.combo_price || mainUpdates.price);
-        payload.price = p;
-        payload.combo_price = p;
-      }
-      if (mainUpdates.original_price !== undefined) payload.original_price = Number(mainUpdates.original_price);
-      if (mainUpdates.discount !== undefined) payload.discount = Number(mainUpdates.discount);
-      if (mainUpdates.stock !== undefined) payload.stock = Number(mainUpdates.stock);
-      if (mainUpdates.bestseller !== undefined) payload.bestseller = Boolean(mainUpdates.bestseller);
-      if (mainUpdates.featured !== undefined) payload.featured = Boolean(mainUpdates.featured);
-      if (mainUpdates.active !== undefined) payload.is_active = Boolean(mainUpdates.active);
-      if (mainUpdates.is_active !== undefined) payload.is_active = Boolean(mainUpdates.is_active);
-      payload.updated_at = new Date().toISOString();
+  if (!isValidUUID(id)) throw new Error('This combo is not a database record. Reload the page.');
 
-      await supabase.from('combos').update(payload).eq('id', id);
+  const row = toComboRow(updates);
+  if (row.price !== undefined && !(Number(row.price) > 0)) {
+    throw new Error('Combo price must be greater than 0.');
+  }
+  const { data, error } = await supabase
+    .from('combos')
+    .update({ ...row, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('id');
+  if (error) throw dbError('Combo was not updated', error);
+  assertRows(data, 'Combo was not updated');
 
-      if (items && Array.isArray(items)) {
-        await supabase.from('combo_items').delete().eq('combo_id', id);
-        const itemRows = items.map((it) => ({
-          combo_id: id,
-          product_name: it.product_name,
-          bottle_type: it.bottle_type || 'Glass Bottle',
-          size_ml: it.size_ml || '50 ml',
-          quantity: Number(it.quantity) || 1,
-          product_image: it.image || it.product_image || '',
-        }));
-        await supabase.from('combo_items').insert(itemRows);
+  if (Array.isArray(updates.items)) {
+    validateItems(updates.items);
+    const { data: oldItems, error: oldErr } = await supabase.from('combo_items').select('id').eq('combo_id', id);
+    if (oldErr) throw dbError('Could not read existing combo items', oldErr);
+
+    // Insert the new list first so a failure never leaves the combo empty
+    const { data: inserted, error: insErr } = await supabase
+      .from('combo_items')
+      .insert(toItemRows(id, updates.items))
+      .select('id');
+    if (insErr || (inserted || []).length !== updates.items.length) {
+      throw dbError('Combo items were not updated', insErr || { message: 'items not returned' });
+    }
+
+    const oldIds = (oldItems || []).map((i) => i.id);
+    if (oldIds.length > 0) {
+      const { error: delErr } = await supabase.from('combo_items').delete().in('id', oldIds);
+      if (delErr) {
+        // Roll back the new rows so the combo keeps its previous contents
+        await supabase.from('combo_items').delete().in('id', inserted.map((i) => i.id));
+        throw dbError('Old combo items could not be replaced', delErr);
       }
-    } catch (e) {
-      console.warn('Supabase updateCombo error:', e);
     }
   }
 
-  const list = getLocalCombos();
-  const idx = list.findIndex((c) => c.id === id);
-  if (idx > -1) {
-    list[idx] = { ...list[idx], ...updates, updated_at: new Date().toISOString() };
-    saveLocalCombos(list);
-    return list[idx];
-  }
-  return null;
+  return getComboById(id);
 }
 
 export async function deleteCombo(id) {
-  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
-    try {
-      await supabase.from('combo_items').delete().eq('combo_id', id);
-      await supabase.from('combos').delete().eq('id', id);
-    } catch (e) {
-      console.warn('Supabase deleteCombo error:', e);
-    }
-  }
+  if (!isValidUUID(id)) throw new Error('This combo is not a database record. Reload the page.');
 
-  const list = getLocalCombos();
-  const filtered = list.filter((c) => c.id !== id);
-  saveLocalCombos(filtered);
+  // Try the combo first: if the foreign key cascades, items go with it; if not (23503),
+  // remove the items and retry. Items are never removed when the combo itself cannot be.
+  let { data, error } = await supabase.from('combos').delete().eq('id', id).select('id');
+  if (error && error.code === '23503') {
+    const { error: itemErr } = await supabase.from('combo_items').delete().eq('combo_id', id);
+    if (itemErr) throw dbError('Combo items were not deleted', itemErr);
+    ({ data, error } = await supabase.from('combos').delete().eq('id', id).select('id'));
+  }
+  if (error) throw dbError('Combo was not deleted', error);
+  assertRows(data, 'Combo was not deleted');
   return true;
 }

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Truck, ShieldCheck, CreditCard, Gift } from 'lucide-react';
 import BenefitItem from './BenefitItem';
+import { useCart } from '../../context/CartContext';
+import { formatINR } from '../../utils/formatCurrency';
 import './BenefitsBar.css';
 
 const BENEFITS = [
@@ -8,7 +10,8 @@ const BENEFITS = [
     id: 'shipping',
     icon: Truck,
     title: 'FREE SHIPPING',
-    description: 'On all orders over ₹1,500',
+    // Filled in from the cart's shipping rule (Store Settings) at render time
+    description: '',
   },
   {
     id: 'original',
@@ -19,8 +22,8 @@ const BENEFITS = [
   {
     id: 'checkout',
     icon: CreditCard,
-    title: 'SECURE CHECKOUT',
-    description: 'Multiple Payment Options',
+    title: 'CASH ON DELIVERY',
+    description: 'Pay when your order arrives',
   },
   {
     id: 'packaging',
@@ -31,6 +34,9 @@ const BENEFITS = [
 ];
 
 export default function BenefitsBar() {
+  const { freeShippingThreshold } = useCart();
+  const shippingText = `On all orders over ${formatINR(freeShippingThreshold)}`;
+
   return (
     <section className="ps-benefits-bar" aria-label="Brand Guarantees & Pillars">
       <div className="ps-benefits-container">
@@ -40,7 +46,7 @@ export default function BenefitsBar() {
               key={item.id}
               icon={item.icon}
               title={item.title}
-              description={item.description}
+              description={item.id === 'shipping' ? shippingText : item.description}
               isLast={index === BENEFITS.length - 1}
             />
           ))}

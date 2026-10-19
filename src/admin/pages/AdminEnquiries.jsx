@@ -7,14 +7,20 @@ export default function AdminEnquiries() {
   const [enquiries, setEnquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
+  const [errorMsg, setErrorMsg] = useState('');
 
   const loadData = async () => {
     setLoading(true);
+    setErrorMsg('');
     try {
       const data = await getEnquiries();
       setEnquiries(data || []);
     } catch (err) {
-      console.error(err);
+      setErrorMsg(
+        /PGRST205|contact_enquiries/.test(err.message)
+          ? 'Contact-form storage is not set up: the contact_enquiries table does not exist. Apply supabase/migrations/20261020_contact_enquiries_optional.sql to enable it. Until then the website shows visitors the e-mail / Instagram / WhatsApp details instead of the form.'
+          : err.message
+      );
     } finally {
       setLoading(false);
     }
@@ -25,8 +31,13 @@ export default function AdminEnquiries() {
   }, []);
 
   const handleStatusChange = async (id, newStatus) => {
-    await updateEnquiryStatus(id, newStatus);
-    setEnquiries((prev) => prev.map((e) => (e.id === id ? { ...e, status: newStatus } : e)));
+    setErrorMsg('');
+    try {
+      await updateEnquiryStatus(id, newStatus);
+      setEnquiries((prev) => prev.map((e) => (e.id === id ? { ...e, status: newStatus } : e)));
+    } catch (err) {
+      setErrorMsg(err.message);
+    }
   };
 
   const filtered = enquiries.filter((e) => {
@@ -47,6 +58,8 @@ export default function AdminEnquiries() {
           <span>Refresh</span>
         </button>
       </div>
+
+      {errorMsg && <div className="ps-form-error-banner">{errorMsg}</div>}
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid rgba(200,164,93,0.15)', paddingBottom: '0.75rem', marginBottom: '1.5rem' }}>

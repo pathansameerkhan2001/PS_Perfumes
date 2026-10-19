@@ -11,11 +11,22 @@ import {
   Loader2,
 } from 'lucide-react';
 import { getProductById, createProduct, updateProduct } from '../../services/products';
+import { getCategories } from '../../services/categories';
 import { uploadImage } from '../../lib/storage';
 import './AdminProductForm.css';
 
-const CATEGORIES = ['Attar', 'Perfume', 'Bakhoor', 'Musky', 'Oud', 'Floral', 'Woody', 'Combo Pack'];
+// Used only if the categories table cannot be read
+const FALLBACK_CATEGORIES = ['Attar', 'Perfume', 'Bakhoor', 'Musky', 'Oud', 'Floral', 'Woody'];
 const ALL_POSSIBLE_SIZES = ['6 ml', '10 ml', '30 ml', '50 ml', '100 ml'];
+const ATTAR_SIZES = ['6 ml', '10 ml'];
+const PERFUME_SIZES = ['30 ml', '50 ml', '100 ml'];
+
+const isAttarName = (cat) => String(cat || '').toLowerCase().includes('attar');
+const sizesForCategory = (cat) => (isAttarName(cat) ? ATTAR_SIZES : PERFUME_SIZES);
+
+// Fresh deep copy so editing one product never mutates the shared defaults
+const cloneDefaultMatrix = () =>
+  Object.fromEntries(Object.entries(DEFAULT_VARIANT_MATRIX).map(([k, v]) => [k, { ...v }]));
 
 const DEFAULT_VARIANT_MATRIX = {
   '6 ml': { glassPrice: 499, pvcPrice: 399, glassStock: 50, pvcStock: 0, glassSku: '', pvcSku: '' },
@@ -57,8 +68,11 @@ export default function AdminProductForm() {
     price: 1499,
     compare_at_price: 1899,
     main_image: '',
+    main_image_path: '',
     glass_image: '',
+    glass_image_path: '',
     pvc_image: '',
+    pvc_image_path: '',
     gallery_images: [],
     featured: false,
     new_arrival: false,
@@ -82,15 +96,36 @@ export default function AdminProductForm() {
   });
 
   // Variants & Pricing Matrix
-  const [variantMatrix, setVariantMatrix] = useState(DEFAULT_VARIANT_MATRIX);
+  const [variantMatrix, setVariantMatrix] = useState(cloneDefaultMatrix);
+
+  // Category names from the database (the product's category_id is resolved from these)
+  const [categoryOptions, setCategoryOptions] = useState(FALLBACK_CATEGORIES);
+
+  useEffect(() => {
+    let active = true;
+    getCategories(true)
+      .then((cats) => {
+        const names = (cats || []).map((c) => c.name).filter(Boolean);
+        if (active && names.length > 0) setCategoryOptions(names);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (isEditing) {
       setLoading(true);
       getProductById(id)
         .then((p) => {
+          if (!p) {
+            setErrorMsg('This product was not found in the database. It may have been deleted.');
+            return;
+          }
           if (p) {
-            const isAttar = p.category?.toLowerCase() === 'attar';
+            const isAttar = isAttarName(p.category);
+            const stored = p.stored_images || {};
             setForm({
               name: p.name || '',
               slug: p.slug || '',
@@ -100,14 +135,17 @@ export default function AdminProductForm() {
               description: p.description || '',
               price: p.price || 1499,
               compare_at_price: p.compare_at_price || '',
-              main_image: p.main_image || p.image || '',
-              glass_image: p.glass_image || '',
-              pvc_image: p.pvc_image || '',
+              main_image: stored.main || '',
+              main_image_path: stored.main_path || '',
+              glass_image: stored.glass || '',
+              glass_image_path: stored.glass_path || '',
+              pvc_image: stored.pvc || '',
+              pvc_image_path: stored.pvc_path || '',
               gallery_images: p.gallery_images || [],
               featured: Boolean(p.featured || p.is_featured),
               new_arrival: Boolean(p.new_arrival || p.is_new_arrival),
               bestseller: Boolean(p.bestseller || p.is_bestseller),
-              active: p.status === 'active' || p.active !== false || p.is_active !== false,
+              active: p.is_active !== false,
               top_notes: Array.isArray(p.top_notes) ? p.top_notes.join(', ') : (p.top_notes || ''),
               heart_notes: Array.isArray(p.heart_notes) ? p.heart_notes.join(', ') : (p.heart_notes || ''),
               base_notes: Array.isArray(p.base_notes) ? p.base_notes.join(', ') : (p.base_notes || ''),
@@ -118,7 +156,7 @@ export default function AdminProductForm() {
 
             // Populate variant matrix and dynamic sizes if available
             if (Array.isArray(p.variants) && p.variants.length > 0) {
-              const nextMatrix = { ...DEFAULT_VARIANT_MATRIX };
+              const nextMatrix = cloneDefaultMatrix();
               const foundSizes = [];
               let hasPvc = false;
 
@@ -127,7 +165,7 @@ export default function AdminProductForm() {
                 const numOnly = rawSz.replace(/[^\d]/g, '');
                 const sz = numOnly ? `${numOnly} ml` : rawSz;
 
-                if (!foundSizes.includes(sz) && ALL_POSSIBLE_SIZES.includes(sz)) {
+                if (!foundSizes.includes(sz) && sizesForCategory(p.category).includes(sz)) {
                   foundSizes.push(sz);
                 }
 
@@ -188,17 +226,18 @@ export default function AdminProductForm() {
 
   const handleCategoryChange = (e) => {
     const newCat = e.target.value;
-    const isAttar = newCat?.toLowerCase() === 'attar';
+    const allowed = sizesForCategory(newCat);
     setForm((prev) => ({ ...prev, category: newCat }));
 
-    if (isAttar) {
-      setSelectedSizes(['6 ml', '10 ml']);
+    // Keep only sizes that exist for the new category (attar: 6/10 ml, perfume: 30/50/100 ml)
+    setSelectedSizes((prev) => {
+      const kept = prev.filter((s) => allowed.includes(s));
+      return kept.length > 0 ? kept : allowed;
+    });
+
+    if (isAttarName(newCat)) {
       setBottleOptions({ glass: true, pvc: false });
     } else {
-      setSelectedSizes((prev) => {
-        const hasOnlyAttar = prev.every((s) => s === '6 ml' || s === '10 ml');
-        return hasOnlyAttar ? ['30 ml', '50 ml', '100 ml'] : prev;
-      });
       setBottleOptions({ glass: true, pvc: true });
     }
   };
@@ -213,7 +252,7 @@ export default function AdminProductForm() {
         return prev.filter((s) => s !== sz);
       } else {
         const next = [...prev, sz];
-        return ALL_POSSIBLE_SIZES.filter((s) => next.includes(s));
+        return sizesForCategory(form.category).filter((s) => next.includes(s));
       }
     });
   };
@@ -230,8 +269,17 @@ export default function AdminProductForm() {
     }));
   };
 
-  // 1. Primary Campaign Image Upload Handler
-  const handleMainImageUpload = async (e) => {
+  // 1–3. Primary / Glass Bottle / PVC Bottle image uploads.
+  // The form only receives the URL and storage path after Storage confirms the upload;
+  // the blob preview is shown while uploading and replaced by the stored image afterwards.
+  const FLACON_UPLOADS = {
+    main: { label: 'Primary image', urlKey: 'main_image', pathKey: 'main_image_path', suffix: 'main' },
+    glass: { label: 'Glass Bottle image', urlKey: 'glass_image', pathKey: 'glass_image_path', suffix: 'glass' },
+    pvc: { label: 'PVC Bottle image', urlKey: 'pvc_image', pathKey: 'pvc_image_path', suffix: 'pvc' },
+  };
+
+  const uploadFlaconImage = async (field, e) => {
+    const cfg = FLACON_UPLOADS[field];
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -240,111 +288,36 @@ export default function AdminProductForm() {
     setErrorMsg('');
     setSuccessMsg('');
 
-    // Instant local preview
     const localBlob = URL.createObjectURL(file);
-    setLocalPreviews((prev) => ({ ...prev, main: localBlob }));
+    setLocalPreviews((prev) => ({ ...prev, [field]: localBlob }));
 
     setIsUploading(true);
-    setUploadingField('main');
-    setUploadProgress('Uploading primary image to Supabase Storage...');
+    setUploadingField(field);
+    setUploadProgress(`Uploading ${cfg.label} to Supabase Storage...`);
 
     try {
-      const { url, error } = await uploadImage(file, 'products', `${form.slug || 'prod'}-main`);
-      if (error) {
-        URL.revokeObjectURL(localBlob);
-        setLocalPreviews((prev) => ({ ...prev, main: '' }));
-        setErrorMsg(`Primary image upload failed: ${error}`);
+      const { url, path, error } = await uploadImage(file, 'products', `${form.slug || 'prod'}-${cfg.suffix}`);
+      if (error || !url || !path) {
+        setErrorMsg(`${cfg.label} upload failed: ${error || 'Storage did not return the uploaded file.'}`);
       } else {
-        setForm((prev) => ({ ...prev, main_image: url }));
-        setSuccessMsg('Primary image uploaded successfully to Supabase Storage.');
-        setTimeout(() => setSuccessMsg(''), 3000);
+        setForm((prev) => ({ ...prev, [cfg.urlKey]: url, [cfg.pathKey]: path }));
+        setSuccessMsg(`${cfg.label} uploaded to Storage. Click "Save Product" to attach it to the product.`);
+        setTimeout(() => setSuccessMsg(''), 4000);
       }
     } catch (err) {
-      URL.revokeObjectURL(localBlob);
-      setLocalPreviews((prev) => ({ ...prev, main: '' }));
-      setErrorMsg(`Primary image upload error: ${err.message || 'Storage error'}`);
+      setErrorMsg(`${cfg.label} upload error: ${err.message || 'Storage error'}`);
     } finally {
+      URL.revokeObjectURL(localBlob);
+      setLocalPreviews((prev) => ({ ...prev, [field]: '' }));
       setIsUploading(false);
       setUploadingField(null);
       setUploadProgress(''); // Crucial: clear loading state in finally block!
     }
   };
 
-  // 2. Glass Bottle Flacon Image Upload Handler
-  const handleGlassImageUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    e.target.value = '';
-    setErrorMsg('');
-    setSuccessMsg('');
-
-    const localBlob = URL.createObjectURL(file);
-    setLocalPreviews((prev) => ({ ...prev, glass: localBlob }));
-
-    setIsUploading(true);
-    setUploadingField('glass');
-    setUploadProgress('Uploading Glass Bottle image to Supabase Storage...');
-
-    try {
-      const { url, error } = await uploadImage(file, 'products', `${form.slug || 'prod'}-glass`);
-      if (error) {
-        URL.revokeObjectURL(localBlob);
-        setLocalPreviews((prev) => ({ ...prev, glass: '' }));
-        setErrorMsg(`Glass Bottle upload failed: ${error}`);
-      } else {
-        setForm((prev) => ({ ...prev, glass_image: url }));
-        setSuccessMsg('Glass Bottle flacon image uploaded successfully.');
-        setTimeout(() => setSuccessMsg(''), 3000);
-      }
-    } catch (err) {
-      URL.revokeObjectURL(localBlob);
-      setLocalPreviews((prev) => ({ ...prev, glass: '' }));
-      setErrorMsg(`Glass Bottle upload error: ${err.message || 'Storage error'}`);
-    } finally {
-      setIsUploading(false);
-      setUploadingField(null);
-      setUploadProgress('');
-    }
-  };
-
-  // 3. PVC Bottle Flacon Image Upload Handler
-  const handlePvcImageUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    e.target.value = '';
-    setErrorMsg('');
-    setSuccessMsg('');
-
-    const localBlob = URL.createObjectURL(file);
-    setLocalPreviews((prev) => ({ ...prev, pvc: localBlob }));
-
-    setIsUploading(true);
-    setUploadingField('pvc');
-    setUploadProgress('Uploading PVC Bottle image to Supabase Storage...');
-
-    try {
-      const { url, error } = await uploadImage(file, 'products', `${form.slug || 'prod'}-pvc`);
-      if (error) {
-        URL.revokeObjectURL(localBlob);
-        setLocalPreviews((prev) => ({ ...prev, pvc: '' }));
-        setErrorMsg(`PVC Bottle upload failed: ${error}`);
-      } else {
-        setForm((prev) => ({ ...prev, pvc_image: url }));
-        setSuccessMsg('PVC Bottle flacon image uploaded successfully.');
-        setTimeout(() => setSuccessMsg(''), 3000);
-      }
-    } catch (err) {
-      URL.revokeObjectURL(localBlob);
-      setLocalPreviews((prev) => ({ ...prev, pvc: '' }));
-      setErrorMsg(`PVC Bottle upload error: ${err.message || 'Storage error'}`);
-    } finally {
-      setIsUploading(false);
-      setUploadingField(null);
-      setUploadProgress('');
-    }
-  };
+  const handleMainImageUpload = (e) => uploadFlaconImage('main', e);
+  const handleGlassImageUpload = (e) => uploadFlaconImage('glass', e);
+  const handlePvcImageUpload = (e) => uploadFlaconImage('pvc', e);
 
   // 4. Gallery Images Upload Handler
   const handleGalleryUpload = async (e) => {
@@ -426,9 +399,10 @@ export default function AdminProductForm() {
     setErrorMsg('');
     setSuccessMsg('');
 
-    // Generate exact variant records for enabled bottle types across selectedSizes
+    // Generate exact variant records for enabled bottle types across the sizes valid for this category
     const generatedVariants = [];
-    selectedSizes.forEach((sz) => {
+    const allowedSizes = sizesForCategory(form.category);
+    selectedSizes.filter((sz) => allowedSizes.includes(sz)).forEach((sz) => {
       const cfg = variantMatrix[sz] || DEFAULT_VARIANT_MATRIX[sz];
       const sizeNum = sz.replace(/\D/g, '');
 
@@ -477,8 +451,11 @@ export default function AdminProductForm() {
       heart_notes: form.heart_notes.split(',').map((s) => s.trim()).filter(Boolean),
       base_notes: form.base_notes.split(',').map((s) => s.trim()).filter(Boolean),
       main_image: form.main_image,
+      main_image_path: form.main_image_path || null,
       glass_image: bottleOptions.glass ? (form.glass_image || null) : null,
+      glass_image_path: bottleOptions.glass ? (form.glass_image_path || null) : null,
       pvc_image: bottleOptions.pvc ? (form.pvc_image || null) : null,
+      pvc_image_path: bottleOptions.pvc ? (form.pvc_image_path || null) : null,
       variants: generatedVariants,
     };
 
@@ -640,7 +617,7 @@ export default function AdminProductForm() {
                   </span>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {ALL_POSSIBLE_SIZES.map((sz) => {
+                  {sizesForCategory(form.category).map((sz) => {
                     const isSelected = selectedSizes.includes(sz);
                     const isAttarSize = sz === '6 ml' || sz === '10 ml';
                     return (
@@ -876,7 +853,10 @@ export default function AdminProductForm() {
                     value={form.category}
                     onChange={handleCategoryChange}
                   >
-                    {CATEGORIES.map((c) => (
+                    {(categoryOptions.includes(form.category)
+                      ? categoryOptions
+                      : [form.category, ...categoryOptions]
+                    ).map((c) => (
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
@@ -953,7 +933,7 @@ export default function AdminProductForm() {
                           className="ps-img-del-btn"
                           title="Remove image"
                           onClick={() => {
-                            setForm((prev) => ({ ...prev, main_image: '' }));
+                            setForm((prev) => ({ ...prev, main_image: '', main_image_path: '' }));
                             setLocalPreviews((prev) => ({ ...prev, main: '' }));
                           }}
                         >
@@ -1006,7 +986,7 @@ export default function AdminProductForm() {
                           className="ps-img-del-btn"
                           title="Remove image"
                           onClick={() => {
-                            setForm((prev) => ({ ...prev, glass_image: '' }));
+                            setForm((prev) => ({ ...prev, glass_image: '', glass_image_path: '' }));
                             setLocalPreviews((prev) => ({ ...prev, glass: '' }));
                           }}
                         >
@@ -1060,7 +1040,7 @@ export default function AdminProductForm() {
                             className="ps-img-del-btn"
                             title="Remove image"
                             onClick={() => {
-                              setForm((prev) => ({ ...prev, pvc_image: '' }));
+                              setForm((prev) => ({ ...prev, pvc_image: '', pvc_image_path: '' }));
                               setLocalPreviews((prev) => ({ ...prev, pvc: '' }));
                             }}
                           >

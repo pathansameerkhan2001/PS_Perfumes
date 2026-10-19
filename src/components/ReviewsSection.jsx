@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Star, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
-import { REVIEWS } from '../data/reviews';
+import { getReviews } from '../services/reviews';
 import './ReviewsSection.css';
 
 export default function ReviewsSection() {
@@ -8,6 +8,32 @@ export default function ReviewsSection() {
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const autoPlayRef = useRef(null);
+  // Approved customer reviews from the database (no hard-coded testimonials)
+  const [REVIEWS, setReviews] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    getReviews(false, { limit: 12 })
+      .then((rows) => {
+        if (!mounted) return;
+        setReviews(
+          rows
+            .filter((r) => r.comment)
+            .map((r) => ({
+              id: r.id,
+              title: r.title || '',
+              comment: r.comment,
+              author: r.customer_name || 'Customer',
+              rating: Math.max(1, Math.min(5, Number(r.rating) || 5)),
+              hasHeart: false,
+            }))
+        );
+      })
+      .catch((err) => console.error('Could not load reviews:', err));
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const totalReviews = REVIEWS.length;
 
@@ -49,6 +75,9 @@ export default function ReviewsSection() {
     setTouchStart(null);
     setTouchEnd(null);
   };
+
+  // No approved reviews yet: hide the section rather than show invented testimonials
+  if (totalReviews === 0) return null;
 
   return (
     <section

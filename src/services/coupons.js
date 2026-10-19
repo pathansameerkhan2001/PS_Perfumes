@@ -1,174 +1,124 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
+import { dbError, assertRows } from './dbErrors';
 
-const LOCAL_COUPONS_KEY = 'ps_db_coupons';
+/*
+ * Live schema (verified 2026-10-19):
+ *   coupons (id, code, description, discount_type, discount_value, minimum_order_amount,
+ *            usage_limit, used_count, is_active, starts_at, expires_at, created_at, updated_at)
+ * The storefront cart validates codes through the validate_coupon() database function and
+ * counts a use through redeem_coupon() after the order is stored.
+ */
 
-export const INITIAL_COUPONS = [
-  {
-    id: 'cp-01',
-    code: 'PS10',
-    discount_type: 'percentage',
-    discount_value: 10,
-    min_order_amount: 999,
-    max_discount_amount: 500,
-    usage_limit: 1000,
-    used_count: 84,
-    is_active: true,
-  },
-  {
-    id: 'cp-02',
-    code: 'WELCOME20',
-    discount_type: 'percentage',
-    discount_value: 20,
-    min_order_amount: 1499,
-    max_discount_amount: 600,
-    usage_limit: 500,
-    used_count: 142,
-    is_active: true,
-  },
-  {
-    id: 'cp-03',
-    code: 'ROYAL100',
-    discount_type: 'fixed',
-    discount_value: 100,
-    min_order_amount: 999,
-    max_discount_amount: 100,
-    usage_limit: 200,
-    used_count: 18,
-    is_active: true,
-  },
-];
-
-function getLocalCoupons() {
-  try {
-    const raw = localStorage.getItem(LOCAL_COUPONS_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch {}
-
-  try {
-    localStorage.setItem(LOCAL_COUPONS_KEY, JSON.stringify(INITIAL_COUPONS));
-  } catch {}
-  return INITIAL_COUPONS;
-}
-
-function saveLocalCoupons(coupons) {
-  try {
-    localStorage.setItem(LOCAL_COUPONS_KEY, JSON.stringify(coupons));
-  } catch {}
+function formatCoupon(row) {
+  return {
+    ...row,
+    min_order_amount: Number(row.minimum_order_amount) || 0,
+    discount_value: Number(row.discount_value) || 0,
+    used_count: Number(row.used_count) || 0,
+  };
 }
 
 export async function getCoupons() {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { data, error } = await supabase.from('coupons').select('*').order('created_at', { ascending: false });
-      if (!error && data && data.length > 0) return data;
-    } catch {}
-  }
-  return getLocalCoupons();
+  const { data, error } = await supabase.from('coupons').select('*').order('created_at', { ascending: false });
+  if (error) throw dbError('Could not load coupons', error);
+  return (data || []).map(formatCoupon);
 }
 
-export async function validateCoupon(code, subtotal) {
-  const clean = code.trim().toUpperCase();
-  const list = await getCoupons();
-  const coupon = list.find((c) => c.code.toUpperCase() === clean && c.is_active);
+/**
+ * Storefront coupon check. Visitors cannot read the coupons table, so this calls the
+ * validate_coupon() database function (migration 20261019), which checks active status,
+ * start/expiry dates, usage limit and minimum order, and computes the discount.
+ * @returns {Promise<{ valid: boolean, message: string, code?: string, discount_type?: string,
+ *   discount_value?: number, minimum_order_amount?: number, discount_amount?: number }>}
+ */
+export async function validateCouponCode(code, subtotal) {
+  const clean = String(code || '').trim().toUpperCase();
+  if (!clean) return { valid: false, message: 'Enter a promo code.' };
 
-  if (!coupon) {
-    return { valid: false, message: 'Invalid or inactive promo code.' };
-  }
-
-  if (coupon.min_order_amount && subtotal < Number(coupon.min_order_amount)) {
+  const { data, error } = await supabase.rpc('validate_coupon', {
+    p_code: clean,
+    p_subtotal: Number(subtotal) || 0,
+  });
+  if (error) {
+    console.error('Coupon validation failed:', error);
     return {
       valid: false,
-      message: `Minimum order amount of ₹${coupon.min_order_amount} required for this code.`,
+      message:
+        error.code === 'PGRST202'
+          ? 'Promo codes are not available at the moment.'
+          : 'The promo code could not be checked. Please try again.',
     };
   }
-
-  let discount = 0;
-  if (coupon.discount_type === 'percentage') {
-    discount = Math.round((subtotal * Number(coupon.discount_value)) / 100);
-    if (coupon.max_discount_amount && discount > Number(coupon.max_discount_amount)) {
-      discount = Number(coupon.max_discount_amount);
-    }
-  } else {
-    discount = Number(coupon.discount_value);
-  }
-
   return {
-    valid: true,
-    coupon,
-    discount,
-    message: `Promo code ${coupon.code} applied!`,
+    valid: Boolean(data?.valid),
+    message: data?.message || (data?.valid ? 'Promo code applied.' : 'Invalid promo code.'),
+    code: data?.code,
+    discount_type: data?.discount_type,
+    discount_value: Number(data?.discount_value) || 0,
+    minimum_order_amount: Number(data?.minimum_order_amount) || 0,
+    discount_amount: Number(data?.discount_amount) || 0,
   };
+}
+
+/** Counts one use of the code for a just-placed order (see redeem_coupon() in the migration). */
+export async function redeemCoupon(code, orderId) {
+  const { data, error } = await supabase.rpc('redeem_coupon', { p_code: code, p_order_id: orderId });
+  if (error) {
+    console.error('Coupon redemption was not recorded:', error);
+    return false;
+  }
+  return Boolean(data);
+}
+
+/** Same discount rule as validate_coupon(), used to keep the cart total in sync as it changes. */
+export function computeCouponDiscount(coupon, subtotal) {
+  if (!coupon) return 0;
+  const sub = Math.max(0, Number(subtotal) || 0);
+  if (coupon.minimum_order_amount && sub < coupon.minimum_order_amount) return 0;
+  const value = Math.max(0, Number(coupon.discount_value) || 0);
+  const discount = coupon.discount_type === 'fixed' ? Math.min(value, sub) : Math.round((sub * Math.min(value, 100)) / 100);
+  return Math.max(0, Math.min(discount, sub));
 }
 
 export async function createCoupon(coupon) {
-  let createdCoupon = null;
+  const code = String(coupon.code || '').toUpperCase().trim();
+  const value = Number(coupon.discount_value);
+  const type = coupon.discount_type === 'fixed' ? 'fixed' : 'percentage';
+  if (!code) throw new Error('Coupon code is required.');
+  if (!(value > 0)) throw new Error('Discount value must be greater than 0.');
+  if (type === 'percentage' && value > 100) throw new Error('A percentage discount cannot exceed 100.');
 
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const payload = {
-        code: coupon.code.toUpperCase().trim(),
-        discount_type: coupon.discount_type || 'percentage',
-        discount_value: Number(coupon.discount_value) || 10,
-        min_order_amount: Number(coupon.min_order_amount) || 0,
-        max_discount_amount: coupon.max_discount_amount ? Number(coupon.max_discount_amount) : null,
-        usage_limit: coupon.usage_limit ? Number(coupon.usage_limit) : null,
-        is_active: coupon.is_active !== undefined ? coupon.is_active : true,
-      };
-
-      const { data, error } = await supabase.from('coupons').insert([payload]).select().single();
-      if (!error && data) {
-        createdCoupon = data;
-        const list = getLocalCoupons();
-        saveLocalCoupons([data, ...list]);
-        return { data, error: null };
-      } else if (error) {
-        console.warn('Supabase createCoupon note:', error.message);
-      }
-    } catch (e) {
-      console.warn('Supabase createCoupon error:', e);
-    }
-  }
-
-  const newCoupon = createdCoupon || {
-    ...coupon,
-    id: coupon.id || `cp-${Date.now()}`,
-    code: coupon.code.toUpperCase().trim(),
-    discount_type: coupon.discount_type || 'percentage',
-    discount_value: Number(coupon.discount_value) || 10,
-    min_order_amount: Number(coupon.min_order_amount) || 0,
-    max_discount_amount: coupon.max_discount_amount ? Number(coupon.max_discount_amount) : null,
-    is_active: coupon.is_active !== undefined ? coupon.is_active : true,
-    created_at: new Date().toISOString(),
+  const payload = {
+    code,
+    description: coupon.description || null,
+    discount_type: type,
+    discount_value: value,
+    minimum_order_amount: Number(coupon.min_order_amount) || 0,
+    usage_limit: coupon.usage_limit ? Number(coupon.usage_limit) : null,
+    is_active: coupon.is_active !== undefined ? Boolean(coupon.is_active) : true,
+    starts_at: coupon.starts_at || null,
+    expires_at: coupon.expires_at || null,
   };
 
-  const list = getLocalCoupons();
-  saveLocalCoupons([newCoupon, ...list]);
-  return { data: newCoupon, error: null };
+  const { data, error } = await supabase.from('coupons').insert([payload]).select().single();
+  if (error || !data) throw dbError(`Coupon ${code} was not created`, error);
+  return { data: formatCoupon(data), error: null };
 }
 
 export async function toggleCouponActive(id, is_active) {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase.from('coupons').update({ is_active }).eq('id', id);
-    } catch {}
-  }
-
-  const list = getLocalCoupons();
-  saveLocalCoupons(list.map((c) => (c.id === id ? { ...c, is_active } : c)));
+  const { data, error } = await supabase
+    .from('coupons')
+    .update({ is_active, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('id');
+  if (error) throw dbError('Coupon was not updated', error);
+  assertRows(data, 'Coupon was not updated');
   return { success: true };
 }
 
 export async function deleteCoupon(id) {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase.from('coupons').delete().eq('id', id);
-    } catch {}
-  }
-
-  const list = getLocalCoupons();
-  saveLocalCoupons(list.filter((c) => c.id !== id));
+  const { data, error } = await supabase.from('coupons').delete().eq('id', id).select('id');
+  if (error) throw dbError('Coupon was not deleted', error);
+  assertRows(data, 'Coupon was not deleted');
   return { success: true };
 }

@@ -166,13 +166,14 @@ export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS,
     };
   }
 
-  // 6. Upload with verified contentType and upsert
+  // 6. Upload. File names are unique (timestamped), so no upsert: a plain INSERT
+  //    only needs the admin INSERT policy, while upsert would also need SELECT + UPDATE.
   try {
     const { data, error } = await supabase.storage
       .from(STORAGE_BUCKET)
       .upload(filePath, file, {
         cacheControl: '3600',
-        upsert: true,
+        upsert: false,
         contentType,
       });
 
@@ -180,18 +181,24 @@ export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS,
       console.error('Supabase Storage upload error:', error);
       const rawMsg = error.message || error.error || 'Storage upload rejected';
       const statusCode = error.statusCode || error.status || '';
-      let userFriendlyMsg = rawMsg;
+      const userEmail = session.user.email || 'current user';
+      let userFriendlyMsg = `Storage upload failed${statusCode ? ` (${statusCode})` : ''}: ${rawMsg}`;
 
-      if (rawMsg.includes('row-level security') || rawMsg.includes('AccessDenied') || statusCode === '403' || statusCode === 403) {
-        const userEmail = session.user.email || 'current user';
-        userFriendlyMsg = `Storage permission denied by database RLS policies (${statusCode || '403'}: ${rawMsg}). Administrator account [${userEmail}] lacks write privileges on storage.objects for bucket "${STORAGE_BUCKET}".`;
-      } else if (rawMsg.includes('Invalid key') || rawMsg.includes('statusCode: "400"')) {
-        userFriendlyMsg = `Invalid storage object key: "${filePath}". Please check the file name and path.`;
+      if (rawMsg.includes('row-level security') || rawMsg.includes('AccessDenied') || String(statusCode) === '403') {
+        userFriendlyMsg = `Storage rejected the upload (${statusCode || '403'}: ${rawMsg}). The live Storage policies for bucket "${STORAGE_BUCKET}" do not allow ${userEmail} to upload to "${cleanFolder}/". Apply supabase/migrations/20261019_admin_media_and_product_delete.sql in the Supabase SQL Editor.`;
+      } else if (rawMsg.includes('Invalid key')) {
+        userFriendlyMsg = `Invalid storage object key "${filePath}" (${rawMsg}).`;
       } else if (rawMsg.includes('mime type') || rawMsg.includes('not allowed')) {
-        userFriendlyMsg = `MIME type "${contentType}" is rejected by the bucket "${STORAGE_BUCKET}". Allowed formats: WebP, JPEG, PNG, MP4.`;
+        userFriendlyMsg = `MIME type "${contentType}" is rejected by bucket "${STORAGE_BUCKET}" (${rawMsg}). Allowed formats: WebP, JPEG, PNG, MP4.`;
+      } else if (rawMsg.toLowerCase().includes('exceeded') || String(statusCode) === '413') {
+        userFriendlyMsg = `File is larger than the bucket limit (${rawMsg}).`;
       }
 
       return { url: '', path: '', error: userFriendlyMsg };
+    }
+
+    if (!data?.path) {
+      return { url: '', path: '', error: 'Storage did not confirm the upload (no object path returned).' };
     }
 
     const publicUrl = getStoragePublicUrl(data.path);
@@ -242,6 +249,30 @@ export async function deleteStorageFile(pathOrUrl) {
   } catch (err) {
     return { success: false, error: err?.message || 'Storage deletion failed' };
   }
+}
+
+/**
+ * Remove several objects from the 'ps-perfumes' bucket and report what was actually removed.
+ * Storage silently skips objects the caller may not delete, so the returned list is compared
+ * with the request instead of trusting the absence of an error.
+ * @param {string[]} paths - Object paths inside the bucket (e.g. 'products/x-123.webp')
+ * @returns {Promise<{ removed: string[], failed: string[], error: string | null }>}
+ */
+export async function deleteStorageFiles(paths) {
+  const clean = (paths || []).map((p) => String(p).replace(/^\/+/, '')).filter(Boolean);
+  if (clean.length === 0) return { removed: [], failed: [], error: null };
+
+  const { data, error } = await supabase.storage.from(STORAGE_BUCKET).remove(clean);
+  if (error) {
+    return { removed: [], failed: clean, error: error.message || 'Storage removal failed' };
+  }
+  const removed = (data || []).map((o) => o.name);
+  const failed = clean.filter((p) => !removed.includes(p));
+  return {
+    removed,
+    failed,
+    error: failed.length > 0 ? 'Some files were not removed (missing or not permitted by Storage policies).' : null,
+  };
 }
 
 // Exact named exports as requested by specifications

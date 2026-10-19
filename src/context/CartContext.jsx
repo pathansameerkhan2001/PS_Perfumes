@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { PRODUCTS, COMBO_PRODUCTS } from '../data/products';
+import { getSiteSettings } from '../services/settings';
+import { validateCouponCode, computeCouponDiscount } from '../services/coupons';
+
+// Shipping rule used until Store Settings has saved values in the database
+const DEFAULT_FREE_SHIPPING_THRESHOLD = 1500;
+const DEFAULT_SHIPPING_FEE = 99;
 
 const CartContext = createContext(null);
 
@@ -33,11 +39,34 @@ export function CartProvider({ children }) {
   const [selectedCategory, setSelectedCategory] = useState('ALL');
 
   // Promo code state
-  const [promoCode, setPromoCode] = useState('');
-  const [discountPercent, setDiscountPercent] = useState(0);
+  // Coupon validated by the database (validate_coupon); null when none is applied
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   // Toast / notification feedback
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Shipping rule: values saved in Admin → Store Settings override the defaults
+  const [shippingRule, setShippingRule] = useState({
+    threshold: DEFAULT_FREE_SHIPPING_THRESHOLD,
+    fee: DEFAULT_SHIPPING_FEE,
+  });
+
+  useEffect(() => {
+    let mounted = true;
+    getSiteSettings()
+      .then((s) => {
+        if (!mounted || !s) return;
+        const stored = new Set(s._storedKeys || []);
+        setShippingRule((prev) => ({
+          threshold: stored.has('free_shipping_threshold') ? Number(s.free_shipping_threshold) || 0 : prev.threshold,
+          fee: stored.has('standard_shipping_fee') ? Number(s.standard_shipping_fee) || 0 : prev.fee,
+        }));
+      })
+      .catch((err) => console.error('Could not load shipping settings:', err));
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -93,7 +122,7 @@ export function CartProvider({ children }) {
     let selectedVariant = null;
     let bottleType = 'Glass Bottle';
     let sizeMl = '50 ml';
-    let unitPrice = Number(product.price) || 999;
+    let unitPrice = Number(product.price) || 0;
 
     if (variantOrSize && typeof variantOrSize === 'object') {
       selectedVariant = variantOrSize;
@@ -128,6 +157,12 @@ export function CartProvider({ children }) {
     }
 
     const variantId = selectedVariant?.id || selectedVariant?.variant_id || `var-${product.id}-${bottleType}-${sizeMl}`;
+    // Never add an item without a real price (e.g. a product whose variants have no price)
+    if (!(unitPrice > 0)) {
+      showToast(`"${product.name}" is currently unavailable.`);
+      return;
+    }
+
     const cartItemId = `${product.id}_${bottleType}_${sizeMl}`;
 
     setCartItems((prev) => {
@@ -138,8 +173,9 @@ export function CartProvider({ children }) {
       );
 
       if (existingIdx > -1) {
+        // Copy the item instead of mutating state (StrictMode runs updaters twice in development)
         const copy = [...prev];
-        copy[existingIdx].quantity += quantity;
+        copy[existingIdx] = { ...copy[existingIdx], quantity: copy[existingIdx].quantity + quantity };
         return copy;
       }
 
@@ -153,7 +189,7 @@ export function CartProvider({ children }) {
         quantity: Math.max(1, quantity),
         product: product,
         name: product.name,
-        image: product.main_image || product.image || '/assets/prod-royal-amber.webp',
+        image: product.main_image || product.image || '/assets/ps-perfumes-logo.webp',
         size: sizeMl, // backward compatibility
       };
 
@@ -204,6 +240,7 @@ export function CartProvider({ children }) {
 
   const clearCart = () => {
     setCartItems([]);
+    setAppliedCoupon(null);
   };
 
   const toggleWishlist = (product) => {
@@ -223,22 +260,23 @@ export function CartProvider({ children }) {
     return wishlist.some((p) => p.id === productId);
   };
 
-  const applyPromoCode = (code) => {
-    const clean = code.trim().toUpperCase();
-    if (clean === 'PS10') {
-      setPromoCode('PS10');
-      setDiscountPercent(10);
-      showToast('Promo code PS10 applied (10% discount)');
-      return { success: true, message: '10% discount applied!' };
+  // Checks the code against the coupons table through the database (no hard-coded codes)
+  const applyPromoCode = async (code) => {
+    const res = await validateCouponCode(code, subtotal);
+    if (!res.valid) {
+      return { success: false, message: res.message };
     }
-    if (clean === 'WELCOME20') {
-      setPromoCode('WELCOME20');
-      setDiscountPercent(20);
-      showToast('Promo code WELCOME20 applied (20% discount)');
-      return { success: true, message: '20% discount applied!' };
-    }
-    return { success: false, message: 'Invalid code. Try PS10 or WELCOME20' };
+    setAppliedCoupon({
+      code: res.code,
+      discount_type: res.discount_type,
+      discount_value: res.discount_value,
+      minimum_order_amount: res.minimum_order_amount,
+    });
+    showToast(res.message);
+    return { success: true, message: res.message };
   };
+
+  const removePromoCode = () => setAppliedCoupon(null);
 
   // Helper to open product by ID (supports catalog and combo products)
   const openProductById = (id) => {
@@ -255,10 +293,16 @@ export function CartProvider({ children }) {
     (acc, item) => acc + (Number(item.price) || Number(item.product?.price) || 0) * item.quantity,
     0
   );
-  // Requirement Section 6: Free shipping on orders over ₹1,500
-  const freeShippingThreshold = 1500;
-  const shipping = subtotal >= freeShippingThreshold || subtotal === 0 ? 0 : 99;
-  const discountAmount = Math.round((subtotal * discountPercent) / 100);
+  const freeShippingThreshold = shippingRule.threshold;
+  const shipping = subtotal >= freeShippingThreshold || subtotal === 0 ? 0 : shippingRule.fee;
+  // Recomputed whenever the cart changes; 0 if the subtotal drops below the coupon minimum
+  const discountAmount = computeCouponDiscount(appliedCoupon, subtotal);
+  const promoCode = appliedCoupon?.code || '';
+  const discountPercent = appliedCoupon?.discount_type === 'percentage' ? appliedCoupon.discount_value : 0;
+  const couponNotice =
+    appliedCoupon && discountAmount === 0 && appliedCoupon.minimum_order_amount > subtotal
+      ? `Add items worth ${Math.ceil(appliedCoupon.minimum_order_amount - subtotal)} more to use ${appliedCoupon.code}.`
+      : '';
   const total = Math.max(0, subtotal - discountAmount + shipping);
 
   return (
@@ -277,6 +321,9 @@ export function CartProvider({ children }) {
         discountPercent,
         promoCode,
         applyPromoCode,
+        removePromoCode,
+        appliedCoupon,
+        couponNotice,
         total,
         wishlist,
         toggleWishlist,

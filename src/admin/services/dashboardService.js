@@ -95,7 +95,7 @@ export async function getDashboardMetrics() {
         totalProducts: 0,
         totalCustomers: 0,
       },
-      error: 'Unable to load dashboard data. Please try again.',
+      error: `Unable to load dashboard data: ${err?.message || 'unknown error'}`,
     };
   }
 }
@@ -129,7 +129,7 @@ export async function getBestSellingProducts() {
           size: item.size_ml || '',
           sold: 0,
           revenue: 0,
-          image: '/assets/prod-royal-amber.webp',
+          image: '/assets/ps-perfumes-logo.webp',
         };
       }
       salesMap[key].sold += Number(item.quantity) || 1;
@@ -263,7 +263,7 @@ export async function getLowStockProducts() {
           variant: `${(v.bottle_type || 'Glass').replace(' Bottle', '')} / ${v.size_ml || '50ml'}`,
           stock,
           status: stock === 0 ? 'Out of Stock' : 'Low Stock',
-          image: img || '/assets/prod-royal-amber.webp',
+          image: img || '/assets/ps-perfumes-logo.webp',
         });
       }
     }

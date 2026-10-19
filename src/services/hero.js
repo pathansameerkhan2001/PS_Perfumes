@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { isValidUUID } from './products';
+import { dbError, assertRows } from './dbErrors';
 import heroLuxuryDesktop from '../assets/hero-luxury-cinematic.png';
 import heroLuxuryMobile from '../assets/hero-luxury-cinematic-mobile.png';
 import heroSlide2 from '../assets/hero-slide2.webp';
@@ -67,8 +68,8 @@ export const INITIAL_HERO_SLIDES = [
 ];
 
 function formatHeroSlide(row) {
-  const desktop = row.image_url || row.desktop_image || heroLuxuryDesktop;
-  const mobile = row.mobile_image_url || row.mobile_image || row.image_url || heroLuxuryMobile;
+  const desktop = row.image_url || row.desktop_image || '';
+  const mobile = row.mobile_image_url || row.mobile_image || '';
   const title = row.title || row.heading || '';
   const subtitle = row.subtitle || row.eyebrow || '';
   const buttonText = row.button_text || row.cta_text || 'EXPLORE COLLECTION';
@@ -80,6 +81,9 @@ function formatHeroSlide(row) {
     mobile_image: mobile,
     image_url: desktop,
     mobile_image_url: mobile,
+    desktop_image_path: row.image_path || '',
+    image_path: row.image_path || '',
+    mobile_image_path: row.mobile_image_path || '',
     heading: title,
     title,
     eyebrow: subtitle,
@@ -126,18 +130,14 @@ function saveLocalHeroSlides(slides) {
 
 export async function getHeroSlides(activeOnly = true) {
   if (isSupabaseConfigured && supabase) {
-    try {
-      let query = supabase.from('hero_slides').select('*').order('display_order', { ascending: true });
-      if (activeOnly) {
-        query = query.eq('is_active', true);
-      }
-      const { data, error } = await query;
-      if (!error && Array.isArray(data) && data.length > 0) {
-        return data.map((row) => formatHeroSlide(row));
-      }
-    } catch (e) {
-      console.warn('Supabase getHeroSlides error, fallback:', e);
+    let query = supabase.from('hero_slides').select('*').order('display_order', { ascending: true });
+    if (activeOnly) {
+      query = query.eq('is_active', true);
     }
+    const { data, error } = await query;
+    if (error) throw dbError('Could not load hero slides', error);
+    // The database answered: show its real state, never demo slides
+    return (data || []).map((row) => formatHeroSlide(row));
   }
 
   let list = getLocalHeroSlides();
@@ -147,40 +147,49 @@ export async function getHeroSlides(activeOnly = true) {
   return list;
 }
 
+function toHeroRow(slideData) {
+  const row = {};
+  if (slideData.heading !== undefined || slideData.title !== undefined) {
+    row.title = slideData.heading ?? slideData.title ?? '';
+  }
+  if (slideData.eyebrow !== undefined || slideData.subtitle !== undefined) {
+    row.subtitle = slideData.eyebrow ?? slideData.subtitle ?? '';
+  }
+  if (slideData.description !== undefined) row.description = slideData.description;
+  if (slideData.cta_text !== undefined || slideData.button_text !== undefined) {
+    row.button_text = slideData.cta_text ?? slideData.button_text ?? '';
+  }
+  if (slideData.cta_link !== undefined || slideData.button_link !== undefined) {
+    row.button_link = slideData.cta_link ?? slideData.button_link ?? '';
+  }
+  if (slideData.desktop_image !== undefined || slideData.image_url !== undefined) {
+    row.image_url = slideData.desktop_image ?? slideData.image_url ?? null;
+  }
+  if (slideData.desktop_image_path !== undefined || slideData.image_path !== undefined) {
+    row.image_path = slideData.desktop_image_path ?? slideData.image_path ?? null;
+  }
+  if (slideData.mobile_image !== undefined || slideData.mobile_image_url !== undefined) {
+    row.mobile_image_url = slideData.mobile_image || slideData.mobile_image_url || null;
+  }
+  if (slideData.mobile_image_path !== undefined) row.mobile_image_path = slideData.mobile_image_path || null;
+  if (slideData.display_order !== undefined) row.display_order = Number(slideData.display_order) || 1;
+  if (slideData.is_active !== undefined) row.is_active = Boolean(slideData.is_active);
+  return row;
+}
+
 export async function createHeroSlide(slideData) {
-  let createdRecord = null;
-
   if (isSupabaseConfigured && supabase) {
-    try {
-      // Map to exact live columns in Supabase
-      const dbPayload = {
-        title: slideData.heading || slideData.title || 'Haute Parfumerie',
-        subtitle: slideData.eyebrow || slideData.subtitle || 'ROYAL OUD ATELIER',
-        description: slideData.description || '',
-        button_text: slideData.cta_text || slideData.button_text || 'EXPLORE COLLECTION',
-        button_link: slideData.cta_link || slideData.button_link || '/category/oud',
-        image_url: slideData.desktop_image || slideData.image_url || '/assets/hero-luxury-cinematic.png',
-        image_path: slideData.image_path || null,
-        mobile_image_url: slideData.mobile_image || slideData.mobile_image_url || null,
-        mobile_image_path: slideData.mobile_image_path || null,
-        display_order: Number(slideData.display_order) || 1,
-        is_active: slideData.is_active !== undefined ? Boolean(slideData.is_active) : true,
-      };
-
-      const { data, error } = await supabase.from('hero_slides').insert([dbPayload]).select().single();
-      if (!error && data) {
-        createdRecord = formatHeroSlide(data);
-        const list = getLocalHeroSlides();
-        saveLocalHeroSlides([...list, createdRecord]);
-        return createdRecord;
-      } else if (error) {
-        console.error('Supabase createHeroSlide error:', error.message);
-        throw new Error(error.message);
-      }
-    } catch (e) {
-      console.error('Supabase createHeroSlide exception:', e);
-      throw e;
+    const dbPayload = {
+      display_order: 1,
+      is_active: true,
+      ...toHeroRow(slideData),
+    };
+    if (!dbPayload.image_url) {
+      throw new Error('Desktop media is required.');
     }
+    const { data, error } = await supabase.from('hero_slides').insert([dbPayload]).select().single();
+    if (error || !data) throw dbError('Hero slide was not created', error);
+    return formatHeroSlide(data);
   }
 
   const newSlide = formatHeroSlide({
@@ -188,7 +197,6 @@ export async function createHeroSlide(slideData) {
     ...slideData,
     created_at: new Date().toISOString(),
   });
-
   const list = getLocalHeroSlides();
   list.push(newSlide);
   saveLocalHeroSlides(list);
@@ -196,53 +204,13 @@ export async function createHeroSlide(slideData) {
 }
 
 export async function updateHeroSlide(id, updates) {
-  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
-    try {
-      const dbUpdates = {};
-      if (updates.heading !== undefined || updates.title !== undefined) {
-        dbUpdates.title = updates.heading || updates.title;
-      }
-      if (updates.eyebrow !== undefined || updates.subtitle !== undefined) {
-        dbUpdates.subtitle = updates.eyebrow || updates.subtitle;
-      }
-      if (updates.description !== undefined) {
-        dbUpdates.description = updates.description;
-      }
-      if (updates.cta_text !== undefined || updates.button_text !== undefined) {
-        dbUpdates.button_text = updates.cta_text || updates.button_text;
-      }
-      if (updates.cta_link !== undefined || updates.button_link !== undefined) {
-        dbUpdates.button_link = updates.cta_link || updates.button_link;
-      }
-      if (updates.desktop_image !== undefined || updates.image_url !== undefined) {
-        dbUpdates.image_url = updates.desktop_image || updates.image_url;
-      }
-      if (updates.mobile_image !== undefined || updates.mobile_image_url !== undefined) {
-        dbUpdates.mobile_image_url = updates.mobile_image || updates.mobile_image_url;
-      }
-      if (updates.display_order !== undefined) {
-        dbUpdates.display_order = Number(updates.display_order);
-      }
-      if (updates.is_active !== undefined) {
-        dbUpdates.is_active = Boolean(updates.is_active);
-      }
-      dbUpdates.updated_at = new Date().toISOString();
-
-      const { data, error } = await supabase.from('hero_slides').update(dbUpdates).eq('id', id).select().single();
-      if (!error && data) {
-        const formatted = formatHeroSlide(data);
-        const list = getLocalHeroSlides();
-        const next = list.map((s) => (s.id === id ? formatted : s));
-        saveLocalHeroSlides(next);
-        return formatted;
-      }
-      if (error) {
-        throw new Error(error.message);
-      }
-    } catch (e) {
-      console.error('Supabase updateHeroSlide error:', e);
-      throw e;
-    }
+  if (isSupabaseConfigured && supabase) {
+    if (!isValidUUID(id)) throw new Error('This hero slide is not a database record. Reload the page.');
+    const dbUpdates = { ...toHeroRow(updates), updated_at: new Date().toISOString() };
+    const { data, error } = await supabase.from('hero_slides').update(dbUpdates).eq('id', id).select();
+    if (error) throw dbError('Hero slide was not updated', error);
+    assertRows(data, 'Hero slide was not updated');
+    return formatHeroSlide(data[0]);
   }
 
   const list = getLocalHeroSlides();
@@ -256,20 +224,15 @@ export async function updateHeroSlide(id, updates) {
 }
 
 export async function deleteHeroSlide(id) {
-  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
-    try {
-      const { error } = await supabase.from('hero_slides').delete().eq('id', id);
-      if (error) {
-        throw new Error(error.message);
-      }
-    } catch (e) {
-      console.error('Supabase deleteHeroSlide error:', e);
-      throw e;
-    }
+  if (isSupabaseConfigured && supabase) {
+    if (!isValidUUID(id)) throw new Error('This hero slide is not a database record. Reload the page.');
+    const { data, error } = await supabase.from('hero_slides').delete().eq('id', id).select('id');
+    if (error) throw dbError('Hero slide was not deleted', error);
+    assertRows(data, 'Hero slide was not deleted');
+    return true;
   }
 
   const list = getLocalHeroSlides();
-  const filtered = list.filter((s) => s.id !== id);
-  saveLocalHeroSlides(filtered);
+  saveLocalHeroSlides(list.filter((s) => s.id !== id));
   return true;
 }

@@ -62,30 +62,14 @@ export async function verifyAdminAuthorization(authUser) {
       if (import.meta.env.DEV) console.warn('admin_users query notice:', e);
     }
 
-    // 3. Supabase Auth token / metadata role verification
-    const appRole = (authUser.app_metadata?.role || authUser.app_metadata?.user_role || '').toLowerCase();
-    const userRole = (authUser.user_metadata?.role || '').toLowerCase();
-    const isAppAdmin = authUser.app_metadata?.is_admin === true || authUser.user_metadata?.is_admin === true;
-
+    // 3. app_metadata role (can only be set server-side with the service role).
+    //    user_metadata and e-mail patterns are NOT trusted: any signed-in user can edit their
+    //    own user_metadata, and anyone can register an admin@<their-domain> address.
+    //    This mirrors public.is_admin() in the database (migration 20261019).
+    const appRole = (authUser.app_metadata?.role || '').toLowerCase();
     if (VALID_ADMIN_ROLES.includes(appRole)) {
       cachedAdmin = { userId: authUser.id, email: authUser.email, role: appRole };
       return { authorized: true, role: appRole, error: null };
-    }
-
-    if (VALID_ADMIN_ROLES.includes(userRole)) {
-      cachedAdmin = { userId: authUser.id, email: authUser.email, role: userRole };
-      return { authorized: true, role: userRole, error: null };
-    }
-
-    if (isAppAdmin) {
-      cachedAdmin = { userId: authUser.id, email: authUser.email, role: 'admin' };
-      return { authorized: true, role: 'admin', error: null };
-    }
-
-    // 4. Admin domain / pattern fallback for authorized administrative emails
-    if (userEmail.endsWith('@psperfumes.com') || userEmail.startsWith('admin@')) {
-      cachedAdmin = { userId: authUser.id, email: authUser.email, role: 'admin' };
-      return { authorized: true, role: 'admin', error: null };
     }
 
     return { authorized: false, role: null, error: UNAUTHORIZED_ERROR };

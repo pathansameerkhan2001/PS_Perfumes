@@ -5,12 +5,19 @@ import { getReviews, updateReviewStatus, deleteReview } from '../../services/rev
 export default function AdminReviews() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState(null);
+  const [notice, setNotice] = useState(null); // { type: 'success' | 'error', text }
 
   const fetchReviews = async () => {
     setLoading(true);
-    const data = await getReviews(true);
-    setReviews(data);
-    setLoading(false);
+    try {
+      const data = await getReviews(true);
+      setReviews(data);
+    } catch (err) {
+      setNotice({ type: 'error', text: err.message });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -18,13 +25,33 @@ export default function AdminReviews() {
   }, []);
 
   const handleStatus = async (id, status) => {
-    await updateReviewStatus(id, status);
-    fetchReviews();
+    setBusyId(id);
+    setNotice(null);
+    try {
+      await updateReviewStatus(id, status);
+      setNotice({
+        type: 'success',
+        text: status === 'approved' ? 'Review approved and visible on the website.' : 'Review hidden from the website.',
+      });
+    } catch (err) {
+      setNotice({ type: 'error', text: err.message });
+    } finally {
+      setBusyId(null);
+      fetchReviews();
+    }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Delete this patron review?')) {
+    if (!window.confirm('Delete this review permanently?')) return;
+    setBusyId(id);
+    setNotice(null);
+    try {
       await deleteReview(id);
+      setNotice({ type: 'success', text: 'Review deleted.' });
+    } catch (err) {
+      setNotice({ type: 'error', text: err.message });
+    } finally {
+      setBusyId(null);
       fetchReviews();
     }
   };
@@ -37,6 +64,12 @@ export default function AdminReviews() {
           <h1 className="ps-admin-page-title">Review Moderation</h1>
         </div>
       </div>
+
+      {notice && (
+        <div className={notice.type === 'error' ? 'ps-form-error-banner' : 'ps-form-success-banner'} role="status">
+          {notice.text}
+        </div>
+      )}
 
       {loading ? (
         <div className="ps-admin-loading">Loading Reviews...</div>
@@ -62,7 +95,7 @@ export default function AdminReviews() {
                   <td>
                     <strong>{rev.customer_name}</strong>
                     <div style={{ fontSize: 11, color: 'var(--color-muted)' }}>
-                      {rev.location || 'India'}
+                      {rev.featured ? 'Featured' : ''}
                     </div>
                   </td>
                   <td>
@@ -119,12 +152,13 @@ export default function AdminReviews() {
                           <Check size={14} />
                         </button>
                       )}
-                      {rev.status !== 'rejected' && (
+                      {rev.status === 'approved' && (
                         <button
                           type="button"
                           className="ps-action-icon-btn"
-                          onClick={() => handleStatus(rev.id, 'rejected')}
-                          title="Reject Review"
+                          onClick={() => handleStatus(rev.id, 'pending')}
+                          disabled={busyId === rev.id}
+                          title="Hide Review from website"
                           style={{ color: '#f87171' }}
                         >
                           <X size={14} />

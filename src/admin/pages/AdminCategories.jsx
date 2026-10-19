@@ -19,11 +19,18 @@ export default function AdminCategories() {
     is_featured: false,
   });
 
+  const [notice, setNotice] = useState(null); // { type: 'success' | 'error', text }
+  const [saving, setSaving] = useState(false);
+
   const loadData = async () => {
     setLoading(true);
-    const data = await getCategories(true);
-    setCategories(data);
-    setLoading(false);
+    try {
+      setCategories(await getCategories(true));
+    } catch (err) {
+      setNotice({ type: 'error', text: err.message });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -37,6 +44,7 @@ export default function AdminCategories() {
       slug: cat.slug,
       description: cat.description || '',
       image_url: cat.image_url || '',
+      image_path: cat.image_path || '',
       display_order: cat.display_order || 1,
       is_active: cat.is_active,
       is_featured: Boolean(cat.is_featured),
@@ -51,6 +59,7 @@ export default function AdminCategories() {
       slug: '',
       description: '',
       image_url: '',
+      image_path: '',
       display_order: categories.length + 1,
       is_active: true,
       is_featured: false,
@@ -60,34 +69,45 @@ export default function AdminCategories() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (editingCat) {
-      await updateCategory(editingCat.id, formData);
-    } else {
-      await createCategory(formData);
+    setSaving(true);
+    setNotice(null);
+    try {
+      if (editingCat) {
+        await updateCategory(editingCat.id, formData);
+      } else {
+        await createCategory(formData);
+      }
+      setIsFormOpen(false);
+      setNotice({ type: 'success', text: `Category "${formData.name}" saved.` });
+      loadData();
+    } catch (err) {
+      setNotice({ type: 'error', text: `Category was not saved: ${err.message}` });
+    } finally {
+      setSaving(false);
     }
-    setIsFormOpen(false);
-    loadData();
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Delete this fragrance category?')) {
-      const res = await deleteCategory(id);
-      if (res && res.success === false && res.error) {
-        alert(res.error);
-      }
-      loadData();
+    if (!window.confirm('Delete this fragrance category?')) return;
+    setNotice(null);
+    const res = await deleteCategory(id);
+    if (res && res.success === false) {
+      setNotice({ type: 'error', text: res.error || 'Category was not deleted.' });
+    } else {
+      setNotice({ type: 'success', text: 'Category deleted.' });
     }
+    loadData();
   };
 
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const { url, error } = await uploadImage(file, 'categories', formData.slug || 'cat');
-      if (error) {
-        alert(`Category image upload failed: ${error}`);
-      } else if (url) {
-        setFormData((prev) => ({ ...prev, image_url: url }));
+      const { url, path, error } = await uploadImage(file, 'categories', formData.slug || 'cat');
+      if (error || !url) {
+        alert(`Category image upload failed: ${error || 'Storage did not return the uploaded file.'}`);
+      } else {
+        setFormData((prev) => ({ ...prev, image_url: url, image_path: path }));
       }
     } catch (err) {
       alert(`Category image upload error: ${err?.message || 'Storage error'}`);
@@ -110,6 +130,12 @@ export default function AdminCategories() {
           <span>+ ADD CATEGORY</span>
         </button>
       </div>
+
+      {notice && (
+        <div className={notice.type === 'error' ? 'ps-form-error-banner' : 'ps-form-success-banner'} role="status">
+          {notice.text}
+        </div>
+      )}
 
       {loading ? (
         <div className="ps-admin-loading">Loading Categories...</div>
@@ -269,8 +295,8 @@ export default function AdminCategories() {
                 <button type="button" className="ps-btn-cancel" onClick={() => setIsFormOpen(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="ps-btn-gold-primary" style={{ padding: '10px 18px' }}>
-                  Save Category
+                <button type="submit" className="ps-btn-gold-primary" style={{ padding: '10px 18px' }} disabled={saving}>
+                  {saving ? 'Saving…' : 'Save Category'}
                 </button>
               </div>
             </form>

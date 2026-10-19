@@ -1,156 +1,63 @@
-import { supabase, isSupabaseConfigured, ADMIN_EMAIL } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
+import { dbError } from './dbErrors';
 
-const LOCAL_ADMIN_USERS_KEY = 'ps_db_admin_users';
+/*
+ * Live schema (verified 2026-10-19): admin_users (id, user_id, role, is_active, created_at, updated_at)
+ * E-mail addresses live in auth.users, which the browser cannot read, so this module uses the
+ * SECURITY DEFINER functions created by supabase/migrations/20261019_admin_media_and_product_delete.sql.
+ * Granting access requires an existing Supabase Auth user (Dashboard → Authentication → Add user):
+ * the browser cannot create Auth users without the secret key, by design.
+ */
 
-export const INITIAL_ADMIN_USERS = [
-  {
-    id: 'admin-01',
-    email: ADMIN_EMAIL || 'brandnix.in@gmail.com',
-    full_name: 'Master Parfumeur / Super Admin',
-    role: 'Super Admin',
-    status: 'active',
-    last_login: new Date().toISOString(),
-    created_at: '2026-01-01T00:00:00Z',
-  },
-  {
-    id: 'admin-02',
-    email: 'atelier@psperfumes.in',
-    full_name: 'Kadapa Atelier Operations',
-    role: 'Store Manager',
-    status: 'active',
-    last_login: '2026-10-06T14:22:00Z',
-    created_at: '2026-03-15T00:00:00Z',
-  },
-  {
-    id: 'admin-03',
-    email: 'inventory@psperfumes.in',
-    full_name: 'Fragrance Vault Custodian',
-    role: 'Inventory Specialist',
-    status: 'active',
-    last_login: '2026-10-05T09:12:00Z',
-    created_at: '2026-05-10T00:00:00Z',
-  },
-];
+export const ADMIN_ROLES = ['super_admin', 'admin', 'editor'];
 
-function getLocalAdminUsers() {
-  try {
-    const raw = localStorage.getItem(LOCAL_ADMIN_USERS_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch (e) {
-    console.error('Error reading local admin users', e);
+function rpcError(action, error) {
+  if (error?.code === 'PGRST202') {
+    return new Error(
+      `${action}: the admin-user database functions are not installed. Run supabase/migrations/20261019_admin_media_and_product_delete.sql in the Supabase SQL Editor.`
+    );
   }
-  try {
-    localStorage.setItem(LOCAL_ADMIN_USERS_KEY, JSON.stringify(INITIAL_ADMIN_USERS));
-  } catch {}
-  return INITIAL_ADMIN_USERS;
-}
-
-function saveLocalAdminUsers(users) {
-  try {
-    localStorage.setItem(LOCAL_ADMIN_USERS_KEY, JSON.stringify(users));
-  } catch (e) {
-    console.error('Error saving local admin users', e);
-  }
+  return dbError(action, error);
 }
 
 function normalizeAdminUser(u) {
-  const email = u.email || (u.user_id ? `admin-${u.user_id.slice(0, 8)}@psperfumes.com` : 'admin@psperfumes.com');
-  const fullName = u.full_name || (u.email ? u.email.split('@')[0] : 'Administrator');
-  const status = u.status || (u.is_active !== false ? 'active' : 'suspended');
   return {
     ...u,
-    email,
-    full_name: fullName,
-    status,
-    role: u.role || 'Admin',
+    email: u.email || '(no Auth account)',
+    full_name: u.email ? u.email.split('@')[0] : 'Unknown user',
+    status: u.is_active === false ? 'suspended' : 'active',
+    role: (u.role || 'admin').toLowerCase(),
   };
 }
 
 export async function getAdminUsers() {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { data, error } = await supabase.from('admin_users').select('*').order('created_at', { ascending: false });
-      if (!error && Array.isArray(data) && data.length > 0) {
-        return data.map(normalizeAdminUser);
-      }
-    } catch (e) {
-      console.warn('Supabase getAdminUsers error, fallback:', e);
-    }
-  }
-
-  return getLocalAdminUsers().map(normalizeAdminUser);
+  const { data, error } = await supabase.rpc('admin_list_admin_users');
+  if (error) throw rpcError('Could not load admin users', error);
+  return (data || []).map(normalizeAdminUser);
 }
 
-export async function createAdminUser(userData) {
-  let createdUser = null;
-
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const payload = {
-        role: userData.role || 'admin',
-        is_active: userData.status === 'active' || userData.is_active !== false,
-      };
-
-      const { data, error } = await supabase.from('admin_users').insert([payload]).select().single();
-      if (!error && data) {
-        createdUser = normalizeAdminUser({ ...userData, ...data });
-      }
-    } catch (e) {
-      console.warn('Supabase createAdminUser error:', e);
-    }
-  }
-
-  const newUser = createdUser || normalizeAdminUser({
-    id: `admin-${Date.now()}`,
-    ...userData,
-    status: userData.status || 'active',
-    created_at: new Date().toISOString(),
-  });
-
-  const list = getLocalAdminUsers();
-  list.unshift(newUser);
-  saveLocalAdminUsers(list);
-  return newUser;
+export async function createAdminUser({ email, role }) {
+  const cleanEmail = String(email || '').trim().toLowerCase();
+  if (!cleanEmail) throw new Error('E-mail is required.');
+  if (!ADMIN_ROLES.includes(role)) throw new Error('Choose a valid role.');
+  const { error } = await supabase.rpc('admin_grant_admin', { p_email: cleanEmail, p_role: role });
+  if (error) throw rpcError(`Admin access was not granted to ${cleanEmail}`, error);
+  return true;
 }
 
 export async function updateAdminUser(id, updates) {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const payload = {};
-      if (updates.role !== undefined) payload.role = updates.role;
-      if (updates.status !== undefined) payload.is_active = updates.status === 'active';
-      if (updates.is_active !== undefined) payload.is_active = updates.is_active;
-
-      await supabase.from('admin_users').update(payload).eq('id', id);
-    } catch (e) {
-      console.warn('Supabase updateAdminUser error:', e);
-    }
-  }
-
-  const list = getLocalAdminUsers();
-  const idx = list.findIndex((u) => u.id === id);
-  if (idx > -1) {
-    list[idx] = normalizeAdminUser({ ...list[idx], ...updates });
-    saveLocalAdminUsers(list);
-    return list[idx];
-  }
-  return null;
+  const params = {
+    p_admin_id: id,
+    p_role: updates.role ?? null,
+    p_is_active: updates.status !== undefined ? updates.status === 'active' : updates.is_active ?? null,
+  };
+  const { error } = await supabase.rpc('admin_update_admin', params);
+  if (error) throw rpcError('Admin user was not updated', error);
+  return true;
 }
 
 export async function deleteAdminUser(id) {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase.from('admin_users').delete().eq('id', id);
-    } catch (e) {
-      console.warn('Supabase deleteAdminUser error:', e);
-    }
-  }
-
-  const list = getLocalAdminUsers();
-  const filtered = list.filter((u) => u.id !== id);
-  saveLocalAdminUsers(filtered);
+  const { error } = await supabase.rpc('admin_revoke_admin', { p_admin_id: id });
+  if (error) throw rpcError('Admin access was not revoked', error);
   return true;
 }

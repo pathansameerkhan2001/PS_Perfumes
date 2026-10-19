@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { isValidUUID } from './products';
+import { dbError, assertRows } from './dbErrors';
 
 const LOCAL_REELS_KEY = 'ps_db_reels';
 
@@ -57,8 +58,9 @@ function formatReel(row) {
     id: row.id,
     title: captionText,
     caption: captionText,
-    instagram_url: row.instagram_url || 'https://www.instagram.com/ps_perfumes_kadapa/?hl=en',
-    thumbnail_url: row.thumbnail_url || '/assets/reel-day-night.webp',
+    instagram_url: row.instagram_url || '',
+    thumbnail_url: row.thumbnail_url || '',
+    thumbnail_path: row.thumbnail_path || '',
     display_order: Number(row.display_order) || 1,
     is_active: row.is_active !== false,
     created_at: row.created_at,
@@ -92,100 +94,54 @@ function saveLocalReels(reels) {
 
 export async function getReels(all = false) {
   if (isSupabaseConfigured && supabase) {
-    try {
-      let query = supabase.from('instagram_reels').select('*').order('display_order', { ascending: true });
-      if (!all) {
-        query = query.eq('is_active', true);
-      }
-      const { data, error } = await query;
-      if (!error && Array.isArray(data) && data.length > 0) {
-        return data.map((r) => formatReel(r));
-      }
-    } catch (e) {
-      console.warn('Supabase getReels note:', e);
+    let query = supabase.from('instagram_reels').select('*').order('display_order', { ascending: true });
+    if (!all) {
+      query = query.eq('is_active', true);
     }
+    const { data, error } = await query;
+    if (error) throw dbError('Could not load Instagram reels', error);
+    // The database answered: show its real state, never demo reels
+    return (data || []).map((r) => formatReel(r));
   }
 
   const list = getLocalReels();
   return all ? list : list.filter((r) => r.is_active);
 }
 
+function toReelRow(reel) {
+  const row = {};
+  if (reel.caption !== undefined || reel.title !== undefined) row.title = reel.caption ?? reel.title ?? '';
+  if (reel.instagram_url !== undefined) row.instagram_url = reel.instagram_url;
+  if (reel.thumbnail_url !== undefined) row.thumbnail_url = reel.thumbnail_url || null;
+  if (reel.thumbnail_path !== undefined) row.thumbnail_path = reel.thumbnail_path || null;
+  if (reel.display_order !== undefined) row.display_order = Number(reel.display_order) || 1;
+  if (reel.is_active !== undefined) row.is_active = Boolean(reel.is_active);
+  return row;
+}
+
 export async function createReel(reel) {
-  let createdRecord = null;
-
   if (isSupabaseConfigured && supabase) {
-    try {
-      const payload = {
-        title: reel.caption || reel.title || 'PS Perfumes Luxury Reel',
-        instagram_url: reel.instagram_url || 'https://www.instagram.com/ps_perfumes_kadapa/?hl=en',
-        thumbnail_url: reel.thumbnail_url || '',
-        display_order: Number(reel.display_order) || 1,
-        is_active: reel.is_active !== undefined ? Boolean(reel.is_active) : true,
-      };
-
-      const { data, error } = await supabase.from('instagram_reels').insert([payload]).select().single();
-      if (!error && data) {
-        createdRecord = formatReel(data);
-        const list = getLocalReels();
-        saveLocalReels([...list, createdRecord]);
-        return { data: createdRecord, error: null };
-      } else if (error) {
-        console.error('Supabase createReel error:', error.message);
-        throw new Error(error.message);
-      }
-    } catch (e) {
-      console.error('Supabase createReel exception:', e);
-      throw e;
-    }
+    const payload = { display_order: 1, is_active: true, ...toReelRow(reel) };
+    if (!payload.instagram_url) throw new Error('An Instagram URL is required.');
+    if (!payload.thumbnail_url) throw new Error('A thumbnail image is required.');
+    const { data, error } = await supabase.from('instagram_reels').insert([payload]).select().single();
+    if (error || !data) throw dbError('Reel was not created', error);
+    return { data: formatReel(data), error: null };
   }
 
-  const newReel = formatReel({
-    ...reel,
-    id: `reel-${Date.now()}`,
-    created_at: new Date().toISOString(),
-  });
-
-  const list = getLocalReels();
-  const updated = [...list, newReel];
-  saveLocalReels(updated);
+  const newReel = formatReel({ ...reel, id: `reel-${Date.now()}`, created_at: new Date().toISOString() });
+  saveLocalReels([...getLocalReels(), newReel]);
   return { data: newReel, error: null };
 }
 
 export async function updateReel(id, updates) {
-  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
-    try {
-      const dbUpdates = {};
-      if (updates.caption !== undefined || updates.title !== undefined) {
-        dbUpdates.title = updates.caption || updates.title;
-      }
-      if (updates.instagram_url !== undefined) {
-        dbUpdates.instagram_url = updates.instagram_url;
-      }
-      if (updates.thumbnail_url !== undefined) {
-        dbUpdates.thumbnail_url = updates.thumbnail_url;
-      }
-      if (updates.display_order !== undefined) {
-        dbUpdates.display_order = Number(updates.display_order);
-      }
-      if (updates.is_active !== undefined) {
-        dbUpdates.is_active = Boolean(updates.is_active);
-      }
-      dbUpdates.updated_at = new Date().toISOString();
-
-      const { data, error } = await supabase.from('instagram_reels').update(dbUpdates).eq('id', id).select().single();
-      if (!error && data) {
-        const formatted = formatReel(data);
-        const list = getLocalReels();
-        saveLocalReels(list.map((r) => (r.id === id ? formatted : r)));
-        return { data: formatted, error: null };
-      }
-      if (error) {
-        throw new Error(error.message);
-      }
-    } catch (e) {
-      console.error('Supabase updateReel error:', e);
-      throw e;
-    }
+  if (isSupabaseConfigured && supabase) {
+    if (!isValidUUID(id)) throw new Error('This reel is not a database record. Reload the page.');
+    const dbUpdates = { ...toReelRow(updates), updated_at: new Date().toISOString() };
+    const { data, error } = await supabase.from('instagram_reels').update(dbUpdates).eq('id', id).select();
+    if (error) throw dbError('Reel was not updated', error);
+    assertRows(data, 'Reel was not updated');
+    return { data: formatReel(data[0]), error: null };
   }
 
   const list = getLocalReels();
@@ -195,19 +151,14 @@ export async function updateReel(id, updates) {
 }
 
 export async function deleteReel(id) {
-  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
-    try {
-      const { error } = await supabase.from('instagram_reels').delete().eq('id', id);
-      if (error) {
-        throw new Error(error.message);
-      }
-    } catch (e) {
-      console.error('Supabase deleteReel error:', e);
-      throw e;
-    }
+  if (isSupabaseConfigured && supabase) {
+    if (!isValidUUID(id)) throw new Error('This reel is not a database record. Reload the page.');
+    const { data, error } = await supabase.from('instagram_reels').delete().eq('id', id).select('id');
+    if (error) throw dbError('Reel was not deleted', error);
+    assertRows(data, 'Reel was not deleted');
+    return { success: true };
   }
 
-  const list = getLocalReels();
-  saveLocalReels(list.filter((r) => r.id !== id));
+  saveLocalReels(getLocalReels().filter((r) => r.id !== id));
   return { success: true };
 }

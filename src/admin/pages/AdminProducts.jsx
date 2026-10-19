@@ -26,13 +26,19 @@ export default function AdminProducts() {
   const [bestsellerFilter, setBestsellerFilter] = useState('ALL');
   const [featuredFilter, setFeaturedFilter] = useState('ALL');
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [busyId, setBusyId] = useState(null);
+  // { type: 'success' | 'info' | 'error', text: string }
+  const [notice, setNotice] = useState(null);
   const navigate = useNavigate();
 
   const fetchList = async () => {
     setLoading(true);
     try {
-      const data = await getProducts({ allStatuses: true });
+      const data = await getProducts({ allStatuses: true, throwOnError: true });
       setProducts(data);
+    } catch (err) {
+      setNotice({ type: 'error', text: `Could not load products from the database: ${err.message}` });
     } finally {
       setLoading(false);
     }
@@ -42,28 +48,98 @@ export default function AdminProducts() {
     fetchList();
   }, []);
 
+  const deleteTarget = products.find((p) => p.id === deleteConfirmId) || null;
+
   const handleDelete = async (id) => {
-    await deleteProduct(id);
-    setDeleteConfirmId(null);
-    fetchList();
+    const prodName = products.find((p) => p.id === id)?.name || 'Product';
+    setDeleting(true);
+    setNotice(null);
+    try {
+      const result = await deleteProduct(id);
+      if (result.action === 'archived') {
+        const refs = result.references || {};
+        const parts = [
+          refs.orderItems ? `${refs.orderItems} order item(s)` : '',
+          refs.comboItems ? `${refs.comboItems} combo item(s)` : '',
+          refs.reviews ? `${refs.reviews} review(s)` : '',
+        ].filter(Boolean);
+        setNotice({
+          type: 'info',
+          text: `"${prodName}" was deactivated instead of deleted because it is referenced by ${
+            parts.length ? parts.join(', ') : `other records (${refs.reason || 'foreign key'})`
+          }. It is hidden from the storefront and its history is preserved.`,
+        });
+      } else if (result.action === 'deleted') {
+        const st = result.storage || {};
+        let text = `"${prodName}" was permanently deleted.`;
+        if (st.removed?.length) text += ` ${st.removed.length} unused image file(s) removed from Storage.`;
+        if (st.failed?.length) text += ` ${st.failed.length} image file(s) could not be removed: ${st.error || 'unknown error'}.`;
+        setNotice({ type: st.failed?.length ? 'info' : 'success', text });
+      } else {
+        setNotice({ type: 'error', text: `Unexpected response from the database for "${prodName}". Reload and check its status.` });
+      }
+    } catch (err) {
+      console.error('Delete product error:', err);
+      setNotice({ type: 'error', text: `Delete failed for "${prodName}": ${err.message}` });
+    } finally {
+      setDeleting(false);
+      setDeleteConfirmId(null);
+      await fetchList();
+    }
   };
 
   const handleDuplicate = async (prod) => {
     const copy = {
       ...prod,
-      id: `ps-${Date.now()}`,
+      id: undefined,
+      // Reuse only the images actually stored on the original (no display fallbacks)
+      main_image: prod.stored_images?.main || prod.main_image,
+      main_image_path: prod.stored_images?.main_path || null,
+      glass_image: prod.stored_images?.glass || null,
+      glass_image_path: prod.stored_images?.glass_path || null,
+      pvc_image: prod.stored_images?.pvc || null,
+      pvc_image_path: prod.stored_images?.pvc_path || null,
       name: `${prod.name} (Copy)`,
       slug: `${prod.slug}-copy-${Math.floor(Math.random() * 1000)}`,
       sku: `${prod.sku}-COPY`,
     };
-    await createProduct(copy);
-    fetchList();
+    setBusyId(prod.id);
+    setNotice(null);
+    try {
+      await createProduct(copy);
+      setNotice({ type: 'success', text: `"${copy.name}" created.` });
+    } catch (err) {
+      setNotice({ type: 'error', text: `Duplicate failed: ${err.message}` });
+    } finally {
+      setBusyId(null);
+      await fetchList();
+    }
   };
 
   const handleToggleStatus = async (prod) => {
     const nextStatus = prod.status === 'active' ? 'draft' : 'active';
-    await updateProduct(prod.id, { status: nextStatus });
-    fetchList();
+    setBusyId(prod.id);
+    setNotice(null);
+    try {
+      await updateProduct(prod.id, { status: nextStatus });
+      setNotice({
+        type: 'success',
+        text: nextStatus === 'active'
+          ? `"${prod.name}" is now active and visible on the storefront.`
+          : `"${prod.name}" was deactivated and is hidden from the storefront.`,
+      });
+    } catch (err) {
+      setNotice({ type: 'error', text: `Status change failed for "${prod.name}": ${err.message}` });
+    } finally {
+      setBusyId(null);
+      await fetchList();
+    }
+  };
+
+  const noticeColors = {
+    success: { bg: '#ECFDF5', border: '#A7F3D0', color: '#065F46' },
+    info: { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' },
+    error: { bg: '#FEF2F2', border: '#FECACA', color: '#B91C1C' },
   };
 
   // Filter
@@ -107,6 +183,35 @@ export default function AdminProducts() {
           </Link>
         </div>
       </div>
+
+      {notice && (
+        <div
+          role={notice.type === 'error' ? 'alert' : 'status'}
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            gap: '12px',
+            padding: '12px 16px',
+            marginBottom: '16px',
+            borderRadius: '8px',
+            fontSize: '14px',
+            background: noticeColors[notice.type].bg,
+            border: `1px solid ${noticeColors[notice.type].border}`,
+            color: noticeColors[notice.type].color,
+          }}
+        >
+          <span>{notice.text}</span>
+          <button
+            type="button"
+            onClick={() => setNotice(null)}
+            aria-label="Dismiss message"
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', fontWeight: 600 }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Control Bar: Search & Multi-Filters (Section 11) */}
       <div className="ps-admin-products-toolbar">
@@ -240,6 +345,7 @@ export default function AdminProducts() {
                       type="button"
                       className={`ps-status-toggle-btn ${prod.status === 'active' ? 'is-active' : 'is-draft'}`}
                       onClick={() => handleToggleStatus(prod)}
+                      disabled={busyId === prod.id}
                       title="Click to toggle status"
                     >
                       {prod.status}
@@ -258,6 +364,7 @@ export default function AdminProducts() {
                         type="button"
                         className="ps-table-action-btn"
                         onClick={() => handleDuplicate(prod)}
+                        disabled={busyId === prod.id}
                         title="Duplicate Formulation"
                       >
                         <Copy size={15} />
@@ -286,13 +393,16 @@ export default function AdminProducts() {
             <AlertCircle size={40} color="#ef4444" className="ps-modal-icon" />
             <h3 className="ps-modal-title">Confirm Deletion</h3>
             <p className="ps-modal-desc">
-              Are you certain you wish to permanently remove this fragrance from the atelier database? This action cannot be reversed.
+              Delete <strong>{deleteTarget?.name || 'this product'}</strong>? If it appears in any order, combo or
+              review, it will be <strong>deactivated</strong> (hidden from the storefront) instead, so purchase history is
+              preserved. Otherwise the product, its variants and its unused images are permanently removed. This cannot be undone.
             </p>
             <div className="ps-modal-actions">
               <button
                 type="button"
                 className="ps-btn-cancel"
                 onClick={() => setDeleteConfirmId(null)}
+                disabled={deleting}
               >
                 CANCEL
               </button>
@@ -300,8 +410,9 @@ export default function AdminProducts() {
                 type="button"
                 className="ps-btn-confirm-delete"
                 onClick={() => handleDelete(deleteConfirmId)}
+                disabled={deleting}
               >
-                PERMANENTLY DELETE
+                {deleting ? 'DELETING…' : 'DELETE'}
               </button>
             </div>
           </div>
