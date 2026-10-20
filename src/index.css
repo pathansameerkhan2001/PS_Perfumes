@@ -190,3 +190,14 @@ img {
 .ps-family-oud     { --family-accent: #BC8A52; --family-glow: rgba(165, 104, 52, 0.30);  --family-deep: #110B07; }
 .ps-family-floral  { --family-accent: #DBA6A2; --family-glow: rgba(210, 142, 142, 0.24); --family-deep: #150D0F; }
 .ps-family-woody   { --family-accent: #BCA67C; --family-glow: rgba(150, 132, 92, 0.26);  --family-deep: #0F0F0B; }
+
+/* Optional section subtitle set in Admin → Homepage (inherits the section's text colour) */
+.ps-section-subtitle {
+  font-family: var(--font-sans, 'Montserrat', sans-serif);
+  font-size: 14px;
+  line-height: 1.7;
+  color: inherit;
+  opacity: 0.75;
+  margin: 8px auto 0;
+  max-width: 560px;
+}

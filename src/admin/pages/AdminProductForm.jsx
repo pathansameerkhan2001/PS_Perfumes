@@ -15,8 +15,8 @@ import { getCategories } from '../../services/categories';
 import { uploadImage } from '../../lib/storage';
 import './AdminProductForm.css';
 
-// Used only if the categories table cannot be read
-const FALLBACK_CATEGORIES = ['Attar', 'Perfume', 'Bakhoor', 'Musky', 'Oud', 'Floral', 'Woody'];
+// Categories always come from the database (categories table). There is deliberately no
+// hard-coded list: offering a category that does not exist makes the save fail.
 const ALL_POSSIBLE_SIZES = ['6 ml', '10 ml', '30 ml', '50 ml', '100 ml'];
 const ATTAR_SIZES = ['6 ml', '10 ml'];
 const PERFUME_SIZES = ['30 ml', '50 ml', '100 ml'];
@@ -61,7 +61,9 @@ export default function AdminProductForm() {
   const [form, setForm] = useState({
     name: '',
     slug: '',
-    category: 'Oud',
+    // category_id is what is saved; category (the name) drives attar/perfume size rules
+    category_id: '',
+    category: '',
     sku: '',
     short_description: '',
     description: '',
@@ -98,23 +100,31 @@ export default function AdminProductForm() {
   // Variants & Pricing Matrix
   const [variantMatrix, setVariantMatrix] = useState(cloneDefaultMatrix);
 
-  // Category names from the database (the product's category_id is resolved from these)
-  const [categoryOptions, setCategoryOptions] = useState(FALLBACK_CATEGORIES);
+  // Category records from the database: { id, name, slug, is_active }
+  const [categories, setCategories] = useState([]);
+  // 'loading' | 'ready' | 'empty' | 'error'
+  const [categoriesStatus, setCategoriesStatus] = useState('loading');
+  const [categoriesError, setCategoriesError] = useState('');
 
   useEffect(() => {
     let active = true;
     getCategories(true)
       .then((cats) => {
-        const names = (cats || []).map((c) => c.name).filter(Boolean);
-        if (active && names.length > 0) {
-          setCategoryOptions(names);
-          // A new product must start with a category that exists in the database
-          if (!isEditing) {
-            setForm((prev) => (names.includes(prev.category) ? prev : { ...prev, category: names[0] }));
-          }
+        if (!active) return;
+        const list = (cats || []).filter((c) => c && c.id && c.name);
+        setCategories(list);
+        setCategoriesStatus(list.length > 0 ? 'ready' : 'empty');
+        // A new product starts on the first active category that exists in the database
+        if (!isEditing && list.length > 0) {
+          const first = list.find((c) => c.is_active !== false) || list[0];
+          setForm((prev) => (prev.category_id ? prev : { ...prev, category_id: first.id, category: first.name }));
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (!active) return;
+        setCategoriesStatus('error');
+        setCategoriesError(err?.message || 'Could not load categories.');
+      });
     return () => {
       active = false;
     };
@@ -135,7 +145,9 @@ export default function AdminProductForm() {
             setForm({
               name: p.name || '',
               slug: p.slug || '',
-              category: p.category || 'Oud',
+              // The product's real category; if it was removed, the admin must choose one
+              category_id: p.category_id || '',
+              category: p.category_id ? p.category || '' : '',
               sku: p.sku || '',
               short_description: p.short_description || '',
               description: p.description || '',
@@ -235,9 +247,10 @@ export default function AdminProductForm() {
   };
 
   const handleCategoryChange = (e) => {
-    const newCat = e.target.value;
+    const chosen = categories.find((c) => c.id === e.target.value);
+    const newCat = chosen ? chosen.name : '';
     const allowed = sizesForCategory(newCat);
-    setForm((prev) => ({ ...prev, category: newCat }));
+    setForm((prev) => ({ ...prev, category_id: chosen ? chosen.id : '', category: newCat }));
 
     // Keep only sizes that exist for the new category (attar: 6/10 ml, perfume: 30/50/100 ml)
     setSelectedSizes((prev) => {
@@ -388,6 +401,19 @@ export default function AdminProductForm() {
       return;
     }
 
+    // The category must be a real row of the categories table (never a substituted name)
+    if (!form.category_id || !categories.some((c) => c.id === form.category_id)) {
+      setActiveTab('basic');
+      setErrorMsg(
+        categoriesStatus === 'empty'
+          ? 'No categories exist in the database yet. Create the fragrance categories under Admin → Categories, then choose one for this product.'
+          : categoriesStatus === 'error'
+          ? `Categories could not be loaded (${categoriesError}). Reload the page and try again.`
+          : 'Please choose a category for this product.'
+      );
+      return;
+    }
+
     const cleanSlug = String(form.slug || form.name)
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
@@ -467,6 +493,9 @@ export default function AdminProductForm() {
 
     const payload = {
       ...form,
+      // Saved as products.category_id (resolveCategoryId passes a UUID through unchanged)
+      category_id: form.category_id,
+      category: form.category,
       slug: cleanSlug,
       price: minPrice,
       status: form.active ? 'active' : 'draft',
@@ -877,16 +906,34 @@ export default function AdminProductForm() {
                   <label htmlFor="pf-category">Category</label>
                   <select
                     id="pf-category"
-                    value={form.category}
+                    value={form.category_id}
                     onChange={handleCategoryChange}
+                    disabled={categoriesStatus !== 'ready'}
+                    aria-describedby="pf-category-help"
                   >
-                    {(categoryOptions.includes(form.category)
-                      ? categoryOptions
-                      : [form.category, ...categoryOptions]
-                    ).map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                    {categoriesStatus === 'loading' && <option value="">Loading categories…</option>}
+                    {categoriesStatus === 'empty' && <option value="">No categories yet</option>}
+                    {categoriesStatus === 'error' && <option value="">Categories unavailable</option>}
+                    {categoriesStatus === 'ready' && !categories.some((c) => c.id === form.category_id) && (
+                      <option value="">— Choose a category —</option>
+                    )}
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}{c.is_active === false ? ' (hidden on storefront)' : ''}
+                      </option>
                     ))}
                   </select>
+                  {categoriesStatus === 'empty' && (
+                    <p id="pf-category-help" className="ps-form-hint" role="status" style={{ color: '#9A3412', marginTop: 6 }}>
+                      No categories exist in the database yet.{' '}
+                      <Link to="/admin/categories">Create them in Admin → Categories</Link> before saving a product.
+                    </p>
+                  )}
+                  {categoriesStatus === 'error' && (
+                    <p id="pf-category-help" className="ps-form-hint" role="alert" style={{ color: '#B91C1C', marginTop: 6 }}>
+                      Categories could not be loaded: {categoriesError}
+                    </p>
+                  )}
                 </div>
 
                 <div className="ps-form-group">

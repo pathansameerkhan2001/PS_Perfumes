@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { isValidUUID } from './products';
 import { dbError, assertRows } from './dbErrors';
+import { getPublicImageUrl } from '../lib/storage';
 import heroLuxuryDesktop from '../assets/hero-luxury-cinematic.png';
 import heroLuxuryMobile from '../assets/hero-luxury-cinematic-mobile.png';
 import heroSlide2 from '../assets/hero-slide2.webp';
@@ -235,4 +236,65 @@ export async function deleteHeroSlide(id) {
   const list = getLocalHeroSlides();
   saveLocalHeroSlides(list.filter((s) => s.id !== id));
   return true;
+}
+
+/* ==========================================================================
+   Homepage hero film (video-only hero) — managed in Admin → Hero Sections.
+   Existing hero_slides columns are reused (no schema change):
+     image_url / image_path               → the hero film (MP4)
+     mobile_image_url / mobile_image_path → the poster image (shown while loading,
+                                            for reduced motion, or if the film fails)
+     title                                → admin label only (never shown on the site)
+     is_active, display_order             → which record the homepage uses
+   Heading, eyebrow, description and button columns are left untouched and never shown.
+   ========================================================================== */
+
+const stripQuery = (value) => String(value || '').split(/[?#]/)[0].toLowerCase();
+
+/** True for an MP4 file reference (public URL or Storage path). */
+export function isMp4Reference(value) {
+  return stripQuery(value).endsWith('.mp4');
+}
+
+/** True for a JPEG / PNG / WebP image reference (public URL or Storage path). */
+export function isImageReference(value) {
+  return /\.(jpe?g|png|webp)$/.test(stripQuery(value));
+}
+
+function resolveMedia(urlOrPath) {
+  if (!urlOrPath) return '';
+  return /^https?:\/\//i.test(urlOrPath) || urlOrPath.startsWith('/') ? urlOrPath : getPublicImageUrl(urlOrPath);
+}
+
+/**
+ * The record the homepage plays: the active slide with the lowest display_order whose film is
+ * an MP4 (ties: oldest first). Records without an MP4 are ignored. Returns null if none.
+ */
+export function pickHeroFilm(slides) {
+  const candidates = (slides || [])
+    .filter((s) => s && s.is_active !== false && isMp4Reference(s.image_path || s.image_url || s.desktop_image))
+    .sort(
+      (a, b) =>
+        (Number(a.display_order) || 0) - (Number(b.display_order) || 0) ||
+        String(a.created_at || '').localeCompare(String(b.created_at || ''))
+    );
+  const chosen = candidates[0];
+  if (!chosen) return null;
+  const film = resolveMedia(chosen.image_url || chosen.desktop_image || chosen.image_path);
+  const posterRef = chosen.mobile_image_url || chosen.mobile_image || chosen.mobile_image_path;
+  return {
+    id: chosen.id,
+    videoUrl: film,
+    posterUrl: isImageReference(posterRef) ? resolveMedia(posterRef) : '',
+  };
+}
+
+/** Homepage: the configured hero film, or null to use the built-in film. Never throws. */
+export async function getActiveHeroFilm() {
+  try {
+    return pickHeroFilm(await getHeroSlides(true));
+  } catch (err) {
+    console.warn('Could not load the hero film setting; using the built-in film.', err?.message || err);
+    return null;
+  }
 }

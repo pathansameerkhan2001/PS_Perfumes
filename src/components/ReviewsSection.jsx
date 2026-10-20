@@ -3,7 +3,7 @@ import { Star, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 import { getReviews } from '../services/reviews';
 import './ReviewsSection.css';
 
-export default function ReviewsSection() {
+export default function ReviewsSection({ title = 'What Our Customers Have to Say', subtitle = '' }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
@@ -89,7 +89,8 @@ export default function ReviewsSection() {
       <div className="ps-reviews-container">
         {/* Section Header */}
         <div className="ps-reviews-header">
-          <h2 className="ps-reviews-heading">What Our Customers Have to Say</h2>
+          <h2 className="ps-reviews-heading">{title || 'What Our Customers Have to Say'}</h2>
+          {subtitle && <p className="ps-section-subtitle">{subtitle}</p>}
         </div>
 
         {/* Editorial Carousel Viewport */}

@@ -21,6 +21,37 @@ function slugify(text) {
     .replace(/(^-|-$)/g, '');
 }
 
+/**
+ * Whether a combo can be bought, and why not. A combo is purchasable only when it is active,
+ * has a price, has stock, has at least one product, and every product still exists and is
+ * active. (Visitors can only read active products, so a deactivated product shows as missing.)
+ * Checkout re-checks this in the app; definitive enforcement is in place_order (migration 08).
+ */
+export function getComboAvailability(combo) {
+  const items = combo?.items || [];
+  const unavailableItems = items.filter((i) => !i.product_active).map((i) => i.product_name);
+  let reason = null;
+  if (combo?.is_active === false) reason = 'inactive';
+  else if (!(Number(combo?.combo_price) > 0)) reason = 'no_price';
+  else if (items.length === 0) reason = 'no_items';
+  else if (unavailableItems.length > 0) reason = 'unavailable_items';
+  else if (!(Number(combo?.stock_quantity) > 0)) reason = 'out_of_stock';
+
+  const messages = {
+    inactive: 'This combo is not active.',
+    no_price: 'This combo has no price.',
+    no_items: 'This combo has no products.',
+    unavailable_items: `Contains unavailable product${unavailableItems.length > 1 ? 's' : ''}: ${unavailableItems.join(', ')}.`,
+    out_of_stock: 'This combo is out of stock.',
+  };
+  return {
+    purchasable: reason === null,
+    reason,
+    message: reason ? messages[reason] : '',
+    unavailableItems,
+  };
+}
+
 function formatCombo(row, items, productMap) {
   const price = Number(row.price) || 0;
   const sale = row.sale_price !== null && row.sale_price !== undefined ? Number(row.sale_price) : null;
@@ -28,7 +59,7 @@ function formatCombo(row, items, productMap) {
   const comboPrice = hasSale ? sale : price;
   const originalPrice = hasSale ? price : null;
 
-  return {
+  const combo = {
     ...row,
     image_url: row.image_url ? getPublicImageUrl(row.image_url) : '',
     image_path: row.image_path || '',
@@ -51,6 +82,13 @@ function formatCombo(row, items, productMap) {
         product_active: Boolean(p?.is_active),
       };
     }),
+  };
+  const availability = getComboAvailability(combo);
+  return {
+    ...combo,
+    is_purchasable: availability.purchasable,
+    unavailable_reason: availability.reason,
+    unavailable_message: availability.message,
   };
 }
 

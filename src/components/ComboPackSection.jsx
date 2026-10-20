@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext';
 import OptimizedImage from './OptimizedImage';
 import './ComboPackSection.css';
 
-export default function ComboPackSection() {
+export default function ComboPackSection({ title = 'Combo Collections', subtitle = '' }) {
   const { addToCart, toggleWishlist, isInWishlist, setSelectedProduct } = useCart();
   const [combos, setCombos] = useState([]);
   const [loaded, setLoaded] = useState(false);
@@ -33,6 +33,8 @@ export default function ComboPackSection() {
 
   const handleAddToCart = (e, combo) => {
     e.stopPropagation();
+    // Out of stock, inactive or containing an unavailable product: cannot be bought
+    if (!combo.is_purchasable) return;
     const comboProduct = {
       id: combo.id,
       name: combo.name,
@@ -42,6 +44,9 @@ export default function ComboPackSection() {
       main_image: combo.image_url || combo.image,
       category: 'Combo Pack',
       slug: combo.slug,
+      // Used by the bag to cap quantities and refuse unavailable combos
+      stock_quantity: Number(combo.stock_quantity) || 0,
+      is_purchasable: Boolean(combo.is_purchasable),
     };
 
     addToCart(comboProduct, 1, {
@@ -70,7 +75,8 @@ export default function ComboPackSection() {
           <span className="ps-section-eyebrow" style={{ color: '#c8a45d', letterSpacing: '0.15em', fontSize: '11px', textTransform: 'uppercase', marginBottom: '6px', display: 'block' }}>
             CURATED LUXURY SETS
           </span>
-          <h2 className="ps-combopack-heading">Combo Collections</h2>
+          <h2 className="ps-combopack-heading">{title || 'Combo Collections'}</h2>
+          {subtitle && <p className="ps-section-subtitle">{subtitle}</p>}
         </div>
 
         {/* 3–4 Column Product Grid */}
@@ -169,13 +175,21 @@ export default function ComboPackSection() {
                   type="button"
                   className={`ps-combopack-add-btn ${isAdded ? 'is-added' : ''}`}
                   onClick={(e) => handleAddToCart(e, combo)}
-                  aria-label={`Add ${combo.name} to cart`}
+                  disabled={!combo.is_purchasable}
+                  title={combo.is_purchasable ? undefined : combo.unavailable_message}
+                  aria-label={
+                    combo.is_purchasable
+                      ? `Add ${combo.name} to cart`
+                      : `${combo.name}: ${combo.unavailable_reason === 'out_of_stock' ? 'out of stock' : 'currently unavailable'}`
+                  }
                 >
                   {isAdded ? (
                     <>
                       <Check size={16} />
                       <span>ADDED TO CART</span>
                     </>
+                  ) : !combo.is_purchasable ? (
+                    <span>{combo.unavailable_reason === 'out_of_stock' ? 'OUT OF STOCK' : 'CURRENTLY UNAVAILABLE'}</span>
                   ) : (
                     <>
                       <ShoppingBag size={16} />

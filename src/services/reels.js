@@ -94,7 +94,12 @@ function saveLocalReels(reels) {
 
 export async function getReels(all = false) {
   if (isSupabaseConfigured && supabase) {
-    let query = supabase.from('instagram_reels').select('*').order('display_order', { ascending: true });
+    // display_order first; newest first among reels with the same position (stable order)
+    let query = supabase
+      .from('instagram_reels')
+      .select('*')
+      .order('display_order', { ascending: true })
+      .order('created_at', { ascending: false });
     if (!all) {
       query = query.eq('is_active', true);
     }
@@ -106,6 +111,32 @@ export async function getReels(all = false) {
 
   const list = getLocalReels();
   return all ? list : list.filter((r) => r.is_active);
+}
+
+/**
+ * Accepts https links to Instagram only: a post/reel/tv link (e.g. https://www.instagram.com/reel/ABC123/)
+ * or a profile link. Returns the trimmed URL, or throws a message the admin can act on.
+ */
+export function validateInstagramUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) throw new Error('An Instagram URL is required.');
+  let url;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error('The Instagram URL is not a valid link. Paste the full address, starting with https://');
+  }
+  const host = url.hostname.toLowerCase().replace(/^www\./, '').replace(/^m\./, '');
+  if (url.protocol !== 'https:' || host !== 'instagram.com') {
+    throw new Error('The link must be an https://www.instagram.com/… address.');
+  }
+  const path = url.pathname.replace(/\/+$/, '');
+  const isPost = /^\/(reel|reels|p|tv)\/[A-Za-z0-9_-]+$/.test(path);
+  const isProfile = /^\/[A-Za-z0-9._]+$/.test(path);
+  if (!isPost && !isProfile) {
+    throw new Error('Use the link of an Instagram reel or post (…/reel/CODE/ or …/p/CODE/) or of the profile.');
+  }
+  return raw;
 }
 
 function toReelRow(reel) {
@@ -122,7 +153,7 @@ function toReelRow(reel) {
 export async function createReel(reel) {
   if (isSupabaseConfigured && supabase) {
     const payload = { display_order: 1, is_active: true, ...toReelRow(reel) };
-    if (!payload.instagram_url) throw new Error('An Instagram URL is required.');
+    payload.instagram_url = validateInstagramUrl(payload.instagram_url);
     if (!payload.thumbnail_url) throw new Error('A thumbnail image is required.');
     const { data, error } = await supabase.from('instagram_reels').insert([payload]).select().single();
     if (error || !data) throw dbError('Reel was not created', error);
@@ -138,6 +169,10 @@ export async function updateReel(id, updates) {
   if (isSupabaseConfigured && supabase) {
     if (!isValidUUID(id)) throw new Error('This reel is not a database record. Reload the page.');
     const dbUpdates = { ...toReelRow(updates), updated_at: new Date().toISOString() };
+    if (dbUpdates.instagram_url !== undefined) dbUpdates.instagram_url = validateInstagramUrl(dbUpdates.instagram_url);
+    if (dbUpdates.thumbnail_url === null && updates.thumbnail_url !== undefined) {
+      throw new Error('A thumbnail image is required.');
+    }
     const { data, error } = await supabase.from('instagram_reels').update(dbUpdates).eq('id', id).select();
     if (error) throw dbError('Reel was not updated', error);
     assertRows(data, 'Reel was not updated');

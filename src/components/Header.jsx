@@ -1,23 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, ShoppingBag, MapPin, User, Menu } from 'lucide-react';
 import PSPerfumesLogo from './common/PSPerfumesLogo';
 import MobileNav from './MobileNav';
 const SearchModal = React.lazy(() => import('./SearchModal'));
 import { useCart } from '../context/CartContext';
+import { useStorefrontCategories } from '../utils/useStorefrontCategories';
 import './Header.css';
 
-const NAV_ITEMS = [
+const FIXED_NAV_ITEMS = [
   { name: 'Home', path: '/' },
   { name: 'About Us', path: '/about' },
-  { name: 'Attar', path: '/attar' },
-  { name: 'Perfume', path: '/perfume' },
-  { name: 'Bakhoor', path: '/bakhoor' },
-  { name: 'Musky', path: '/musky' },
-  { name: 'Oud', path: '/oud' },
-  { name: 'Floral', path: '/floral' },
-  { name: 'Woody', path: '/woody' },
 ];
+// Categories shown inline in the desktop bar; any further ones go under "More"
+const MAX_INLINE_CATEGORIES = 7;
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -40,8 +36,35 @@ export default function Header() {
     if (!['Home', 'About Us'].includes(name)) {
       setSelectedCategory(name);
     }
+    setIsMoreOpen(false);
     navigate(path);
   };
+
+  // Category links from the shared, data-driven source (database categories, seven built-in fallback)
+  const categories = useStorefrontCategories();
+  const inlineCategories = categories.slice(0, MAX_INLINE_CATEGORIES);
+  const moreCategories = categories.slice(MAX_INLINE_CATEGORIES);
+  const navItems = [...FIXED_NAV_ITEMS, ...inlineCategories.map((c) => ({ name: c.name, path: c.path }))];
+  const isPathActive = (path) =>
+    location.pathname === path || (path !== '/' && path !== '/about' && location.pathname.startsWith(`${path}/`));
+
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const moreRef = useRef(null);
+  useEffect(() => {
+    if (!isMoreOpen) return undefined;
+    const onDocClick = (e) => {
+      if (moreRef.current && !moreRef.current.contains(e.target)) setIsMoreOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setIsMoreOpen(false);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [isMoreOpen]);
 
   return (
     <>
@@ -131,26 +154,52 @@ export default function Header() {
           <div className="ps-nav-bar-inner">
             {/* Centered Navigation Links */}
             <ul className="ps-nav-menu">
-              {NAV_ITEMS.map((item) => {
-                const isExact = location.pathname === item.path;
-                const isCategoryMatch =
-                  item.path !== '/' &&
-                  item.path !== '/about' &&
-                  (location.pathname === `/category${item.path}` ||
-                   location.pathname === item.path);
-                const isActive = isExact || isCategoryMatch;
+              {navItems.map((item) => {
+                const isActive =
+                  isPathActive(item.path) ||
+                  (item.path !== '/' && item.path !== '/about' && location.pathname === `/category${item.path}`);
                 return (
-                  <li key={item.name} className="ps-nav-menu-item">
+                  <li key={item.path} className="ps-nav-menu-item">
                     <button
                       type="button"
                       className={`ps-nav-menu-link ${isActive ? 'is-active' : ''}`}
                       onClick={() => handleNavClick(item.path, item.name)}
+                      aria-current={isActive ? 'page' : undefined}
                     >
                       <span className="ps-nav-text">{item.name}</span>
                     </button>
                   </li>
                 );
               })}
+              {moreCategories.length > 0 && (
+                <li className="ps-nav-menu-item ps-nav-more" ref={moreRef}>
+                  <button
+                    type="button"
+                    className={`ps-nav-menu-link ${moreCategories.some((c) => isPathActive(c.path)) ? 'is-active' : ''}`}
+                    aria-haspopup="true"
+                    aria-expanded={isMoreOpen}
+                    onClick={() => setIsMoreOpen((open) => !open)}
+                  >
+                    <span className="ps-nav-text">More</span>
+                  </button>
+                  {isMoreOpen && (
+                    <ul className="ps-nav-more-menu" role="menu">
+                      {moreCategories.map((c) => (
+                        <li key={c.slug} role="none">
+                          <button
+                            type="button"
+                            role="menuitem"
+                            className={`ps-nav-more-link ${isPathActive(c.path) ? 'is-active' : ''}`}
+                            onClick={() => handleNavClick(c.path, c.name)}
+                          >
+                            {c.name}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              )}
             </ul>
 
             {/* Red NEW ARRIVAL Badge at far right */}

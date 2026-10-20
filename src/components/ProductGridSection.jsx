@@ -11,6 +11,7 @@ export default function ProductGridSection({
   showFilterTabs = true,
   limit = 8,
   emptyMessage = 'No fragrances found in this category.',
+  subtitle = '',
 }) {
   const { selectedCategory, setSelectedCategory } = useCart();
   const [activeTab, setActiveTab] = useState('ALL');
@@ -54,6 +55,7 @@ export default function ProductGridSection({
         <div className="ps-bestsellers-header">
           {tag && <span className="ps-bestsellers-tag">{tag}</span>}
           <h2 className="ps-bestsellers-heading">{title}</h2>
+          {subtitle && <p className="ps-section-subtitle">{subtitle}</p>}
           <div className="ps-bestsellers-divider" />
         </div>
 

@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase';
 import { isValidUUID } from './products';
 import { dbError, assertRows } from './dbErrors';
 import { redeemCoupon } from './coupons';
+import { getComboById, getComboAvailability } from './combos';
 
 /*
  * Live schema (verified 2026-10-19):
@@ -164,9 +165,41 @@ async function placeOrderOnServer(orderPayload, items) {
   return { order, error: null };
 }
 
+/**
+ * Re-checks combo lines against the database just before ordering: the combo must still be
+ * purchasable (active, priced, all products available) and have stock for the quantity.
+ * This catches changes made after the combo was added to the bag. place_order enforces the same
+ * rules on the server once migration 08 is applied.
+ */
+async function revalidateComboLines(items) {
+  const comboLines = items.filter(isComboItem);
+  for (const line of comboLines) {
+    const comboId = line.product_id || line.product?.id;
+    const name = line.name || line.product?.name || 'A combo';
+    let combo = null;
+    try {
+      combo = isValidUUID(comboId) ? await getComboById(comboId) : null;
+    } catch (err) {
+      throw new Error(`Could not check the availability of "${name}" (${err.message}). Please try again.`);
+    }
+    if (!combo) {
+      throw new Error(`"${name}" is no longer available. Please remove it from your bag.`);
+    }
+    const availability = getComboAvailability(combo);
+    if (!availability.purchasable) {
+      throw new Error(`"${name}" is no longer available (${availability.message}) Please remove it from your bag.`);
+    }
+    if (Number(line.quantity) > Number(combo.stock_quantity)) {
+      throw new Error(`Only ${combo.stock_quantity} of "${name}" available. Please reduce the quantity in your bag.`);
+    }
+  }
+}
+
 export async function createOrder(orderPayload) {
   const items = (orderPayload.items || []).filter((it) => Number(it.quantity) > 0);
   if (items.length === 0) throw new Error('Your cart is empty.');
+
+  await revalidateComboLines(items);
 
   const serverResult = await placeOrderOnServer(orderPayload, items);
   if (serverResult) return serverResult;

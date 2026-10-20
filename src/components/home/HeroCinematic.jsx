@@ -1,14 +1,18 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Pause, Play } from 'lucide-react';
 import { getStoragePublicUrl } from '../../lib/storage';
+import { getActiveHeroFilm } from '../../services/hero';
 import posterDesktop from '../../assets/hero-luxury-cinematic.png';
 import posterMobile from '../../assets/hero-luxury-cinematic-mobile.png';
 import './HeroCinematic.css';
 
-// Supabase Storage, configured bucket (VITE_SUPABASE_STORAGE_BUCKET = "Ps-perfumes-media")
+// Built-in film (Supabase Storage, configured bucket "Ps-perfumes-media"), used when no active
+// hero film is set in Admin → Hero Sections
 const HERO_VIDEO_PATH = 'hero/ps-perfumes-hero-desktop.mp4';
 // One reload attempt if the file fails to load (e.g. a dropped connection)
 const LOAD_RETRY_DELAY_MS = 4000;
+// How long to wait for the admin hero setting before using the built-in film
+const SETTING_TIMEOUT_MS = 2500;
 
 /**
  * PS PERFUMES — full-screen cinematic hero film.
@@ -25,6 +29,8 @@ const LOAD_RETRY_DELAY_MS = 4000;
  *   film does not autoplay for them.
  * - A small, discreet pause/resume control (bottom-right corner, icon only) lets anyone stop or
  *   start the film. A deliberate pause is never undone automatically.
+ * - The film and poster come from Admin → Hero Sections (active record with the lowest display
+ *   order that has an MP4); otherwise the built-in film and poster are used.
  * - No sound is ever played.
  */
 export default function HeroCinematic() {
@@ -32,22 +38,44 @@ export default function HeroCinematic() {
   const videoRef = useRef(null);
   const retriedLoadRef = useRef(false);
   const inViewRef = useRef(true);
-  const videoUrl = getStoragePublicUrl(HERO_VIDEO_PATH);
-  // Phones get the lighter poster (620×384, ~0.6 MB instead of ~1 MB)
+  const defaultVideoUrl = getStoragePublicUrl(HERO_VIDEO_PATH);
+  // Phones get the lighter built-in poster (620×384, ~0.6 MB instead of ~1 MB)
   const isNarrow = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 768px)').matches;
-  const poster = isNarrow ? posterMobile : posterDesktop;
+  const defaultPoster = isNarrow ? posterMobile : posterDesktop;
   const prefersReducedMotion =
     typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+  // The film to play: resolved once from the admin setting before any video is requested, so
+  // the built-in film and a configured one are never both downloaded. null = still resolving.
+  const [source, setSource] = useState(null);
+  useEffect(() => {
+    let settled = false;
+    const settle = (film) => {
+      if (settled) return;
+      settled = true;
+      setSource({
+        videoUrl: film?.videoUrl || defaultVideoUrl,
+        poster: film?.posterUrl || defaultPoster,
+      });
+    };
+    const timer = window.setTimeout(() => settle(null), SETTING_TIMEOUT_MS);
+    getActiveHeroFilm().then(settle);
+    return () => {
+      settled = true;
+      window.clearTimeout(timer);
+    };
+    // Resolved once per mount; the defaults do not change during a visit
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const videoUrl = source?.videoUrl || '';
+  const poster = source?.poster || defaultPoster;
 
   // Whether the film should be playing. Every automatic start (initial, retries, coming back into
   // view) checks this, so reduced-motion visitors and a deliberate pause are respected.
   const wantsPlayRef = useRef(!prefersReducedMotion);
 
   // 'loading' → 'playing' | 'paused' | 'blocked' (autoplay refused) | 'error' (file failed to load)
-  const [status, setStatus] = useState(() => {
-    if (!videoUrl) return 'error';
-    return prefersReducedMotion ? 'paused' : 'loading';
-  });
+  const [status, setStatus] = useState(() => (prefersReducedMotion ? 'paused' : 'loading'));
 
   const tryPlay = useCallback(() => {
     const video = videoRef.current;

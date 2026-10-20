@@ -18,26 +18,33 @@ import {
   Heart,
   ShoppingBag,
   ChevronRight,
+  Tag,
 } from 'lucide-react';
+import { useStorefrontCategories } from '../utils/useStorefrontCategories';
 import PSPerfumesLogo from './common/PSPerfumesLogo';
 import { useCart } from '../context/CartContext';
 import './MobileNav.css';
 
-// EXACT 12 navigation items in specified order (Shop All strictly excluded)
-const NAVIGATION_ITEMS = [
+// Fixed links around the category list; categories come from the shared, data-driven source
+const LEADING_ITEMS = [
   { name: 'Home', path: '/', icon: Home },
   { name: 'About Us', path: '/about', icon: Info },
-  { name: 'Attar', path: '/attar', icon: Droplets },
-  { name: 'Perfume', path: '/perfume', icon: SprayCan },
-  { name: 'Bakhoor', path: '/bakhoor', icon: Flame },
-  { name: 'Musky', path: '/musky', icon: Moon },
-  { name: 'Oud', path: '/oud', icon: Crown },
-  { name: 'Floral', path: '/floral', icon: Flower2 },
-  { name: 'Woody', path: '/woody', icon: TreePine },
+];
+const TRAILING_ITEMS = [
   { name: 'New Arrival', path: '/shop?filter=new_arrival', icon: Sparkles },
   { name: 'Offers', path: '/offers', icon: BadgePercent },
   { name: 'Track Order', path: '/track-order', icon: Truck },
 ];
+// Icons of the seven built-in fragrance families; other categories use a neutral tag icon
+const FAMILY_ICONS = {
+  attar: Droplets,
+  perfume: SprayCan,
+  bakhoor: Flame,
+  musky: Moon,
+  oud: Crown,
+  floral: Flower2,
+  woody: TreePine,
+};
 
 export default function MobileNav({
   isOpen,

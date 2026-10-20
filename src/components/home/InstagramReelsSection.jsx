@@ -13,7 +13,7 @@ function InstagramIcon({ size = 18 }) {
   );
 }
 
-export default function InstagramReelsSection() {
+export default function InstagramReelsSection({ title = 'PS Perfumes on Instagram', subtitle = '' }) {
   const [reels, setReels] = useState([]);
   const [loading, setLoading] = useState(true);
   const trackRef = useRef(null);
@@ -58,9 +58,9 @@ export default function InstagramReelsSection() {
               <InstagramIcon size={14} />
               <span>@PS_PERFUMES_KADAPA</span>
             </span>
-            <h2 className="ps-reels-title">PS Perfumes on Instagram</h2>
+            <h2 className="ps-reels-title">{title || 'PS Perfumes on Instagram'}</h2>
             <p className="ps-reels-sub">
-              Watch real sensory stories, unboxings, and distillation journals from our Kadapa atelier.
+              {subtitle || 'Follow PS PERFUMES on Instagram for new arrivals and behind-the-scenes moments.'}
             </p>
           </div>
 
@@ -118,7 +118,17 @@ export default function InstagramReelsSection() {
                 {/* 9:16 Aspect Ratio Media Box */}
                 <div className="ps-reel-media">
                   <img
-                    src={reel.thumbnail_url}
+                    src={reel.thumbnail_url || '/assets/ps-perfumes-logo.webp'}
+                    onError={(e) => {
+                      // Missing or deleted thumbnail: show the brand logo instead of a broken image
+                      const img = e.currentTarget;
+                      if (img.dataset.fallback !== '1') {
+                        img.dataset.fallback = '1';
+                        img.src = '/assets/ps-perfumes-logo.webp';
+                        img.style.objectFit = 'contain';
+                        img.style.background = '#0D0D0D';
+                      }
+                    }}
                     alt={reel.caption || 'PS Perfumes Reel'}
                     className="ps-reel-thumbnail"
                     loading="lazy"

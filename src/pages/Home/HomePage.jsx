@@ -35,6 +35,7 @@ export default function HomePage() {
   });
   const [bestSellers, setBestSellers] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [newArrivals, setNewArrivals] = useState([]);
   const [sections, setSections] = useState([]);
   const [, setLoading] = useState(true);
 
@@ -43,7 +44,7 @@ export default function HomePage() {
 
     async function fetchHomeData() {
       try {
-        const [{ bestSellers: bs, featuredProducts: fp }, rawSections] = await Promise.all([
+        const [{ bestSellers: bs, featuredProducts: fp, newArrivals: na }, rawSections] = await Promise.all([
           getHomepageProductSections(),
           // A sections error falls back to the default layout without hiding the products
           getHomepageSections().catch((err) => {
@@ -54,6 +55,7 @@ export default function HomePage() {
         if (mounted) {
           setBestSellers(bs || []);
           setFeaturedProducts(fp || []);
+          setNewArrivals(na || []);
           if (Array.isArray(rawSections) && rawSections.length > 0) {
             const activeSorted = rawSections
               .filter((s) => s.is_active !== false)
@@ -87,7 +89,7 @@ export default function HomePage() {
           </React.Fragment>
         );
       case 'fragrance_categories':
-        return <ShopByFragrance key={sec.id} />;
+        return <ShopByFragrance key={sec.id} title={sec.title} subtitle={sec.subtitle} />;
       case 'bestsellers':
         return (
           <ProductGridSection
@@ -95,6 +97,7 @@ export default function HomePage() {
             id="best-sellers"
             tag="SIGNATURE CREATIONS"
             title={sec.title || 'Best Sellers'}
+            subtitle={sec.subtitle}
             products={bestSellers}
             showFilterTabs={false}
             limit={8}
@@ -102,6 +105,20 @@ export default function HomePage() {
           />
         );
       case 'new_arrivals':
+        // Products flagged "New Arrival", else the most recently added (getNewArrivalProducts)
+        return (
+          <ProductGridSection
+            key={sec.id}
+            id="new-arrivals"
+            tag="JUST ARRIVED"
+            title={sec.title || 'New Arrivals'}
+            subtitle={sec.subtitle}
+            products={newArrivals}
+            showFilterTabs={false}
+            limit={8}
+            emptyMessage="No new arrivals yet."
+          />
+        );
       case 'featured_products':
         return (
           <ProductGridSection
@@ -109,6 +126,7 @@ export default function HomePage() {
             id="featured-products"
             tag="CURATED FORMULATIONS"
             title={sec.title || 'Featured Products'}
+            subtitle={sec.subtitle}
             products={featuredProducts}
             showFilterTabs={false}
             limit={8}
@@ -117,11 +135,11 @@ export default function HomePage() {
         );
       case 'combos':
       case 'combo_pack':
-        return <ComboPackSection key={sec.id} />;
+        return <ComboPackSection key={sec.id} title={sec.title} subtitle={sec.subtitle} />;
       case 'instagram_reels':
-        return <InstagramReelsSection key={sec.id} />;
+        return <InstagramReelsSection key={sec.id} title={sec.title} subtitle={sec.subtitle} />;
       case 'reviews':
-        return <ReviewsSection key={sec.id} />;
+        return <ReviewsSection key={sec.id} title={sec.title} subtitle={sec.subtitle} />;
       default:
         return null;
     }

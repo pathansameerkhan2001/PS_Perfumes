@@ -127,7 +127,14 @@ export async function createCategory(cat) {
         return { data, error: null };
       } else if (error) {
         console.error('Supabase createCategory error:', error.message);
-        throw new Error(error.message);
+        // categories.slug is UNIQUE: explain duplicates instead of showing the raw constraint error
+        if (error.code === '23505') {
+          throw new Error(`A category with the slug "${payload.slug}" already exists. Edit the existing category instead of adding it again.`);
+        }
+        if (error.code === '42501') {
+          throw new Error('This account is not allowed to create categories (database permission denied).');
+        }
+        throw new Error(`${error.message}${error.code ? ` (code ${error.code})` : ''}`);
       }
     } catch (e) {
       console.error('Supabase createCategory exception:', e);

@@ -351,3 +351,14 @@
     gap: 6px;
   }
 }
+
+/* Out of stock / currently unavailable combo: clearly not purchasable */
+.ps-combopack-add-btn:disabled,
+.ps-combopack-add-btn:disabled:hover {
+  background: #2A2724;
+  border-color: #3A3631;
+  color: #A39C91;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}

@@ -4,9 +4,23 @@ import {
   updateHomepageSection,
   reorderSections,
   initializeHomepageSections,
+  restoreMissingDefaultSections,
+  isSupportedSectionKey,
 } from '../../services/homepage';
 import { ArrowUp, ArrowDown, Eye, EyeOff, Save, CheckCircle, AlertCircle, RefreshCw, LayoutTemplate } from 'lucide-react';
 import './AdminProducts.css';
+
+// Sections whose subtitle is shown on the storefront (others ignore it)
+const SUBTITLE_SECTIONS = new Set([
+  'fragrance_categories',
+  'new_arrivals',
+  'featured_products',
+  'bestsellers',
+  'combos',
+  'combo_pack',
+  'instagram_reels',
+  'reviews',
+]);
 
 export default function AdminHomepage() {
   const [sections, setSections] = useState([]);
@@ -91,6 +105,34 @@ export default function AdminHomepage() {
     );
   };
 
+  const handleSubtitleChange = (id, newSubtitle) => {
+    setSections((prev) => prev.map((s) => (s.id === id ? { ...s, subtitle: newSubtitle } : s)));
+  };
+
+  // Adds only the built-in sections that are not in the database yet; existing rows untouched
+  const handleRestoreMissing = async () => {
+    setSaving(true);
+    setStatusMessage({ type: '', text: '' });
+    try {
+      const added = await restoreMissingDefaultSections();
+      if (added.length === 0) {
+        setStatusMessage({ type: 'success', text: 'All default sections are already present. Nothing was changed.' });
+      } else {
+        await loadData();
+        setStatusMessage({
+          type: 'success',
+          text: `Added ${added.length} missing section${added.length > 1 ? 's' : ''}: ${added
+            .map((s) => s.title || s.section_key)
+            .join(', ')}. They were placed at the end; reorder them as needed.`,
+        });
+      }
+    } catch (err) {
+      setStatusMessage({ type: 'error', text: err.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSaveAll = async () => {
     setSaving(true);
     setStatusMessage({ type: '', text: '' });
@@ -131,6 +173,18 @@ export default function AdminHomepage() {
             <RefreshCw size={16} />
             <span>Reset</span>
           </button>
+          {!isDefaultLayout && (
+            <button
+              type="button"
+              onClick={handleRestoreMissing}
+              disabled={saving}
+              className="ps-admin-btn-secondary"
+              title="Adds built-in sections that are missing (e.g. Combo Packs, Customer Reviews) without changing existing ones"
+            >
+              <LayoutTemplate size={16} />
+              <span>Restore Missing Default Sections</span>
+            </button>
+          )}
           <button type="button" onClick={handleSaveAll} disabled={saving || isDefaultLayout} className="ps-admin-btn-primary">
             {saving ? <RefreshCw size={16} className="ps-spin" /> : <Save size={16} />}
             <span>{saving ? 'Saving...' : 'Save All Layouts'}</span>
@@ -215,6 +269,19 @@ export default function AdminHomepage() {
                   >
                     {section.is_active ? 'ACTIVE' : 'HIDDEN'}
                   </span>
+                  {!isSupportedSectionKey(section.section_key) && (
+                    <span
+                      title="This section has no storefront implementation. Its saved content is kept but not displayed."
+                      style={{ fontSize: '0.7rem', padding: '1px 6px', backgroundColor: 'rgba(234,179,8,0.12)', color: '#EAB308' }}
+                    >
+                      NOT SHOWN ON STOREFRONT
+                    </span>
+                  )}
+                  {section.section_key === 'hero' && (
+                    <span style={{ fontSize: '0.7rem', color: '#8F8A80' }}>
+                      Title is an admin label only — the hero is video-only (film: Admin → Hero Sections)
+                    </span>
+                  )}
                 </div>
                 <input
                   type="text"
@@ -230,7 +297,28 @@ export default function AdminHomepage() {
                     width: '100%',
                     maxWidth: '450px',
                   }}
+                  aria-label={`${section.section_key} title`}
                 />
+                {SUBTITLE_SECTIONS.has(section.section_key) && (
+                  <input
+                    type="text"
+                    value={section.subtitle || ''}
+                    onChange={(e) => handleSubtitleChange(section.id, e.target.value)}
+                    placeholder="Subtitle (optional)"
+                    aria-label={`${section.section_key} subtitle`}
+                    style={{
+                      display: 'block',
+                      marginTop: '0.4rem',
+                      backgroundColor: '#050505',
+                      border: '1px solid rgba(200,164,93,0.15)',
+                      color: '#D9D3C7',
+                      padding: '0.35rem 0.75rem',
+                      fontSize: '0.85rem',
+                      width: '100%',
+                      maxWidth: '450px',
+                    }}
+                  />
+                )}
               </div>
             </div>
 

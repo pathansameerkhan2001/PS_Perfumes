@@ -3,28 +3,50 @@ import { isValidUUID } from './products';
 import { dbError, assertRows } from './dbErrors';
 
 
+// Section keys the storefront can actually render (pages/Home/HomePage.jsx renderSection).
+// Saved rows with other keys (e.g. editorial_feature, our_story, newsletter from an earlier
+// layout) are kept in the database but shown as "Not shown on storefront" in the admin.
+export const SUPPORTED_SECTION_KEYS = [
+  'hero',
+  'trust_strip',
+  'fragrance_categories',
+  'new_arrivals',
+  'featured_products',
+  'bestsellers',
+  'combos',
+  'combo_pack',
+  'instagram_reels',
+  'reviews',
+];
+
+export function isSupportedSectionKey(key) {
+  return SUPPORTED_SECTION_KEYS.includes(String(key || ''));
+}
+
+/*
+ * Built-in homepage layout: only sections with a storefront implementation.
+ * Titles/subtitles are the defaults shown on the homepage until an admin edits them.
+ * Copy is deliberately plain — no product, ingredient or history claims.
+ * The hero is video-only: its title is only the admin label (never shown on the site).
+ */
 export const INITIAL_SECTIONS = [
   {
     id: 'sec-hero',
     section_key: 'hero',
-    // Shown as the homepage hero heading / line / button (editable in Admin → Homepage)
-    title: 'Discover the Art of Luxury Fragrance',
-    subtitle: 'Attars, perfumes and bakhoor from PS PERFUMES, Kadapa.',
-    cta_text: 'Shop the Collection',
-    cta_link: '/shop',
-    image_url: '/assets/hero-luxury-cinematic.png',
-    secondary_image_url: '/assets/hero-slide2.webp',
+    title: 'Cinematic hero film',
+    subtitle: '',
+    cta_text: '',
+    cta_link: '',
+    image_url: '',
     is_active: true,
     display_order: 1,
-    metadata: {
-      collection: 'ROYAL OUD & AMBER ESSENCE',
-    },
+    metadata: {},
   },
   {
     id: 'sec-trust',
     section_key: 'trust_strip',
     title: 'Trust & Excellence',
-    subtitle: '100% Genuine, Handcrafted, Pan-India Dispatch',
+    subtitle: '',
     cta_text: '',
     cta_link: '',
     image_url: '',
@@ -36,8 +58,8 @@ export const INITIAL_SECTIONS = [
     id: 'sec-fragrance-family',
     section_key: 'fragrance_categories',
     title: 'Shop by Fragrance',
-    subtitle: 'Curated olfactive journeys from pure concentrated attars to artisanal modern parfums.',
-    cta_text: 'EXPLORE ALL',
+    subtitle: '',
+    cta_text: 'VIEW ALL',
     cta_link: '/shop',
     image_url: '',
     is_active: true,
@@ -47,10 +69,10 @@ export const INITIAL_SECTIONS = [
   {
     id: 'sec-new-arrivals',
     section_key: 'new_arrivals',
-    title: 'New Creations',
-    subtitle: 'Fresh extractions and limited artisanal drops just released from our blending atelier.',
-    cta_text: 'VIEW ALL NEW',
-    cta_link: '/shop?filter=new',
+    title: 'New Arrivals',
+    subtitle: 'The latest additions to our collection.',
+    cta_text: '',
+    cta_link: '',
     image_url: '',
     is_active: true,
     display_order: 4,
@@ -59,34 +81,32 @@ export const INITIAL_SECTIONS = [
   {
     id: 'sec-bestsellers',
     section_key: 'bestsellers',
-    title: 'Our Signature Bestsellers',
-    subtitle: 'The timeless classics celebrated for their extraordinary longevity and sillage.',
-    cta_text: 'SHOP SIGNATURES',
-    cta_link: '/shop?filter=bestseller',
+    title: 'Best Sellers',
+    subtitle: '',
+    cta_text: '',
+    cta_link: '',
     image_url: '',
     is_active: true,
     display_order: 5,
     metadata: {},
   },
   {
-    id: 'sec-editorial',
-    section_key: 'editorial_feature',
-    title: 'The Royal Amber Extract',
-    subtitle: 'Matured for months in seasoned French oak barrels with warm benzoin and pure Cambodian oudh.',
-    cta_text: 'DISCOVER ROYAL AMBER',
-    cta_link: '/product/royal-amber-extreme',
-    image_url: '/assets/prod-royal-amber.webp',
+    id: 'sec-combos',
+    section_key: 'combos',
+    title: 'Combo Packs',
+    subtitle: 'Curated sets from our collection.',
+    cta_text: '',
+    cta_link: '',
+    image_url: '',
     is_active: true,
     display_order: 6,
-    metadata: {
-      notes: 'Amber, Cambodian Oud, Madagascar Vanilla',
-    },
+    metadata: {},
   },
   {
     id: 'sec-reels',
     section_key: 'instagram_reels',
     title: 'PS Perfumes on Instagram',
-    subtitle: 'Follow our atelier journey, bottle pours, and scent discoveries @ps_perfumes_kadapa',
+    subtitle: 'Follow us @ps_perfumes_kadapa',
     cta_text: 'FOLLOW ON INSTAGRAM',
     cta_link: 'https://www.instagram.com/ps_perfumes_kadapa/?hl=en',
     image_url: '',
@@ -95,27 +115,15 @@ export const INITIAL_SECTIONS = [
     metadata: {},
   },
   {
-    id: 'sec-story',
-    section_key: 'our_story',
-    title: 'Artisanal Perfumery Born in Kadapa',
-    subtitle: 'Honoring ancient Indian distillation heritage while embracing modern luxury French perfumery aesthetics.',
-    cta_text: 'READ OUR HERITAGE',
-    cta_link: '/about',
-    image_url: '/assets/hero-desktop.webp',
-    is_active: true,
-    display_order: 8,
-    metadata: {},
-  },
-  {
-    id: 'sec-newsletter',
-    section_key: 'newsletter',
-    title: 'Join the Connoisseurs Circle',
-    subtitle: 'Receive exclusive private release invitations, olfactory masterclasses, and early access.',
-    cta_text: 'SUBSCRIBE',
+    id: 'sec-reviews',
+    section_key: 'reviews',
+    title: 'Customer Reviews',
+    subtitle: '',
+    cta_text: '',
     cta_link: '',
     image_url: '',
     is_active: true,
-    display_order: 9,
+    display_order: 8,
     metadata: {},
   },
 ];
@@ -214,4 +222,40 @@ export async function reorderSections(orderedIds) {
     results.push(data);
   }
   return { success: true, data: results };
+}
+
+/**
+ * Adds the built-in sections that are missing from the database (matched by section_key).
+ * Existing rows — their titles, visibility and order — are never changed. New rows are
+ * appended after the current last position. Returns the inserted sections.
+ */
+export async function restoreMissingDefaultSections() {
+  const { data: existing, error: readErr } = await supabase
+    .from('homepage_sections')
+    .select('section_key, display_order');
+  if (readErr) throw dbError('Could not read homepage sections', readErr);
+
+  const present = new Set((existing || []).map((r) => r.section_key));
+  // combo_pack / featured_products are aliases of combos / new_arrivals: do not add both
+  if (present.has('combo_pack')) present.add('combos');
+  if (present.has('featured_products')) present.add('new_arrivals');
+
+  const missing = INITIAL_SECTIONS.filter((s) => !present.has(s.section_key));
+  if (missing.length === 0) return [];
+
+  const lastOrder = Math.max(0, ...(existing || []).map((r) => Number(r.display_order) || 0));
+  const rows = missing.map((s, i) => ({
+    section_key: s.section_key,
+    title: s.title || '',
+    subtitle: s.subtitle || '',
+    button_text: s.cta_text || null,
+    button_link: s.cta_link || null,
+    is_active: s.is_active !== false,
+    display_order: lastOrder + i + 1,
+    settings: s.metadata || {},
+  }));
+  const { data, error } = await supabase.from('homepage_sections').insert(rows).select();
+  if (error) throw dbError('Missing sections were not added', error);
+  if ((data || []).length !== rows.length) throw new Error('Not all missing sections were added (permission denied?).');
+  return data.map(formatSection);
 }

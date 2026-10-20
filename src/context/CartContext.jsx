@@ -164,6 +164,19 @@ export function CartProvider({ children }) {
       sizeMl = comboVariant.size_ml || 'Complete Set';
       unitPrice = Number(comboVariant.sale_price || comboVariant.price || product.price);
       variantId = comboVariant.id || comboVariant.variant_id || `combo-var-${product.id}`;
+      // Unavailable combos (inactive, unavailable products, no stock) cannot be added
+      if (product.is_purchasable === false) {
+        showToast(`"${product.name}" is currently unavailable.`);
+        return;
+      }
+      // Combo stock, when known, limits the quantity in the bag like a variant's stock
+      if (product.stock_quantity !== undefined && product.stock_quantity !== null) {
+        availableStock = Number(product.stock_quantity) || 0;
+        if (availableStock <= 0) {
+          showToast(`"${product.name}" is out of stock.`);
+          return;
+        }
+      }
     } else {
       // Products: only a real, active variant of THIS product can go into the cart. Checkout
       // (place_order) prices each line from its variant id, so an invented variant would be
@@ -296,9 +309,14 @@ export function CartProvider({ children }) {
           item.size === variantIdentifier ||
           (item.product_id === productId && item.size_ml === variantIdentifier);
         if (!matches) return item;
-        // Cap at the variant's stock as known when it was added (checkout re-checks current stock)
-        const variant = item.product?.variants?.find((v) => v.id === item.variant_id);
-        const max = variant ? Number(variant.stock_quantity ?? variant.stock ?? 0) : 0;
+        // Cap at the variant's (or combo's) stock as known when it was added; checkout re-checks
+        const isComboLine = item.product?.category === 'Combo Pack';
+        const variant = isComboLine ? null : item.product?.variants?.find((v) => v.id === item.variant_id);
+        const max = isComboLine
+          ? Number(item.product?.stock_quantity ?? 0)
+          : variant
+          ? Number(variant.stock_quantity ?? variant.stock ?? 0)
+          : 0;
         return { ...item, quantity: max > 0 ? Math.min(quantity, max) : quantity };
       })
     );

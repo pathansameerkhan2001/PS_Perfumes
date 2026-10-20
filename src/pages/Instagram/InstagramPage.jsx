@@ -88,7 +88,17 @@ export default function InstagramPage() {
               >
                 <div className="ps-insta-media">
                   <img
-                    src={reel.thumbnail_url}
+                    src={reel.thumbnail_url || '/assets/ps-perfumes-logo.webp'}
+                    onError={(e) => {
+                      // Missing or deleted thumbnail: show the brand logo instead of a broken image
+                      const img = e.currentTarget;
+                      if (img.dataset.fallback !== '1') {
+                        img.dataset.fallback = '1';
+                        img.src = '/assets/ps-perfumes-logo.webp';
+                        img.style.objectFit = 'contain';
+                        img.style.background = '#0D0D0D';
+                      }
+                    }}
                     alt={reel.caption || 'PS Perfumes Reel'}
                     className="ps-insta-img"
                     loading="lazy"

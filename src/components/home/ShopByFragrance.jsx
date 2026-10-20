@@ -24,7 +24,7 @@ const DEFAULT_FRAGRANCES = [
   { name: 'WOODY', slug: 'woody', image: woodyImg },
 ];
 
-export default function ShopByFragrance() {
+export default function ShopByFragrance({ title = 'Shop by Fragrance', subtitle = '' }) {
   const [categories, setCategories] = useState(DEFAULT_FRAGRANCES);
 
   useEffect(() => {
@@ -69,7 +69,8 @@ export default function ShopByFragrance() {
               <span className="ps-fragrance-eyebrow">EXPLORE OUR COLLECTION</span>
               <span className="ps-fragrance-eyebrow-line" aria-hidden="true" />
             </div>
-            <h2 className="ps-fragrance-title">Shop by Fragrance</h2>
+            <h2 className="ps-fragrance-title">{title || 'Shop by Fragrance'}</h2>
+            {subtitle && <p className="ps-section-subtitle">{subtitle}</p>}
           </div>
 
           <Link

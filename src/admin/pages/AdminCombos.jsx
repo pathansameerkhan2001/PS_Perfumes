@@ -132,6 +132,11 @@ export default function AdminCombos() {
     if (!pickerProdId) return;
     const selectedProd = catalogProducts.find((p) => p.id === pickerProdId);
     if (!selectedProd) return;
+    // A combo containing an inactive product cannot be bought
+    if (selectedProd.is_active === false) {
+      setErrorMsg(`"${selectedProd.name}" is inactive. Activate it under Products before adding it to a combo.`);
+      return;
+    }
 
     setForm((prev) => {
       const existing = prev.items.findIndex((it) => it.product_id === selectedProd.id);
@@ -174,6 +179,19 @@ export default function AdminCombos() {
     }
     if (uploading) {
       setErrorMsg('Please wait for the image upload to finish.');
+      return;
+    }
+    // Every product in the combo must exist and be active, or the combo cannot be bought
+    const blocked = form.items.filter((it) => {
+      const p = catalogProducts.find((cp) => cp.id === it.product_id);
+      return !p || p.is_active === false;
+    });
+    if (blocked.length > 0) {
+      setErrorMsg(
+        `This combo contains unavailable products: ${blocked
+          .map((it) => it.product_name || 'a deleted product')
+          .join(', ')}. Remove them, or activate them under Products, before saving.`
+      );
       return;
     }
 
@@ -461,8 +479,8 @@ export default function AdminCombos() {
                 >
                   <option value="">-- Choose Product --</option>
                   {catalogProducts.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({p.category}){p.is_active === false ? ' — inactive' : ''}
+                    <option key={p.id} value={p.id} disabled={p.is_active === false}>
+                      {p.name} ({p.category}){p.is_active === false ? ' — inactive (cannot be added)' : ''}
                     </option>
                   ))}
                 </select>
@@ -576,6 +594,16 @@ export default function AdminCombos() {
                       >
                         {c.is_active !== false ? 'Active' : 'Disabled'}
                       </span>
+                      {/* Active but cannot be bought (out of stock, unavailable products, no price) */}
+                      {c.is_active !== false && c.is_purchasable === false && (
+                        <span
+                          className="ps-status-pill ps-status-cancelled"
+                          title={c.unavailable_message}
+                          style={{ display: 'block', marginTop: 4, whiteSpace: 'normal', maxWidth: 220 }}
+                        >
+                          Not purchasable: {c.unavailable_message}
+                        </span>
+                      )}
                     </td>
                     <td>
                       <div className="ps-table-actions">

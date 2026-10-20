@@ -172,6 +172,56 @@ export async function getFeaturedProducts(limit = 8) {
   return prods.map(formatHomepageProduct);
 }
 
+const NEW_ARRIVAL_SELECT = `
+  id,
+  name,
+  slug,
+  brand,
+  main_image_path,
+  main_image_url,
+  is_featured,
+  is_bestseller,
+  is_new_arrival,
+  is_active,
+  display_order,
+  created_at,
+  categories ( id, name, slug ),
+  product_variants ( id, product_id, bottle_type, size_ml, price, sale_price, stock_quantity, is_active )
+`;
+
+/**
+ * Fetch New Arrivals for the homepage "new_arrivals" section.
+ * Rule: active products the admin flagged "New Arrival" (is_new_arrival), newest first.
+ * If none are flagged, the most recently added active products (created_at, newest first) —
+ * i.e. the latest additions to the catalogue. Never demo products.
+ */
+export async function getNewArrivalProducts(limit = 8) {
+  if (!supabase) return [];
+  try {
+    const { data: flagged, error } = await supabase
+      .from('products')
+      .select(NEW_ARRIVAL_SELECT)
+      .eq('is_active', true)
+      .eq('is_new_arrival', true)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    if (Array.isArray(flagged) && flagged.length > 0) return flagged.map(formatHomepageProduct);
+
+    const { data: latest, error: latestErr } = await supabase
+      .from('products')
+      .select(NEW_ARRIVAL_SELECT)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (latestErr) throw latestErr;
+    return (latest || []).map(formatHomepageProduct);
+  } catch (err) {
+    console.error('Could not load new arrivals:', err?.message || err);
+    return [];
+  }
+}
+
 /**
  * Fetch Best Selling Products:
  * 1. Primary logic: Rank using actual completed sales (orders & order_items) if sales exist.
@@ -362,11 +412,12 @@ export async function getHomepageCategories() {
  * Parallel fetcher for Best Sellers and Featured Products
  */
 export async function getHomepageProductSections() {
-  const [bestSellers, featuredProducts] = await Promise.all([
+  const [bestSellers, featuredProducts, newArrivals] = await Promise.all([
     getBestSellingProducts(),
     getFeaturedProducts(),
+    getNewArrivalProducts(),
   ]);
 
-  return { bestSellers, featuredProducts };
+  return { bestSellers, featuredProducts, newArrivals };
 }
 
