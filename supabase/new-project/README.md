@@ -8,6 +8,22 @@
 
 **Status:** prepared, **nothing applied**. Every ⛔ step needs explicit approval. The old project is never modified: it is only read during the export. That includes no password resets and no new keys there. Without approval, do not change the old project, Vercel's production settings, or the live site.
 
+## 0. Current state (2026-10-20) and the short path to a working admin
+
+- Live site: built against `pwacxxrghlglvdtclbig` with bucket `Ps-perfumes-media` (checked in the deployed bundle; no old-project references).
+- Admin sign-in **succeeds** (Auth works), then the panel reports *"the database administrator check (is_admin) is not installed"*. That means steps 1–4 below have not been applied yet. This is expected, not a code fault.
+
+Run in the new project's SQL Editor, each file **in full**, in this order:
+`00` (read-only, check the result) → `01` → `02` → `03` → `04` → `05` (read-only). Then sign out and back in at `/admin/login`.
+
+What each result means at login:
+
+| Login message | Meaning |
+|---|---|
+| "…is_admin is not installed…" | `02` not applied (or the schema cache not yet refreshed — wait a minute and retry) |
+| "…not registered as an active administrator…" | `02` applied, but `04` not applied or it was rolled back |
+| Dashboard opens, no red banner | `is_admin()` returned true for this session |
+
 ## 1. What the application uses
 
 | Area | Objects |
@@ -30,6 +46,7 @@ Check before every run: the browser URL contains `/project/pwacxxrghlglvdtclbig/
 | ⛔ 0 | `00_preflight_readonly.sql` | **Read-only.** Confirms Auth user `a5b3ff02-8d08-454a-8474-d5f51a4d890f` exists, is `brandnix.in@gmail.com`, is confirmed. Reports any tables, `admin_users` schema/rows, `is_admin()` definition, buckets and Storage policies already in the project. Continue with 1 only if `public_tables` is `[]` and the user checks pass; otherwise send the CSV for review |
 | ⛔ 1 | `01_schema.sql` | 16 tables, constraints, indexes, `updated_at` triggers, RLS **enabled**, default Data API grants revoked. Refuses to run if `products`/`orders` already exist |
 | ⛔ 2 | `02_auth_functions_rls.sql` | `is_admin()` (active `admin_users` row or server-set `app_metadata.role`; no e-mail or `user_metadata` trust), coupon and checkout functions, safe delete, admin-user RPCs, exact grants, RLS policies (table in §3) |
+| 2-check | `02_check_readonly.sql` | **Read-only.** If `02` reports "policy … already exists", Step 2 was most likely applied before. This shows whether it is complete (`step2_complete = true` → go straight to 03). `02` itself is re-runnable: it replaces only its own `ps_*` policies by name and stops if any other policy exists on these tables |
 | ⛔ 3 | `03_storage.sql` | Bucket `Ps-perfumes-media` (public read by URL, 50 MB, jpeg/png/webp/mp4) and three admin-only Storage policies. If the SQL role cannot manage `storage.objects`, it stops; create the same three policies in Dashboard → Storage → Policies |
 | — | Dashboard → Authentication → Users | Only if step 0 showed the UID missing or unconfirmed: fix it there (the UID `a5b3ff02-…` was supplied as already created) |
 | ⛔ 4 | `04_bootstrap_admin.sql` | Creates or updates the **single** `admin_users` row for UID `a5b3ff02-8d08-454a-8474-d5f51a4d890f` (super_admin, active) after re-checking the UID/e-mail match. Then runs `is_admin()`/`is_super_admin()` as that user and **rolls back** unless both are true |

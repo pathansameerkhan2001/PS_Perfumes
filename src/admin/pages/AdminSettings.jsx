@@ -4,6 +4,9 @@ import { uploadImage } from '../../lib/storage';
 import { Save, CheckCircle, AlertCircle, Building, MapPin, Share2, Truck, RefreshCw, Upload } from 'lucide-react';
 import './AdminProductForm.css';
 
+// Logo uploads: images only (no SVG — neither the app nor the bucket accepts it)
+const LOGO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
 export default function AdminSettings() {
   const [settings, setSettings] = useState({
     brand_name: 'PS PERFUMES',
@@ -58,7 +61,21 @@ export default function AdminSettings() {
 
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
+    // Reset so choosing the same file again still triggers this handler
+    e.target.value = '';
     if (!file) return;
+
+    // The picker's accept list is only a hint (the dialog can show "All files"), so check here.
+    // Logos must be images; the shared upload helper would also accept MP4 video.
+    const reported = (file.type || '').toLowerCase();
+    const logoType = reported === 'image/jpg' || reported === 'image/pjpeg' ? 'image/jpeg' : reported;
+    if (!LOGO_TYPES.includes(logoType)) {
+      setStatusMessage({
+        type: 'error',
+        text: `"${file.name}" cannot be used as a logo${file.type ? ` (${file.type})` : ''}. Please choose a JPEG, PNG or WebP image.`,
+      });
+      return;
+    }
 
     setUploadingLogo(true);
     setStatusMessage({ type: '', text: '' });
@@ -186,14 +203,14 @@ export default function AdminSettings() {
                 <span>{uploadingLogo ? 'Uploading...' : 'Upload New Logo'}</span>
                 <input
                   type="file"
-                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  accept={LOGO_TYPES.join(',')}
                   onChange={handleLogoUpload}
                   style={{ display: 'none' }}
                   disabled={uploadingLogo}
                 />
               </label>
             </div>
-            <span className="ps-admin-input-hint">Storage folder: logo/ (PNG or WebP)</span>
+            <span className="ps-admin-input-hint">Storage folder: logo/ (JPEG, PNG or WebP, up to 10 MB)</span>
           </div>
 
           <div className="ps-admin-input-group">

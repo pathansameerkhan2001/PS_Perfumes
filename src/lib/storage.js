@@ -1,7 +1,8 @@
 import { supabase, STORAGE_BUCKET } from './supabase';
 
 /**
- * Supabase Storage Folders within the 'ps-perfumes' bucket
+ * Supabase Storage folders within the configured bucket (STORAGE_BUCKET, "Ps-perfumes-media").
+ * The bucket's Storage policies only allow uploads into these folders (plus "banners").
  */
 export const STORAGE_FOLDERS = {
   PRODUCTS: 'products',
@@ -14,13 +15,19 @@ export const STORAGE_FOLDERS = {
   LOGO: 'logo',
 };
 
-// Allowed MIME types strictly supported by the 'ps-perfumes' bucket
-const ALLOWED_MIME_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'video/mp4',
-]);
+// The only file types the app uploads (the bucket must allow exactly these), with the
+// extension each one is stored under
+const SUPPORTED_TYPES = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'video/mp4': 'mp4',
+};
+// Non-standard MIME names some browsers/OSes report for the same formats
+const MIME_ALIASES = { 'image/jpg': 'image/jpeg', 'image/pjpeg': 'image/jpeg' };
+// Used only when the browser reports no MIME type at all
+const EXTENSION_TYPES = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', mp4: 'video/mp4' };
+const SUPPORTED_LABEL = 'JPEG, PNG or WebP images, or MP4 videos';
 
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
@@ -40,39 +47,24 @@ export function sanitizeFileName(name) {
 }
 
 /**
- * Normalizes file extension and MIME type for Supabase Storage
- * Avoids HTTP 400 caused by 'image/jpg' or missing content-types
- * @param {File|Blob} file 
- * @param {string} rawExt 
- * @returns {{ mime: string, ext: string }}
+ * Determines the real type of a file and the extension to store it under.
+ * The browser-reported MIME type decides; the file extension is only consulted when the
+ * browser reports none. A file that is not JPEG, PNG, WebP or MP4 is never relabelled —
+ * for example an SVG or HEIC named "logo.jpg" is rejected, not uploaded as image/jpeg.
+ * @param {File|Blob} file
+ * @param {string} rawExt - extension from the file name, without the dot
+ * @returns {{ mime: string, ext: string } | { error: string }}
  */
-function normalizeMimeAndExtension(file, rawExt) {
-  let ext = (rawExt || '').toLowerCase().replace(/^\./, '');
-  let mime = (file.type || '').toLowerCase();
+function resolveFileType(file, rawExt) {
+  const ext = (rawExt || '').toLowerCase().replace(/^\./, '');
+  const reported = (file.type || '').toLowerCase().trim();
+  const mime = reported ? MIME_ALIASES[reported] || reported : EXTENSION_TYPES[ext] || '';
 
-  // Normalize JPEG variations
-  if (mime === 'image/jpg' || mime === 'image/pjpeg' || ext === 'jpg' || ext === 'jpeg') {
-    return { mime: 'image/jpeg', ext: ext || 'jpg' };
+  if (!SUPPORTED_TYPES[mime]) {
+    const described = reported || (ext ? `.${ext} file` : 'unknown type');
+    return { error: `This file type (${described}) is not supported. Please choose ${SUPPORTED_LABEL}.` };
   }
-  // Normalize PNG
-  if (mime === 'image/png' || ext === 'png') {
-    return { mime: 'image/png', ext: 'png' };
-  }
-  // Normalize WebP
-  if (mime === 'image/webp' || ext === 'webp') {
-    return { mime: 'image/webp', ext: 'webp' };
-  }
-  // Normalize MP4 video
-  if (mime === 'video/mp4' || ext === 'mp4') {
-    return { mime: 'video/mp4', ext: 'mp4' };
-  }
-
-  // Fallback defaults if valid extension exists
-  if (ext === 'png') return { mime: 'image/png', ext: 'png' };
-  if (ext === 'webp') return { mime: 'image/webp', ext: 'webp' };
-  if (ext === 'mp4') return { mime: 'video/mp4', ext: 'mp4' };
-
-  return { mime: 'image/jpeg', ext: 'jpg' };
+  return { mime, ext: SUPPORTED_TYPES[mime] };
 }
 
 /**
@@ -99,7 +91,7 @@ export function getStoragePublicUrl(path) {
 }
 
 /**
- * Upload a file to a designated folder in the 'ps-perfumes' bucket
+ * Upload a file to a designated folder in the configured bucket (STORAGE_BUCKET)
  * @param {File|Blob} file - File object to upload
  * @param {string} folder - Destination folder (from STORAGE_FOLDERS)
  * @param {string} [customSlug] - Optional subpath / slug prefix
@@ -113,8 +105,22 @@ export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS,
     return { url: '', path: '', error: 'Supabase client is not initialized.' };
   }
 
-  // 1. Validate file size
-  const isVideo = file.type?.startsWith('video/') || (file.name && file.name.endsWith('.mp4'));
+  // 1. Extract and sanitize file name
+  const originalName = file.name || 'asset';
+  const cleanOriginal = sanitizeFileName(originalName);
+  const rawParts = cleanOriginal.split('.');
+  const detectedExt = rawParts.length > 1 ? rawParts.pop() : '';
+  const baseName = rawParts.join('.') || 'file';
+
+  // 2. Supported types only (checked before anything is sent)
+  const fileType = resolveFileType(file, detectedExt);
+  if (fileType.error) {
+    return { url: '', path: '', error: fileType.error };
+  }
+  const { mime: contentType, ext: normalizedExt } = fileType;
+
+  // 3. Validate file size for that type
+  const isVideo = contentType === 'video/mp4';
   const maxSize = isVideo ? MAX_VIDEO_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES;
   const maxLabel = isVideo ? '50MB' : '10MB';
 
@@ -123,24 +129,6 @@ export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS,
       url: '',
       path: '',
       error: `File size (${(file.size / (1024 * 1024)).toFixed(1)}MB) exceeds the maximum allowed limit of ${maxLabel}.`,
-    };
-  }
-
-  // 2. Extract and sanitize file name
-  const originalName = file.name || 'asset';
-  const cleanOriginal = sanitizeFileName(originalName);
-  const rawParts = cleanOriginal.split('.');
-  const detectedExt = rawParts.length > 1 ? rawParts.pop() : '';
-  const baseName = rawParts.join('.') || 'file';
-
-  // 3. Normalize MIME and extension
-  const { mime: contentType, ext: normalizedExt } = normalizeMimeAndExtension(file, detectedExt);
-
-  if (!ALLOWED_MIME_TYPES.has(contentType)) {
-    return {
-      url: '',
-      path: '',
-      error: `Unsupported file format (${contentType || detectedExt}). Please use WebP, PNG, JPEG, or MP4.`,
     };
   }
 
@@ -232,7 +220,7 @@ export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS,
 }
 
 /**
- * Remove an existing file from the 'ps-perfumes' bucket
+ * Remove an existing file from the configured bucket (STORAGE_BUCKET)
  * @param {string} pathOrUrl - Storage file path or full public URL
  * @returns {Promise<{ success: boolean, error: string | null }>}
  */
@@ -266,7 +254,7 @@ export async function deleteStorageFile(pathOrUrl) {
 }
 
 /**
- * Remove several objects from the 'ps-perfumes' bucket and report what was actually removed.
+ * Remove several objects from the configured bucket and report what was actually removed.
  * Storage silently skips objects the caller may not delete, so the returned list is compared
  * with the request instead of trusting the absence of an error.
  * @param {string[]} paths - Object paths inside the bucket (e.g. 'products/x-123.webp')

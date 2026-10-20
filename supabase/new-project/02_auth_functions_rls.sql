@@ -19,6 +19,10 @@
 -- No e-mail matching and no user_metadata (any signed-in user can edit their own metadata).
 --
 -- One transaction: on any error nothing changes.
+-- Re-runnable: functions use CREATE OR REPLACE, grants/revokes are idempotent, and the
+-- policies this file owns are replaced by exact name (section 8). If 02 was already applied
+-- once, check with 02_check_readonly.sql first — when step2_complete = true there is no need
+-- to run it again.
 -- ============================================================================
 
 begin;
@@ -622,13 +626,41 @@ grant select, insert, update, delete on
 grant select on public.admin_users to authenticated;
 
 -- ---------------------------------------------------------------------------
--- 8. RLS policies
+-- 8. RLS policies — re-runnable
+--    This file owns exactly 28 policies (ps_admin_manage_*, ps_public_read_*,
+--    ps_admin_users_read_own, ps_admin_users_admin_read). On a re-run each one is dropped
+--    BY EXACT NAME and recreated inside this transaction, so other sessions see either the
+--    old or the new policy, never none, and RLS stays enabled throughout.
+--    Any OTHER policy on these tables stops the script before anything changes: permissive
+--    policies are OR-ed, so an unknown one could widen access and must be reviewed first
+--    (02_check_readonly.sql lists it under policies_unexpected).
 -- ---------------------------------------------------------------------------
+do $$
+declare
+  v_list text;
+begin
+  select string_agg(p.tablename || '.' || p.policyname || ' (' || p.cmd || ')', ', ')
+    into v_list
+  from pg_policies p
+  where p.schemaname = 'public'
+    and p.tablename in ('admin_users', 'categories', 'products', 'product_variants', 'product_images', 'combos',
+                        'combo_items', 'reviews', 'hero_slides', 'instagram_reels', 'homepage_sections',
+                        'store_settings', 'coupons', 'customers', 'orders', 'order_items')
+    and not (p.policyname like 'ps\_admin\_manage\_%' or p.policyname like 'ps\_public\_read\_%'
+             or p.policyname in ('ps_admin_users_read_own', 'ps_admin_users_admin_read'));
+  if v_list is not null then
+    raise exception 'Policies not created by this file exist: %. Nothing was changed. Review them (02_check_readonly.sql) before re-running.', v_list;
+  end if;
+end $$;
+
 create or replace function pg_temp.ps_policies(p_table text, p_public_read text)
 returns void language plpgsql as $$
 begin
+  execute format('drop policy if exists %I on public.%I', 'ps_admin_manage_' || p_table, p_table);
   execute format('create policy %I on public.%I for all to authenticated using (public.is_admin()) with check (public.is_admin())',
                  'ps_admin_manage_' || p_table, p_table);
+  -- Removes a public-read policy left by an earlier version even when none is wanted now
+  execute format('drop policy if exists %I on public.%I', 'ps_public_read_' || p_table, p_table);
   if p_public_read is not null then
     execute format('create policy %I on public.%I for select to anon, authenticated using (%s)',
                    'ps_public_read_' || p_table, p_table, p_public_read);
@@ -661,11 +693,16 @@ select pg_temp.ps_policies('order_items', null);
 
 -- admin_users: a signed-in user may read their own row (the admin panel reads the role);
 -- admins may read all rows. No write policies.
+drop policy if exists "ps_admin_users_read_own" on public.admin_users;
+drop policy if exists "ps_admin_users_admin_read" on public.admin_users;
 create policy "ps_admin_users_read_own" on public.admin_users
   for select to authenticated using (user_id = auth.uid());
 create policy "ps_admin_users_admin_read" on public.admin_users
   for select to authenticated using (public.is_admin());
 
 drop function pg_temp.ps_policies(text, text);
+
+-- Refresh the Data API schema cache so new tables/functions are visible immediately (sent at commit)
+notify pgrst, 'reload schema';
 
 commit;

@@ -87,4 +87,7 @@ begin
   end loop;
 end $$;
 
+-- Refresh the Data API schema cache so new tables/functions are visible immediately (sent at commit)
+notify pgrst, 'reload schema';
+
 commit;

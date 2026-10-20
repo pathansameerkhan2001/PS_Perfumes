@@ -37,7 +37,7 @@ if (import.meta.env.DEV) {
 }
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabasePublishableKey);
-// Bucket ids are case-sensitive. The new project uses "Ps-perfumes-media"; the old project
-// used "ps-perfumes" (kept as the default so a build without the variable behaves as before).
-export const STORAGE_BUCKET = (import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'ps-perfumes').trim();
+// Bucket ids are case-sensitive: the project's bucket is exactly "Ps-perfumes-media".
+// VITE_SUPABASE_STORAGE_BUCKET overrides it; the default applies when the variable is not set.
+export const STORAGE_BUCKET = (import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'Ps-perfumes-media').trim();
 export const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'brandnix.in@gmail.com';
