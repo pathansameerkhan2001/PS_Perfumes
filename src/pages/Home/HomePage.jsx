@@ -78,7 +78,7 @@ export default function HomePage() {
     const key = sec.section_key || sec.id;
     switch (key) {
       case 'hero':
-        return <HeroCinematic key={sec.id} section={sec} />;
+        return <HeroCinematic key={sec.id} />;
       case 'trust_strip':
         return (
           <React.Fragment key={sec.id}>
