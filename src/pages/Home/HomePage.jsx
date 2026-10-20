@@ -4,6 +4,7 @@ import AnnouncementTicker from '../../components/home/AnnouncementTicker';
 import BenefitsBar from '../../components/home/BenefitsBar';
 import ShopByFragrance from '../../components/home/ShopByFragrance';
 import ProductGridSection from '../../components/ProductGridSection';
+import NewArrivalsSection from '../../components/home/NewArrivalsSection';
 import ComboPackSection from '../../components/ComboPackSection';
 import InstagramReelsSection from '../../components/home/InstagramReelsSection';
 import ReviewsSection from '../../components/ReviewsSection';
@@ -38,7 +39,7 @@ export default function HomePage() {
   const [newArrivals, setNewArrivals] = useState([]);
   // null until loaded; then the active sections in display order (may be empty)
   const [sections, setSections] = useState(null);
-  const [, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -81,8 +82,8 @@ export default function HomePage() {
     const key = sec.section_key || sec.id;
     switch (key) {
       case 'hero':
-        // Stable key: the film is not restarted when the saved layout replaces the built-in one
-        return <HeroCinematic key="hero" />;
+        // Rendered once above the sections (see below), never inside the list
+        return null;
       case 'trust_strip':
         return (
           <React.Fragment key={sec.id}>
@@ -107,18 +108,15 @@ export default function HomePage() {
           />
         );
       case 'new_arrivals':
-        // Products flagged "New Arrival", else the most recently added (getNewArrivalProducts)
+        // Products flagged "New Arrival" in Admin → Products (their display order), else the most
+        // recently added (getNewArrivalProducts)
         return (
-          <ProductGridSection
+          <NewArrivalsSection
             key={sec.id}
-            id="new-arrivals"
-            tag="JUST ARRIVED"
-            title={sec.title || 'New Arrivals'}
+            title={sec.title}
             subtitle={sec.subtitle}
             products={newArrivals}
-            showFilterTabs={false}
-            limit={8}
-            emptyMessage="No new arrivals yet."
+            loaded={!loading}
           />
         );
       case 'featured_products':
@@ -151,11 +149,12 @@ export default function HomePage() {
   // only the hero remains (it is always shown).
   const visibleSections = sections ?? INITIAL_SECTIONS;
 
-  const hasHeroSection = visibleSections.some((s) => (s.section_key || s.id) === 'hero');
-
+  // The hero film is always first and rendered exactly once, outside the section list, so it is
+  // never unmounted and re-created (which would abort and restart its download) when the saved
+  // layout replaces the built-in one
   return (
     <div className="ps-home-page">
-      {!hasHeroSection && <HeroCinematic key="hero" />}
+      <HeroCinematic />
       {visibleSections.map(renderSection)}
     </div>
   );

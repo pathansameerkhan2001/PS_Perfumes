@@ -1,200 +1,137 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Star, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
+import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getReviews } from '../services/reviews';
 import './ReviewsSection.css';
 
-export default function ReviewsSection({ title = 'What Our Customers Have to Say', subtitle = '' }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd, setTouchEnd] = useState(null);
-  const autoPlayRef = useRef(null);
-  // Approved customer reviews from the database (no hard-coded testimonials)
-  const [REVIEWS, setReviews] = useState([]);
+// The homepage shows a few reviews only (featured first, then newest)
+const HOMEPAGE_REVIEW_LIMIT = 6;
+// Long reviews are shortened on the card; "Read more" shows the rest in place
+const LONG_REVIEW_CHARS = 220;
+
+function Stars({ rating }) {
+  return (
+    <span className="ps-rev-stars" role="img" aria-label={`${rating} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star
+          key={i}
+          size={14}
+          aria-hidden="true"
+          fill={i <= rating ? '#B08A48' : 'none'}
+          color={i <= rating ? '#B08A48' : '#CFC6B8'}
+          strokeWidth={1.6}
+        />
+      ))}
+    </span>
+  );
+}
+
+function ReviewCard({ review }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = review.comment.length > LONG_REVIEW_CHARS;
+  return (
+    <article className="ps-rev-card">
+      <Stars rating={review.rating} />
+      {review.title && <h3 className="ps-rev-title">{review.title}</h3>}
+      <p className={`ps-rev-text${isLong && !expanded ? ' is-clamped' : ''}`}>{review.comment}</p>
+      {isLong && (
+        <button type="button" className="ps-rev-more" onClick={() => setExpanded((v) => !v)} aria-expanded={expanded}>
+          {expanded ? 'Show less' : 'Read more'}
+        </button>
+      )}
+      <footer className="ps-rev-footer">
+        <span className="ps-rev-author">{review.author}</span>
+        {review.product && <span className="ps-rev-product">on {review.product}</span>}
+      </footer>
+    </article>
+  );
+}
+
+/**
+ * Homepage "Loved by Fragrance Enthusiasts": approved reviews from the reviews table, managed
+ * in Admin → Reviews (approve / hide / feature / edit). Nothing is invented: name, rating and
+ * text are shown as stored, and there is no "verified purchase" badge because the database
+ * does not record purchase verification.
+ */
+export default function ReviewsSection({
+  title = 'Loved by Fragrance Enthusiasts',
+  subtitle = 'Experiences shared by our customers.',
+}) {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const trackRef = useRef(null);
 
   useEffect(() => {
     let mounted = true;
-    getReviews(false, { limit: 12 })
+    getReviews(false, { featuredFirst: true, limit: HOMEPAGE_REVIEW_LIMIT })
       .then((rows) => {
         if (!mounted) return;
         setReviews(
           rows
-            .filter((r) => r.comment)
+            .filter((r) => r.comment && r.comment.trim())
             .map((r) => ({
               id: r.id,
               title: r.title || '',
-              comment: r.comment,
+              comment: r.comment.trim(),
               author: r.customer_name || 'Customer',
-              rating: Math.max(1, Math.min(5, Number(r.rating) || 5)),
-              hasHeart: false,
+              product: r.product_name || '',
+              rating: Math.max(1, Math.min(5, Math.round(Number(r.rating) || 5))),
             }))
         );
       })
-      .catch((err) => console.error('Could not load reviews:', err));
+      .catch((err) => console.error('Could not load reviews:', err?.message || err))
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
     return () => {
       mounted = false;
     };
   }, []);
 
-  const totalReviews = REVIEWS.length;
-
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev === 0 ? totalReviews - 1 : prev - 1));
+  const scroll = (direction) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    track.scrollBy({ left: (direction === 'next' ? 1 : -1) * track.clientWidth * 0.9, behavior: reduce ? 'auto' : 'smooth' });
   };
 
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev === totalReviews - 1 ? 0 : prev + 1));
-  };
-
-  // Keyboard navigation
-  const handleKeyDown = (e) => {
-    if (e.key === 'ArrowLeft') prevSlide();
-    if (e.key === 'ArrowRight') nextSlide();
-  };
-
-  // Touch swipe support for mobile
-  const handleTouchStart = (e) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe) {
-      nextSlide();
-    } else if (isRightSwipe) {
-      prevSlide();
-    }
-
-    setTouchStart(null);
-    setTouchEnd(null);
-  };
-
-  // No approved reviews yet: hide the section rather than show invented testimonials
-  if (totalReviews === 0) return null;
+  // Still loading: render nothing yet (the section is below the fold; avoids a flash of the empty state)
+  if (loading) return null;
 
   return (
-    <section
-      className="ps-reviews-section"
-      aria-label="What Our Customers Have to Say"
-      onKeyDown={handleKeyDown}
-      tabIndex={0}
-    >
+    <section className="ps-reviews-section" aria-labelledby="ps-reviews-title">
       <div className="ps-reviews-container">
-        {/* Section Header */}
-        <div className="ps-reviews-header">
-          <h2 className="ps-reviews-heading">{title || 'What Our Customers Have to Say'}</h2>
-          {subtitle && <p className="ps-section-subtitle">{subtitle}</p>}
-        </div>
+        <header className="ps-reviews-header">
+          <span className="ps-reviews-eyebrow">CUSTOMER STORIES</span>
+          <h2 id="ps-reviews-title" className="ps-reviews-heading">
+            {title || 'Loved by Fragrance Enthusiasts'}
+          </h2>
+          {subtitle && <p className="ps-reviews-subtitle">{subtitle}</p>}
+          <span className="ps-reviews-rule" aria-hidden="true" />
+        </header>
 
-        {/* Editorial Carousel Viewport */}
-        <div
-          className="ps-reviews-carousel-viewport"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          <div
-            className="ps-reviews-track"
-            style={{
-              transform: `translateX(calc(-0.5 * var(--slide-width) - (${currentIndex} * (var(--slide-width) + var(--slide-gap)))))`,
-            }}
-          >
-            {REVIEWS.map((rev, index) => {
-              const isActive = index === currentIndex;
-              const isPrev =
-                index === (currentIndex - 1 + totalReviews) % totalReviews;
-              const isNext = index === (currentIndex + 1) % totalReviews;
-
-              let cardClass = 'ps-review-slide';
-              if (isActive) cardClass += ' is-active';
-              else if (isPrev) cardClass += ' is-prev';
-              else if (isNext) cardClass += ' is-next';
-              else cardClass += ' is-hidden';
-
-              return (
-                <div
-                  key={rev.id}
-                  className={cardClass}
-                  onClick={() => {
-                    if (isPrev) prevSlide();
-                    if (isNext) nextSlide();
-                  }}
-                  role={isActive ? 'group' : 'button'}
-                  tabIndex={isActive ? 0 : -1}
-                  aria-label={`Review ${index + 1} of ${totalReviews} by ${rev.author}`}
-                >
-                  <div className="ps-review-slide-inner">
-                    {/* 5 Gold Stars */}
-                    <div className="ps-review-stars" aria-label="5 out of 5 stars">
-                      {[...Array(rev.rating || 5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          size={18}
-                          className="ps-review-star-icon"
-                          fill="#D4AF37"
-                          color="#D4AF37"
-                        />
-                      ))}
-                    </div>
-
-                    {/* Review Quote Body */}
-                    <blockquote className="ps-review-quote">
-                      <p>
-                        “{rev.comment}”
-                        {rev.hasHeart && (
-                          <span className="ps-review-heart" aria-label="love">
-                            {' '}
-                            ❤️
-                          </span>
-                        )}
-                      </p>
-                    </blockquote>
-
-                    {/* Attribution: Bold Title & Customer Name */}
-                    <div className="ps-review-attribution">
-                      <span className="ps-review-title">“{rev.title}”</span>
-                      <span className="ps-review-author-name"> — {rev.author}</span>
-                    </div>
-                  </div>
+        {reviews.length === 0 ? (
+          <p className="ps-reviews-empty">Customer reviews will appear here soon.</p>
+        ) : (
+          <>
+            <div className="ps-reviews-track" ref={trackRef} role="list">
+              {reviews.map((rev) => (
+                <div className="ps-reviews-item" role="listitem" key={rev.id}>
+                  <ReviewCard review={rev} />
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Carousel Navigation Controls (< 1 / 6 >) */}
-        <div className="ps-reviews-controls">
-          <button
-            type="button"
-            className="ps-reviews-nav-btn ps-reviews-prev-btn"
-            onClick={prevSlide}
-            aria-label="Previous review"
-          >
-            <ChevronLeft size={20} />
-          </button>
-
-          <div className="ps-reviews-counter" aria-live="polite">
-            <span className="ps-reviews-current-num">{currentIndex + 1}</span>
-            <span className="ps-reviews-counter-divider">/</span>
-            <span className="ps-reviews-total-num">{totalReviews}</span>
-          </div>
-
-          <button
-            type="button"
-            className="ps-reviews-nav-btn ps-reviews-next-btn"
-            onClick={nextSlide}
-            aria-label="Next review"
-          >
-            <ChevronRight size={20} />
-          </button>
-        </div>
+              ))}
+            </div>
+            {reviews.length > 3 && (
+              <div className="ps-reviews-controls">
+                <button type="button" className="ps-reviews-nav-btn" onClick={() => scroll('prev')} aria-label="Previous reviews">
+                  <ChevronLeft size={18} />
+                </button>
+                <button type="button" className="ps-reviews-nav-btn" onClick={() => scroll('next')} aria-label="Next reviews">
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </section>
   );

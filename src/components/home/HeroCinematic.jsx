@@ -12,7 +12,27 @@ const HERO_VIDEO_PATH = 'hero/ps-perfumes-hero-desktop.mp4';
 // One reload attempt if the file fails to load (e.g. a dropped connection)
 const LOAD_RETRY_DELAY_MS = 4000;
 // How long to wait for the admin hero setting before using the built-in film
-const SETTING_TIMEOUT_MS = 2500;
+const SETTING_TIMEOUT_MS = 1500;
+// The resolved setting is kept for this browser tab, so returning to the homepage starts the
+// film at once instead of waiting for the database; it is still re-checked every time
+const SETTING_CACHE_KEY = 'ps_hero_film_v1';
+
+function readCachedFilm() {
+  try {
+    const raw = sessionStorage.getItem(SETTING_CACHE_KEY);
+    return raw ? JSON.parse(raw) : undefined; // undefined = not resolved yet in this tab
+  } catch {
+    return undefined;
+  }
+}
+
+function writeCachedFilm(film) {
+  try {
+    sessionStorage.setItem(SETTING_CACHE_KEY, JSON.stringify(film || null));
+  } catch {
+    // private mode / storage disabled: the setting is simply fetched again next time
+  }
+}
 
 /**
  * PS PERFUMES — full-screen cinematic hero film.
@@ -25,8 +45,8 @@ const SETTING_TIMEOUT_MS = 2500;
  *   the tab becomes visible again. If the file fails to load, it is retried once; otherwise
  *   the poster remains, so the hero is never blank.
  * - The film pauses while scrolled out of view (saves battery and CPU) and resumes on return.
- * - Visitors who ask for reduced motion (prefers-reduced-motion: reduce) see the poster; the
- *   film does not autoplay for them.
+ * - Visitors who ask for reduced motion (prefers-reduced-motion: reduce) or use Data Saver see
+ *   the poster and a clear play control; the film is not downloaded until they press it.
  * - A small, discreet pause/resume control (bottom-right corner, icon only) lets anyone stop or
  *   start the film. A deliberate pause is never undone automatically.
  * - The film and poster come from Admin → Hero Sections (active record with the lowest display
@@ -44,25 +64,52 @@ export default function HeroCinematic() {
   const defaultPoster = isNarrow ? posterMobile : posterDesktop;
   const prefersReducedMotion =
     typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  // Data Saver / "Lite mode": do not start a multi-megabyte film on its own; the poster and the
+  // play control stay, and the visitor can start it with one tap
+  const saveData = typeof navigator !== 'undefined' && navigator.connection?.saveData === true;
+  const autoStart = !prefersReducedMotion && !saveData;
 
   // The film to play: resolved once from the admin setting before any video is requested, so
   // the built-in film and a configured one are never both downloaded. null = still resolving.
-  const [source, setSource] = useState(null);
+  const toSource = (film) => ({
+    videoUrl: film?.videoUrl || defaultVideoUrl,
+    poster: film?.posterUrl || defaultPoster,
+  });
+  const [source, setSource] = useState(() => {
+    const cached = readCachedFilm();
+    return cached === undefined ? null : toSource(cached);
+  });
   useEffect(() => {
-    let settled = false;
+    let active = true;
+    const startedFromCache = source !== null;
+    let settled = startedFromCache;
     const settle = (film) => {
       if (settled) return;
       settled = true;
-      setSource({
-        videoUrl: film?.videoUrl || defaultVideoUrl,
-        poster: film?.posterUrl || defaultPoster,
-      });
+      setSource(toSource(film));
     };
-    const timer = window.setTimeout(() => settle(null), SETTING_TIMEOUT_MS);
-    getActiveHeroFilm().then(settle);
+    const timer = settled ? null : window.setTimeout(() => settle(null), SETTING_TIMEOUT_MS);
+    // Always re-checked, so a film changed in Admin → Hero Sections shows on the next visit or
+    // reload; a cached film is replaced only when the setting actually changed
+    getActiveHeroFilm().then((film) => {
+      writeCachedFilm(film);
+      if (!active) return;
+      if (!settled) {
+        settle(film);
+        return;
+      }
+      // Fell back to the built-in film after the timeout: keep it for this visit (no second
+      // download); the cached answer is used next time
+      if (!startedFromCache) return;
+      const fresh = toSource(film);
+      setSource((current) =>
+        current && current.videoUrl === fresh.videoUrl && current.poster === fresh.poster ? current : fresh
+      );
+    });
     return () => {
+      active = false;
       settled = true;
-      window.clearTimeout(timer);
+      if (timer) window.clearTimeout(timer);
     };
     // Resolved once per mount; the defaults do not change during a visit
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -72,10 +119,10 @@ export default function HeroCinematic() {
 
   // Whether the film should be playing. Every automatic start (initial, retries, coming back into
   // view) checks this, so reduced-motion visitors and a deliberate pause are respected.
-  const wantsPlayRef = useRef(!prefersReducedMotion);
+  const wantsPlayRef = useRef(autoStart);
 
   // 'loading' → 'playing' | 'paused' | 'blocked' (autoplay refused) | 'error' (file failed to load)
-  const [status, setStatus] = useState(() => (prefersReducedMotion ? 'paused' : 'loading'));
+  const [status, setStatus] = useState(() => (autoStart ? 'loading' : 'paused'));
 
   const tryPlay = useCallback(() => {
     const video = videoRef.current;
@@ -187,6 +234,9 @@ export default function HeroCinematic() {
   const isPlaying = status === 'playing';
   // No control while loading or when the file failed (there is nothing to play or pause)
   const showControl = status === 'playing' || status === 'paused' || status === 'blocked';
+  // When the film is not playing (refused autoplay, reduced motion, Data Saver, paused) the
+  // control is shown larger and fully visible so the poster never looks like a broken video
+  const controlIsProminent = showControl && !isPlaying;
 
   return (
     <section
@@ -200,12 +250,13 @@ export default function HeroCinematic() {
           className="ps-hero-cinematic-video"
           src={videoUrl || undefined}
           poster={poster}
-          autoPlay={!prefersReducedMotion}
+          autoPlay={autoStart}
           muted
           loop
           playsInline
           webkit-playsinline="true"
-          preload={prefersReducedMotion ? 'metadata' : 'auto'}
+          /* Nothing is downloaded until the visitor asks for it when autoplay is off */
+          preload={autoStart ? 'auto' : 'none'}
           disablePictureInPicture
           disableRemotePlayback
           controls={false}
@@ -226,12 +277,16 @@ export default function HeroCinematic() {
         {showControl && (
           <button
             type="button"
-            className="ps-hero-playback-toggle"
+            className={`ps-hero-playback-toggle${controlIsProminent ? ' is-prominent' : ''}`}
             onClick={togglePlayback}
             aria-label={isPlaying ? 'Pause background film' : 'Play background film'}
             title={isPlaying ? 'Pause' : 'Play'}
           >
-            {isPlaying ? <Pause size={14} aria-hidden="true" /> : <Play size={14} aria-hidden="true" />}
+            {isPlaying ? (
+              <Pause size={14} aria-hidden="true" />
+            ) : (
+              <Play size={controlIsProminent ? 20 : 14} aria-hidden="true" style={{ marginLeft: 2 }} />
+            )}
           </button>
         )}
       </div>

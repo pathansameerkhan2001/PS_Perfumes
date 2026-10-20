@@ -63,6 +63,9 @@ function formatHomepageProduct(item) {
     is_bestseller: Boolean(item.is_bestseller || item.bestseller),
     featured: Boolean(item.is_featured || item.featured),
     bestseller: Boolean(item.is_bestseller || item.bestseller),
+    // Admin → Products "New Arrival" flag (drives the NEW label; never set for fallback products)
+    new_arrival: Boolean(item.is_new_arrival || item.new_arrival),
+    is_new_arrival: Boolean(item.is_new_arrival || item.new_arrival),
     variants: activeVariants.map((v) => ({
       id: v.id,
       product_id: v.product_id,
@@ -191,7 +194,8 @@ const NEW_ARRIVAL_SELECT = `
 
 /**
  * Fetch New Arrivals for the homepage "new_arrivals" section.
- * Rule: active products the admin flagged "New Arrival" (is_new_arrival), newest first.
+ * Rule: active products the admin flagged "New Arrival" (is_new_arrival), in the display order set
+ * in Admin → Products (lowest first; newest first among equal positions).
  * If none are flagged, the most recently added active products (created_at, newest first) —
  * i.e. the latest additions to the catalogue. Never demo products.
  */
@@ -203,6 +207,7 @@ export async function getNewArrivalProducts(limit = 8) {
       .select(NEW_ARRIVAL_SELECT)
       .eq('is_active', true)
       .eq('is_new_arrival', true)
+      .order('display_order', { ascending: true })
       .order('created_at', { ascending: false })
       .limit(limit);
     if (error) throw error;

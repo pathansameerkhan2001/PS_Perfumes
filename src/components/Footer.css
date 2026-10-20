@@ -1,281 +1,228 @@
 /* ==========================================================================
-   PS PERFUMES — Premium Public Storefront Footer Stylesheet
-   Approved Design Reference: Deep Black (#0A0908) + Gold Accents + Warm Ivory
+   PS PERFUMES — Compact storefront footer
+   Deep black, ivory text, champagne-gold accents. Four columns on desktop;
+   on phones the link groups collapse and contact stays visible.
    ========================================================================== */
 
 .ps-public-footer {
   background-color: #0A0908;
   color: #E8E2D5;
   border-top: 1px solid rgba(201, 169, 110, 0.22);
-  position: relative;
-  width: 100%;
   font-family: var(--font-sans, 'Montserrat', sans-serif);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Hairline Gold Gradient Ribbon across very top */
-.ps-footer-top-gold-bar {
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    rgba(201, 169, 110, 0) 0%,
-    rgba(201, 169, 110, 0.6) 25%,
-    rgba(240, 216, 154, 0.95) 50%,
-    rgba(201, 169, 110, 0.6) 75%,
-    rgba(201, 169, 110, 0) 100%
-  );
-  width: 100%;
-}
-
-.ps-footer-main-container {
-  max-width: 1320px;
+.ps-footer-inner {
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 56px 28px 24px 28px;
-  box-sizing: border-box;
+  padding: 44px 28px 18px;
 }
 
-/* ==========================================================================
-   FOUR-COLUMN BALANCED DESKTOP GRID
-   ========================================================================== */
-.ps-footer-four-col-grid {
+.ps-footer-grid {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr 1.1fr;
-  gap: 40px;
-  padding-bottom: 48px;
+  grid-template-columns: 1.3fr 0.8fr 1fr 1.2fr;
+  gap: 32px;
+  padding-bottom: 28px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-@media (max-width: 1024px) {
-  .ps-footer-four-col-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 36px 24px;
-  }
-}
-
-@media (max-width: 640px) {
-  .ps-footer-four-col-grid {
-    grid-template-columns: 1fr;
-    gap: 32px;
-    padding-bottom: 36px;
-  }
-}
-
-/* ==========================================================================
-   COLUMN 1 — BRAND
-   ========================================================================== */
-.ps-footer-brand-column {
-  display: flex;
-  flex-direction: column;
-}
-
-.ps-footer-logo-wrap {
-  margin-bottom: 16px;
+/* Brand */
+.ps-footer-logo {
   display: inline-block;
-}
-
-.ps-footer-logo-wrap a {
   text-decoration: none;
-  display: inline-block;
 }
 
-.ps-footer-brand-description {
+.ps-footer-tagline {
+  margin: 12px 0 16px;
   font-size: 13px;
-  line-height: 1.7;
-  color: #B5AD9F;
-  margin: 0 0 20px 0;
-  max-width: 320px;
-  font-weight: 400;
+  line-height: 1.6;
+  color: rgba(232, 226, 213, 0.7);
+  max-width: 280px;
 }
 
-.ps-footer-social-links {
+.ps-footer-social {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.ps-footer-social-pill {
+.ps-footer-pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(201, 169, 110, 0.3);
-  border-radius: 20px;
-  color: #E8E2D5;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(201, 169, 110, 0.4);
+  border-radius: 999px;
+  color: #E5C77A;
   font-size: 12px;
-  font-weight: 500;
-  text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ps-footer-social-pill:hover {
-  background: rgba(201, 169, 110, 0.12);
-  border-color: #C9A96E;
-  color: #FFFFFF;
-  transform: translateY(-1px);
-}
-
-/* ==========================================================================
-   HEADINGS & LINK LISTS
-   ========================================================================== */
-.ps-footer-col-heading {
-  font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
-  font-size: 19px;
-  font-weight: 600;
-  color: #C9A96E;
   letter-spacing: 0.04em;
-  margin: 0 0 18px 0;
-  line-height: 1.2;
-  position: relative;
-  display: inline-block;
-}
-
-.ps-footer-col-heading::after {
-  content: '';
-  position: absolute;
-  bottom: -5px;
-  left: 0;
-  width: 24px;
-  height: 1px;
-  background: rgba(201, 169, 110, 0.4);
-}
-
-.ps-footer-link-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.ps-footer-link-list a {
-  color: #C4BCAC;
   text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Headings and links */
+.ps-footer-heading {
+  margin: 0 0 12px;
+  font-family: var(--font-serif);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #C9A96E;
+}
+
+.ps-footer-links,
+.ps-footer-contact-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.ps-footer-links-cols {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+}
+
+.ps-footer-links a,
+.ps-footer-contact-list a,
+.ps-footer-contact-list span {
+  color: rgba(232, 226, 213, 0.82);
   font-size: 13px;
-  font-weight: 400;
-  transition: all 0.18s ease;
-  display: inline-block;
-}
-
-.ps-footer-link-list a:hover {
-  color: #F0D89A;
-  transform: translateX(3px);
-}
-
-.ps-footer-unlinked-item {
-  color: #7A7265;
-  font-size: 13px;
-  cursor: default;
-  user-select: none;
-  transition: color 0.18s ease;
-}
-
-.ps-footer-unlinked-item:hover {
-  color: #9E9485;
-}
-
-/* ==========================================================================
-   COLUMN 4 — CONTACT DETAILS
-   ========================================================================== */
-.ps-footer-contact-details {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.ps-footer-contact-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-size: 13px;
-  color: #C4BCAC;
   line-height: 1.5;
+  text-decoration: none;
+  overflow-wrap: anywhere;
 }
 
-.ps-footer-icon {
-  flex-shrink: 0;
+.ps-footer-contact-list li {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.ps-footer-contact-list svg {
+  color: #C9A96E;
   margin-top: 2px;
 }
 
-.ps-footer-link {
-  color: #C4BCAC;
-  text-decoration: none;
-  transition: color 0.18s ease;
-}
-
-.ps-footer-link:hover {
-  color: #F0D89A;
-}
-
-.ps-footer-text strong {
-  color: #FFFAF0;
-  font-weight: 600;
-}
-
-/* ==========================================================================
-   FOOTER BOTTOM BAR
-   ========================================================================== */
-.ps-footer-bottom-bar {
+/* Bottom bar */
+.ps-footer-bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 22px;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 14px;
 }
 
 .ps-footer-copyright {
-  font-size: 12px;
-  color: #8C8373;
   margin: 0;
-  line-height: 1.5;
+  font-size: 11.5px;
+  color: rgba(232, 226, 213, 0.55);
 }
 
-.ps-footer-copyright strong {
-  color: #C9A96E;
-  font-weight: 600;
-}
-
-.ps-footer-bottom-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.ps-footer-back-to-top-btn {
+.ps-footer-top-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(201, 169, 110, 0.25);
-  border-radius: 6px;
-  color: #C9A96E;
-  font-family: var(--font-sans, 'Montserrat', sans-serif);
+  min-height: 36px;
+  padding: 0 10px;
+  background: none;
+  border: none;
+  color: rgba(232, 226, 213, 0.7);
   font-size: 11.5px;
-  font-weight: 500;
+  letter-spacing: 0.06em;
   cursor: pointer;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.ps-footer-back-to-top-btn:hover {
-  background: rgba(201, 169, 110, 0.14);
-  border-color: #C9A96E;
-  color: #FFFFFF;
-  transform: translateY(-2px);
+/* Visible keyboard focus everywhere in the footer */
+.ps-public-footer a:focus-visible,
+.ps-public-footer button:focus-visible,
+.ps-public-footer summary:focus-visible {
+  outline: 2px solid #E5C77A;
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
-/* Mobile Adjustments */
-@media (max-width: 480px) {
-  .ps-footer-main-container {
-    padding: 40px 18px 20px 18px;
+@media (hover: hover) {
+  .ps-footer-links a:hover,
+  .ps-footer-contact-list a:hover,
+  .ps-footer-top-btn:hover {
+    color: #E5C77A;
   }
+  .ps-footer-pill:hover {
+    background-color: #C9A96E;
+    color: #0A0908;
+  }
+}
 
-  .ps-footer-bottom-bar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+/* Tablets: two by two */
+@media (max-width: 1024px) {
+  .ps-footer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 24px;
+  }
+}
+
+/* Phones: brand, two collapsible groups, contact; minimal spacing */
+@media (max-width: 640px) {
+  .ps-footer-inner {
+    padding: 28px 16px 12px;
+  }
+  .ps-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding-bottom: 16px;
+  }
+  .ps-footer-brand {
+    padding-bottom: 16px;
+  }
+  .ps-footer-tagline {
+    margin: 8px 0 12px;
+  }
+  .ps-footer-collapsible {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .ps-footer-collapsible > summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+    margin: 0;
+    cursor: pointer;
+  }
+  .ps-footer-collapsible > summary::-webkit-details-marker {
+    display: none;
+  }
+  .ps-footer-chevron {
+    transition: transform 0.2s ease;
+  }
+  .ps-footer-collapsible[open] .ps-footer-chevron {
+    transform: rotate(180deg);
+  }
+  .ps-footer-collapsible nav {
+    padding-bottom: 14px;
+  }
+  .ps-footer-links a {
+    display: inline-block;
+    padding: 4px 0;
+  }
+  .ps-footer-contact {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 14px;
+  }
+  .ps-footer-bottom {
+    flex-direction: row;
+    padding-top: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-footer-pill,
+  .ps-footer-chevron {
+    transition: none;
   }
 }

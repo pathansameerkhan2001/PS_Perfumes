@@ -143,6 +143,53 @@ export default function AdminProducts() {
     }
   };
 
+  // Homepage "Discover Our New Arrivals": the New Arrival flag shows the product there, and the
+  // display order sets its position (lowest first). Only these columns change; prices,
+  // variants and stock are not touched.
+  const handleToggleNewArrival = async (prod) => {
+    const next = !prod.new_arrival;
+    setBusyId(prod.id);
+    setNotice(null);
+    try {
+      await updateProduct(prod.id, { is_new_arrival: next });
+      setNotice({
+        type: 'success',
+        text: next
+          ? `"${prod.name}" is marked New Arrival${prod.status === 'active' ? ' and shown in the homepage section.' : ' (it appears once the product is active).'}`
+          : `"${prod.name}" is no longer a New Arrival.`,
+      });
+    } catch (err) {
+      setNotice({ type: 'error', text: `New Arrival change failed for "${prod.name}": ${err.message}` });
+    } finally {
+      setBusyId(null);
+      await fetchList();
+    }
+  };
+
+  const handleDisplayOrder = async (prod, value) => {
+    const next = Math.max(0, Math.floor(Number(value) || 0));
+    if (next === (Number(prod.display_order) || 0)) return;
+    setBusyId(prod.id);
+    setNotice(null);
+    try {
+      await updateProduct(prod.id, { display_order: next });
+      setNotice({ type: 'success', text: `"${prod.name}": display order saved as ${next}.` });
+    } catch (err) {
+      setNotice({ type: 'error', text: `Display order not saved for "${prod.name}": ${err.message}` });
+    } finally {
+      setBusyId(null);
+      await fetchList();
+    }
+  };
+
+  // Bottle types and sizes actually configured (active variants), instead of fixed labels
+  const variantSummary = (prod) => {
+    const active = (prod.variants || []).filter((v) => v.is_active !== false);
+    const bottles = [...new Set(active.map((v) => (String(v.bottle_type || '').toLowerCase().includes('pvc') ? 'PVC' : 'Glass')))];
+    const sizes = [...new Set(active.map((v) => String(v.size_ml || '').replace(/\s+/g, '').toLowerCase()).filter(Boolean))];
+    return { bottles: bottles.join(' & ') || '—', sizes: sizes.join(', ') || '—' };
+  };
+
   const noticeColors = {
     success: { bg: '#ECFDF5', border: '#A7F3D0', color: '#065F46' },
     info: { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' },
@@ -303,6 +350,7 @@ export default function AdminProducts() {
                 <th>Available Sizes</th>
                 <th>Starting Price</th>
                 <th>Stock</th>
+                <th title="Shown in the homepage New Arrivals section (active products only); lower order first">New Arrival</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -329,10 +377,10 @@ export default function AdminProducts() {
                     <span className="ps-prod-table-category">{prod.category}</span>
                   </td>
                   <td>
-                    <span style={{ fontSize: '12px', color: '#fffaf0' }}>Glass & PVC</span>
+                    <span style={{ fontSize: '12px', color: '#fffaf0' }}>{variantSummary(prod).bottles}</span>
                   </td>
                   <td>
-                    <span style={{ fontSize: '11px', color: '#c8a45d' }}>30ml, 50ml, 100ml</span>
+                    <span style={{ fontSize: '11px', color: '#c8a45d' }}>{variantSummary(prod).sizes}</span>
                   </td>
                   <td>
                     <div className="ps-prod-table-price">
@@ -346,6 +394,34 @@ export default function AdminProducts() {
                     <span className={`ps-stock-indicator-pill ${prod.stock <= 5 ? 'is-low' : ''}`}>
                       {prod.stock} Units
                     </span>
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <button
+                        type="button"
+                        className={`ps-status-toggle-btn ${prod.new_arrival ? 'is-active' : 'is-draft'}`}
+                        onClick={() => handleToggleNewArrival(prod)}
+                        disabled={busyId === prod.id}
+                        aria-pressed={prod.new_arrival}
+                        title={prod.new_arrival ? 'Remove from New Arrivals' : 'Show in homepage New Arrivals'}
+                      >
+                        {prod.new_arrival ? 'New' : 'Off'}
+                      </button>
+                      <input
+                        type="number"
+                        min="0"
+                        defaultValue={Number(prod.display_order) || 0}
+                        key={`${prod.id}-${prod.display_order}`}
+                        disabled={busyId === prod.id}
+                        onBlur={(e) => handleDisplayOrder(prod, e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') e.currentTarget.blur();
+                        }}
+                        aria-label={`Display order for ${prod.name}`}
+                        title="Display order (lower first)"
+                        style={{ width: 54, padding: '4px 6px', textAlign: 'center' }}
+                      />
+                    </div>
                   </td>
                   <td>
                     <button

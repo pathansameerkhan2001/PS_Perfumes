@@ -334,3 +334,33 @@
     font-size: 10.5px;
   }
 }
+
+/* Discreet NEW label (Admin → Products "New Arrival") */
+.ps-badge-new {
+  background-color: rgba(23, 21, 19, 0.88);
+  color: #E5C77A;
+  border: 1px solid rgba(200, 164, 93, 0.55);
+  letter-spacing: 0.16em;
+}
+
+.ps-badge-soldout {
+  background-color: rgba(255, 255, 255, 0.92);
+  color: #5c564e;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Bottle options configured for the product (Glass · PVC) */
+.ps-pcard-bottles {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: #8a8175;
+  margin: -2px 0 4px;
+}
+
+.ps-pcard-add-btn.is-soldout {
+  background: #f1eee9;
+  color: #6b645b;
+  border-color: #e3ded6;
+}

@@ -25,8 +25,8 @@
 
     <!-- Immediate High-Priority Preloading for LCP Assets -->
     <link rel="preload" as="image" href="/assets/ps-perfumes-logo.webp" fetchpriority="high" type="image/webp" />
-    <link rel="preload" as="image" href="/assets/hero-desktop.webp" media="(min-width: 769px)" fetchpriority="high" type="image/webp" />
-    <link rel="preload" as="image" href="/assets/hero-mobile.webp" media="(max-width: 768px)" fetchpriority="high" type="image/webp" />
+    <!-- The hero poster is bundled by Vite (src/assets) and requested by the hero itself; the old
+         /assets/hero-*.webp images are not used on the homepage, so they are not preloaded -->
   </head>
   <body>
     <div id="root"></div>

@@ -66,6 +66,20 @@ export async function getSiteSettings() {
   return { ...merged, _storedKeys: storedKeys };
 }
 
+// Storefront: one settings request per page load, shared by the bag (shipping rule) and the
+// footer (contact details). The admin always reads fresh values with getSiteSettings().
+let storefrontSettingsPromise = null;
+
+export function getStorefrontSettings() {
+  if (!storefrontSettingsPromise) {
+    storefrontSettingsPromise = getSiteSettings().catch((err) => {
+      storefrontSettingsPromise = null; // allow a later retry
+      throw err;
+    });
+  }
+  return storefrontSettingsPromise;
+}
+
 /** Saves every known setting; updates existing keys and inserts missing ones. */
 export async function updateSiteSettings(settingsUpdates) {
   const { data: existing, error: readErr } = await supabase

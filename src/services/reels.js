@@ -92,7 +92,12 @@ function saveLocalReels(reels) {
   } catch {}
 }
 
-export async function getReels(all = false) {
+/**
+ * @param {boolean} all - true for admin (every reel), false for the storefront (active only)
+ * @param {{ limit?: number }} [options] - the homepage loads only the first few reels
+ */
+export async function getReels(all = false, options = {}) {
+  const { limit } = options;
   if (isSupabaseConfigured && supabase) {
     // display_order first; newest first among reels with the same position (stable order)
     let query = supabase
@@ -103,6 +108,7 @@ export async function getReels(all = false) {
     if (!all) {
       query = query.eq('is_active', true);
     }
+    if (limit) query = query.limit(limit);
     const { data, error } = await query;
     if (error) throw dbError('Could not load Instagram reels', error);
     // The database answered: show its real state, never demo reels
@@ -110,7 +116,8 @@ export async function getReels(all = false) {
   }
 
   const list = getLocalReels();
-  return all ? list : list.filter((r) => r.is_active);
+  const visible = all ? list : list.filter((r) => r.is_active);
+  return limit ? visible.slice(0, limit) : visible;
 }
 
 /**

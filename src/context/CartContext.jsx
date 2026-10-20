@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getSiteSettings } from '../services/settings';
+import { getStorefrontSettings } from '../services/settings';
 import { validateCouponCode, computeCouponDiscount } from '../services/coupons';
 import { isComboRecord, toComboCartProduct } from '../services/combos';
 
@@ -85,7 +85,7 @@ export function CartProvider({ children }) {
 
   useEffect(() => {
     let mounted = true;
-    getSiteSettings()
+    getStorefrontSettings()
       .then((s) => {
         if (!mounted || !s) return;
         const stored = new Set(s._storedKeys || []);

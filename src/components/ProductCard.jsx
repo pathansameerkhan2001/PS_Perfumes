@@ -54,16 +54,27 @@ export default function ProductCard({ product, priority = false }) {
     return activeVariants[0];
   }, [activeVariants]);
 
-  // Dynamic database prices
+  // Dynamic database prices — the price and any strike-through price both come from the SAME
+  // variant (the product-level compare price belongs to the cheapest variant, which may differ)
   const displayPrice = defaultVariant
     ? Number(defaultVariant.sale_price || defaultVariant.price)
     : Number(product.price) || 0;
 
-  const displayComparePrice = defaultVariant?.compare_at_price
-    ? Number(defaultVariant.compare_at_price)
+  const displayComparePrice = defaultVariant
+    ? Number(defaultVariant.compare_at_price) ||
+      (Number(defaultVariant.sale_price) > 0 && Number(defaultVariant.price) > Number(defaultVariant.sale_price)
+        ? Number(defaultVariant.price)
+        : null)
     : Number(product.compare_at_price || product.originalPrice || null);
 
   const hasDiscount = Boolean(displayComparePrice && displayComparePrice > displayPrice);
+
+  // Sold out: every active variant has no stock (same rule as the bag and checkout)
+  const stockOf = (v) => Number(v?.stock_quantity ?? v?.stock ?? 0);
+  const isSoldOut = activeVariants.length > 0 && activeVariants.every((v) => stockOf(v) <= 0);
+
+  // Bottle options actually configured for this product (e.g. Glass · PVC)
+  const bottleOptions = [...new Set(activeVariants.map((v) => normalizeBottle(v.bottle_type)))];
 
   // Ratings calculation
   const rating = Number(product.rating || 0);
@@ -87,8 +98,9 @@ export default function ProductCard({ product, priority = false }) {
   // Add to cart click
   const handleAddToCart = (e) => {
     e.stopPropagation();
-    // No purchasable variant: the product page explains availability (never add an invented variant)
-    if (activeVariants.length === 0) {
+    // No purchasable variant, or sold out: the product page explains availability
+    // (never add an invented variant)
+    if (activeVariants.length === 0 || isSoldOut) {
       handleCardClick();
       return;
     }
@@ -132,9 +144,10 @@ export default function ProductCard({ product, priority = false }) {
             {product.bestseller && (
               <span className="ps-pcard-badge ps-badge-bestseller">BESTSELLER</span>
             )}
-            {product.new_arrival && (
-              <span className="ps-pcard-badge ps-badge-new">NEW ARRIVAL</span>
+            {product.new_arrival && !isSoldOut && (
+              <span className="ps-pcard-badge ps-badge-new">NEW</span>
             )}
+            {isSoldOut && <span className="ps-pcard-badge ps-badge-soldout">SOLD OUT</span>}
           </div>
 
           {/* Top-Right Circular Wishlist Button */}
@@ -163,6 +176,10 @@ export default function ProductCard({ product, priority = false }) {
           <h3 className="ps-pcard-title" title={product.name}>
             {product.name}
           </h3>
+
+          {bottleOptions.length > 1 && (
+            <span className="ps-pcard-bottles">{bottleOptions.join(' · ')}</span>
+          )}
 
           {/* Compact Ratings */}
           <div className="ps-pcard-rating-row">
@@ -205,11 +222,13 @@ export default function ProductCard({ product, priority = false }) {
           {/* Single Primary Action: ADD TO CART */}
           <button
             type="button"
-            className={`ps-pcard-add-btn ${isAddedAnim ? 'is-success' : ''}`}
+            className={`ps-pcard-add-btn ${isAddedAnim ? 'is-success' : ''} ${isSoldOut ? 'is-soldout' : ''}`}
             onClick={handleAddToCart}
-            aria-label={`Add ${product.name} to cart`}
+            aria-label={isSoldOut ? `${product.name} is sold out — view details` : `Add ${product.name} to cart`}
           >
-            {isAddedAnim ? (
+            {isSoldOut ? (
+              <span>SOLD OUT</span>
+            ) : isAddedAnim ? (
               <>
                 <Check size={16} strokeWidth={2.4} />
                 <span>ADDED</span>

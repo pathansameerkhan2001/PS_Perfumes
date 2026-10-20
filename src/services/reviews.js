@@ -30,11 +30,14 @@ async function loadProductNames(rows) {
 
 /**
  * @param {boolean} all - true for admin (every review), false for storefront (approved only)
- * @param {{ productId?: string, featuredOnly?: boolean, limit?: number }} [options]
+ * @param {{ productId?: string, featuredOnly?: boolean, featuredFirst?: boolean, limit?: number }} [options]
+ *   featuredFirst: reviews the admin marked "Featured" come first (homepage)
  */
 export async function getReviews(all = false, options = {}) {
-  const { productId, featuredOnly, limit } = options;
-  let query = supabase.from('reviews').select('*').order('created_at', { ascending: false });
+  const { productId, featuredOnly, featuredFirst, limit } = options;
+  let query = supabase.from('reviews').select('*');
+  if (featuredFirst) query = query.order('is_featured', { ascending: false });
+  query = query.order('created_at', { ascending: false });
   if (!all) query = query.eq('is_approved', true);
   if (productId) query = query.eq('product_id', productId);
   if (featuredOnly) query = query.eq('is_featured', true);
@@ -78,4 +81,52 @@ export async function createReview(review) {
   const { data, error } = await supabase.from('reviews').insert([payload]).select().single();
   if (error || !data) throw dbError('Review was not submitted', error);
   return { data: formatReview(data, new Map()), error: null };
+}
+
+function toReviewRow(review) {
+  const row = {};
+  if (review.customer_name !== undefined) row.customer_name = String(review.customer_name || '').trim();
+  if (review.rating !== undefined) row.rating = Math.max(1, Math.min(5, Math.round(Number(review.rating) || 5)));
+  if (review.title !== undefined) row.title = String(review.title || '').trim() || null;
+  if (review.comment !== undefined || review.review_text !== undefined) {
+    row.review_text = String(review.comment ?? review.review_text ?? '').trim();
+  }
+  if (review.product_id !== undefined) row.product_id = review.product_id || null;
+  if (review.is_approved !== undefined) row.is_approved = Boolean(review.is_approved);
+  if (review.is_featured !== undefined) row.is_featured = Boolean(review.is_featured);
+  return row;
+}
+
+function validateReviewRow(row) {
+  if (row.customer_name !== undefined && !row.customer_name) throw new Error('Customer name (or approved initials) is required.');
+  if (row.review_text !== undefined && !row.review_text) throw new Error('Review text is required.');
+}
+
+/**
+ * Admin → Reviews: add a review supplied by a customer (e.g. received on WhatsApp).
+ * Only administrators pass the database policy; visitors cannot insert or edit reviews.
+ */
+export async function adminCreateReview(review) {
+  const row = { is_approved: false, is_featured: false, ...toReviewRow(review) };
+  if (!row.customer_name || !row.review_text) {
+    throw new Error('Customer name and review text are required.');
+  }
+  const { data, error } = await supabase.from('reviews').insert([row]).select('id');
+  if (error) throw dbError('Review was not saved', error);
+  assertRows(data, 'Review was not saved');
+  return { success: true };
+}
+
+/** Admin → Reviews: edit text, rating, name, product, approval or featured flag. */
+export async function adminUpdateReview(id, updates) {
+  const row = toReviewRow(updates);
+  validateReviewRow(row);
+  const { data, error } = await supabase
+    .from('reviews')
+    .update({ ...row, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('id');
+  if (error) throw dbError('Review was not updated', error);
+  assertRows(data, 'Review was not updated');
+  return { success: true };
 }

@@ -69,8 +69,8 @@ export const INITIAL_SECTIONS = [
   {
     id: 'sec-new-arrivals',
     section_key: 'new_arrivals',
-    title: 'New Arrivals',
-    subtitle: 'The latest additions to our collection.',
+    title: 'Discover Our New Arrivals',
+    subtitle: 'Meet your next signature fragrance.',
     cta_text: '',
     cta_link: '',
     image_url: '',
@@ -105,8 +105,8 @@ export const INITIAL_SECTIONS = [
   {
     id: 'sec-reels',
     section_key: 'instagram_reels',
-    title: 'PS Perfumes on Instagram',
-    subtitle: 'Follow us @ps_perfumes_kadapa',
+    title: 'Follow Our Fragrance Journey',
+    subtitle: 'Discover our fragrances, stories, and moments.',
     cta_text: 'FOLLOW ON INSTAGRAM',
     cta_link: 'https://www.instagram.com/ps_perfumes_kadapa/?hl=en',
     image_url: '',
@@ -117,8 +117,8 @@ export const INITIAL_SECTIONS = [
   {
     id: 'sec-reviews',
     section_key: 'reviews',
-    title: 'Customer Reviews',
-    subtitle: '',
+    title: 'Loved by Fragrance Enthusiasts',
+    subtitle: 'Experiences shared by our customers.',
     cta_text: '',
     cta_link: '',
     image_url: '',

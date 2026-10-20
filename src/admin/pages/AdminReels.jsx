@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, ArrowUp, ArrowDown, ExternalLink, Play, X, Upload, Loader2 } from 'lucide-react';
-import { getReels, createReel, updateReel, deleteReel } from '../../services/reels';
+import { getReels, createReel, updateReel, deleteReel, validateInstagramUrl } from '../../services/reels';
 import { uploadImage } from '../../lib/storage';
 
 export default function AdminReels() {
@@ -72,6 +72,12 @@ export default function AdminReels() {
 
     e.target.value = '';
     setErrorMsg('');
+    // Thumbnails are images only (the bucket also accepts MP4, which is not a thumbnail)
+    const type = (file.type || '').toLowerCase();
+    if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(type)) {
+      setErrorMsg(`"${file.name}" is not a JPEG, PNG or WebP image. Use a 9:16 still from the reel.`);
+      return;
+    }
     setIsUploading(true);
 
     try {
@@ -90,17 +96,14 @@ export default function AdminReels() {
     }
   };
 
-  const validateInstagramUrl = (url) => {
-    if (!url || typeof url !== 'string') return false;
-    const clean = url.trim();
-    return clean.includes('instagram.com') || clean.includes('instagr.am');
-  };
-
   const handleSave = async (e) => {
     e.preventDefault();
 
-    if (!validateInstagramUrl(formData.instagram_url)) {
-      setErrorMsg('Please enter a valid Instagram URL (e.g. https://www.instagram.com/reel/...).');
+    // Same rule the database write uses: an https Instagram reel/post link or the profile link
+    try {
+      validateInstagramUrl(formData.instagram_url);
+    } catch (err) {
+      setErrorMsg(err.message);
       return;
     }
 
@@ -159,8 +162,10 @@ export default function AdminReels() {
     const targetReel = reels[targetIdx];
 
     try {
-      const currentOrder = currentReel.display_order;
-      const targetOrder = targetReel.display_order;
+      // Reels sharing a display order would not move by swapping: use list positions then
+      const sameOrder = Number(currentReel.display_order) === Number(targetReel.display_order);
+      const currentOrder = sameOrder ? index + 1 : currentReel.display_order;
+      const targetOrder = sameOrder ? targetIdx + 1 : targetReel.display_order;
 
       await updateReel(currentReel.id, { display_order: targetOrder });
       await updateReel(targetReel.id, { display_order: currentOrder });
@@ -352,7 +357,7 @@ export default function AdminReels() {
                       <span>{isUploading ? 'Uploading...' : 'Upload 9:16 Thumbnail'}</span>
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,image/png,image/webp"
                         onChange={handleThumbnailUpload}
                         disabled={isUploading}
                         style={{ display: 'none' }}

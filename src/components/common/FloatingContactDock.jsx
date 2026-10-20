@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SITE_CONFIG } from '../../config/siteConfig';
-import { getSiteSettings } from '../../services/settings';
+import { getStorefrontSettings } from '../../services/settings';
 import './FloatingContactDock.css';
 
 function WhatsAppIcon({ size = 18, color = 'currentColor' }) {
@@ -71,7 +71,7 @@ export default function FloatingContactDock() {
     let mounted = true;
     async function fetchLiveSettings() {
       try {
-        const live = await getSiteSettings();
+        const live = await getStorefrontSettings();
         if (mounted && live) {
           setConfig((prev) => ({
             ...prev,

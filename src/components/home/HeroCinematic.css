@@ -230,3 +230,20 @@
     transition: none;
   }
 }
+
+/* Not playing (autoplay refused, reduced motion, Data Saver, paused): a larger, fully visible
+   play control (same corner) on the poster, so the hero never looks like a broken video */
+.ps-hero-playback-toggle.is-prominent {
+  width: 52px;
+  height: 52px;
+  opacity: 0.95;
+  border-color: rgba(201, 169, 110, 0.75);
+  background: rgba(5, 5, 5, 0.5);
+}
+
+@media (max-width: 768px) {
+  .ps-hero-playback-toggle.is-prominent {
+    width: 48px;
+    height: 48px;
+  }
+}
