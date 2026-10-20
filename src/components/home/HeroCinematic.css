@@ -12,6 +12,9 @@
   position: relative;
   width: 100%;
   height: 80vh;
+  /* svh = small viewport height: stays fixed while a mobile browser toolbar collapses, so the
+     hero does not jump. Browsers without svh support ignore it and keep the vh value. */
+  height: 80svh;
   min-height: 520px;
   max-height: 840px;
   background-color: #050505;
@@ -24,6 +27,7 @@
 @media (min-width: 1440px) {
   .ps-hero-cinematic {
     height: 82vh;
+    height: 82svh;
     min-height: 560px;
     max-height: 880px;
   }
@@ -33,6 +37,7 @@
 @media (max-width: 1024px) {
   .ps-hero-cinematic {
     height: 64vh;
+    height: 64svh;
     min-height: 440px;
     max-height: 600px;
   }
@@ -42,6 +47,7 @@
 @media (max-width: 768px) {
   .ps-hero-cinematic {
     height: 56vh;
+    height: 56svh;
     min-height: 400px;
     max-height: 520px;
   }
@@ -51,6 +57,7 @@
 @media (max-width: 480px) {
   .ps-hero-cinematic {
     height: 52vh;
+    height: 52svh;
     min-height: 360px;
     max-height: 460px;
   }
@@ -60,6 +67,7 @@
 @media (max-width: 375px) {
   .ps-hero-cinematic {
     height: 48vh;
+    height: 48svh;
     min-height: 330px;
     max-height: 420px;
   }

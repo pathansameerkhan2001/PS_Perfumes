@@ -19,6 +19,9 @@ const HERO_VIDEO_PATH = 'hero/ps-perfumes-hero-desktop.mp4';
 export default function HeroCinematic() {
   const videoRef = useRef(null);
   const videoUrl = getStoragePublicUrl(HERO_VIDEO_PATH);
+  // Visitors who asked their OS for reduced motion see the still poster instead of a looping video
+  const prefersReducedMotion =
+    typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -32,6 +35,11 @@ export default function HeroCinematic() {
     video.setAttribute('muted', '');
     video.setAttribute('playsinline', '');
     video.setAttribute('webkit-playsinline', '');
+
+    if (prefersReducedMotion) {
+      video.pause();
+      return undefined;
+    }
 
     const attemptPlay = () => {
       const playPromise = video.play();
@@ -66,7 +74,7 @@ export default function HeroCinematic() {
       window.removeEventListener('touchstart', handleFirstGesture);
       window.removeEventListener('click', handleFirstGesture);
     };
-  }, [videoUrl]);
+  }, [videoUrl, prefersReducedMotion]);
 
   return (
     <section className="ps-hero-cinematic" aria-label="PS PERFUMES Haute Parfumerie Campaign">
@@ -76,12 +84,12 @@ export default function HeroCinematic() {
           className="ps-hero-cinematic-video"
           src={videoUrl || undefined}
           poster={posterFallback}
-          autoPlay
+          autoPlay={!prefersReducedMotion}
           muted
           loop
           playsInline
           webkit-playsinline="true"
-          preload="auto"
+          preload={prefersReducedMotion ? 'metadata' : 'auto'}
           disablePictureInPicture
           controls={false}
           controlsList="nodownload nofullscreen noremoteplayback"
