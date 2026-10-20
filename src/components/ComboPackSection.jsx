@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Heart, Check } from 'lucide-react';
-import { getCombos } from '../services/combos';
+import { getCombos, toComboCartProduct } from '../services/combos';
 import { formatINR } from '../utils/formatCurrency';
 import { useCart } from '../context/CartContext';
 import OptimizedImage from './OptimizedImage';
@@ -35,26 +35,8 @@ export default function ComboPackSection({ title = 'Combo Collections', subtitle
     e.stopPropagation();
     // Out of stock, inactive or containing an unavailable product: cannot be bought
     if (!combo.is_purchasable) return;
-    const comboProduct = {
-      id: combo.id,
-      name: combo.name,
-      price: Number(combo.combo_price) || 0,
-      compare_at_price: combo.original_price ? Number(combo.original_price) : null,
-      image: combo.image_url || combo.image,
-      main_image: combo.image_url || combo.image,
-      category: 'Combo Pack',
-      slug: combo.slug,
-      // Used by the bag to cap quantities and refuse unavailable combos
-      stock_quantity: Number(combo.stock_quantity) || 0,
-      is_purchasable: Boolean(combo.is_purchasable),
-    };
-
-    addToCart(comboProduct, 1, {
-      variant_id: `combo-var-${combo.id}`,
-      bottle_type: 'Combo Collection',
-      size_ml: 'Complete Set',
-      price: comboProduct.price,
-    });
+    const { product, variant } = toComboCartProduct(combo);
+    addToCart(product, 1, variant);
 
     setAddedIds((prev) => ({ ...prev, [combo.id]: true }));
     setTimeout(() => {

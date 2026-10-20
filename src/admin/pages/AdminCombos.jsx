@@ -363,7 +363,11 @@ export default function AdminCombos() {
               {form.items.length === 0 && (
                 <p className="ps-cell-muted" style={{ margin: '4px 0 8px' }}>No products added yet.</p>
               )}
-              {form.items.map((item, idx) => (
+              {form.items.map((item, idx) => {
+                // Deleted or deactivated products block saving; mark them so they can be removed
+                const catalogItem = catalogProducts.find((cp) => cp.id === item.product_id);
+                const problem = !catalogItem ? 'deleted product' : catalogItem.is_active === false ? 'inactive' : '';
+                return (
                 <div key={`${item.product_id}-${idx}`} className="ps-combo-item-row">
                   <div className="ps-combo-item-left">
                     {item.image ? (
@@ -372,6 +376,11 @@ export default function AdminCombos() {
                     <span className="ps-combo-item-title">
                       {item.product_name} × {item.quantity || 1}
                     </span>
+                    {problem && (
+                      <span className="ps-status-pill ps-status-cancelled" title="Remove this product, or activate it under Products, before saving">
+                        {problem === 'inactive' ? 'Inactive — cannot be sold' : 'Deleted product'}
+                      </span>
+                    )}
                   </div>
 
                   <button
@@ -383,7 +392,8 @@ export default function AdminCombos() {
                     <X size={16} />
                   </button>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             <button
@@ -560,6 +570,7 @@ export default function AdminCombos() {
                   <th>Price</th>
                   <th>Original</th>
                   <th>Items</th>
+                  <th>Stock</th>
                   <th>Featured</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -583,6 +594,13 @@ export default function AdminCombos() {
                       </span>
                     </td>
                     <td>{`${c.items.length} product${c.items.length === 1 ? '' : 's'}`}</td>
+                    <td>
+                      {c.stock_quantity > 0 ? (
+                        c.stock_quantity
+                      ) : (
+                        <span className="ps-status-pill ps-status-cancelled">Out of stock</span>
+                      )}
+                    </td>
                     <td>
                       {c.featured ? <span className="ps-status-pill ps-status-confirmed">Yes</span> : '—'}
                     </td>

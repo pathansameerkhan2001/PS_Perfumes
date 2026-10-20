@@ -3,6 +3,7 @@ import { X, Heart, Star, ShoppingBag, Zap, ShieldCheck, Truck, Sparkles, Check }
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
+import { isComboRecord, toComboCartProduct } from '../services/combos';
 import './ProductDetailModal.css';
 
 const bottleLabel = (b) => {
@@ -39,14 +40,33 @@ export default function ProductDetailModal() {
   const [activeImage, setActiveImage] = useState(null);
   const [isAdded, setIsAdded] = useState(false);
 
+  // A combo opened from the combo section or the wishlist: sold as one set, priced and stocked
+  // by the combo itself (only when it is purchasable)
+  const isCombo = isComboRecord(selectedProduct);
+
   // Active, priced variants of this product (the only things that can be bought)
-  const variants = useMemo(
-    () =>
-      (selectedProduct?.variants || []).filter(
-        (v) => v && v.is_active !== false && v.active !== false && unitPriceOf(v) > 0
-      ),
-    [selectedProduct]
-  );
+  const variants = useMemo(() => {
+    if (isComboRecord(selectedProduct)) {
+      if (!selectedProduct.is_purchasable) return [];
+      const price = Number(selectedProduct.combo_price) || 0;
+      const original = Number(selectedProduct.original_price) || 0;
+      return [
+        {
+          id: `combo-var-${selectedProduct.id}`,
+          bottle_type: 'Combo Collection',
+          size_ml: 'Complete Set',
+          // Same convention as products: price = regular price, sale_price = the lower price paid
+          price: original > price ? original : price,
+          sale_price: original > price ? price : null,
+          stock_quantity: Number(selectedProduct.stock_quantity) || 0,
+          is_active: true,
+        },
+      ].filter((v) => unitPriceOf(v) > 0);
+    }
+    return (selectedProduct?.variants || []).filter(
+      (v) => v && v.is_active !== false && v.active !== false && unitPriceOf(v) > 0
+    );
+  }, [selectedProduct]);
 
   useEffect(() => {
     if (selectedProduct) {
@@ -70,7 +90,7 @@ export default function ProductDetailModal() {
 
   const product = selectedProduct;
   const isWishlisted = isInWishlist(product.id);
-  const mainImage = product.image || product.main_image || '/assets/ps-perfumes-logo.webp';
+  const mainImage = product.image || product.image_url || product.main_image || '/assets/ps-perfumes-logo.webp';
 
   const bottles = [...new Set(variants.map((v) => bottleLabel(v.bottle_type)))];
   const sizeOptions = variants
@@ -113,16 +133,26 @@ export default function ProductDetailModal() {
   const baseNotes = toList(product.base_notes ?? product.baseNotes);
   const hasNotes = topNotes.length + heartNotes.length + baseNotes.length > 0;
 
+  // Combos go into the bag as the same line as from the combo section
+  const purchase = () => {
+    if (isCombo) {
+      const combo = toComboCartProduct(product);
+      addToCart(combo.product, quantity, combo.variant);
+    } else {
+      addToCart(product, quantity, currentVariant);
+    }
+  };
+
   const handleAdd = () => {
     if (!canPurchase) return;
-    addToCart(product, quantity, currentVariant);
+    purchase();
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 2000);
   };
 
   const handleBuyNow = () => {
     if (!canPurchase) return;
-    addToCart(product, quantity, currentVariant);
+    purchase();
     setSelectedProduct(null);
     navigate('/checkout');
   };
@@ -231,6 +261,20 @@ export default function ProductDetailModal() {
 
             {product.description && <p className="ps-pdetail-description">{product.description}</p>}
 
+            {isCombo && Array.isArray(product.items) && product.items.length > 0 && (
+              <div className="ps-pdetail-description">
+                <strong>Includes:</strong>{' '}
+                {product.items
+                  .map((it) => `${it.product_name}${Number(it.quantity) > 1 ? ` × ${it.quantity}` : ''}`)
+                  .join(', ')}
+              </div>
+            )}
+            {isCombo && !product.is_purchasable && product.unavailable_message && (
+              <p className="ps-pdetail-description" role="status" style={{ color: '#8C5A3C', fontWeight: 600 }}>
+                {product.unavailable_reason === 'out_of_stock' ? 'Out of stock.' : `Currently unavailable. ${product.unavailable_message}`}
+              </p>
+            )}
+
             {/* Fragrance notes — only when the product has them */}
             {hasNotes && (
               <div className="ps-pdetail-pyramid">
@@ -275,7 +319,7 @@ export default function ProductDetailModal() {
             )}
 
             {/* Options built from the product's real variants */}
-            {bottles.length > 1 && (
+            {!isCombo && bottles.length > 1 && (
               <div className="ps-pdetail-sizes" role="group" aria-label="Bottle">
                 <span className="ps-sizes-label">BOTTLE:</span>
                 <div className="ps-sizes-options">
@@ -294,7 +338,7 @@ export default function ProductDetailModal() {
               </div>
             )}
 
-            {sizeOptions.length > 0 && (
+            {!isCombo && sizeOptions.length > 0 && (
               <div className="ps-pdetail-sizes" role="group" aria-label="Size">
                 <span className="ps-sizes-label">SIZE:</span>
                 <div className="ps-sizes-options">
@@ -366,7 +410,15 @@ export default function ProductDetailModal() {
                     <span>ADD TO BAG • {formatINR(price * quantity)}</span>
                   </>
                 ) : (
-                  <span>{isUnavailable ? 'CURRENTLY UNAVAILABLE' : 'OUT OF STOCK'}</span>
+                  <span>
+                    {isCombo
+                      ? product.unavailable_reason === 'out_of_stock' || (currentVariant && stock <= 0)
+                        ? 'OUT OF STOCK'
+                        : 'CURRENTLY UNAVAILABLE'
+                      : isUnavailable
+                      ? 'CURRENTLY UNAVAILABLE'
+                      : 'OUT OF STOCK'}
+                  </span>
                 )}
               </button>
 

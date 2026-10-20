@@ -97,19 +97,61 @@ function isComboItem(it) {
   return it.product?.category === 'Combo Pack' || String(it.variant_id || '').startsWith('combo-');
 }
 
+/*
+ * Checkout attempt key (idempotency). One random key per checkout attempt, kept in
+ * sessionStorage while the bag and coupon stay the same, so a retry after a lost response
+ * (or a page reload) sends the same key and place_order returns the order already saved
+ * instead of creating a second one (migration 08). A different bag or coupon starts a new
+ * attempt; the key is cleared once an order is confirmed.
+ */
+const ATTEMPT_KEY = 'ps_checkout_attempt';
+
+function attemptSignature(items, couponCode) {
+  return JSON.stringify({
+    lines: items
+      .map((it) => [isComboItem(it) ? `c:${it.product_id || it.product?.id}` : `v:${it.variant_id}`, Number(it.quantity)])
+      .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
+    coupon: String(couponCode || '').trim().toUpperCase(),
+  });
+}
+
+/**
+ * Returns { key, isRetry }: the saved key when this bag + coupon was already sent to the
+ * server (isRetry), otherwise a new key that is saved only when it is sent (rememberAttempt).
+ */
+function getAttemptKey(signature) {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(ATTEMPT_KEY) || 'null');
+    if (saved && saved.signature === signature && isValidUUID(saved.key)) return { key: saved.key, isRetry: true };
+  } catch {}
+  return { key: crypto.randomUUID(), isRetry: false };
+}
+
+function rememberAttempt(key, signature) {
+  try {
+    sessionStorage.setItem(ATTEMPT_KEY, JSON.stringify({ key, signature }));
+  } catch {}
+}
+
+function clearAttemptKey() {
+  try {
+    sessionStorage.removeItem(ATTEMPT_KEY);
+  } catch {}
+}
+
 /**
  * Preferred path: place_order() (migration 20261022) prices every line, the shipping fee and
  * the coupon from the database in one transaction. Returns null when the function is not
  * installed yet, so the caller can use the direct insert below.
  */
-async function placeOrderOnServer(orderPayload, items) {
+async function placeOrderOnServer(orderPayload, items, attemptKey) {
   const lines = items.map((it) =>
     isComboItem(it)
       ? { type: 'combo', combo_id: it.product_id || it.product?.id, quantity: Number(it.quantity) }
       : { type: 'variant', variant_id: it.variant_id, quantity: Number(it.quantity) }
   );
 
-  const { data, error } = await supabase.rpc('place_order', {
+  const params = {
     p_customer: {
       first_name: orderPayload.firstName,
       last_name: orderPayload.lastName,
@@ -124,11 +166,20 @@ async function placeOrderOnServer(orderPayload, items) {
     p_items: lines,
     p_coupon_code: String(orderPayload.couponCode || '').trim().toUpperCase() || null,
     p_payment_method: orderPayload.paymentMethod || 'COD',
-  });
+  };
+
+  // With migration 08 the attempt key makes retries safe. Before 08 the function has no
+  // p_idempotency_key parameter (PGRST202), so the call is repeated without it.
+  let { data, error } = await supabase.rpc('place_order', { ...params, p_idempotency_key: attemptKey });
+  if (error?.code === 'PGRST202') {
+    ({ data, error } = await supabase.rpc('place_order', params));
+  }
 
   if (error) {
     if (error.code === 'PGRST202') return null;
     console.error('place_order failed:', error);
+    // P0001 = place_order refused the order (its transaction saved nothing): a new attempt may start
+    if (error.code === 'P0001') clearAttemptKey();
     // Validation messages raised by place_order are written for shoppers
     throw new Error(error.code === 'P0001' ? error.message : `Your order could not be placed (${error.message}). Please try again or contact us on WhatsApp.`);
   }
@@ -142,7 +193,8 @@ async function placeOrderOnServer(orderPayload, items) {
     customer_name: data.customer_name,
     customer_email: data.customer_email,
     customer_phone: data.customer_phone,
-    shipping_address: {
+    // Migration 08 returns the stored address (on a retry it may differ from the form)
+    shipping_address: data.shipping_address || {
       address: orderPayload.address,
       city: orderPayload.city,
       state: orderPayload.state,
@@ -158,7 +210,7 @@ async function placeOrderOnServer(orderPayload, items) {
     payment_method: data.payment_method,
     payment_status: data.payment_status,
     order_status: data.order_status,
-    created_at: new Date().toISOString(),
+    created_at: data.created_at || new Date().toISOString(),
     order_items: data.items || [],
   });
   saveLocalOrder(order);
@@ -169,7 +221,7 @@ async function placeOrderOnServer(orderPayload, items) {
  * Re-checks combo lines against the database just before ordering: the combo must still be
  * purchasable (active, priced, all products available) and have stock for the quantity.
  * This catches changes made after the combo was added to the bag. place_order enforces the same
- * rules on the server once migration 08 is applied.
+ * rules on the server once supabase/new-project/08_checkout_hardening.sql is applied.
  */
 async function revalidateComboLines(items) {
   const comboLines = items.filter(isComboItem);
@@ -199,13 +251,25 @@ export async function createOrder(orderPayload) {
   const items = (orderPayload.items || []).filter((it) => Number(it.quantity) > 0);
   if (items.length === 0) throw new Error('Your cart is empty.');
 
-  await revalidateComboLines(items);
+  const signature = attemptSignature(items, orderPayload.couponCode);
+  const { key: attemptKey, isRetry } = getAttemptKey(signature);
 
-  const serverResult = await placeOrderOnServer(orderPayload, items);
-  if (serverResult) return serverResult;
+  // On a retry of the same attempt the server decides (it may return the order already saved)
+  if (!isRetry) await revalidateComboLines(items);
+  // From here on the attempt may reach the database: keep its key for a retry
+  rememberAttempt(attemptKey, signature);
 
-  // Legacy path, used only until place_order is installed: prices come from the cart
-  const orderId = crypto.randomUUID();
+  const serverResult = await placeOrderOnServer(orderPayload, items, attemptKey);
+  if (serverResult) {
+    clearAttemptKey();
+    return serverResult;
+  }
+
+  // Legacy path, used only until place_order is installed: prices come from the cart.
+  // The attempt key is the order id, so a retry of the same attempt cannot insert a second order.
+  // Nothing on the server checks combos on this path, so the app check always runs here.
+  if (isRetry) await revalidateComboLines(items);
+  const orderId = attemptKey;
   const orderNumber = newOrderNumber();
   const customerName = `${orderPayload.firstName || ''} ${orderPayload.lastName || ''}`.trim();
 
@@ -263,6 +327,13 @@ export async function createOrder(orderPayload) {
   };
 
   const { error: orderErr } = await supabase.from('orders').insert([orderRow]);
+  if (orderErr?.code === '23505' && /orders_pkey/.test(`${orderErr.message} ${orderErr.details || ''}`)) {
+    // This attempt's order was already saved (the earlier response was lost)
+    clearAttemptKey();
+    throw new Error(
+      'This order was already received. Please do not place it again — check your e-mail or contact us on WhatsApp with your details.'
+    );
+  }
   if (orderErr) {
     console.error('Order insert failed:', orderErr);
     throw new Error(`Your order could not be placed (${orderErr.message}). Please try again or contact us on WhatsApp.`);
@@ -287,6 +358,7 @@ export async function createOrder(orderPayload) {
     order_items: itemRows,
   });
   saveLocalOrder(order);
+  clearAttemptKey();
   return { order, error: null };
 }
 

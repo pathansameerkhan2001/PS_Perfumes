@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, ArrowRight, ShieldCheck, Tag, ArrowLeft, ShoppingBag } from 'lucide-react';
-import { useCart } from '../../context/CartContext';
+import { useCart, maxQuantityFor } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatCurrency';
 import './CartPage.css';
 import { useSeo } from '../../utils/useSeo';
@@ -122,6 +122,9 @@ export default function CartPage() {
                         <button
                           type="button"
                           onClick={() => updateQuantity(prod.id, identifier, item.quantity + 1)}
+                          disabled={maxQuantityFor(item) !== null && item.quantity >= maxQuantityFor(item)}
+                          aria-label="Increase quantity"
+                          title={maxQuantityFor(item) !== null && item.quantity >= maxQuantityFor(item) ? 'No more in stock' : undefined}
                         >
                           +
                         </button>

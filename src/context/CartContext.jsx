@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getSiteSettings } from '../services/settings';
 import { validateCouponCode, computeCouponDiscount } from '../services/coupons';
+import { isComboRecord, toComboCartProduct } from '../services/combos';
 
 // Shipping rule used until Store Settings has saved values in the database
 const DEFAULT_FREE_SHIPPING_THRESHOLD = 1500;
@@ -16,6 +17,21 @@ function isOrderableLine(item) {
   const id = String(item.variant_id || '');
   if (item.product?.category === 'Combo Pack' || id.startsWith('combo-')) return true;
   return id !== '' && !id.startsWith('var-');
+}
+
+/**
+ * Most units of a bag line that can be ordered, from the stock known when it was added:
+ * the combo's stock for combos, the variant's stock for products. null = not known.
+ */
+export function maxQuantityFor(item) {
+  if (!item) return null;
+  if (item.product?.category === 'Combo Pack' || String(item.variant_id || '').startsWith('combo-')) {
+    const stock = item.product?.stock_quantity;
+    return stock === undefined || stock === null ? null : Math.max(0, Number(stock) || 0);
+  }
+  const variant = item.product?.variants?.find((v) => v.id === item.variant_id);
+  if (!variant) return null;
+  return Math.max(0, Number(variant.stock_quantity ?? variant.stock ?? 0) || 0);
 }
 
 // Number of unorderable lines removed from the saved bag (shown once after load)
@@ -146,6 +162,12 @@ export function CartProvider({ children }) {
    */
   const addToCart = (product, quantity = 1, variantOrSize = null, bottleTypeArg = null) => {
     if (!product) return;
+    // A combo record (quick view, wishlist) becomes the same bag line as from the combo section
+    if (isComboRecord(product)) {
+      const combo = toComboCartProduct(product);
+      product = combo.product;
+      variantOrSize = combo.variant;
+    }
 
     let selectedVariant = null;
     let bottleType = 'Glass Bottle';
@@ -300,24 +322,30 @@ export function CartProvider({ children }) {
       removeFromCart(productId, variantIdentifier);
       return;
     }
+    const matchesLine = (item) =>
+      item.cartItemId === variantIdentifier ||
+      item.variant_id === variantIdentifier ||
+      item.size_ml === variantIdentifier ||
+      item.size === variantIdentifier ||
+      (item.product_id === productId && item.size_ml === variantIdentifier);
+
+    // Lowering is always allowed; raising stops at the stock known when the line was added
+    // (checkout re-checks against the database)
+    const target = cartItems.find(matchesLine);
+    const max = target ? maxQuantityFor(target) : null;
+    if (target && max !== null && quantity > target.quantity && quantity > max) {
+      showToast(
+        max > target.quantity
+          ? `Only ${max} of "${target.name}" available.`
+          : `No more of "${target.name}" available${max > 0 ? ` — ${max} in stock` : ''}.`
+      );
+    }
     setCartItems((prev) =>
       prev.map((item) => {
-        const matches =
-          item.cartItemId === variantIdentifier ||
-          item.variant_id === variantIdentifier ||
-          item.size_ml === variantIdentifier ||
-          item.size === variantIdentifier ||
-          (item.product_id === productId && item.size_ml === variantIdentifier);
-        if (!matches) return item;
-        // Cap at the variant's (or combo's) stock as known when it was added; checkout re-checks
-        const isComboLine = item.product?.category === 'Combo Pack';
-        const variant = isComboLine ? null : item.product?.variants?.find((v) => v.id === item.variant_id);
-        const max = isComboLine
-          ? Number(item.product?.stock_quantity ?? 0)
-          : variant
-          ? Number(variant.stock_quantity ?? variant.stock ?? 0)
-          : 0;
-        return { ...item, quantity: max > 0 ? Math.min(quantity, max) : quantity };
+        if (!matchesLine(item)) return item;
+        const lineMax = maxQuantityFor(item);
+        if (lineMax === null || quantity <= item.quantity) return { ...item, quantity };
+        return { ...item, quantity: Math.max(item.quantity, Math.min(quantity, lineMax)) };
       })
     );
   };

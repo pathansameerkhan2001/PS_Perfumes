@@ -196,9 +196,13 @@ export default function AdminHero() {
     if (targetIdx < 0 || targetIdx >= slides.length) return;
     const currentSlide = slides[index];
     const targetSlide = slides[targetIdx];
+    // Records sharing a display order would not move by swapping: use list positions then
+    const sameOrder = Number(currentSlide.display_order) === Number(targetSlide.display_order);
+    const currentOrder = sameOrder ? index + 1 : currentSlide.display_order;
+    const targetOrder = sameOrder ? targetIdx + 1 : targetSlide.display_order;
     try {
-      await updateHeroSlide(currentSlide.id, { display_order: targetSlide.display_order });
-      await updateHeroSlide(targetSlide.id, { display_order: currentSlide.display_order });
+      await updateHeroSlide(currentSlide.id, { display_order: targetOrder });
+      await updateHeroSlide(targetSlide.id, { display_order: currentOrder });
       await loadSlides();
     } catch (err) {
       setErrorMsg(`Failed to reorder: ${err.message}`);

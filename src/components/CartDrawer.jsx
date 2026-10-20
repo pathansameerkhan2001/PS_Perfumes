@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Trash2, ShoppingBag, ArrowRight, Tag, Check, Truck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useCart } from '../context/CartContext';
+import { useCart, maxQuantityFor } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
 import './CartDrawer.css';
 
@@ -181,6 +181,9 @@ export default function CartDrawer() {
                             type="button"
                             className="ps-cart-qty-btn"
                             onClick={() => updateQuantity(prod.id, identifier, item.quantity + 1)}
+                            disabled={maxQuantityFor(item) !== null && item.quantity >= maxQuantityFor(item)}
+                            aria-label="Increase quantity"
+                            title={maxQuantityFor(item) !== null && item.quantity >= maxQuantityFor(item) ? 'No more in stock' : undefined}
                           >
                             +
                           </button>

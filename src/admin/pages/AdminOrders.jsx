@@ -99,15 +99,25 @@ export default function AdminOrders() {
                   </td>
                   <td>{new Date(ord.created_at).toLocaleDateString()}</td>
                   <td>
-                    <span style={{ fontSize: 12 }}>
-                      {ord.items?.length || 1} Flacon{(ord.items?.length || 1) > 1 ? 's' : ''}
-                    </span>
+                    {(() => {
+                      // Units ordered (sum of line quantities), from the stored order items
+                      const units = (ord.items || []).reduce((sum, it) => sum + (Number(it.quantity) || 0), 0);
+                      return (
+                        <span style={{ fontSize: 12 }} title={`${(ord.items || []).length} line(s)`}>
+                          {units > 0 ? `${units} unit${units > 1 ? 's' : ''}` : 'No items recorded'}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td>
                     <strong style={{ color: 'var(--color-gold-bright)' }}>{formatINR(ord.total)}</strong>
                   </td>
                   <td>
                     <span style={{ fontSize: 11, color: '#c9c1b2' }}>{ord.payment_method}</span>
+                    {/* As stored on the order; no payment gateway updates it */}
+                    <div style={{ fontSize: 10, color: ord.payment_status === 'paid' ? '#4ade80' : 'var(--color-muted)' }}>
+                      {String(ord.payment_status || 'pending').toUpperCase()}
+                    </div>
                   </td>
                   <td>
                     <select

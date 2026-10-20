@@ -257,7 +257,7 @@ export default function AdminHomepage() {
                       textTransform: 'uppercase',
                     }}
                   >
-                    {section.section_key.replace('_', ' ')}
+                    {String(section.section_key || '').replace(/_/g, ' ')}
                   </span>
                   <span
                     style={{

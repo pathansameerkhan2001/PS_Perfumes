@@ -149,7 +149,7 @@ export const PRODUCTS = [
     image: promoBanner,
     secondaryImage: prodNoirAbsolu,
     description:
-      'Artisanal pure agarwood distillation aged in oak barrels for over eight years. Rich, resinous, dark honey facets complemented by ancient leather and earthy woods. The definitive benchmark of oriental perfumery.',
+      'Rich, resinous, dark honey facets complemented by leather and earthy woods.',
     topNotes: ['Rare Cambodi Agarwood', 'Wild Saffron'],
     heartNotes: ['Aged Hindi Oud Heart', 'Cistus Labdanum'],
     baseNotes: ['Dark Leather', 'Forest Amber', 'Animalic Woods'],
@@ -535,7 +535,7 @@ export const REELS_DATA = [
     originalPrice: 3499,
     discount: '27% OFF',
     productId: 'ps-05',
-    description: 'Celebrated on the fashion runway. Aged agarwood distilled for eight years in vintage oak casks.',
+    description: 'An oud fragrance from PS PERFUMES.',
   },
   {
     id: 'reel-03',

@@ -46,13 +46,11 @@ export default function PromoBanner() {
             </div>
 
             <h2 className="ps-promo-heading">
-              Pure Artisanal Distillation, Aged in Rare French Oak
+              The PS PERFUMES Collection
             </h2>
 
             <p className="ps-promo-desc">
-              From the wild mountain agarwood forests of Assam to the rose fields of Kannauj and Grasse,
-              our perfumers hand-extract every botanical resin according to ancient royal recipes.
-              Experience unmatched concentration, infinite longevity, and an intoxicating sillage.
+              Attars, perfumes and bakhoor from PS PERFUMES, Kadapa.
             </p>
 
             <div className="ps-promo-actions">

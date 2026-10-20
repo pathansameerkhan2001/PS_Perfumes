@@ -30,11 +30,14 @@ export async function getDashboardMetrics() {
 
   const [ordersRes, revenueRes, productsRes, customersRes] = await Promise.all([
     supabase.from('orders').select('id', { count: 'exact', head: true }),
-    // Revenue: paid or delivered orders only
+    // Revenue: orders recorded as paid, or delivered (cash on delivery is collected on delivery);
+    // cancelled orders never count. No payment gateway exists, so payment_status changes only
+    // when the store records it — nothing is assumed here.
     supabase
       .from('orders')
       .select('total_amount')
-      .or('payment_status.eq.paid,order_status.eq.delivered'),
+      .or('payment_status.eq.paid,order_status.eq.delivered')
+      .neq('order_status', 'cancelled'),
     // Live schema: products.is_active (there is no status column)
     supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('customers').select('id', { count: 'exact', head: true }),
@@ -87,7 +90,9 @@ export async function getBestSellingProducts() {
   try {
     const { data: items, error } = await supabase
       .from('order_items')
-      .select('product_id, product_name, quantity, total_price, unit_price, bottle_type, size_ml');
+      .select('product_id, product_name, quantity, total_price, unit_price, bottle_type, size_ml, orders!inner(order_status)')
+      // Items of cancelled orders are not sales
+      .neq('orders.order_status', 'cancelled');
 
     if (error) {
       return { data: [], error: `Best sellers: ${describeQueryError(error)}` };

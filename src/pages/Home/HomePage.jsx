@@ -8,7 +8,7 @@ import ComboPackSection from '../../components/ComboPackSection';
 import InstagramReelsSection from '../../components/home/InstagramReelsSection';
 import ReviewsSection from '../../components/ReviewsSection';
 import { getHomepageProductSections } from '../../services/homepageService';
-import { getHomepageSections } from '../../services/homepage';
+import { getHomepageSections, INITIAL_SECTIONS } from '../../services/homepage';
 import { useSeo } from '../../utils/useSeo';
 
 export default function HomePage() {
@@ -36,7 +36,8 @@ export default function HomePage() {
   const [bestSellers, setBestSellers] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [newArrivals, setNewArrivals] = useState([]);
-  const [sections, setSections] = useState([]);
+  // null until loaded; then the active sections in display order (may be empty)
+  const [sections, setSections] = useState(null);
   const [, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,22 +47,22 @@ export default function HomePage() {
       try {
         const [{ bestSellers: bs, featuredProducts: fp, newArrivals: na }, rawSections] = await Promise.all([
           getHomepageProductSections(),
-          // A sections error falls back to the default layout without hiding the products
+          // A sections error falls back to the built-in layout without hiding the products
           getHomepageSections().catch((err) => {
             console.error('Could not load homepage sections:', err);
-            return [];
+            return INITIAL_SECTIONS;
           }),
         ]);
         if (mounted) {
           setBestSellers(bs || []);
           setFeaturedProducts(fp || []);
           setNewArrivals(na || []);
-          if (Array.isArray(rawSections) && rawSections.length > 0) {
-            const activeSorted = rawSections
+          const list = Array.isArray(rawSections) && rawSections.length > 0 ? rawSections : INITIAL_SECTIONS;
+          setSections(
+            list
               .filter((s) => s.is_active !== false)
-              .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
-            setSections(activeSorted);
-          }
+              .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+          );
           setLoading(false);
         }
       } catch {
@@ -80,7 +81,8 @@ export default function HomePage() {
     const key = sec.section_key || sec.id;
     switch (key) {
       case 'hero':
-        return <HeroCinematic key={sec.id} />;
+        // Stable key: the film is not restarted when the saved layout replaces the built-in one
+        return <HeroCinematic key="hero" />;
       case 'trust_strip':
         return (
           <React.Fragment key={sec.id}>
@@ -145,43 +147,16 @@ export default function HomePage() {
     }
   };
 
-  // Default fallback layout if sections aren't customized yet
-  const defaultLayout = (
-    <>
-      <HeroCinematic />
-      <AnnouncementTicker />
-      <BenefitsBar />
-      <ShopByFragrance />
-      <ProductGridSection
-        id="best-sellers"
-        tag="SIGNATURE CREATIONS"
-        title="Best Sellers"
-        products={bestSellers}
-        showFilterTabs={false}
-        limit={8}
-        emptyMessage="No best sellers available."
-      />
-      <ProductGridSection
-        id="featured-products"
-        tag="CURATED FORMULATIONS"
-        title="Featured Products"
-        products={featuredProducts}
-        showFilterTabs={false}
-        limit={8}
-        emptyMessage="No featured products available."
-      />
-      <ComboPackSection />
-      <InstagramReelsSection />
-      <ReviewsSection />
-    </>
-  );
+  // Until the sections have loaded, the built-in layout is shown. If every section is hidden,
+  // only the hero remains (it is always shown).
+  const visibleSections = sections ?? INITIAL_SECTIONS;
 
-  const hasHeroSection = sections.some((s) => (s.section_key || s.id) === 'hero');
+  const hasHeroSection = visibleSections.some((s) => (s.section_key || s.id) === 'hero');
 
   return (
     <div className="ps-home-page">
-      {sections.length > 0 && !hasHeroSection && <HeroCinematic />}
-      {sections.length > 0 ? sections.map(renderSection) : defaultLayout}
+      {!hasHeroSection && <HeroCinematic key="hero" />}
+      {visibleSections.map(renderSection)}
     </div>
   );
 }

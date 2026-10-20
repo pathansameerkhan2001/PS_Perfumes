@@ -1,59 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import FragranceCategoryCard from './FragranceCategoryCard';
-import { getCategories } from '../../services/categories';
-
-import attarImg from '../../assets/categories/fragrance-attar.png';
-import perfumeImg from '../../assets/categories/fragrance-perfume.png';
-import bakhoorImg from '../../assets/categories/fragrance-bakhoor.png';
-import muskyImg from '../../assets/categories/fragrance-musky.png';
-import oudImg from '../../assets/categories/fragrance-oud.png';
-import floralImg from '../../assets/categories/fragrance-floral.png';
-import woodyImg from '../../assets/categories/fragrance-woody.png';
+import { useStorefrontCategories } from '../../utils/useStorefrontCategories';
 
 import './ShopByFragrance.css';
 
-const DEFAULT_FRAGRANCES = [
-  { name: 'ATTAR', slug: 'attar', image: attarImg },
-  { name: 'PERFUME', slug: 'perfume', image: perfumeImg },
-  { name: 'BAKHOOR', slug: 'bakhoor', image: bakhoorImg },
-  { name: 'MUSKY', slug: 'musky', image: muskyImg },
-  { name: 'OUD', slug: 'oud', image: oudImg },
-  { name: 'FLORAL', slug: 'floral', image: floralImg },
-  { name: 'WOODY', slug: 'woody', image: woodyImg },
-];
-
 export default function ShopByFragrance({ title = 'Shop by Fragrance', subtitle = '' }) {
-  const [categories, setCategories] = useState(DEFAULT_FRAGRANCES);
-
-  useEffect(() => {
-    let isMounted = true;
-    async function loadDynamicCategories() {
-      try {
-        const remoteCats = await getCategories();
-        if (isMounted && Array.isArray(remoteCats) && remoteCats.length > 0) {
-          // Merge dynamic image_url if provided by Supabase admin and valid
-          const merged = DEFAULT_FRAGRANCES.map((def) => {
-            const found = remoteCats.find(
-              (rc) => rc.slug?.toLowerCase() === def.slug.toLowerCase()
-            );
-            if (found && found.image_url && !found.image_url.startsWith('/assets/')) {
-              return { ...def, image: found.image_url };
-            }
-            return def;
-          });
-          setCategories(merged);
-        }
-      } catch (err) {
-        console.warn('Using local fragrance category defaults:', err);
-      }
-    }
-    loadDynamicCategories();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  // Active categories in display order (shared with the header, mobile menu and footer); the
+  // seven built-in families keep their artwork, others use an admin image or the brand logo
+  const categories = useStorefrontCategories();
 
   return (
     <section
@@ -83,15 +39,17 @@ export default function ShopByFragrance({ title = 'Shop by Fragrance', subtitle 
           </Link>
         </div>
 
-        {/* 7 Luxury Fragrance Categories Carousel / Row */}
+        {/* Fragrance Categories Carousel / Row */}
         <div className="ps-fragrance-carousel-track">
           <div className="ps-fragrance-cards-row">
             {categories.map((cat) => (
               <FragranceCategoryCard
                 key={cat.slug}
-                name={cat.name}
+                name={cat.name.toUpperCase()}
                 slug={cat.slug}
+                path={cat.path}
                 image={cat.image}
+                isBuiltIn={cat.isBuiltIn}
               />
             ))}
           </div>

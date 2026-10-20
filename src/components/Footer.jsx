@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import PSPerfumesLogo from './common/PSPerfumesLogo';
 import { MapPin, Mail, Phone, ArrowUp } from 'lucide-react';
 import { SITE_CONFIG } from '../config/siteConfig';
+import { useStorefrontCategories } from '../utils/useStorefrontCategories';
 import './Footer.css';
 
 function InstagramIcon({ size = 16, color = 'currentColor' }) {
@@ -31,6 +32,8 @@ function InstagramIcon({ size = 16, color = 'currentColor' }) {
  * 4-column balanced luxury layout on desktop; clean stacked layout on mobile.
  */
 export default function Footer() {
+  // Category links from the shared, data-driven source (database categories, seven built-in fallback)
+  const categories = useStorefrontCategories();
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -84,27 +87,11 @@ export default function Footer() {
               <li>
                 <Link to="/about">About Us</Link>
               </li>
-              <li>
-                <Link to="/attar">Attar</Link>
-              </li>
-              <li>
-                <Link to="/perfume">Perfume</Link>
-              </li>
-              <li>
-                <Link to="/bakhoor">Bakhoor</Link>
-              </li>
-              <li>
-                <Link to="/musky">Musky</Link>
-              </li>
-              <li>
-                <Link to="/oud">Oud</Link>
-              </li>
-              <li>
-                <Link to="/floral">Floral</Link>
-              </li>
-              <li>
-                <Link to="/woody">Woody</Link>
-              </li>
+              {categories.map((c) => (
+                <li key={c.slug}>
+                  <Link to={c.path}>{c.name}</Link>
+                </li>
+              ))}
             </ul>
           </div>
 

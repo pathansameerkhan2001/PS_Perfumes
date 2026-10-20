@@ -54,6 +54,12 @@ export default function MobileNav({
 }) {
   const { itemCount, setIsCartOpen, setIsWishlistOpen, wishlist = [] } = useCart();
   const drawerRef = useRef(null);
+  const categories = useStorefrontCategories();
+  const NAVIGATION_ITEMS = [
+    ...LEADING_ITEMS,
+    ...categories.map((c) => ({ name: c.name, path: c.path, icon: FAMILY_ICONS[c.slug] || Tag })),
+    ...TRAILING_ITEMS,
+  ];
 
   // Lock background scrolling across iOS and Android browsers without layout shifts
   useEffect(() => {
@@ -223,12 +229,12 @@ export default function MobileNav({
             {/* 2. Scrollable Body: Exact 12 Navigation Items in Defined Order */}
             <div className="mobile-nav-body">
               <nav className="mobile-nav-list" aria-label="Store Navigation">
-                {NAVIGATION_ITEMS.map((item, idx) => {
+                {NAVIGATION_ITEMS.map((item) => {
                   const Icon = item.icon;
                   const isActive = isItemActive(item);
 
                   return (
-                    <div key={item.name} className="mobile-nav-item">
+                    <div key={item.path} className="mobile-nav-item">
                       <button
                         type="button"
                         className={`mobile-nav-link ${isActive ? 'is-active' : ''}`}

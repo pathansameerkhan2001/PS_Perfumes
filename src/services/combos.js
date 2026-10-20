@@ -25,7 +25,8 @@ function slugify(text) {
  * Whether a combo can be bought, and why not. A combo is purchasable only when it is active,
  * has a price, has stock, has at least one product, and every product still exists and is
  * active. (Visitors can only read active products, so a deactivated product shows as missing.)
- * Checkout re-checks this in the app; definitive enforcement is in place_order (migration 08).
+ * Checkout re-checks this in the app; definitive enforcement is in place_order once
+ * supabase/new-project/08_checkout_hardening.sql is applied.
  */
 export function getComboAvailability(combo) {
   const items = combo?.items || [];
@@ -49,6 +50,42 @@ export function getComboAvailability(combo) {
     reason,
     message: reason ? messages[reason] : '',
     unavailableItems,
+  };
+}
+
+/** True for a combo as returned by getCombos / getComboById (not a product or a bag line). */
+export function isComboRecord(item) {
+  return Boolean(item) && item.combo_price !== undefined && Array.isArray(item.items);
+}
+
+/**
+ * The bag product and its single "variant" for a combo, in the shape CartContext.addToCart
+ * expects. Used by every place a combo can be added (homepage section, quick view, wishlist).
+ */
+export function toComboCartProduct(combo) {
+  const price = Number(combo.combo_price) || 0;
+  const original = Number(combo.original_price) || 0;
+  const image = combo.image_url || combo.image || '';
+  return {
+    product: {
+      id: combo.id,
+      name: combo.name,
+      price,
+      compare_at_price: original > price ? original : null,
+      image,
+      main_image: image,
+      category: 'Combo Pack',
+      slug: combo.slug,
+      // Used by the bag to cap quantities and refuse unavailable combos
+      stock_quantity: Number(combo.stock_quantity) || 0,
+      is_purchasable: Boolean(combo.is_purchasable),
+    },
+    variant: {
+      id: `combo-var-${combo.id}`,
+      bottle_type: 'Combo Collection',
+      size_ml: 'Complete Set',
+      price,
+    },
   };
 }
 
