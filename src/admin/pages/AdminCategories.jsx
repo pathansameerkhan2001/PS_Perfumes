@@ -253,7 +253,7 @@ export default function AdminCategories() {
               </div>
 
               <div className="ps-form-group">
-                <label>Category Image (ps-perfumes/categories/...)</label>
+                <label>Category Image (Storage folder: categories/)</label>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                   {formData.image_url && (
                     <img src={formData.image_url} alt="Preview" style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 4 }} />

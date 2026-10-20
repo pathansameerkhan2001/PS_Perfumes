@@ -30,6 +30,9 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
+  // When the stored settings could not be read, the form only holds defaults: saving it would
+  // overwrite the real values, so saving stays disabled until a reload succeeds.
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -40,6 +43,7 @@ export default function AdminSettings() {
         }
       } catch (err) {
         console.error('Failed to load settings:', err);
+        setLoadError(err?.message || 'Could not load store settings.');
       } finally {
         setLoading(false);
       }
@@ -73,6 +77,7 @@ export default function AdminSettings() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    if (loadError) return;
     setSaving(true);
     setStatusMessage({ type: '', text: '' });
 
@@ -105,13 +110,24 @@ export default function AdminSettings() {
         <button
           type="button"
           onClick={handleSave}
-          disabled={saving}
+          disabled={saving || Boolean(loadError)}
+          title={loadError ? 'Saving is disabled because the stored settings could not be loaded' : undefined}
           className="ps-admin-btn-primary"
         >
           {saving ? <RefreshCw size={18} className="ps-spin" /> : <Save size={18} />}
           <span>{saving ? 'Saving...' : 'Save Settings'}</span>
         </button>
       </div>
+
+      {loadError && (
+        <div className="ps-admin-alert ps-alert-danger" role="alert">
+          <AlertCircle size={18} />
+          <span>
+            The stored settings could not be loaded ({loadError}). The values below are defaults, not your saved
+            settings, so saving is disabled to avoid overwriting them. Reload the page to try again.
+          </span>
+        </div>
+      )}
 
       {statusMessage.text && (
         <div className={`ps-admin-alert ${statusMessage.type === 'error' ? 'ps-alert-danger' : 'ps-alert-success'}`}>
@@ -177,7 +193,7 @@ export default function AdminSettings() {
                 />
               </label>
             </div>
-            <span className="ps-admin-input-hint">Bucket: ps-perfumes/logo/ (PNG, WebP or SVG recommended)</span>
+            <span className="ps-admin-input-hint">Storage folder: logo/ (PNG or WebP)</span>
           </div>
 
           <div className="ps-admin-input-group">

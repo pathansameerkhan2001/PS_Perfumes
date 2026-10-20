@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
 import {
   ShoppingBag,
   IndianRupee,
@@ -27,23 +27,30 @@ import { formatINR } from '../../utils/formatCurrency';
 import AdminPageContainer from '../components/AdminPageContainer';
 import './AdminDashboard.css';
 
+// null = the query failed (shown as "—"), never coerced to 0
+const EMPTY_METRICS = {
+  totalOrders: null,
+  totalRevenue: null,
+  totalProducts: null,
+  totalCustomers: null,
+};
+
 export default function AdminDashboard() {
-  const [metrics, setMetrics] = useState({
-    totalOrders: 0,
-    totalRevenue: 0,
-    totalProducts: 0,
-    totalCustomers: 0,
-  });
+  // From AdminLayout: whether the database's is_admin() recognises this account
+  const { dbAdmin = null, dbAdminError = null } = useOutletContext() || {};
+
+  const [metrics, setMetrics] = useState(EMPTY_METRICS);
   const [bestSellers, setBestSellers] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
   const [lowStock, setLowStock] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState(null);
+  // One message per failed query; panel errors also replace that panel's empty state
+  const [errors, setErrors] = useState([]);
+  const [panelErrors, setPanelErrors] = useState({ bestSellers: null, recentOrders: null, lowStock: null });
+  const mountedRef = useRef(true);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
-    setErrorMessage(null);
-
     try {
       const [metricsRes, bestSellersRes, recentOrdersRes, lowStockRes] = await Promise.all([
         getDashboardMetrics(),
@@ -51,63 +58,65 @@ export default function AdminDashboard() {
         getRecentOrders(5),
         getLowStockProducts(),
       ]);
+      if (!mountedRef.current) return;
 
-      if (metricsRes.error) {
-        setErrorMessage(metricsRes.error);
-      } else {
-        setMetrics(metricsRes.data);
-      }
-
+      setMetrics(metricsRes.data);
       setBestSellers(bestSellersRes.data || []);
       setRecentOrders(recentOrdersRes.data || []);
       setLowStock(lowStockRes.data || []);
-    } catch {
-      setErrorMessage('Unable to load dashboard data. Please try again.');
+      setPanelErrors({
+        bestSellers: bestSellersRes.error,
+        recentOrders: recentOrdersRes.error,
+        lowStock: lowStockRes.error,
+      });
+      setErrors(
+        [...metricsRes.errors, bestSellersRes.error, recentOrdersRes.error, lowStockRes.error].filter(Boolean)
+      );
+    } catch (err) {
+      if (!mountedRef.current) return;
+      setMetrics(EMPTY_METRICS);
+      setErrors([`Unable to load dashboard data: ${err?.message || 'unknown error'}`]);
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    let mounted = true;
-
-    async function fetchDashboardData() {
-      try {
-        const [metricsRes, bestSellersRes, recentOrdersRes, lowStockRes] = await Promise.all([
-          getDashboardMetrics(),
-          getBestSellingProducts(),
-          getRecentOrders(5),
-          getLowStockProducts(),
-        ]);
-
-        if (!mounted) return;
-
-        if (metricsRes.error) {
-          setErrorMessage(metricsRes.error);
-        } else {
-          setMetrics(metricsRes.data);
-        }
-
-        setBestSellers(bestSellersRes.data || []);
-        setRecentOrders(recentOrdersRes.data || []);
-        setLowStock(lowStockRes.data || []);
-      } catch {
-        if (mounted) {
-          setErrorMessage('Unable to load dashboard data. Please try again.');
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    fetchDashboardData();
-
+    mountedRef.current = true;
+    loadData();
     return () => {
-      mounted = false;
+      mountedRef.current = false;
     };
-  }, []);
+  }, [loadData]);
+
+  const formatCount = (value) => (value === null ? '—' : value.toLocaleString());
+  const formatMoney = (value) => (value === null ? '—' : formatINR(value));
+  // Admin-only tables read as empty (not as an error) when RLS hides them
+  const unverified = dbAdmin === false;
+  const kpiNote = (value, normalNote) => {
+    if (value === null) return <span className="ps-kpi-note is-error">Query failed — see notice above</span>;
+    if (unverified) return <span className="ps-kpi-note is-warning">Unverified — database admin check failed</span>;
+    return <span className="ps-kpi-note">{normalNote}</span>;
+  };
+
+  let badge = { tone: 'ok', text: 'Supabase connected', title: 'All dashboard queries succeeded' };
+  if (errors.length > 0) {
+    badge = { tone: 'error', text: `${errors.length} query error${errors.length > 1 ? 's' : ''}`, title: errors.join('\n') };
+  } else if (dbAdmin === false) {
+    badge = { tone: 'warning', text: 'Admin not recognised', title: 'is_admin() returns false for this account' };
+  } else if (dbAdminError) {
+    badge = { tone: 'warning', text: 'Access check failed', title: dbAdminError };
+  } else if (dbAdmin === null) {
+    badge = { tone: 'neutral', text: 'Checking access…', title: 'Waiting for the database administrator check' };
+  }
+
+  const renderPanelError = (message, compact = false) => (
+    <div className={`ps-panel-empty-state${compact ? ' is-compact' : ''}`} role="alert">
+      <AlertCircle size={26} className="ps-empty-icon is-error" />
+      <p className="ps-empty-message">Could not load this section.</p>
+      <span className="ps-empty-subtext">{message}</span>
+    </div>
+  );
 
   // Premium Skeleton Loader
   if (loading) {
@@ -145,12 +154,19 @@ export default function AdminDashboard() {
   return (
     <AdminPageContainer maxWidth="1400px">
       <div className="ps-admin-dashboard-view">
-        {/* Error Notification Banner if query failed */}
-        {errorMessage && (
+        {/* Error Notification Banner if any query failed */}
+        {errors.length > 0 && (
           <div className="ps-dash-error-banner" role="alert">
             <div className="ps-dash-error-left">
               <AlertCircle size={18} className="ps-dash-error-icon" />
-              <span>{errorMessage}</span>
+              <div className="ps-dash-error-text">
+                <strong>Some dashboard data could not be loaded. Figures shown as “—” are unknown, not zero.</strong>
+                <ul className="ps-dash-error-list">
+                  {errors.map((msg) => (
+                    <li key={msg}>{msg}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
             <button
               type="button"
@@ -161,6 +177,18 @@ export default function AdminDashboard() {
               <RefreshCw size={13} />
               <span>Retry</span>
             </button>
+          </div>
+        )}
+
+        {/* Row-level security hides rows instead of failing, so zeros cannot be trusted here */}
+        {unverified && (
+          <div className="ps-dash-warning-banner" role="status">
+            <AlertTriangle size={18} className="ps-dash-warning-icon" />
+            <span>
+              These figures only include rows this account is allowed to read. Because the database does not
+              recognise it as an administrator, row-level security hides orders, customers and inactive products
+              without raising an error, so a 0 below does <strong>not</strong> mean the table is empty.
+            </span>
           </div>
         )}
 
@@ -182,9 +210,9 @@ export default function AdminDashboard() {
               <RefreshCw size={14} />
               <span>Refresh</span>
             </button>
-            <div className="ps-dash-live-badge" title="Live connection to Supabase database">
+            <div className={`ps-dash-live-badge is-${badge.tone}`} title={badge.title}>
               <span className="ps-live-pulse-dot" />
-              <span className="ps-live-text">Supabase Active</span>
+              <span className="ps-live-text">{badge.text}</span>
             </div>
           </div>
         </div>
@@ -199,8 +227,8 @@ export default function AdminDashboard() {
               </div>
               <div className="ps-kpi-meta">
                 <span className="ps-kpi-label">Total Orders</span>
-                <div className="ps-kpi-number">{metrics.totalOrders.toLocaleString()}</div>
-                <span className="ps-kpi-note">Recorded in database</span>
+                <div className="ps-kpi-number">{formatCount(metrics.totalOrders)}</div>
+                {kpiNote(metrics.totalOrders, 'Recorded in database')}
               </div>
             </div>
           </div>
@@ -213,8 +241,8 @@ export default function AdminDashboard() {
               </div>
               <div className="ps-kpi-meta">
                 <span className="ps-kpi-label">Total Revenue</span>
-                <div className="ps-kpi-number">{formatINR(metrics.totalRevenue)}</div>
-                <span className="ps-kpi-note">Settled / paid orders</span>
+                <div className="ps-kpi-number">{formatMoney(metrics.totalRevenue)}</div>
+                {kpiNote(metrics.totalRevenue, 'Paid or delivered orders')}
               </div>
             </div>
           </div>
@@ -227,8 +255,8 @@ export default function AdminDashboard() {
               </div>
               <div className="ps-kpi-meta">
                 <span className="ps-kpi-label">Total Products</span>
-                <div className="ps-kpi-number">{metrics.totalProducts.toLocaleString()}</div>
-                <span className="ps-kpi-note">Active catalog formulations</span>
+                <div className="ps-kpi-number">{formatCount(metrics.totalProducts)}</div>
+                {kpiNote(metrics.totalProducts, 'Active catalog formulations')}
               </div>
             </div>
           </div>
@@ -241,8 +269,8 @@ export default function AdminDashboard() {
               </div>
               <div className="ps-kpi-meta">
                 <span className="ps-kpi-label">Total Customers</span>
-                <div className="ps-kpi-number">{metrics.totalCustomers.toLocaleString()}</div>
-                <span className="ps-kpi-note">Registered clientele accounts</span>
+                <div className="ps-kpi-number">{formatCount(metrics.totalCustomers)}</div>
+                {kpiNote(metrics.totalCustomers, 'Distinct shoppers')}
               </div>
             </div>
           </div>
@@ -262,7 +290,9 @@ export default function AdminDashboard() {
               </Link>
             </div>
 
-            {bestSellers.length === 0 ? (
+            {panelErrors.bestSellers ? (
+              renderPanelError(panelErrors.bestSellers)
+            ) : bestSellers.length === 0 ? (
               <div className="ps-panel-empty-state">
                 <Crown size={26} className="ps-empty-icon" />
                 <p className="ps-empty-message">No sales recorded yet.</p>
@@ -319,7 +349,9 @@ export default function AdminDashboard() {
               </Link>
             </div>
 
-            {recentOrders.length === 0 ? (
+            {panelErrors.recentOrders ? (
+              renderPanelError(panelErrors.recentOrders)
+            ) : recentOrders.length === 0 ? (
               <div className="ps-panel-empty-state">
                 <FileText size={26} className="ps-empty-icon" />
                 <p className="ps-empty-message">No orders registered yet.</p>
@@ -384,7 +416,9 @@ export default function AdminDashboard() {
               </Link>
             </div>
 
-            {lowStock.length === 0 ? (
+            {panelErrors.lowStock ? (
+              renderPanelError(panelErrors.lowStock, true)
+            ) : lowStock.length === 0 ? (
               <div className="ps-panel-empty-state is-compact">
                 <span className="ps-stock-sufficient-check">✓</span>
                 <p className="ps-empty-message">All products are sufficiently stocked.</p>

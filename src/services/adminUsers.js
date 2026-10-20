@@ -14,7 +14,7 @@ export const ADMIN_ROLES = ['super_admin', 'admin', 'editor'];
 function rpcError(action, error) {
   if (error?.code === 'PGRST202') {
     return new Error(
-      `${action}: the admin-user database functions are not installed. Run supabase/migrations/20261019_admin_media_and_product_delete.sql in the Supabase SQL Editor.`
+      `${action}: the admin-user database functions are not installed. Run supabase/new-project/02_auth_functions_rls.sql in the Supabase SQL Editor (see supabase/new-project/README.md).`
     );
   }
   return dbError(action, error);

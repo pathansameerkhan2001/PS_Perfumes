@@ -33,6 +33,8 @@
 | 11 | [Testing and Operations](11-Testing-and-Operations.md) | Manual tests, smoke test, monitoring, backups, incidents |
 | 12 | [Future Implementation Roadmap](12-Future-Implementation-Roadmap.md) | Remaining work in phases |
 | 13 | [Production Migration and Handover](13-Production-Migration-and-Handover.md) | **Exact go-live procedure and readiness checklist** |
+| 14 | [AWS Migration Assessment](14-AWS-Migration-Assessment.md) | Supabase repair vs. S3 + RDS + API: effort, cost, risk, recommendation |
+| — | [New Supabase project setup](../../supabase/new-project/README.md) | **Move to `pwacxxrghlglvdtclbig` / bucket `Ps-perfumes-media`**: ordered SQL, admin bootstrap, RLS/Storage plan, data + media migration, env vars, cutover |
 
 ## Five things to know first
 

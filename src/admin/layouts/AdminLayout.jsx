@@ -38,6 +38,8 @@ export default function AdminLayout() {
   // database's is_admin(). Check it once so a mismatch is visible before saves fail.
   // null = checking / unknown, true = recognised, false = not recognised
   const [dbAdmin, setDbAdmin] = useState(null);
+  // Set when the is_admin() call itself fails (function missing, permission denied, network)
+  const [dbAdminError, setDbAdminError] = useState(null);
 
   useEffect(() => {
     if (!user?.id) return undefined;
@@ -47,8 +49,13 @@ export default function AdminLayout() {
       .then(({ data, error }) => {
         if (!mounted) return;
         setDbAdmin(error ? null : data === true);
+        setDbAdminError(error ? `${error.message || 'request failed'}${error.code ? ` (code ${error.code})` : ''}` : null);
       })
-      .catch(() => mounted && setDbAdmin(null));
+      .catch((err) => {
+        if (!mounted) return;
+        setDbAdmin(null);
+        setDbAdminError(err?.message || 'request failed');
+      });
     return () => {
       mounted = false;
     };
@@ -90,11 +97,17 @@ export default function AdminLayout() {
             <div className="ps-form-error-banner" role="alert">
               The database's administrator check (is_admin()) currently returns false for {email || 'this account'}.
               Image uploads and other changes are likely to be rejected until database-side administrator
-              authorization is corrected (see docs/KT/09-Troubleshooting-Runbook.md, R-2). Reload this page after a fix
+              authorization is corrected (see supabase/new-project/README.md and docs/KT/09-Troubleshooting-Runbook.md, R-2). Reload this page after a fix
               to re-check.
             </div>
           )}
-          <Outlet />
+          {dbAdminError && (
+            <div className="ps-form-error-banner" role="alert">
+              The database's administrator check (is_admin()) could not be run: {dbAdminError}. Changes may be
+              rejected until this is resolved (see supabase/new-project/README.md and docs/KT/09-Troubleshooting-Runbook.md, R-2).
+            </div>
+          )}
+          <Outlet context={{ dbAdmin, dbAdminError }} />
         </main>
       </div>
     </div>

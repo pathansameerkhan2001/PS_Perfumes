@@ -4,22 +4,21 @@ import posterFallback from '../../assets/hero-luxury-cinematic.png';
 import './HeroCinematic.css';
 
 const HERO_VIDEO_PATH = 'hero/ps-perfumes-hero-desktop.mp4';
-const HERO_VIDEO_FALLBACK =
-  'https://jnrmmhzhhmjxefapkemv.supabase.co/storage/v1/object/public/ps-perfumes/hero/ps-perfumes-hero-desktop.mp4';
 
 /**
  * PS PERFUMES — Luxury Brand Automatic Hero Video
  *
  * Core Project Requirement:
  * - Displays the dedicated automatic cinematic brand video:
- *   Supabase Storage: bucket 'ps-perfumes', path 'hero/ps-perfumes-hero-desktop.mp4'
+ *   Supabase Storage: configured bucket (VITE_SUPABASE_STORAGE_BUCKET), path 'hero/ps-perfumes-hero-desktop.mp4'
+ *   of the configured project. No hard-coded project URL: the poster image shows if it is missing.
  * - HTML5 video element with autoPlay, muted, loop, playsInline across modern desktop and mobile browsers
  * - Pure luxury visual experience with zero obstructive play buttons, play icons, or click overlays
  * - Positioned seamlessly beneath the fixed brand navigation with object-fit: cover
  */
 export default function HeroCinematic() {
   const videoRef = useRef(null);
-  const videoUrl = getStoragePublicUrl(HERO_VIDEO_PATH) || HERO_VIDEO_FALLBACK;
+  const videoUrl = getStoragePublicUrl(HERO_VIDEO_PATH);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -75,7 +74,7 @@ export default function HeroCinematic() {
         <video
           ref={videoRef}
           className="ps-hero-cinematic-video"
-          src={videoUrl}
+          src={videoUrl || undefined}
           poster={posterFallback}
           autoPlay
           muted
@@ -88,7 +87,7 @@ export default function HeroCinematic() {
           controlsList="nodownload nofullscreen noremoteplayback"
           aria-label="PS PERFUMES Haute Parfumerie Showcase"
         >
-          <source src={videoUrl} type="video/mp4" />
+          {videoUrl && <source src={videoUrl} type="video/mp4" />}
           <img
             src={posterFallback}
             alt="PS PERFUMES Haute Parfumerie Showcase"

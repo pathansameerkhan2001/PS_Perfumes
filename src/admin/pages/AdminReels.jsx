@@ -341,7 +341,7 @@ export default function AdminReels() {
                 </div>
 
                 <div className="ps-form-group">
-                  <label>Thumbnail Media (Supabase Storage: ps-perfumes/reels) *</label>
+                  <label>Thumbnail Media (Supabase Storage folder: reels/) *</label>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <label className="ps-combo-upload-btn" style={{ cursor: isUploading ? 'not-allowed' : 'pointer' }}>
                       {isUploading ? (

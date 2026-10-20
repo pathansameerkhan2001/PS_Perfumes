@@ -1,4 +1,4 @@
-import { supabase, ADMIN_EMAIL } from '../../lib/supabase';
+import { supabase } from '../../lib/supabase';
 
 const VALID_ADMIN_ROLES = ['super_admin', 'admin', 'editor'];
 const UNAUTHORIZED_ERROR = 'You do not have permission to access the admin panel.';
@@ -7,8 +7,13 @@ const UNAUTHORIZED_ERROR = 'You do not have permission to access the admin panel
 let cachedAdmin = null;
 
 /**
- * Verifies admin authorization against Supabase public.admin_users and auth metadata
- * Schema-accurate: checks existing columns in public.admin_users (id, user_id, role, is_active)
+ * Verifies admin authorization with the database, which is the only authority:
+ *   1. public.is_admin() must return true for the signed-in user's JWT. It checks for an active
+ *      public.admin_users row (or a server-set app_metadata.role) — the same rule every RLS
+ *      and Storage policy uses, so the panel never admits someone the database would reject.
+ *   2. The role shown in the panel comes from the user's own admin_users row.
+ * No e-mail address, VITE_* variable or user_metadata grants access: the browser can be edited,
+ * the database cannot.
  * @param {object} authUser - Authenticated user from Supabase Auth
  * @returns {Promise<{ authorized: boolean, role: string | null, error: string | null }>}
  */
@@ -23,56 +28,38 @@ export async function verifyAdminAuthorization(authUser) {
   }
 
   try {
-    const userEmail = (authUser.email || '').trim().toLowerCase();
-    const configAdminEmail = (ADMIN_EMAIL || '').trim().toLowerCase();
-
-    // 1. Direct master admin email match from environment configuration
-    if (userEmail && (userEmail === configAdminEmail || userEmail === 'brandnix.in@gmail.com')) {
-      cachedAdmin = {
-        userId: authUser.id,
-        email: authUser.email,
-        role: 'super_admin',
+    const { data: isAdmin, error: rpcErr } = await supabase.rpc('is_admin');
+    if (rpcErr) {
+      console.error('is_admin() check failed:', rpcErr);
+      return {
+        authorized: false,
+        role: null,
+        error: `The administrator check could not be completed (${rpcErr.message || 'database error'}). Please try again or contact the site owner.`,
       };
-      return { authorized: true, role: 'super_admin', error: null };
+    }
+    if (isAdmin !== true) {
+      return { authorized: false, role: null, error: UNAUTHORIZED_ERROR };
     }
 
-    // 2. Query public.admin_users matching user_id = authUser.id (using verified schema columns)
-    try {
-      const { data: adminRecord, error: adminErr } = await supabase
-        .from('admin_users')
-        .select('id, user_id, role, is_active')
-        .eq('user_id', authUser.id)
-        .maybeSingle();
-
-      if (!adminErr && adminRecord) {
-        const isActive = adminRecord.is_active !== false;
-        const assignedRole = (adminRecord.role || 'admin').toLowerCase();
-
-        if (isActive && VALID_ADMIN_ROLES.includes(assignedRole)) {
-          cachedAdmin = {
-            userId: authUser.id,
-            email: authUser.email,
-            role: assignedRole,
-          };
-          return { authorized: true, role: assignedRole, error: null };
-        }
-      }
-    } catch (e) {
-      // Non-fatal if table query is restricted
-      if (import.meta.env.DEV) console.warn('admin_users query notice:', e);
+    // Role for the UI only (authorization already decided above). RLS lets a user read their own row.
+    let role = null;
+    const { data: adminRecord, error: adminErr } = await supabase
+      .from('admin_users')
+      .select('role, is_active')
+      .eq('user_id', authUser.id)
+      .maybeSingle();
+    if (adminErr && import.meta.env.DEV) console.warn('admin_users role lookup notice:', adminErr.message);
+    if (adminRecord && adminRecord.is_active !== false) {
+      role = (adminRecord.role || '').toLowerCase();
+    }
+    if (!VALID_ADMIN_ROLES.includes(role)) {
+      // is_admin() also accepts a server-set app_metadata role
+      const appRole = (authUser.app_metadata?.role || '').toLowerCase();
+      role = VALID_ADMIN_ROLES.includes(appRole) ? appRole : 'admin';
     }
 
-    // 3. app_metadata role (can only be set server-side with the service role).
-    //    user_metadata and e-mail patterns are NOT trusted: any signed-in user can edit their
-    //    own user_metadata, and anyone can register an admin@<their-domain> address.
-    //    This mirrors public.is_admin() in the database (migration 20261019).
-    const appRole = (authUser.app_metadata?.role || '').toLowerCase();
-    if (VALID_ADMIN_ROLES.includes(appRole)) {
-      cachedAdmin = { userId: authUser.id, email: authUser.email, role: appRole };
-      return { authorized: true, role: appRole, error: null };
-    }
-
-    return { authorized: false, role: null, error: UNAUTHORIZED_ERROR };
+    cachedAdmin = { userId: authUser.id, email: authUser.email, role };
+    return { authorized: true, role, error: null };
   } catch (err) {
     console.error('Admin authorization verification error:', err);
     return { authorized: false, role: null, error: UNAUTHORIZED_ERROR };
@@ -172,7 +159,7 @@ export async function getAdminSession() {
  */
 export function subscribeToAuthChanges(callback) {
   const { data: { subscription } } = supabase.auth.onAuthStateChange(
-    async (event, session) => {
+    (event, session) => {
       if (event === 'SIGNED_OUT' || !session?.user) {
         cachedAdmin = null;
         callback({ event, user: null, role: null });
@@ -186,12 +173,16 @@ export function subscribeToAuthChanges(callback) {
       }
 
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-        const verification = await verifyAdminAuthorization(session.user);
-        if (verification.authorized) {
-          callback({ event, user: session.user, role: verification.role });
-        } else {
-          callback({ event, user: null, role: null });
-        }
+        // Verification calls the database. Awaiting Supabase calls inside this callback can
+        // deadlock the auth client, so it runs after the callback has returned.
+        setTimeout(async () => {
+          const verification = await verifyAdminAuthorization(session.user);
+          if (verification.authorized) {
+            callback({ event, user: session.user, role: verification.role });
+          } else {
+            callback({ event, user: null, role: null });
+          }
+        }, 0);
       }
     }
   );

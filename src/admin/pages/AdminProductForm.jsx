@@ -932,7 +932,7 @@ export default function AdminProductForm() {
             <div className="ps-tab-pane">
               <h2 className="ps-pane-title">Flacon Imagery</h2>
               <p className="ps-pane-desc">
-                Upload luxury assets to Supabase Storage bucket <code>ps-perfumes</code>. Supports WebP, PNG, and JPEG.
+                Upload luxury assets to Supabase Storage (folder <code>products/</code>). Supports WebP, PNG, and JPEG.
               </p>
 
               {/* 1. Main Primary Campaign Image */}

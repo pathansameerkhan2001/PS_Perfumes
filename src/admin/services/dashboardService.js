@@ -4,108 +4,84 @@ import { getPublicImageUrl } from '../../lib/storage';
 /**
  * Service providing real aggregated data for the PS PERFUMES Admin Dashboard
  * Strictly uses real Supabase queries with zero mock/fake numbers.
+ *
+ * A failed query is reported as an error with a null value, never as 0 or an empty list:
+ * "0 products" and "the products query failed" must look different on the dashboard.
+ * Note that RLS does not raise errors for reads — rows the caller may not see are simply
+ * left out — so the dashboard also shows whether the database recognises the admin.
  */
+
+function describeQueryError(error) {
+  if (!error) return 'unknown error';
+  const msg = error.message || error.details || error.hint || (error.status ? `HTTP ${error.status}` : 'unknown error');
+  return `${msg}${error.code ? ` (code ${error.code})` : ''}`;
+}
 
 /**
- * Fetch top 4 KPI metrics: Orders, Revenue, Active Products, Customers
+ * Fetch top 4 KPI metrics: Orders, Revenue, Active Products, Customers.
+ * Each metric is null when its query failed; `errors` lists one message per failed metric.
  */
 export async function getDashboardMetrics() {
-  try {
-    // 1. Orders count
-    const { count: ordersCount, error: ordersErr } = await supabase
+  const errors = [];
+  const fail = (label, error) => {
+    errors.push(`${label}: ${describeQueryError(error)}`);
+    return null;
+  };
+
+  const [ordersRes, revenueRes, productsRes, customersRes] = await Promise.all([
+    supabase.from('orders').select('id', { count: 'exact', head: true }),
+    // Revenue: paid or delivered orders only
+    supabase
       .from('orders')
-      .select('*', { count: 'exact', head: true });
+      .select('total_amount')
+      .or('payment_status.eq.paid,order_status.eq.delivered'),
+    // Live schema: products.is_active (there is no status column)
+    supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true),
+    supabase.from('customers').select('id', { count: 'exact', head: true }),
+  ]).catch((err) => {
+    const e = { message: err?.message || 'network error' };
+    return [{ error: e }, { error: e }, { error: e }, { error: e }];
+  });
 
-    if (ordersErr) throw ordersErr;
+  const totalOrders = ordersRes.error ? fail('Orders', ordersRes.error) : ordersRes.count ?? 0;
 
-    // 2. Revenue (Calculated strictly from paid or delivered orders)
-    const { data: revenueData, error: revErr } = await supabase
+  const totalRevenue = revenueRes.error
+    ? fail('Revenue', revenueRes.error)
+    : (revenueRes.data || []).reduce((acc, order) => acc + (Number(order.total_amount) || 0), 0);
+
+  const totalProducts = productsRes.error ? fail('Products', productsRes.error) : productsRes.count ?? 0;
+
+  // Checkout does not write to public.customers, so when it is empty or unavailable count
+  // the distinct shoppers on orders (customer_id, else customer_email)
+  let totalCustomers = null;
+  if (!customersRes.error && typeof customersRes.count === 'number' && customersRes.count > 0) {
+    totalCustomers = customersRes.count;
+  } else {
+    const { data: orderCusts, error: custErr } = await supabase
       .from('orders')
-      .select('total_amount, payment_status, order_status')
-      .or('payment_status.eq.paid,order_status.eq.delivered');
-
-    if (revErr && revErr.code !== 'PGRST116') {
-      if (import.meta.env.DEV) console.warn('Revenue fetch note:', revErr.message);
-    }
-
-    const totalRevenue = (revenueData || []).reduce(
-      (acc, order) => acc + (Number(order.total_amount) || 0),
-      0
-    );
-
-    // 3. Products count (Active products)
-    let productsCount = 0;
-    const { count: prodCount, error: prodErr } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true);
-
-    if (prodErr) {
-      // Fallback if schema uses status
-      const { count: altCount } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'active');
-      productsCount = altCount || 0;
+      .select('customer_email, customer_id');
+    if (custErr) {
+      fail('Customers', custErr);
     } else {
-      productsCount = prodCount || 0;
+      totalCustomers = new Set(
+        (orderCusts || [])
+          .map((o) => o.customer_id || (o.customer_email || '').trim().toLowerCase())
+          .filter(Boolean)
+      ).size;
     }
-
-    // 4. Customers count (from public.customers with fallback to unique orders/profiles)
-    let customersCount = 0;
-    try {
-      const { count: custCount, error: custErr } = await supabase
-        .from('customers')
-        .select('*', { count: 'exact', head: true });
-
-      if (!custErr && typeof custCount === 'number' && custCount > 0) {
-        customersCount = custCount;
-      } else {
-        // Checkout does not write to public.customers, so count the distinct shoppers on orders
-        // (the column is customer_email; the previous query asked for a non-existent "email")
-        const { data: orderCusts } = await supabase
-          .from('orders')
-          .select('customer_email, customer_id');
-
-        if (orderCusts && orderCusts.length > 0) {
-          const uniqueSet = new Set(
-            orderCusts
-              .map((o) => o.customer_id || (o.customer_email || '').trim().toLowerCase())
-              .filter(Boolean)
-          );
-          customersCount = uniqueSet.size;
-        }
-      }
-    } catch {
-      customersCount = 0;
-    }
-
-    return {
-      data: {
-        totalOrders: ordersCount || 0,
-        totalRevenue: totalRevenue || 0,
-        totalProducts: productsCount || 0,
-        totalCustomers: customersCount || 0,
-      },
-      error: null,
-    };
-  } catch (err) {
-    if (import.meta.env.DEV) console.error('getDashboardMetrics error:', err);
-    return {
-      data: {
-        totalOrders: 0,
-        totalRevenue: 0,
-        totalProducts: 0,
-        totalCustomers: 0,
-      },
-      error: `Unable to load dashboard data: ${err?.message || 'unknown error'}`,
-    };
   }
+
+  if (errors.length > 0 && import.meta.env.DEV) console.error('getDashboardMetrics errors:', errors);
+
+  return {
+    data: { totalOrders, totalRevenue, totalProducts, totalCustomers },
+    errors,
+  };
 }
 
 /**
  * Fetch Best Selling Products from actual order items
- * Returns empty array [] if no sales data exists
+ * Returns empty array [] if no sales data exists; error is set when the query failed
  */
 export async function getBestSellingProducts() {
   try {
@@ -113,7 +89,10 @@ export async function getBestSellingProducts() {
       .from('order_items')
       .select('product_id, product_name, quantity, total_price, unit_price, bottle_type, size_ml');
 
-    if (error || !items || items.length === 0) {
+    if (error) {
+      return { data: [], error: `Best sellers: ${describeQueryError(error)}` };
+    }
+    if (!items || items.length === 0) {
       return { data: [], error: null };
     }
 
@@ -151,7 +130,7 @@ export async function getBestSellingProducts() {
     return { data: sorted, error: null };
   } catch (err) {
     if (import.meta.env.DEV) console.warn('getBestSellingProducts note:', err);
-    return { data: [], error: null };
+    return { data: [], error: `Best sellers: ${err?.message || 'unknown error'}` };
   }
 }
 
@@ -245,7 +224,10 @@ export async function getLowStockProducts() {
       .order('stock_quantity', { ascending: true })
       .limit(20);
 
-    if (error || !variants) {
+    if (error) {
+      return { data: [], error: `Low stock: ${describeQueryError(error)}` };
+    }
+    if (!variants) {
       return { data: [], error: null };
     }
 
@@ -274,7 +256,7 @@ export async function getLowStockProducts() {
     return { data: lowStockItems.slice(0, 5), error: null };
   } catch (err) {
     if (import.meta.env.DEV) console.warn('getLowStockProducts note:', err);
-    return { data: [], error: null };
+    return { data: [], error: `Low stock: ${err?.message || 'unknown error'}` };
   }
 }
 
@@ -314,7 +296,7 @@ export async function getRecentOrders(limit = 5) {
 
     if (error) {
       if (import.meta.env.DEV) console.warn('getRecentOrders note:', error.message);
-      return { data: [], error: null };
+      return { data: [], error: `Recent orders: ${describeQueryError(error)}` };
     }
 
     const formatted = (data || []).map((ord) => ({
@@ -326,6 +308,6 @@ export async function getRecentOrders(limit = 5) {
     return { data: formatted, error: null };
   } catch (err) {
     if (import.meta.env.DEV) console.warn('getRecentOrders catch:', err);
-    return { data: [], error: null };
+    return { data: [], error: `Recent orders: ${err?.message || 'unknown error'}` };
   }
 }

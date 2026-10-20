@@ -82,6 +82,18 @@ begin
                  where table_schema = 'public' and table_name = 'admin_users' and column_name = 'user_id') then
     raise exception 'public.admin_users.user_id does not exist — schema differs from the verified live schema';
   end if;
+  -- Columns written by section 1 and read by is_admin(); role must be plain text because the
+  -- functions below compare and assign it as text (an enum/domain needs this file adapted first)
+  if (select count(*) from information_schema.columns
+      where table_schema = 'public' and table_name = 'admin_users'
+        and column_name in ('role', 'is_active', 'updated_at')) <> 3 then
+    raise exception 'public.admin_users must have role, is_active and updated_at columns (diagnostics section 11) — schema differs from the verified live schema';
+  end if;
+  if exists (select 1 from information_schema.columns
+             where table_schema = 'public' and table_name = 'admin_users' and column_name = 'role'
+               and data_type not in ('text', 'character varying')) then
+    raise exception 'public.admin_users.role is not text (diagnostics section 11) — adapt the role comparisons in this file before applying';
+  end if;
   if not exists (select 1 from information_schema.columns
                  where table_schema = 'public' and table_name = 'products' and column_name = 'is_active') then
     raise exception 'public.products.is_active does not exist — schema differs from the verified live schema';
@@ -204,8 +216,8 @@ $$;
 
 revoke all on function public.is_admin() from public;
 revoke all on function public.is_super_admin() from public;
-grant execute on function public.is_admin() to anon, authenticated;
-grant execute on function public.is_super_admin() to authenticated;
+grant execute on function public.is_admin() to anon, authenticated, service_role;
+grant execute on function public.is_super_admin() to authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
 -- 3. Stop automatic e-mail-domain promotion (only if that trigger function exists)

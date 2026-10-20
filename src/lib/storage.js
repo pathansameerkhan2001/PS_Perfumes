@@ -199,7 +199,7 @@ export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS,
             : adminCheck === 'yes'
             ? `${userEmail} is an administrator, but no Storage policy allows uploads to "${STORAGE_BUCKET}/${cleanFolder}/".`
             : `The Storage policies for bucket "${STORAGE_BUCKET}" do not allow ${userEmail} to upload to "${cleanFolder}/".`;
-        userFriendlyMsg = `Storage rejected the upload (${statusCode || '403'}: ${rawMsg}). ${cause} Fix: apply supabase/migrations/20261019_admin_media_and_product_delete.sql (or the narrow supabase/repairs/20261021_storage_upload_repair.sql) in the Supabase SQL Editor.`;
+        userFriendlyMsg = `Storage rejected the upload (${statusCode || '403'}: ${rawMsg}). ${cause} Fix: run supabase/new-project/03_storage.sql, and make sure this account has an active admin_users row (04_bootstrap_admin.sql) — see supabase/new-project/README.md.`;
       } else if (rawMsg.includes('Invalid key')) {
         userFriendlyMsg = `Invalid storage object key "${filePath}" (${rawMsg}).`;
       } else if (rawMsg.includes('mime type') || rawMsg.includes('not allowed')) {

@@ -18,6 +18,7 @@
 | R-4 | Any admin save: "no row was changed" | RLS blocked the write (not admin per `is_admin()`) or record gone | Simulation file (admin_is_admin) | Apply migration / grant admin |
 | R-5 | Delete product: "admin_delete_product is not installed" | Migration pending | Diagnostics section 07 | Apply migration |
 | R-6 | Product "deactivated instead of deleted" | Order items / combos / reviews reference it — **expected** | Banner lists counts | None (history preserved) |
+| R-6b | Admin dashboard shows 0 orders / ₹0 / 0 products | RLS hides rows from an account `is_admin()` does not recognise. Reads return 200 with no rows, not an error, so 0 is a lower bound, not a fact. A failed query now shows "—" with the error listed, and an amber notice appears while `is_admin()` is false | Diagnostics section 16 (true row counts, run in SQL Editor) vs. the dashboard | Fix R-2; the counts update on reload. Never insert placeholder rows |
 | R-7 | Storefront empty (no products/combos/reels) | Tables empty, items inactive, or public read policy missing | Network: 200 with `[]` vs 401/42501 | Activate items; apply migration |
 | R-8 | Checkout: "Your order could not be placed (… row-level security …)" | Insert policy missing (migration pending) | API logs `POST /orders` | Apply migration |
 | R-9 | Checkout: order received but items not saved | order_items insert rejected (e.g. order older than 30 min) | API logs | Contact customer using the order number; re-enter items as admin |

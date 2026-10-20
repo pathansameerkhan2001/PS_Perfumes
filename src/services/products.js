@@ -859,7 +859,7 @@ export async function deleteProduct(id) {
   if (error) {
     if (error.code === 'PGRST202') {
       throw new Error(
-        'The database function admin_delete_product is not installed. Run supabase/migrations/20261019_admin_media_and_product_delete.sql in the Supabase SQL Editor, then try again.'
+        'The database function admin_delete_product is not installed. Run supabase/new-project/02_auth_functions_rls.sql in the Supabase SQL Editor (see supabase/new-project/README.md), then try again.'
       );
     }
     if (error.code === '42501') {
