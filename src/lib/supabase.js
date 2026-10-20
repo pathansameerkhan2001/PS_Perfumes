@@ -11,6 +11,17 @@ if (!supabasePublishableKey) {
   throw new Error('Missing VITE_SUPABASE_PUBLISHABLE_KEY');
 }
 
+// Host of the configured project, shown in connection error messages (public information)
+export const SUPABASE_HOST = (() => {
+  try {
+    const parsed = new URL(supabaseUrl);
+    if (parsed.protocol !== 'https:' && !import.meta.env.DEV) throw new Error('not https');
+    return parsed.host;
+  } catch {
+    throw new Error(`VITE_SUPABASE_URL is not a valid https URL: "${supabaseUrl}"`);
+  }
+})();
+
 export const supabase = createClient(supabaseUrl, supabasePublishableKey, {
   auth: {
     persistSession: true,

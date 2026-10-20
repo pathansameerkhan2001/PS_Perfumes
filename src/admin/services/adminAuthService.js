@@ -1,7 +1,54 @@
-import { supabase } from '../../lib/supabase';
+import { supabase, SUPABASE_HOST } from '../../lib/supabase';
 
 const VALID_ADMIN_ROLES = ['super_admin', 'admin', 'editor'];
-const UNAUTHORIZED_ERROR = 'You do not have permission to access the admin panel.';
+// Sign-in worked, but the database does not list this account as an administrator
+const UNAUTHORIZED_ERROR =
+  'Your sign-in was accepted, but this account is not registered as an active administrator in the database. Contact the site owner to be granted access.';
+
+/** True when the request never got an HTTP response (DNS, offline, blocked, CORS). */
+function isNetworkFailure(err) {
+  if (!err) return false;
+  const msg = String(err.message || err).toLowerCase();
+  return (
+    err.name === 'AuthRetryableFetchError' ||
+    (err.name === 'TypeError' && msg.includes('fetch')) ||
+    msg.includes('failed to fetch') ||
+    msg.includes('networkerror') ||
+    msg.includes('load failed') ||
+    msg.includes('network request failed')
+  );
+}
+
+const NETWORK_ERROR =
+  `The sign-in server (${SUPABASE_HOST || 'not configured'}) could not be reached. ` +
+  'If your internet connection works, the site is configured with a database address that is unavailable — ' +
+  'the site owner must check the VITE_SUPABASE_URL setting and redeploy.';
+
+/**
+ * Turns a Supabase Auth / PostgREST error into a message that says which side failed:
+ * network or configuration, credentials, account state, or rate limiting.
+ */
+function describeAuthError(err) {
+  if (isNetworkFailure(err)) return NETWORK_ERROR;
+  const code = err?.code || '';
+  const msg = String(err?.message || '');
+  const status = Number(err?.status) || 0;
+
+  if (code === 'invalid_credentials' || /invalid login credentials/i.test(msg)) {
+    return 'Incorrect email or password.';
+  }
+  if (code === 'email_not_confirmed' || /email not confirmed/i.test(msg)) {
+    return 'This account’s email address has not been confirmed yet. Confirm it in Supabase → Authentication → Users.';
+  }
+  if (code === 'user_banned') return 'This account has been disabled.';
+  if (status === 429 || code === 'over_request_rate_limit' || /rate limit/i.test(msg)) {
+    return 'Too many sign-in attempts. Wait a few minutes and try again.';
+  }
+  if (/invalid api key|no api key|api key/i.test(msg) || status === 401) {
+    return 'The site’s Supabase publishable key does not match its project URL (configuration error). The site owner must check VITE_SUPABASE_PUBLISHABLE_KEY and redeploy.';
+  }
+  return msg ? `Sign-in failed: ${msg}` : 'Sign-in failed for an unknown reason.';
+}
 
 // In-memory cache of verified admin role to prevent repeated DB round-trips
 let cachedAdmin = null;
@@ -31,10 +78,16 @@ export async function verifyAdminAuthorization(authUser) {
     const { data: isAdmin, error: rpcErr } = await supabase.rpc('is_admin');
     if (rpcErr) {
       console.error('is_admin() check failed:', rpcErr);
+      if (isNetworkFailure(rpcErr)) {
+        return { authorized: false, role: null, error: NETWORK_ERROR };
+      }
       return {
         authorized: false,
         role: null,
-        error: `The administrator check could not be completed (${rpcErr.message || 'database error'}). Please try again or contact the site owner.`,
+        error:
+          rpcErr.code === 'PGRST202'
+            ? 'Sign-in worked, but the database administrator check (is_admin) is not installed in this project yet. The site owner must finish the database setup (supabase/new-project/README.md).'
+            : `Sign-in worked, but the administrator check could not be completed (${rpcErr.message || 'database error'}${rpcErr.code ? `, code ${rpcErr.code}` : ''}).`,
       };
     }
     if (isAdmin !== true) {
@@ -82,8 +135,9 @@ export async function adminLogin(email, password) {
     });
 
     if (signInError) {
-      if (import.meta.env.DEV) console.warn('Supabase signIn error:', signInError.message);
-      return { user: null, role: null, error: signInError.message };
+      // Logged without the password or keys: name, status and code identify the failure
+      console.warn('Supabase sign-in error:', signInError.name, signInError.status, signInError.code || '', signInError.message);
+      return { user: null, role: null, error: describeAuthError(signInError) };
     }
 
     if (!data?.user) {
@@ -112,7 +166,7 @@ export async function adminLogin(email, password) {
     return {
       user: null,
       role: null,
-      error: err?.message || 'Unexpected login error',
+      error: describeAuthError(err),
     };
   }
 }

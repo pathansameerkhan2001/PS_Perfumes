@@ -58,12 +58,10 @@ export default function AdminLogin() {
     }
   };
 
+  // No reset e-mail is sent from here (the site has no set-new-password page yet), so the
+  // message says how a reset is actually done instead of claiming an e-mail was dispatched.
   const handleForgotPassword = (e) => {
     e.preventDefault();
-    if (!email.trim()) {
-      setErrorMessage('Please enter your email above before requesting a password reset.');
-      return;
-    }
     setForgotSent(true);
     setErrorMessage('');
   };
@@ -90,7 +88,10 @@ export default function AdminLogin() {
         {/* Forgot Password Confirmation */}
         {forgotSent && (
           <div className="ps-login-alert is-info" role="status">
-            <span>Password recovery instructions have been dispatched to {email}.</span>
+            <span>
+              Password resets are not sent from this page. The site owner can set a new password for your account in
+              Supabase → Authentication → Users.
+            </span>
           </div>
         )}
 

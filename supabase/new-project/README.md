@@ -62,6 +62,8 @@ Check before every run: the browser URL contains `/project/pwacxxrghlglvdtclbig/
 - `auth.users` / passwords: there are no customer accounts, and admins set a new password.
 - `contact_enquiries`: it does not exist in the old project.
 
+**Blocker found 2026-10-20:** `jnrmmhzhhmjxefapkemv.supabase.co` no longer exists in DNS (NXDOMAIN via Google and Cloudflare resolvers). The old project is paused, removed or deleted, so nothing below can be exported until its state is known. Check it in the Supabase dashboard. A paused project can usually be restored from there, but that changes the old project and needs approval. If it was deleted, data can only come from a backup taken earlier.
+
 **Unknown until exported:** the actual old row counts. Anonymous reads of the old project return 0 rows except `categories`, so the true counts can only be seen with owner access.
 
 1. **Record the source counts (read-only):** old project → SQL Editor → run `supabase/diagnostics/20261019_media_and_product_delete_diagnostics.sql` → export CSV. Section 16 holds the row counts, section 13 the status and discount constraints.
