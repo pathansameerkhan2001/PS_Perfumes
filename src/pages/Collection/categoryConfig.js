@@ -1,3 +1,13 @@
+import attarArt from '../../assets/categories/fragrance-attar.png';
+import perfumeArt from '../../assets/categories/fragrance-perfume.png';
+import bakhoorArt from '../../assets/categories/fragrance-bakhoor.png';
+import muskyArt from '../../assets/categories/fragrance-musky.png';
+import oudArt from '../../assets/categories/fragrance-oud.png';
+import floralArt from '../../assets/categories/fragrance-floral.png';
+import woodyArt from '../../assets/categories/fragrance-woody.png';
+
+// heroImage: built-in artwork for each fragrance family. An image set on the category in
+// Admin → Categories (categories.image_url) takes precedence (see CollectionPage.jsx).
 // Master category configuration for all 7 fragrance categories
 export const CATEGORY_CONFIG = {
   attar: {
@@ -6,7 +16,7 @@ export const CATEGORY_CONFIG = {
     title: 'Attar',
     fallbackDescription:
       '100% pure concentrated fragrance oils, non-alcoholic and artisanal distilled.',
-    heroImage: '/assets/combo-attar-set.webp',
+    heroImage: attarArt,
     metaTitle: 'PS PERFUMES | Attar',
     metaDescription:
       'Discover pure non-alcoholic artisanal attars distilled from rare florals, aged agarwood, and Mysore sandalwood.',
@@ -17,7 +27,7 @@ export const CATEGORY_CONFIG = {
     title: 'Perfume',
     fallbackDescription:
       'Haute Parfumerie & Extrait de Parfum crafted for enduring sillage.',
-    heroImage: '/assets/prod-royal-amber.webp',
+    heroImage: perfumeArt,
     metaTitle: 'PS PERFUMES | Perfume',
     metaDescription:
       'Explore master perfumes and extraits de parfum, hand-crafted with rare essences for exceptional longevity.',
@@ -28,7 +38,7 @@ export const CATEGORY_CONFIG = {
     title: 'Bakhoor',
     fallbackDescription:
       'Exquisite aromatic wood chips soaked in perfumed essential oils for traditional incense rituals.',
-    heroImage: '/assets/promo-banner.webp',
+    heroImage: bakhoorArt,
     metaTitle: 'PS PERFUMES | Bakhoor',
     metaDescription:
       'Authentic royal bakhoor and slow-burning scented agarwood chips steeped in Taif rose, amber, and musk.',
@@ -39,7 +49,7 @@ export const CATEGORY_CONFIG = {
     title: 'Musky',
     fallbackDescription:
       'Sensual white musk, royal deer musk accords, and intimate velvet undertones.',
-    heroImage: '/assets/cat-unisex.webp',
+    heroImage: muskyArt,
     metaTitle: 'PS PERFUMES | Musky',
     metaDescription:
       'Sensual, clean velvet musk creations that melt into the skin for a magnetic second-skin sillage.',
@@ -50,7 +60,7 @@ export const CATEGORY_CONFIG = {
     title: 'Oud',
     fallbackDescription:
       'Precious aged Cambodi, Hindi, and Assam agarwood essences of royal lineage.',
-    heroImage: '/assets/combo-oud-trio.webp',
+    heroImage: oudArt,
     metaTitle: 'PS PERFUMES | Oud',
     metaDescription:
       'The pinnacle of oriental perfumery: aged pure agarwood distillations, dark resins, and smoky royal ouds.',
@@ -61,7 +71,7 @@ export const CATEGORY_CONFIG = {
     title: 'Floral',
     fallbackDescription:
       'Enchanting Bulgarian rose damascena, jasmine sambac, and ethereal blossoms.',
-    heroImage: '/assets/cat-women.webp',
+    heroImage: floralArt,
     metaTitle: 'PS PERFUMES | Floral',
     metaDescription:
       'Captivating floral fragrances featuring hand-picked dawn roses, white jasmine blossoms, and lush botanicals.',
@@ -72,7 +82,7 @@ export const CATEGORY_CONFIG = {
     title: 'Woody',
     fallbackDescription:
       'Smoked cedar, Mysore sandalwood, vetiver, and midnight birch accords.',
-    heroImage: '/assets/prod-noir-absolu.webp',
+    heroImage: woodyArt,
     metaTitle: 'PS PERFUMES | Woody',
     metaDescription:
       'Rich architectural woods, smoked cedar, pure Mysore sandalwood, and damp vetiver extractions.',

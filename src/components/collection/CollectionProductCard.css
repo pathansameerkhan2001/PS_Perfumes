@@ -486,3 +486,90 @@
     height: 35px;
   }
 }
+
+/* ==========================================================================
+   Availability states (variants come from the product's real data)
+   ========================================================================== */
+.ps-col-card-unavailable,
+.ps-col-card-stock-note {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8C5A3C;
+}
+
+.ps-col-card-stock-note {
+  margin-left: auto;
+  font-size: 10px;
+}
+
+/* A size that exists but is out of stock: still selectable (to see its price), visibly muted */
+.ps-col-pill.is-unavailable {
+  color: #A79F94;
+  text-decoration: line-through;
+  text-decoration-color: rgba(140, 132, 122, 0.6);
+}
+
+.ps-col-pill.is-unavailable.is-active {
+  color: #D8CFC2;
+}
+
+.ps-col-pill:focus-visible,
+.ps-col-card-add-btn:focus-visible,
+.ps-col-card-fav-btn:focus-visible,
+.ps-col-card-wish-floating:focus-visible {
+  outline: 2px solid #C9A45C;
+  outline-offset: 2px;
+}
+
+.ps-col-card:focus-visible {
+  outline: 2px solid #C9A45C;
+  outline-offset: 3px;
+}
+
+.ps-col-card-add-btn:disabled {
+  background-color: #EFEBE4;
+  border-color: #E2DCD2;
+  color: #8C847A;
+  cursor: not-allowed;
+}
+
+.ps-col-card-add-btn:disabled:hover {
+  background-color: #EFEBE4;
+  border-color: #E2DCD2;
+  color: #8C847A;
+}
+
+/* ==========================================================================
+   Hover only where hover exists; touch screens get a short press effect instead
+   (hover styles otherwise "stick" after a tap on phones).
+   ========================================================================== */
+@media (hover: hover) and (pointer: fine) {
+  .ps-col-card:hover {
+    border-color: rgba(201, 164, 92, 0.5);
+    border-color: color-mix(in srgb, var(--family-accent, #C9A45C) 65%, transparent);
+  }
+}
+
+@media (hover: none) {
+  .ps-col-card:hover {
+    transform: none;
+    border-color: rgba(23, 21, 19, 0.09);
+    box-shadow: 0 2px 8px rgba(23, 21, 19, 0.04);
+  }
+
+  .ps-col-card:hover .ps-col-card-img {
+    transform: none;
+  }
+
+  .ps-col-card:hover .ps-col-card-name {
+    color: #171513;
+  }
+
+  .ps-col-card:active {
+    transform: scale(0.99);
+    border-color: rgba(201, 164, 92, 0.45);
+  }
+}

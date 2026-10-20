@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Heart, Star, ShoppingBag, Check, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
@@ -12,23 +12,55 @@ export default function CollectionProductCard({
 }) {
   const { addToCart, toggleWishlist, isInWishlist, setSelectedProduct } = useCart();
   const [isAddedAnim, setIsAddedAnim] = useState(false);
-  const [selectedBottle, setSelectedBottle] = useState('Glass');
-  const [selectedSize, setSelectedSize] = useState('50ml');
   const navigate = useNavigate();
 
   const isWishlisted = isInWishlist(product.id);
   const imageSrc =
     product.main_image || product.image || '/assets/ps-perfumes-logo.webp';
 
-  const normalizeBottle = (b) => (b && String(b).toLowerCase().includes('pvc') ? 'PVC' : 'Glass');
-  const normalizeSz = (s) => (s ? String(s).toLowerCase().replace(/\s+/g, '') : '50ml');
+  // Bottle / size options come from the product's own active, priced variants — never a fixed
+  // list — so what the card shows is exactly what can be bought.
+  const variants = useMemo(
+    () => (product.variants || []).filter((v) => v.is_active !== false && Number(v.sale_price || v.price) > 0),
+    [product.variants]
+  );
+  const inStock = (v) => Number(v?.stock_quantity ?? v?.stock ?? 0) > 0;
+  const bottleLabel = (b) => {
+    const s = String(b || '').toLowerCase();
+    if (s.includes('pvc')) return 'PVC';
+    if (s.includes('glass')) return 'Glass';
+    return String(b || 'Standard');
+  };
+  const sizeKey = (s) => String(s || '').toLowerCase().replace(/\s+/g, '');
+  const bottles = [...new Set(variants.map((v) => bottleLabel(v.bottle_type)))];
+  const initialVariant = variants.find(inStock) || variants[0] || null;
 
-  const currentVariant = product.variants?.find((v) =>
-    normalizeBottle(v.bottle_type) === selectedBottle &&
-    normalizeSz(v.size_ml) === normalizeSz(selectedSize)
-  ) || product.variants?.[0] || null;
+  const [selectedBottle, setSelectedBottle] = useState(() => (initialVariant ? bottleLabel(initialVariant.bottle_type) : null));
+  const [selectedSize, setSelectedSize] = useState(() => (initialVariant ? sizeKey(initialVariant.size_ml) : null));
 
-  const price = currentVariant ? Number(currentVariant.sale_price || currentVariant.price) : (Number(product.price) || 0);
+  // Sizes available for the selected bottle (one entry per size, first variant wins)
+  const sizeOptions = variants
+    .filter((v) => bottleLabel(v.bottle_type) === selectedBottle)
+    .filter((v, i, arr) => arr.findIndex((o) => sizeKey(o.size_ml) === sizeKey(v.size_ml)) === i);
+
+  const currentVariant =
+    variants.find((v) => bottleLabel(v.bottle_type) === selectedBottle && sizeKey(v.size_ml) === selectedSize) || null;
+  const isUnavailable = variants.length === 0;
+  const isOutOfStock = !isUnavailable && (!currentVariant || !inStock(currentVariant));
+
+  const chooseBottle = (label) => {
+    setSelectedBottle(label);
+    // Keep the size if this bottle has it, otherwise pick its first (preferably in-stock) size
+    const forBottle = variants.filter((v) => bottleLabel(v.bottle_type) === label);
+    if (!forBottle.some((v) => sizeKey(v.size_ml) === selectedSize)) {
+      const next = forBottle.find(inStock) || forBottle[0];
+      setSelectedSize(next ? sizeKey(next.size_ml) : null);
+    }
+  };
+
+  const price = currentVariant
+    ? Number(currentVariant.sale_price || currentVariant.price)
+    : Number(product.price) || 0;
   const comparePrice = currentVariant?.compare_at_price
     ? Number(currentVariant.compare_at_price)
     : Number(product.compare_at_price || product.originalPrice || null);
@@ -48,12 +80,13 @@ export default function CollectionProductCard({
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
-    const chosenVariant = currentVariant || {
-      bottle_type: selectedBottle === 'Glass' ? 'Glass Bottle' : 'PVC Bottle',
-      size_ml: selectedSize,
-      price: price,
-    };
-    addToCart(product, 1, chosenVariant);
+    // No variants: the product page explains availability; never add an invented variant
+    if (isUnavailable) {
+      navigate(`/product/${slug}`);
+      return;
+    }
+    if (!currentVariant || isOutOfStock) return;
+    addToCart(product, 1, currentVariant);
     setIsAddedAnim(true);
     setTimeout(() => setIsAddedAnim(false), 1800);
   };
@@ -81,7 +114,8 @@ export default function CollectionProductCard({
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
-        if (e.key === 'Enter') handleCardClick();
+        // Only when the card itself has focus: Enter on an inner button must not also navigate
+        if (e.key === 'Enter' && e.target === e.currentTarget) handleCardClick();
       }}
       aria-label={`View ${product.name}`}
     >
@@ -171,52 +205,67 @@ export default function CollectionProductCard({
 
         {/* Pricing Row */}
         <div className="ps-col-card-pricing">
-          <span className="ps-col-card-price">{formatINR(price)}</span>
-          {hasDiscount && (
-            <span className="ps-col-card-compare-price">
-              {formatINR(comparePrice)}
-            </span>
+          {isUnavailable ? (
+            <span className="ps-col-card-unavailable">Currently unavailable</span>
+          ) : (
+            <>
+              <span className="ps-col-card-price">{formatINR(price)}</span>
+              {hasDiscount && (
+                <span className="ps-col-card-compare-price">
+                  {formatINR(comparePrice)}
+                </span>
+              )}
+              {isOutOfStock && <span className="ps-col-card-stock-note">Out of stock</span>}
+            </>
           )}
         </div>
 
-        {/* Minimal Luxury Variant Selectors */}
-        <div className="ps-col-card-variants" onClick={(e) => e.stopPropagation()}>
-          <div className="ps-col-var-row">
-            <span className="ps-col-var-lbl">Bottle:</span>
-            <div className="ps-col-pills">
-              <button
-                type="button"
-                className={`ps-col-pill ${selectedBottle === 'Glass' ? 'is-active' : ''}`}
-                onClick={() => setSelectedBottle('Glass')}
-              >
-                Glass
-              </button>
-              <button
-                type="button"
-                className={`ps-col-pill ${selectedBottle === 'PVC' ? 'is-active' : ''}`}
-                onClick={() => setSelectedBottle('PVC')}
-              >
-                PVC
-              </button>
-            </div>
-          </div>
+        {/* Variant selectors built from the product's real variants */}
+        {!isUnavailable && (
+          <div className="ps-col-card-variants" onClick={(e) => e.stopPropagation()}>
+            {bottles.length > 1 && (
+              <div className="ps-col-var-row" role="group" aria-label="Bottle">
+                <span className="ps-col-var-lbl">Bottle:</span>
+                <div className="ps-col-pills">
+                  {bottles.map((b) => (
+                    <button
+                      key={b}
+                      type="button"
+                      className={`ps-col-pill ${selectedBottle === b ? 'is-active' : ''}`}
+                      aria-pressed={selectedBottle === b}
+                      onClick={() => chooseBottle(b)}
+                    >
+                      {b}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-          <div className="ps-col-var-row">
-            <span className="ps-col-var-lbl">Size:</span>
-            <div className="ps-col-pills">
-              {['30ml', '50ml', '100ml'].map((sz) => (
-                <button
-                  key={sz}
-                  type="button"
-                  className={`ps-col-pill ${normalizeSz(selectedSize) === sz ? 'is-active' : ''}`}
-                  onClick={() => setSelectedSize(sz)}
-                >
-                  {sz.replace('ml', ' ml')}
-                </button>
-              ))}
-            </div>
+            {sizeOptions.length > 0 && (
+              <div className="ps-col-var-row" role="group" aria-label="Size">
+                <span className="ps-col-var-lbl">Size:</span>
+                <div className="ps-col-pills">
+                  {sizeOptions.map((v) => {
+                    const key = sizeKey(v.size_ml);
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        className={`ps-col-pill ${selectedSize === key ? 'is-active' : ''} ${inStock(v) ? '' : 'is-unavailable'}`}
+                        aria-pressed={selectedSize === key}
+                        onClick={() => setSelectedSize(key)}
+                        title={inStock(v) ? undefined : 'Out of stock'}
+                      >
+                        {v.size_ml}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
         {/* Action Controls: [ ADD TO CART ] [ ♡ ] */}
         <div className="ps-col-card-actions">
@@ -224,13 +273,24 @@ export default function CollectionProductCard({
             type="button"
             className={`ps-col-card-add-btn ${isAddedAnim ? 'is-success' : ''}`}
             onClick={handleAddToCart}
-            aria-label={`Add ${product.name} to cart`}
+            disabled={isOutOfStock}
+            aria-label={
+              isUnavailable
+                ? `View details of ${product.name}`
+                : isOutOfStock
+                ? `${product.name} is out of stock in this option`
+                : `Add ${product.name} to cart`
+            }
           >
             {isAddedAnim ? (
               <>
                 <Check size={14} strokeWidth={2.2} />
                 <span>ADDED</span>
               </>
+            ) : isUnavailable ? (
+              <span>VIEW DETAILS</span>
+            ) : isOutOfStock ? (
+              <span>OUT OF STOCK</span>
             ) : (
               <>
                 <ShoppingBag size={14} strokeWidth={1.8} />

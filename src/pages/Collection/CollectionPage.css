@@ -23,20 +23,35 @@
    1. CATEGORY HERO (Master Attar Structural Reference)
    ========================================================================== */
 
+/* Fragrance-family identity: --family-accent / --family-glow / --family-deep come from the
+   .ps-family-<slug> tokens in src/index.css (set on .ps-collection-page). */
 .ps-collection-hero {
   width: 100%;
-  background-color: #F8F5EF;
-  border-bottom: 1px solid rgba(201, 164, 92, 0.2);
-  padding: clamp(36px, 4vw, 64px) 0;
+  color: #F8F3E9;
+  background:
+    radial-gradient(ellipse 55% 110% at 82% 50%, var(--family-glow) 0%, transparent 70%),
+    linear-gradient(180deg, var(--family-deep) 0%, #0A0908 100%);
+  border-bottom: 1px solid rgba(201, 164, 92, 0.28);
+  padding: clamp(40px, 5vw, 76px) 0;
   position: relative;
   overflow: hidden;
 }
 
 .ps-collection-hero-grid {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: clamp(32px, 5vw, 80px);
+  gap: clamp(24px, 5vw, 96px);
+}
+
+.ps-collection-hero-eyebrow {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--family-accent);
+  margin-bottom: 10px;
 }
 
 .ps-collection-hero-content {
@@ -58,41 +73,42 @@
 }
 
 .ps-breadcrumb-link {
-  color: #77716A;
+  color: rgba(248, 243, 233, 0.62);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
-.ps-breadcrumb-link:hover {
-  color: #C9A45C;
+.ps-breadcrumb-link:hover,
+.ps-breadcrumb-link:focus-visible {
+  color: var(--family-accent);
 }
 
 .ps-breadcrumb-sep {
-  color: #C9A45C;
+  color: var(--family-accent);
   font-size: 11px;
 }
 
 .ps-breadcrumb-current {
-  color: #171513;
+  color: #F8F3E9;
   font-weight: 600;
 }
 
 /* Heading */
 .ps-collection-hero-title {
   font-family: 'Cinzel', 'Cormorant Garamond', serif;
-  font-size: clamp(38px, 4.2vw, 62px);
+  font-size: clamp(38px, 4.2vw, 64px);
   font-weight: 500;
-  color: #171513;
-  margin: 0 0 16px 0;
-  line-height: 1.08;
-  letter-spacing: -0.01em;
+  color: #F8F3E9;
+  margin: 0 0 18px 0;
+  line-height: 1.06;
+  letter-spacing: 0.02em;
 }
 
-/* Decorative Champagne Hairline */
+/* Decorative hairline in the family accent */
 .ps-collection-hero-divider {
   width: 56px;
-  height: 2px;
-  background-color: #C9A45C;
+  height: 1px;
+  background-color: var(--family-accent);
   margin-bottom: 18px;
 }
 
@@ -100,29 +116,32 @@
 .ps-collection-hero-description {
   font-family: 'Montserrat', sans-serif;
   font-size: clamp(14px, 1.05vw, 16px);
-  line-height: 1.65;
-  color: #55504A;
+  font-weight: 300;
+  line-height: 1.75;
+  color: rgba(248, 243, 233, 0.78);
   margin: 0;
-  max-width: 580px;
+  max-width: 560px;
 }
 
-/* Hero Media: Large Editorial Fragrance Bottle Image */
+/* Hero Media: round family artwork (built-in medallions are 240×240, so the frame never
+   exceeds 240px and stays sharp). Admin-set photos are cropped to the same circle. */
 .ps-collection-hero-media {
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 12px;
 }
 
 .ps-collection-hero-frame {
   position: relative;
-  width: 100%;
-  max-width: 440px;
+  width: clamp(150px, 19vw, 240px);
   aspect-ratio: 1 / 1;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 16px 40px rgba(23, 21, 19, 0.1),
-              0 2px 10px rgba(201, 164, 92, 0.15);
-  border: 1px solid rgba(201, 164, 92, 0.35);
+  border-radius: 50%;
+  /* Fine ring at a distance, in the family accent */
+  outline: 1px solid rgba(201, 164, 92, 0.4);
+  outline: 1px solid color-mix(in srgb, var(--family-accent) 50%, transparent);
+  outline-offset: 10px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 0 80px var(--family-glow);
   background-color: #0E0C0A;
 }
 
@@ -132,6 +151,7 @@
   object-fit: cover;
   object-position: center;
   display: block;
+  border-radius: 50%;
 }
 
 /* ==========================================================================
@@ -710,17 +730,9 @@
     grid-template-columns: repeat(3, 1fr);
   }
 
+  /* Tablet: keep text and artwork side by side (the artwork no longer stacks on top) */
   .ps-collection-hero-grid {
-    grid-template-columns: 1fr;
     gap: 32px;
-  }
-
-  .ps-collection-hero-media {
-    order: -1;
-  }
-
-  .ps-collection-hero-frame {
-    max-width: 320px;
   }
 }
 
@@ -746,8 +758,40 @@
     width: 100%;
   }
 
+  /* Mobile: compact banner — text beside a small medallion, so products start higher */
+  .ps-collection-hero {
+    padding: 26px 0 28px;
+    background:
+      radial-gradient(ellipse 70% 120% at 90% 50%, var(--family-glow) 0%, transparent 70%),
+      linear-gradient(180deg, var(--family-deep) 0%, #0A0908 100%);
+  }
+
+  .ps-collection-hero-grid {
+    gap: 18px;
+  }
+
   .ps-collection-hero-title {
     font-size: 32px;
+    margin-bottom: 12px;
+  }
+
+  .ps-collection-hero-divider {
+    margin-bottom: 12px;
+  }
+
+  .ps-collection-hero-description {
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+
+  .ps-collection-hero-media {
+    padding: 6px;
+  }
+
+  .ps-collection-hero-frame {
+    width: 112px;
+    outline-offset: 5px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 40px var(--family-glow);
   }
 }
 
@@ -764,6 +808,20 @@
   }
 
   .ps-collection-hero-frame {
-    max-width: 260px;
+    width: 88px;
+  }
+
+  .ps-collection-hero-title {
+    font-size: 28px;
+  }
+
+  .ps-collection-hero-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.26em;
+  }
+
+  .ps-collection-breadcrumb {
+    font-size: 10.5px;
+    margin-bottom: 10px;
   }
 }

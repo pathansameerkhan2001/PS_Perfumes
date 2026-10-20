@@ -87,14 +87,14 @@ export default function ProductCard({ product, priority = false }) {
   // Add to cart click
   const handleAddToCart = (e) => {
     e.stopPropagation();
-    // If only one variant, add directly!
-    if (activeVariants.length <= 1) {
-      const chosen = activeVariants[0] || {
-        bottle_type: 'Glass Bottle',
-        size_ml: '50 ml',
-        price: displayPrice,
-      };
-      addToCart(product, 1, chosen);
+    // No purchasable variant: the product page explains availability (never add an invented variant)
+    if (activeVariants.length === 0) {
+      handleCardClick();
+      return;
+    }
+    // If only one variant, add directly (addToCart refuses it when out of stock)
+    if (activeVariants.length === 1) {
+      addToCart(product, 1, activeVariants[0]);
       setIsAddedAnim(true);
       setTimeout(() => setIsAddedAnim(false), 1800);
     } else {
@@ -111,7 +111,8 @@ export default function ProductCard({ product, priority = false }) {
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') handleCardClick();
+          // Only when the card itself has focus: Enter on an inner button must not also navigate
+          if (e.key === 'Enter' && e.target === e.currentTarget) handleCardClick();
         }}
         aria-label={`View ${product.name}`}
       >
@@ -188,9 +189,16 @@ export default function ProductCard({ product, priority = false }) {
 
           {/* Pricing Row */}
           <div className="ps-pcard-pricing-row">
-            <span className="ps-pcard-price">{formatINR(displayPrice)}</span>
-            {hasDiscount && (
-              <span className="ps-pcard-orig-price">{formatINR(displayComparePrice)}</span>
+            {activeVariants.length === 0 || !(displayPrice > 0) ? (
+              // No priced variant: never show "₹0"
+              <span className="ps-pcard-price">Currently unavailable</span>
+            ) : (
+              <>
+                <span className="ps-pcard-price">{formatINR(displayPrice)}</span>
+                {hasDiscount && (
+                  <span className="ps-pcard-orig-price">{formatINR(displayComparePrice)}</span>
+                )}
+              </>
             )}
           </div>
 

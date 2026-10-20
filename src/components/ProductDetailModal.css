@@ -542,3 +542,20 @@
     font-size: 12px;
   }
 }
+
+/* Unavailable / out-of-stock option: actions are disabled, not hidden */
+.ps-pdetail-add-bag-btn:disabled,
+.ps-pdetail-buy-now-btn:disabled,
+.ps-qty-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.ps-size-pill:focus-visible,
+.ps-pdetail-add-bag-btn:focus-visible,
+.ps-pdetail-buy-now-btn:focus-visible {
+  outline: 2px solid #C9A45C;
+  outline-offset: 2px;
+}

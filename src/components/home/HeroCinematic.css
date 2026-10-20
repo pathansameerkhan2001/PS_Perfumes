@@ -2,8 +2,8 @@
    PS PERFUMES — Luxury Hero Video Stylesheet
    Pure Visual Haute Parfumerie Hero Video:
    - Full-width responsive container
-   - Zero text obstruction, overlays, or buttons
-   - Clean autoplaying video playback
+   - No text over the film; one small corner Play/Pause control
+   - Clean autoplaying video playback (poster until the first frame)
    - Native controls strictly suppressed
    - Seamless placement beneath fixed luxury navigation
    ========================================================================== */
@@ -43,9 +43,29 @@
   }
 }
 
-/* Standard Mobile (<= 768px) */
+/* Media Wrapper (fills the section on tablet/desktop; the text overlays it there) */
+.ps-hero-media-wrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #050505;
+}
+
+/* Mobile (<= 768px): the film keeps its own height and the text sits BELOW it, so the
+   bottles are never covered. The section grows to film + text (about 70–78% of the screen).
+   The film heights are unchanged from the previous design, so the crop stays the same. */
 @media (max-width: 768px) {
   .ps-hero-cinematic {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .ps-hero-media-wrapper {
+    position: relative;
+    inset: auto;
     height: 56vh;
     height: 56svh;
     min-height: 400px;
@@ -55,7 +75,7 @@
 
 /* Compact Mobile (<= 480px, including 430px and 390px) */
 @media (max-width: 480px) {
-  .ps-hero-cinematic {
+  .ps-hero-media-wrapper {
     height: 52vh;
     height: 52svh;
     min-height: 360px;
@@ -65,22 +85,12 @@
 
 /* Small Mobile (<= 375px, down to 320px) */
 @media (max-width: 375px) {
-  .ps-hero-cinematic {
+  .ps-hero-media-wrapper {
     height: 48vh;
     height: 48svh;
     min-height: 330px;
     max-height: 420px;
   }
-}
-
-/* Media Wrapper */
-.ps-hero-media-wrapper {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background-color: #050505;
 }
 
 /* Responsive Hero Video Element */
@@ -183,4 +193,259 @@
   background: linear-gradient(to top, rgba(5, 5, 5, 0.8) 0%, transparent 100%);
   pointer-events: none;
   z-index: 2;
+}
+
+/* Play / Pause control — shown while playing (pause) and when autoplay was refused or the
+   visitor prefers reduced motion (play). Sits above the vignette and gradient blends. */
+.ps-hero-playback-toggle {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  z-index: 3;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(201, 169, 110, 0.55);
+  background: rgba(5, 5, 5, 0.45);
+  color: #C9A96E;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  opacity: 0.75;
+  transition: opacity 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+}
+
+.ps-hero-playback-toggle:hover {
+  opacity: 1;
+  background: rgba(5, 5, 5, 0.7);
+  border-color: #C9A96E;
+}
+
+.ps-hero-playback-toggle:focus-visible {
+  opacity: 1;
+  outline: 2px solid #E5C77A;
+  outline-offset: 3px;
+}
+
+/* Paused (autoplay refused / reduced motion): make "Play film" noticeable, still restrained */
+.ps-hero-playback-toggle.is-paused {
+  opacity: 1;
+  width: 48px;
+  height: 48px;
+  border-color: #C9A96E;
+  background: rgba(5, 5, 5, 0.6);
+}
+
+/* Optical centring of the play triangle */
+.ps-hero-playback-toggle.is-paused svg {
+  margin-left: 2px;
+}
+
+@media (max-width: 768px) {
+  .ps-hero-playback-toggle {
+    right: 14px;
+    bottom: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-hero-playback-toggle {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   Hero text (heading, line, buttons)
+   Desktop/tablet: bottom-left over the film, with a left scrim that fades out before the
+   centre so the bottle stays bright. Mobile: below the film on black (see media query).
+   ========================================================================== */
+.ps-hero-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(5, 5, 5, 0.78) 0%, rgba(5, 5, 5, 0.42) 30%, rgba(5, 5, 5, 0) 54%),
+    linear-gradient(0deg, rgba(5, 5, 5, 0.55) 0%, rgba(5, 5, 5, 0) 38%);
+}
+
+.ps-hero-content {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 3;
+  width: 100%;
+  max-width: 640px;
+  padding: 0 clamp(24px, 5vw, 88px) clamp(44px, 8vh, 96px);
+  box-sizing: border-box;
+  color: var(--text-ivory, #F8F5EE);
+}
+
+.ps-hero-content-inner {
+  animation: psHeroRise 1s var(--transition-smooth, ease) 0.25s both;
+}
+
+@keyframes psHeroRise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ps-hero-eyebrow {
+  display: block;
+  font-family: var(--font-sans, 'Montserrat', sans-serif);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--gold-bright, #E5C77A);
+  margin-bottom: 14px;
+}
+
+.ps-hero-heading {
+  font-family: var(--font-editorial, 'Cormorant Garamond', serif);
+  font-size: clamp(36px, 3.7vw, 62px);
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: 0.005em;
+  margin: 0;
+  color: var(--text-ivory, #F8F5EE);
+  text-shadow: 0 2px 28px rgba(0, 0, 0, 0.45);
+  text-wrap: balance;
+}
+
+.ps-hero-rule {
+  display: block;
+  width: 52px;
+  height: 1px;
+  background: var(--gold-primary, #C8A45D);
+  margin: 20px 0 18px;
+}
+
+.ps-hero-sub {
+  font-family: var(--font-sans, 'Montserrat', sans-serif);
+  font-size: clamp(13.5px, 1vw, 15px);
+  font-weight: 300;
+  line-height: 1.75;
+  color: rgba(248, 245, 238, 0.82);
+  margin: 0;
+  max-width: 440px;
+}
+
+.ps-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.ps-hero-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 26px;
+  font-family: var(--font-sans, 'Montserrat', sans-serif);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 2px;
+  box-sizing: border-box;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+
+.ps-hero-btn--primary {
+  background: var(--gold-primary, #C8A45D);
+  color: #050505;
+  border: 1px solid var(--gold-primary, #C8A45D);
+}
+
+.ps-hero-btn--primary:hover {
+  background: var(--gold-bright, #E5C77A);
+  border-color: var(--gold-bright, #E5C77A);
+  transform: translateY(-1px);
+}
+
+.ps-hero-btn--ghost {
+  background: rgba(5, 5, 5, 0.25);
+  color: var(--text-ivory, #F8F5EE);
+  border: 1px solid rgba(248, 245, 238, 0.55);
+}
+
+.ps-hero-btn--ghost:hover {
+  color: var(--gold-bright, #E5C77A);
+  border-color: var(--gold-bright, #E5C77A);
+}
+
+.ps-hero-btn:focus-visible {
+  outline: 2px solid var(--gold-bright, #E5C77A);
+  outline-offset: 3px;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .ps-hero-content {
+    max-width: 560px;
+    padding-bottom: clamp(36px, 6vh, 64px);
+  }
+}
+
+/* Mobile: text below the film, centred, buttons full width */
+@media (max-width: 768px) {
+  .ps-hero-scrim {
+    display: none;
+  }
+
+  .ps-hero-content {
+    position: static;
+    max-width: none;
+    padding: 26px 20px 38px;
+    text-align: center;
+    background: #050505;
+  }
+
+  .ps-hero-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    margin-bottom: 10px;
+  }
+
+  .ps-hero-heading {
+    font-size: clamp(30px, 8.4vw, 40px);
+    text-shadow: none;
+  }
+
+  .ps-hero-rule {
+    margin: 16px auto 14px;
+  }
+
+  .ps-hero-sub {
+    margin: 0 auto;
+    max-width: 34ch;
+  }
+
+  .ps-hero-actions {
+    justify-content: center;
+    margin-top: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ps-hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    max-width: 340px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .ps-hero-btn {
+    width: 100%;
+    min-height: 48px;
+  }
 }

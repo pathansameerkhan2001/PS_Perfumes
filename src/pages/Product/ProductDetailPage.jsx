@@ -226,16 +226,15 @@ export default function ProductDetailPage() {
     ? Number(currentVariant.compare_at_price)
     : Number(product.compare_at_price || product.originalPrice || null);
 
-  const hasDiscount = Boolean(comparePrice && comparePrice > price);
+  // A discount only exists for a real selected variant (never "100% OFF" against a missing price)
+  const hasDiscount = Boolean(currentVariant && comparePrice && comparePrice > price);
   const discountPercent = hasDiscount
     ? Math.round(((comparePrice - price) / comparePrice) * 100)
     : null;
 
-  const currentStock =
-    currentVariant && currentVariant.stock !== undefined
-      ? Number(currentVariant.stock)
-      : Number(product.stock ?? 0);
-  const isOutOfStock = variantUnavailable || currentStock <= 0;
+  // Stock of the selected variant only: a product without a matching variant cannot be bought
+  const currentStock = currentVariant ? Number(currentVariant.stock_quantity ?? currentVariant.stock ?? 0) : 0;
+  const isOutOfStock = variantUnavailable || !currentVariant || currentStock <= 0;
 
   const isWishlisted = isInWishlist(product.id);
 
@@ -273,7 +272,8 @@ export default function ProductDetailPage() {
       });
       if (distinct.length > 0) return distinct;
     }
-    return isAttar ? ['Glass Bottle'] : ['Glass Bottle', 'PVC Bottle'];
+    // No variants: no bottle options are invented (the product shows as unavailable)
+    return [];
   })();
 
   // Distinct sizes offered in active variants (or sensible fallback per category)
@@ -286,7 +286,8 @@ export default function ProductDetailPage() {
       });
       if (distinct.length > 0) return distinct;
     }
-    return isAttar ? ['6 ml', '10 ml'] : ['30 ml', '50 ml', '100 ml'];
+    // No variants: no sizes are invented
+    return [];
   })();
 
   const sizeAvailableFor = (bottle, sz) =>
@@ -305,32 +306,18 @@ export default function ProductDetailPage() {
     if (image) setActiveImage(image);
   };
 
-  // Add to cart handler
+  // Add to cart handler — only the real selected variant (isOutOfStock covers "no variant")
   const handleAddToCart = () => {
-    if (isOutOfStock) return;
-    const variantPayload = currentVariant || {
-      id: `var-${product.id}-${selectedBottleType}-${selectedSize}`,
-      bottle_type: selectedBottleType,
-      size_ml: selectedSize,
-      price: price,
-      stock: currentStock,
-    };
-    addToCart(product, quantity, variantPayload);
+    if (isOutOfStock || !currentVariant) return;
+    addToCart(product, quantity, currentVariant);
     setIsAddedAnim(true);
     setTimeout(() => setIsAddedAnim(false), 2000);
   };
 
   // Express Buy Now handler
   const handleBuyNow = () => {
-    if (isOutOfStock) return;
-    const variantPayload = currentVariant || {
-      id: `var-${product.id}-${selectedBottleType}-${selectedSize}`,
-      bottle_type: selectedBottleType,
-      size_ml: selectedSize,
-      price: price,
-      stock: currentStock,
-    };
-    addToCart(product, quantity, variantPayload);
+    if (isOutOfStock || !currentVariant) return;
+    addToCart(product, quantity, currentVariant);
     navigate('/checkout');
   };
 
@@ -480,7 +467,14 @@ export default function ProductDetailPage() {
 
             {/* Pricing Row */}
             <div className="ps-pdp-price-row">
-              <span className="ps-pdp-current-price">{formatINR(price)}</span>
+              {/* Price of the selected variant; never "₹0" when nothing can be bought */}
+              <span className="ps-pdp-current-price">
+                {currentVariant
+                  ? formatINR(price)
+                  : activeVariants.length === 0
+                  ? 'Currently unavailable'
+                  : 'Choose an option'}
+              </span>
               {hasDiscount && (
                 <span className="ps-pdp-original-price">{formatINR(comparePrice)}</span>
               )}
@@ -569,18 +563,18 @@ export default function ProductDetailPage() {
                   </button>
                 </div>
               </div>
-            ) : (
+            ) : availableBottleTypes.length === 1 ? (
               <div className="ps-pdp-selector-section">
                 <span className="ps-pdp-section-heading">FLACON TYPE:</span>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 14px', background: '#F7F4EE', borderRadius: '6px', fontSize: '13px', color: '#171411', border: '1px solid #E5D7C3' }}>
-                  <span style={{ fontWeight: 600 }}>{availableBottleTypes[0] || 'Glass Bottle'}</span>
+                  <span style={{ fontWeight: 600 }}>{availableBottleTypes[0]}</span>
                   <span style={{ fontSize: '11px', color: '#8C8479' }}>{isAttar ? '(Artisanal Oil Roll-On)' : '(Luxury Flacon)'}</span>
                 </div>
               </div>
-            )}
+            ) : null}
 
-            {/* SIZE SELECTOR */}
-            <div className="ps-pdp-selector-section">
+            {/* SIZE SELECTOR (only the product's real sizes) */}
+            <div className="ps-pdp-selector-section" style={availableSizes.length === 0 ? { display: 'none' } : undefined}>
               <span className="ps-pdp-section-heading">SIZE:</span>
               <div className="ps-pdp-sizes-grid">
                 {availableSizes.map((sz) => {

@@ -165,8 +165,37 @@
 
 .ps-category-card:hover .ps-category-circle-frame {
   border-color: rgba(201, 164, 92, 0.95);
-  box-shadow: 0 12px 32px rgba(201, 164, 92, 0.28), 0 4px 12px rgba(23, 21, 19, 0.08);
+  /* Each family's own accent and glow (tokens: .ps-family-<slug> in index.css) */
+  border-color: var(--family-accent);
+  box-shadow: 0 12px 32px var(--family-glow), 0 4px 12px rgba(23, 21, 19, 0.08);
   transform: translateY(-3px);
+}
+
+.ps-category-card:focus-visible {
+  outline: none;
+}
+
+.ps-category-card:focus-visible .ps-category-circle-frame {
+  border-color: var(--family-accent);
+  box-shadow: 0 0 0 3px var(--family-glow), 0 0 0 4px var(--family-accent);
+}
+
+/* Touch screens: no sticky hover after a tap; a short press effect instead */
+@media (hover: none) {
+  .ps-category-card:hover .ps-category-img {
+    transform: none;
+  }
+
+  .ps-category-card:hover .ps-category-circle-frame {
+    transform: none;
+    border-color: rgba(201, 164, 92, 0.55);
+    box-shadow: 0 8px 24px rgba(23, 21, 19, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+  }
+
+  .ps-category-card:active .ps-category-circle-frame {
+    border-color: var(--family-accent);
+    transform: scale(0.97);
+  }
 }
 
 /* Category Typography: Refined Serif / Display */

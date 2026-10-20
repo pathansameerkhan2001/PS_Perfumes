@@ -34,19 +34,20 @@ export default function QuickAddModal({ product, isOpen, onClose }) {
   // Active variants from product data
   const variants = useMemo(() => {
     if (!product?.variants || !Array.isArray(product.variants)) return [];
-    return product.variants.filter((v) => v.active !== false && v.is_active !== false);
+    // Only active variants with a real price can be bought
+    return product.variants.filter(
+      (v) => v.active !== false && v.is_active !== false && Number(v.sale_price || v.price) > 0
+    );
   }, [product]);
 
   const isAttar = product?.category?.toLowerCase() === 'attar';
 
-  // Available bottle types
+  // Available bottle types — from the product's variants only (no invented options)
   const availableBottles = useMemo(() => {
     const set = new Set();
     variants.forEach((v) => set.add(normalizeBottle(v.bottle_type)));
-    const list = Array.from(set);
-    if (list.length > 0) return list;
-    return isAttar ? ['Glass'] : ['Glass', 'PVC'];
-  }, [variants, isAttar]);
+    return Array.from(set);
+  }, [variants]);
 
   // Reset defaults when product opens
   useEffect(() => {
@@ -96,9 +97,8 @@ export default function QuickAddModal({ product, isOpen, onClose }) {
         if (!list.includes(norm)) list.push(norm);
       });
     list.sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0));
-    if (list.length > 0) return list;
-    return isAttar ? ['6 ML', '10 ML'] : ['30 ML', '50 ML', '100 ML'];
-  }, [variants, selectedBottle, isAttar]);
+    return list;
+  }, [variants, selectedBottle]);
 
   // Keep size valid when bottle changes
   const handleBottleChange = (bottle) => {
@@ -112,17 +112,15 @@ export default function QuickAddModal({ product, isOpen, onClose }) {
     }
   };
 
-  // Find exact matching variant
+  // Exact match only: falling back to another variant would sell a different size than the
+  // one highlighted (bottle changes re-select a valid size in handleBottleChange)
   const selectedVariant = useMemo(() => {
     return (
       variants.find(
         (v) =>
           normalizeBottle(v.bottle_type) === selectedBottle &&
           normalizeSize(v.size_ml) === selectedSize
-      ) ||
-      variants.find((v) => normalizeBottle(v.bottle_type) === selectedBottle) ||
-      variants[0] ||
-      null
+      ) || null
     );
   }, [variants, selectedBottle, selectedSize]);
 
@@ -140,8 +138,9 @@ export default function QuickAddModal({ product, isOpen, onClose }) {
     ? Math.round(((comparePrice - price) / comparePrice) * 100)
     : null;
 
-  const stock = selectedVariant?.stock !== undefined ? Number(selectedVariant.stock) : (product.stock ?? 15);
-  const isOutOfStock = stock <= 0;
+  // Stock of the selected variant only; no selected variant means nothing can be bought
+  const stock = selectedVariant ? Number(selectedVariant.stock_quantity ?? selectedVariant.stock ?? 0) : 0;
+  const isOutOfStock = !selectedVariant || stock <= 0;
 
   const rating = Number(product.rating || 0);
   const reviewCount = Number(product.review_count || product.reviewCount || 0);
@@ -150,16 +149,9 @@ export default function QuickAddModal({ product, isOpen, onClose }) {
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
-    if (isOutOfStock) return;
+    if (isOutOfStock || !selectedVariant) return;
 
-    const chosenVariant = selectedVariant || {
-      bottle_type: selectedBottle === 'Glass' ? 'Glass Bottle' : 'PVC Bottle',
-      size_ml: selectedSize.toLowerCase(),
-      price: price,
-      stock: stock,
-    };
-
-    addToCart(product, quantity, chosenVariant);
+    addToCart(product, quantity, selectedVariant);
     setIsAddedAnim(true);
     setTimeout(() => {
       setIsAddedAnim(false);
@@ -314,9 +306,9 @@ export default function QuickAddModal({ product, isOpen, onClose }) {
                 <button
                   type="button"
                   className="ps-quickadd-qty-btn"
-                  onClick={() => setQuantity((q) => Math.min(stock || 10, q + 1))}
+                  onClick={() => setQuantity((q) => Math.min(stock, q + 1))}
                   aria-label="Increase quantity"
-                  disabled={quantity >= (stock || 10)}
+                  disabled={isOutOfStock || quantity >= stock}
                 >
                   <Plus size={13} />
                 </button>

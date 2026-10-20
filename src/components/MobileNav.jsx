@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import {
   X,
   Home,
@@ -164,6 +164,8 @@ export default function MobileNav({
   };
 
   return (
+    // reducedMotion="user": skip slide/scale movement when the OS asks for reduced motion
+    <MotionConfig reducedMotion="user">
     <AnimatePresence>
       {isOpen && (
         <div className="ps-mobile-nav-portal">
@@ -306,5 +308,6 @@ export default function MobileNav({
         </div>
       )}
     </AnimatePresence>
+    </MotionConfig>
   );
 }

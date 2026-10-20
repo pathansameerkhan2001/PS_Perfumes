@@ -6,7 +6,7 @@ export default function FragranceCategoryCard({ name, slug, image }) {
   return (
     <Link
       to={`/${slug}`}
-      className="ps-category-card"
+      className={`ps-category-card ps-family-${slug}`}
       aria-label={`Shop ${name} Fragrances`}
     >
       {/* Circular Image Container with Delicate Gold Rim */}

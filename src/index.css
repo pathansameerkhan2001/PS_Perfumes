@@ -150,3 +150,43 @@ img {
   height: auto;
   display: block;
 }
+
+/* ==========================================================================
+   Reduced motion (OS setting "reduce motion" / Windows "Animation effects" off).
+   Animations and transitions complete almost instantly instead of being removed, so every
+   element still reaches its final, visible state: marquees rest at their start position,
+   drawers that animate "forwards" still end on screen, spinners stop rotating.
+   The hero film handles this itself (poster + Play button) in HeroCinematic.jsx.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================================
+   Fragrance-family tokens — one shared layout, a distinct identity per family.
+   Apply with class "ps-family-<slug>" (category pages, homepage family cards).
+   --family-accent: eyebrows, dividers, rings, hover borders
+   --family-glow:   soft light behind artwork · --family-deep: dark banner base tone
+   ========================================================================== */
+:root {
+  --family-accent: #C9A45C;
+  --family-glow: rgba(201, 164, 92, 0.22);
+  --family-deep: #120E0A;
+}
+.ps-family-attar   { --family-accent: #D4AF6A; --family-glow: rgba(212, 175, 106, 0.26); --family-deep: #15100A; }
+.ps-family-perfume { --family-accent: #D6B56D; --family-glow: rgba(214, 181, 109, 0.20); --family-deep: #111012; }
+.ps-family-bakhoor { --family-accent: #CC8C5C; --family-glow: rgba(204, 120, 70, 0.26);  --family-deep: #160D09; }
+.ps-family-musky   { --family-accent: #DCC6B2; --family-glow: rgba(220, 198, 178, 0.18); --family-deep: #131011; }
+.ps-family-oud     { --family-accent: #BC8A52; --family-glow: rgba(165, 104, 52, 0.30);  --family-deep: #110B07; }
+.ps-family-floral  { --family-accent: #DBA6A2; --family-glow: rgba(210, 142, 142, 0.24); --family-deep: #150D0F; }
+.ps-family-woody   { --family-accent: #BCA67C; --family-glow: rgba(150, 132, 92, 0.26);  --family-deep: #0F0F0B; }

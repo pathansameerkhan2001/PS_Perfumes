@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { Search, X, ArrowRight } from 'lucide-react';
 import { getProducts } from '../services/products';
 import { formatINR } from '../utils/formatCurrency';
@@ -67,6 +67,8 @@ export default function SearchModal({ isOpen, onClose }) {
   };
 
   return (
+    // reducedMotion="user": skip slide/scale movement when the OS asks for reduced motion
+    <MotionConfig reducedMotion="user">
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -167,5 +169,6 @@ export default function SearchModal({ isOpen, onClose }) {
         </motion.div>
       )}
     </AnimatePresence>
+    </MotionConfig>
   );
 }

@@ -254,11 +254,11 @@ export default function CollectionPage({ category: categoryProp }) {
   const visibleProducts = filteredProducts.slice(0, visibleCount);
 
   return (
-    <div className="ps-collection-page">
+    <div className={`ps-collection-page ps-family-${baseConfig.slug || categoryKey}`}>
       {/* ==============================================================
-          1. CATEGORY HERO (Master Attar Structural Reference)
-          Left: Breadcrumb + Large Heading + Description
-          Right: Large Premium Fragrance Image
+          1. CATEGORY HERO — dark editorial banner; each family has its own
+          accent and glow (CSS variables per .ps-family-<slug>).
+          Left: Breadcrumb + Heading + Description · Right: family artwork
           ============================================================== */}
       <section className="ps-collection-hero" aria-label={`${activeCategory.name} Collection Header`}>
         <div className="ps-collection-container">
@@ -276,6 +276,8 @@ export default function CollectionPage({ category: categoryProp }) {
                 </span>
               </nav>
 
+              <span className="ps-collection-hero-eyebrow">Fragrance Family</span>
+
               {/* Category Heading */}
               <h1 className="ps-collection-hero-title">{activeCategory.title}</h1>
 
@@ -292,12 +294,23 @@ export default function CollectionPage({ category: categoryProp }) {
             <div className="ps-collection-hero-media">
               <div className="ps-collection-hero-frame">
                 <img
+                  key={activeCategory.heroImage}
                   src={activeCategory.heroImage}
-                  alt={`PS PERFUMES ${activeCategory.name} Master Flacon`}
+                  alt={`${activeCategory.name} fragrance family`}
                   className="ps-collection-hero-img"
                   loading="eager"
-                  width="480"
-                  height="480"
+                  decoding="async"
+                  fetchPriority="high"
+                  width="240"
+                  height="240"
+                  onError={(e) => {
+                    // An admin-set image that fails to load falls back to the family's own artwork
+                    const img = e.currentTarget;
+                    if (img.dataset.fallback !== '1' && baseConfig.heroImage) {
+                      img.dataset.fallback = '1';
+                      img.src = baseConfig.heroImage;
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -613,7 +626,7 @@ export default function CollectionPage({ category: categoryProp }) {
               <p className="ps-empty-sub">
                 {activeFilterCount > 0
                   ? 'Try relaxing your price or curation filters to explore other exquisite formulations.'
-                  : 'Our master perfumers are distilling new rare extractions for this atelier library.'}
+                  : 'New fragrances will appear here as they are added. In the meantime, explore our other collections.'}
               </p>
               {activeFilterCount > 0 ? (
                 <button

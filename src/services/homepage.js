@@ -7,9 +7,10 @@ export const INITIAL_SECTIONS = [
   {
     id: 'sec-hero',
     section_key: 'hero',
-    title: 'ROYAL OUD & AMBER ESSENCE',
-    subtitle: 'Pure visual luxury campaign showcasing the bespoke flacons of PS PERFUMES.',
-    cta_text: '',
+    // Shown as the homepage hero heading / line / button (editable in Admin → Homepage)
+    title: 'Discover the Art of Luxury Fragrance',
+    subtitle: 'Attars, perfumes and bakhoor from PS PERFUMES, Kadapa.',
+    cta_text: 'Shop the Collection',
     cta_link: '/shop',
     image_url: '/assets/hero-luxury-cinematic.png',
     secondary_image_url: '/assets/hero-slide2.webp',
