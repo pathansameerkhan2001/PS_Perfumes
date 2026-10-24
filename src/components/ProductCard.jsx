@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Heart, Star, ShoppingBag, Check } from 'lucide-react';
+import { Star, ShoppingBag, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
@@ -12,12 +12,11 @@ import './ProductCard.css';
  * Clean, elegant, visually focused with 4:5 cinematic image and single ADD TO CART CTA.
  */
 export default function ProductCard({ product, priority = false }) {
-  const { addToCart, toggleWishlist, isInWishlist } = useCart();
+  const { addToCart } = useCart();
   const [isAddedAnim, setIsAddedAnim] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const navigate = useNavigate();
 
-  const isWishlisted = isInWishlist(product.id);
   const imageSrc = product.main_image || product.image || '/assets/ps-perfumes-logo.webp';
   const slug = product.slug || product.id;
 
@@ -89,12 +88,6 @@ export default function ProductCard({ product, priority = false }) {
     navigate(`/product/${slug}`);
   };
 
-  // Wishlist toggle
-  const handleWishlistClick = (e) => {
-    e.stopPropagation();
-    toggleWishlist(product);
-  };
-
   // Add to cart click
   const handleAddToCart = (e) => {
     e.stopPropagation();
@@ -149,22 +142,6 @@ export default function ProductCard({ product, priority = false }) {
             )}
             {isSoldOut && <span className="ps-pcard-badge ps-badge-soldout">SOLD OUT</span>}
           </div>
-
-          {/* Top-Right Circular Wishlist Button */}
-          <button
-            type="button"
-            className={`ps-pcard-wishlist-btn ${isWishlisted ? 'is-active' : ''}`}
-            onClick={handleWishlistClick}
-            aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-            title={isWishlisted ? 'In Wishlist' : 'Add to Wishlist'}
-          >
-            <Heart
-              size={16}
-              fill={isWishlisted ? '#e31b23' : 'none'}
-              color={isWishlisted ? '#e31b23' : '#171513'}
-              strokeWidth={1.8}
-            />
-          </button>
         </div>
 
         {/* 2. Product Details */}

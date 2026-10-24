@@ -53,37 +53,6 @@
   transform: scale(1.05);
 }
 
-/* Floating Top-Right Wishlist Icon */
-.ps-col-card-wish-floating {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid rgba(23, 21, 19, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 3;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-.ps-col-card-wish-floating:hover {
-  transform: scale(1.1);
-  background: #FFFFFF;
-  border-color: #C9A45C;
-}
-
-.ps-col-card-wish-floating.is-active {
-  background: #FFFFFF;
-  border-color: #E31B23;
-}
-
 /* Top-Left Discount Badge */
 .ps-col-card-badge-discount {
   position: absolute;
@@ -295,10 +264,10 @@
   font-weight: 600;
 }
 
-/* Action Controls: [ ADD TO CART ] [ ♡ ] */
+/* Action Controls: [ ADD TO CART ] */
 .ps-col-card-actions {
   display: grid;
-  grid-template-columns: 1fr 38px;
+  grid-template-columns: 1fr;
   gap: 8px;
   align-items: center;
   margin-top: auto;
@@ -335,31 +304,6 @@
   background-color: #108474;
   border-color: #108474;
   color: #FFFFFF;
-}
-
-.ps-col-card-fav-btn {
-  width: 38px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #FAF8F4;
-  border: 1px solid rgba(23, 21, 19, 0.14);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.22s ease;
-  padding: 0;
-}
-
-.ps-col-card-fav-btn:hover {
-  background-color: #FFFFFF;
-  border-color: #C9A45C;
-  transform: scale(1.05);
-}
-
-.ps-col-card-fav-btn.is-active {
-  border-color: #E31B23;
-  background-color: #FFF5F5;
 }
 
 /* ==========================================================================
@@ -417,10 +361,6 @@
   margin-bottom: 12px;
 }
 
-.ps-col-card.is-list-view .ps-col-card-fav-btn {
-  width: 100%;
-}
-
 /* ==========================================================================
    Mobile & Tablet Responsiveness
    ========================================================================== */
@@ -439,7 +379,7 @@
   .ps-col-card.is-list-view .ps-col-card-actions {
     grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: 1fr 38px;
+    grid-template-columns: 1fr;
   }
 }
 
@@ -480,11 +420,6 @@
     letter-spacing: 0.06em;
     padding: 0 8px;
   }
-
-  .ps-col-card-fav-btn {
-    width: 35px;
-    height: 35px;
-  }
 }
 
 /* ==========================================================================
@@ -517,9 +452,7 @@
 }
 
 .ps-col-pill:focus-visible,
-.ps-col-card-add-btn:focus-visible,
-.ps-col-card-fav-btn:focus-visible,
-.ps-col-card-wish-floating:focus-visible {
+.ps-col-card-add-btn:focus-visible {
   outline: 2px solid #C9A45C;
   outline-offset: 2px;
 }

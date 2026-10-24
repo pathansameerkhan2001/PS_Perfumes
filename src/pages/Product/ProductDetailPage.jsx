@@ -610,25 +610,15 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            {/* Stock Status Indicator */}
-            <div className="ps-pdp-stock-status">
-              <span
-                className={`ps-pdp-stock-dot ${isOutOfStock ? 'is-out' : 'is-in'}`}
-                aria-hidden="true"
-              />
-              <span className={`ps-pdp-stock-text ${isOutOfStock ? 'is-out' : 'is-in'}`}>
-                {!isOutOfStock ? (
-                  <>
-                    In Stock &amp; Ready for Express Dispatch from Kadapa{' '}
-                    {currentStock ? `(${currentStock} available)` : ''}
-                  </>
-                ) : variantUnavailable ? (
-                  <>Not available in this bottle and size</>
-                ) : (
-                  <>Out of Stock</>
-                )}
-              </span>
-            </div>
+            {/* Stock notice: shown only when the selected option cannot be bought */}
+            {isOutOfStock && (
+              <div className="ps-pdp-stock-status">
+                <span className="ps-pdp-stock-dot is-out" aria-hidden="true" />
+                <span className="ps-pdp-stock-text is-out">
+                  {variantUnavailable ? <>Not available in this bottle and size</> : <>Out of Stock</>}
+                </span>
+              </div>
+            )}
 
             {/* Actions: Quantity + ADD TO CART + BUY NOW */}
             <div className="ps-pdp-actions-row">

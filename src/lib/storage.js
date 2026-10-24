@@ -220,65 +220,6 @@ export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS,
 }
 
 /**
- * Looks up one object in the configured bucket (read-only; admins may list the bucket).
- * @param {string} path - Object path inside the bucket (e.g. 'products/concepts/x-main.webp')
- * @returns {Promise<{ path: string, size: number | null } | null>} null when no such object exists
- */
-export async function getStorageObjectInfo(path) {
-  if (!supabase) throw new Error('Supabase client is not initialized.');
-  const clean = String(path || '').replace(/^\/+/, '');
-  const slash = clean.lastIndexOf('/');
-  const folder = slash >= 0 ? clean.slice(0, slash) : '';
-  const name = clean.slice(slash + 1);
-  const { data, error } = await supabase.storage.from(STORAGE_BUCKET).list(folder, { search: name, limit: 100 });
-  if (error) throw new Error(`Could not check Storage for "${clean}": ${error.message}`);
-  const hit = (data || []).find((o) => o.name === name);
-  return hit ? { path: clean, size: hit.metadata?.size !== undefined ? Number(hit.metadata.size) : null } : null;
-}
-
-/**
- * Upload a file to an exact, predictable path. Never overwrites: an existing object at the
- * path makes the upload fail (no upsert, and the bucket has no UPDATE policy).
- * @param {File|Blob} file
- * @param {string} path - Object path inside the bucket, e.g. 'products/khamrah-attar-main.webp'
- * @returns {Promise<{ url: string, path: string, error: string | null, exists?: boolean }>}
- */
-export async function uploadStorageFileToPath(file, path) {
-  if (!file) return { url: '', path: '', error: 'No file provided for upload.' };
-  if (!supabase) return { url: '', path: '', error: 'Supabase client is not initialized.' };
-
-  const cleanPath = String(path || '').replace(/^\/+/, '');
-  if (!/^[a-z0-9-]+(\/[a-z0-9.-]+)+$/.test(cleanPath)) {
-    return { url: '', path: '', error: `Invalid storage path "${cleanPath}".` };
-  }
-  const ext = cleanPath.split('.').pop();
-  const fileType = resolveFileType(file, ext);
-  if (fileType.error) return { url: '', path: '', error: fileType.error };
-  if (fileType.mime === 'video/mp4' || fileType.ext !== (ext === 'jpeg' ? 'jpg' : ext)) {
-    return { url: '', path: '', error: `The file type (${fileType.mime}) does not match the path extension ".${ext}".` };
-  }
-  if (file.size && file.size > MAX_IMAGE_SIZE_BYTES) {
-    return { url: '', path: '', error: `File size (${(file.size / (1024 * 1024)).toFixed(1)}MB) exceeds the 10MB image limit.` };
-  }
-
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData?.session?.user) {
-    return { url: '', path: '', error: 'No active administrator session. Sign in at /admin/login first.' };
-  }
-
-  const { data, error } = await supabase.storage
-    .from(STORAGE_BUCKET)
-    .upload(cleanPath, file, { cacheControl: '3600', upsert: false, contentType: fileType.mime });
-  if (error) {
-    const msg = error.message || 'Storage upload rejected';
-    const exists = /exists|duplicate/i.test(msg) || String(error.statusCode || '') === '409';
-    return { url: '', path: '', error: exists ? `An object already exists at "${cleanPath}"; it was not overwritten.` : `Storage upload failed: ${msg}`, exists };
-  }
-  if (!data?.path) return { url: '', path: '', error: 'Storage did not confirm the upload (no object path returned).' };
-  return { url: getStoragePublicUrl(data.path), path: data.path, error: null };
-}
-
-/**
  * Remove an existing file from the configured bucket (STORAGE_BUCKET)
  * @param {string} pathOrUrl - Storage file path or full public URL
  * @returns {Promise<{ success: boolean, error: string | null }>}

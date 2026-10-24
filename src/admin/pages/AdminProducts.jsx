@@ -12,7 +12,6 @@ import {
   AlertCircle,
   Eye,
   Upload,
-  Image as ImageIcon,
 } from 'lucide-react';
 import { getProducts, deleteProduct, createProduct, updateProduct } from '../../services/products';
 import { formatINR } from '../../utils/formatCurrency';
@@ -233,10 +232,6 @@ export default function AdminProducts() {
           <p className="ps-admin-page-subtitle">Manage formulations, variant matrices, and availability</p>
         </div>
         <div className="ps-admin-header-actions">
-          <Link to="/admin/products/images" className="ps-btn-gold-primary ps-admin-header-btn">
-            <ImageIcon size={16} />
-            <span>Product Images</span>
-          </Link>
           <Link to="/admin/products/import" className="ps-btn-gold-primary ps-admin-header-btn">
             <Upload size={16} />
             <span>Bulk Import</span>

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Heart, Star, ShoppingBag, Check, Eye } from 'lucide-react';
+import { Star, ShoppingBag, Check, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatCurrency';
@@ -10,11 +10,10 @@ export default function CollectionProductCard({
   viewMode = 'grid',
   priority = false,
 }) {
-  const { addToCart, toggleWishlist, isInWishlist, setSelectedProduct } = useCart();
+  const { addToCart, setSelectedProduct } = useCart();
   const [isAddedAnim, setIsAddedAnim] = useState(false);
   const navigate = useNavigate();
 
-  const isWishlisted = isInWishlist(product.id);
   const imageSrc =
     product.main_image || product.image || '/assets/ps-perfumes-logo.webp';
 
@@ -91,11 +90,6 @@ export default function CollectionProductCard({
     setTimeout(() => setIsAddedAnim(false), 1800);
   };
 
-  const handleWishlistClick = (e) => {
-    e.stopPropagation();
-    toggleWishlist(product);
-  };
-
   const handleQuickView = (e) => {
     e.stopPropagation();
     setSelectedProduct(product);
@@ -129,22 +123,6 @@ export default function CollectionProductCard({
           width="400"
           height="400"
         />
-
-        {/* Floating Top Right Wishlist Icon */}
-        <button
-          type="button"
-          className={`ps-col-card-wish-floating ${isWishlisted ? 'is-active' : ''}`}
-          onClick={handleWishlistClick}
-          aria-label={isWishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
-          title="Wishlist"
-        >
-          <Heart
-            size={16}
-            fill={isWishlisted ? '#E31B23' : 'none'}
-            color={isWishlisted ? '#E31B23' : '#171513'}
-            strokeWidth={1.8}
-          />
-        </button>
 
         {/* Top Left Discount Badge */}
         {discountPercent && (
@@ -267,7 +245,7 @@ export default function CollectionProductCard({
           </div>
         )}
 
-        {/* Action Controls: [ ADD TO CART ] [ ♡ ] */}
+        {/* Single action: ADD TO CART */}
         <div className="ps-col-card-actions">
           <button
             type="button"
@@ -297,21 +275,6 @@ export default function CollectionProductCard({
                 <span>ADD TO CART</span>
               </>
             )}
-          </button>
-
-          <button
-            type="button"
-            className={`ps-col-card-fav-btn ${isWishlisted ? 'is-active' : ''}`}
-            onClick={handleWishlistClick}
-            aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-            title={isWishlisted ? 'Wishlisted' : 'Add to Wishlist'}
-          >
-            <Heart
-              size={15}
-              fill={isWishlisted ? '#E31B23' : 'none'}
-              color={isWishlisted ? '#E31B23' : '#171513'}
-              strokeWidth={1.8}
-            />
           </button>
         </div>
       </div>

@@ -563,10 +563,11 @@ export default function AdminProductForm() {
       base_notes: form.base_notes.split(',').map((s) => s.trim()).filter(Boolean),
       main_image: form.main_image,
       main_image_path: form.main_image_path || null,
-      glass_image: bottleOptions.glass ? (form.glass_image || null) : null,
-      glass_image_path: bottleOptions.glass ? (form.glass_image_path || null) : null,
-      pvc_image: bottleOptions.pvc ? (form.pvc_image || null) : null,
-      pvc_image_path: bottleOptions.pvc ? (form.pvc_image_path || null) : null,
+      // Bottle images are kept even when that bottle type is switched off, so a save never drops a stored image
+      glass_image: form.glass_image || null,
+      glass_image_path: form.glass_image_path || null,
+      pvc_image: form.pvc_image || null,
+      pvc_image_path: form.pvc_image_path || null,
       variants: generatedVariants,
     };
 
