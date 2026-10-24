@@ -1,0 +1,404 @@
+/* ==========================================================================
+   PS PERFUMES — Admin Bulk Product Import
+   Same palette as the Products page: ivory cards, charcoal text, champagne gold
+   ========================================================================== */
+
+.ps-imp-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ps-imp-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--ps-admin-border-light, #E5E0D8);
+  background: var(--ps-admin-bg-card, #FFFEFA);
+  color: var(--ps-admin-text-muted, #9E9487);
+  font-size: 12px;
+}
+
+.ps-imp-steps li span {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ps-admin-border-subtle, #ECE7DF);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.ps-imp-steps li.is-current {
+  border-color: var(--ps-admin-gold, #C9A96E);
+  background: #11100F;
+  color: var(--ps-admin-gold, #C9A96E);
+}
+
+.ps-imp-steps li.is-current span {
+  background: var(--ps-admin-gold, #C9A96E);
+  color: #11100F;
+}
+
+.ps-imp-steps li.is-done {
+  color: var(--ps-admin-text-secondary, #746B61);
+}
+
+.ps-imp-card {
+  background: var(--ps-admin-bg-card, #FFFEFA);
+  border: 1px solid var(--ps-admin-border-subtle, #ECE7DF);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--ps-admin-shadow-card, 0 2px 8px rgba(0, 0, 0, 0.02));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.ps-imp-card h2 {
+  font-family: var(--ps-admin-font-serif, 'Cormorant Garamond', Georgia, serif);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ps-admin-text-primary, #1A1714);
+  margin: 0;
+}
+
+.ps-imp-subhead {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ps-admin-text-primary, #1A1714);
+  margin: 6px 0 0;
+}
+
+.ps-imp-help,
+.ps-imp-note {
+  font-size: 13px;
+  color: var(--ps-admin-text-secondary, #746B61);
+  margin: 0;
+  line-height: 1.55;
+}
+
+.ps-imp-help code {
+  font-size: 12px;
+  background: var(--ps-admin-bg-card-subtle, #FAF7F2);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.ps-imp-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 16px;
+  border: 1.5px dashed var(--ps-admin-gold, #C9A96E);
+  border-radius: 12px;
+  background: var(--ps-admin-bg-card-subtle, #FAF7F2);
+  color: var(--ps-admin-gold-dark, #8C7343);
+  cursor: pointer;
+  font-size: 14px;
+  text-align: center;
+}
+
+.ps-imp-drop input {
+  display: none;
+}
+
+.ps-imp-drop.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ps-imp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.ps-imp-grid label,
+.ps-imp-confirm-word {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ps-admin-text-secondary, #746B61);
+}
+
+.ps-imp-grid select,
+.ps-imp-grid input,
+.ps-imp-confirm-word input,
+.ps-imp-assign select,
+.ps-imp-name {
+  padding: 7px 9px;
+  border: 1px solid var(--ps-admin-border-light, #E5E0D8);
+  border-radius: 6px;
+  background: #FFFFFF;
+  color: var(--ps-admin-text-primary, #1A1714);
+  font-size: 13px;
+  font-weight: 400;
+  min-width: 0;
+}
+
+.ps-imp-confirm-word input {
+  max-width: 220px;
+  letter-spacing: 0.08em;
+}
+
+.ps-imp-req {
+  font-style: normal;
+  font-weight: 500;
+  color: var(--ps-admin-error-text, #B91C1C);
+  font-size: 11px;
+}
+
+.ps-imp-scroll {
+  overflow-x: auto;
+  max-height: 62vh;
+  overflow-y: auto;
+}
+
+.ps-imp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  color: var(--ps-admin-text-primary, #1A1714);
+}
+
+.ps-imp-table th {
+  position: sticky;
+  top: 0;
+  background: var(--ps-admin-bg-card-subtle, #FAF7F2);
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ps-admin-text-secondary, #746B61);
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--ps-admin-border-light, #E5E0D8);
+  z-index: 1;
+}
+
+.ps-imp-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--ps-admin-border-subtle, #ECE7DF);
+  vertical-align: top;
+}
+
+.ps-imp-name {
+  width: 100%;
+  min-width: 200px;
+}
+
+.ps-imp-sub {
+  font-size: 11.5px;
+  color: var(--ps-admin-text-secondary, #746B61);
+  margin-top: 3px;
+}
+
+.ps-imp-sub.is-warn {
+  color: var(--ps-admin-warning-text, #B45309);
+}
+
+.ps-imp-rows {
+  font-size: 11px;
+  color: var(--ps-admin-text-muted, #9E9487);
+}
+
+.ps-imp-variants {
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.ps-imp-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ps-imp-badge.is-ready {
+  background: var(--ps-admin-success-bg, #EAF5ED);
+  color: var(--ps-admin-success-text, #2D6A4F);
+}
+
+.ps-imp-badge.is-review {
+  background: var(--ps-admin-warning-bg, #FEF7EA);
+  color: var(--ps-admin-warning-text, #B45309);
+}
+
+.ps-imp-badge.is-blocked {
+  background: var(--ps-admin-error-bg, #FDF2F2);
+  color: var(--ps-admin-error-text, #B91C1C);
+}
+
+.ps-imp-badge.is-exists {
+  background: var(--ps-admin-border-subtle, #ECE7DF);
+  color: var(--ps-admin-text-secondary, #746B61);
+}
+
+.ps-imp-issues {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 12px;
+  min-width: 240px;
+}
+
+.ps-imp-issues li {
+  margin-bottom: 3px;
+}
+
+.ps-imp-issues li.is-error {
+  color: var(--ps-admin-error-text, #B91C1C);
+}
+
+.ps-imp-issues li.is-review {
+  color: var(--ps-admin-warning-text, #B45309);
+}
+
+.ps-imp-issues li.is-warning {
+  color: var(--ps-admin-text-secondary, #746B61);
+}
+
+.ps-imp-verify {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--ps-admin-text-primary, #1A1714);
+  margin-top: 6px;
+  cursor: pointer;
+}
+
+.ps-imp-verify input {
+  margin-top: 2px;
+}
+
+.ps-imp-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ps-imp-summary button {
+  border: 1px solid var(--ps-admin-border-light, #E5E0D8);
+  background: #FFFFFF;
+  color: var(--ps-admin-text-secondary, #746B61);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ps-imp-summary button b {
+  color: var(--ps-admin-text-primary, #1A1714);
+  margin-left: 4px;
+}
+
+.ps-imp-summary button.is-on {
+  border-color: var(--ps-admin-gold, #C9A96E);
+  background: var(--ps-admin-gold-active-bg, rgba(201, 169, 110, 0.14));
+}
+
+.ps-imp-alert {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.ps-imp-alert.is-error {
+  background: var(--ps-admin-error-bg, #FDF2F2);
+  border: 1px solid #FECACA;
+  color: var(--ps-admin-error-text, #B91C1C);
+}
+
+.ps-imp-alert.is-warn {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  background: var(--ps-admin-warning-bg, #FEF7EA);
+  border: 1px solid #FDE68A;
+  color: var(--ps-admin-warning-text, #B45309);
+}
+
+.ps-imp-confirm-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ps-admin-text-primary, #1A1714);
+}
+
+.ps-imp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+}
+
+.ps-imp-actions.is-left {
+  justify-content: flex-start;
+}
+
+.ps-imp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--ps-admin-border-light, #E5E0D8);
+  background: #FFFFFF;
+  color: var(--ps-admin-text-primary, #1A1714);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ps-imp-btn:hover {
+  border-color: var(--ps-admin-gold, #C9A96E);
+}
+
+.ps-imp-page .ps-btn-gold-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ps-imp-assign {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.ps-imp-progress {
+  height: 10px;
+  border-radius: 6px;
+  background: var(--ps-admin-border-subtle, #ECE7DF);
+  overflow: hidden;
+}
+
+.ps-imp-progress div {
+  height: 100%;
+  background: var(--ps-admin-gold, #C9A96E);
+  transition: width 0.3s ease;
+}
+
+@media (max-width: 640px) {
+  .ps-imp-card {
+    padding: 14px;
+  }
+}

@@ -17,20 +17,46 @@ import './AdminProductForm.css';
 
 // Categories always come from the database (categories table). There is deliberately no
 // hard-coded list: offering a category that does not exist makes the save fail.
-const ALL_POSSIBLE_SIZES = ['6 ml', '10 ml', '30 ml', '50 ml', '100 ml'];
-const ATTAR_SIZES = ['6 ml', '10 ml'];
+const ATTAR_SIZES = ['3 ml', '6 ml', '8 ml', '10 ml', '12 ml'];
 const PERFUME_SIZES = ['30 ml', '50 ml', '100 ml'];
 
 const isAttarName = (cat) => String(cat || '').toLowerCase().includes('attar');
 const sizesForCategory = (cat) => (isAttarName(cat) ? ATTAR_SIZES : PERFUME_SIZES);
 
+// "6ml", "6 ML" and "6 ml" are the same size; other labels (e.g. legacy sets) are kept verbatim
+const sizeKey = (raw) => {
+  const s = String(raw || '').trim();
+  const m = s.match(/^(\d+(?:\.\d+)?)\s*ml$/i) || s.match(/^(\d+(?:\.\d+)?)$/);
+  return m ? `${Number(m[1])} ml` : s;
+};
+const sizeSortValue = (sz) => {
+  const n = parseFloat(sz);
+  return Number.isFinite(n) ? n : Number.MAX_SAFE_INTEGER;
+};
+const sortSizes = (list) => [...new Set(list)].sort((a, b) => sizeSortValue(a) - sizeSortValue(b));
+// Glass/PVC are the bottle types the matrix edits; any other stored label stays as it is
+const bottleKey = (bt) => {
+  const s = String(bt || '').toLowerCase();
+  if (s.includes('pvc')) return 'PVC Bottle';
+  if (s.includes('glass')) return 'Glass Bottle';
+  return String(bt || '').trim();
+};
+
+const EMPTY_SIZE_ROW = { glassPrice: 0, pvcPrice: 0, glassStock: 0, pvcStock: 0, glassSku: '', pvcSku: '' };
+
 // Fresh deep copy so editing one product never mutates the shared defaults
 const cloneDefaultMatrix = () =>
   Object.fromEntries(Object.entries(DEFAULT_VARIANT_MATRIX).map(([k, v]) => [k, { ...v }]));
+// Existing products start from zero, so a size/bottle the product never had is never given a placeholder price
+const cloneEmptyMatrix = () =>
+  Object.fromEntries(Object.keys(DEFAULT_VARIANT_MATRIX).map((k) => [k, { ...EMPTY_SIZE_ROW }]));
 
 const DEFAULT_VARIANT_MATRIX = {
+  '3 ml': { ...EMPTY_SIZE_ROW },
   '6 ml': { glassPrice: 499, pvcPrice: 399, glassStock: 50, pvcStock: 0, glassSku: '', pvcSku: '' },
+  '8 ml': { ...EMPTY_SIZE_ROW },
   '10 ml': { glassPrice: 799, pvcPrice: 649, glassStock: 30, pvcStock: 0, glassSku: '', pvcSku: '' },
+  '12 ml': { ...EMPTY_SIZE_ROW },
   '30 ml': { glassPrice: 1499, pvcPrice: 899, glassStock: 20, pvcStock: 40, glassSku: '', pvcSku: '' },
   '50 ml': { glassPrice: 2199, pvcPrice: 1299, glassStock: 15, pvcStock: 25, glassSku: '', pvcSku: '' },
   '100 ml': { glassPrice: 3299, pvcPrice: 1899, glassStock: 8, pvcStock: 12, glassSku: '', pvcSku: '' },
@@ -99,6 +125,12 @@ export default function AdminProductForm() {
 
   // Variants & Pricing Matrix
   const [variantMatrix, setVariantMatrix] = useState(cloneDefaultMatrix);
+
+  // Sizes the saved product already has (always offered, whatever the category), and its
+  // saved variants as "Bottle|size" keys, so a save never removes one without confirmation
+  const [storedSizes, setStoredSizes] = useState([]);
+  const [storedVariantKeys, setStoredVariantKeys] = useState([]);
+  const sizeOptions = (cat) => sortSizes([...sizesForCategory(cat), ...storedSizes]);
 
   // Category records from the database: { id, name, slug, is_active }
   const [categories, setCategories] = useState([]);
@@ -174,17 +206,18 @@ export default function AdminProductForm() {
 
             // Populate variant matrix and dynamic sizes if available
             if (Array.isArray(p.variants) && p.variants.length > 0) {
-              const nextMatrix = cloneDefaultMatrix();
+              const nextMatrix = cloneEmptyMatrix();
               const foundSizes = [];
+              const foundKeys = [];
               let hasPvc = false;
               let hasGlass = false;
 
               p.variants.forEach((v) => {
-                const rawSz = String(v.size_ml || '').trim();
-                const numOnly = rawSz.replace(/[^\d]/g, '');
-                const sz = numOnly ? `${numOnly} ml` : rawSz;
+                const sz = sizeKey(v.size_ml);
+                if (!sz) return;
 
-                if (!foundSizes.includes(sz) && sizesForCategory(p.category).includes(sz)) {
+                // Every stored size is kept, including sizes outside the category's usual set
+                if (!foundSizes.includes(sz)) {
                   foundSizes.push(sz);
                 }
 
@@ -192,22 +225,24 @@ export default function AdminProductForm() {
                 const isPvc = v.bottle_type?.toLowerCase().includes('pvc');
                 if (isPvc) hasPvc = true;
                 if (isGlass) hasGlass = true;
+                foundKeys.push(`${bottleKey(v.bottle_type)}|${sz}`);
 
-                if (nextMatrix[sz]) {
-                  if (isGlass) {
-                    nextMatrix[sz].glassPrice = v.sale_price || v.price;
-                    nextMatrix[sz].glassStock = v.stock_quantity !== undefined ? v.stock_quantity : (v.stock || 0);
-                    if (v.sku) nextMatrix[sz].glassSku = v.sku;
-                  } else if (isPvc) {
-                    nextMatrix[sz].pvcPrice = v.sale_price || v.price;
-                    nextMatrix[sz].pvcStock = v.stock_quantity !== undefined ? v.stock_quantity : (v.stock || 0);
-                    if (v.sku) nextMatrix[sz].pvcSku = v.sku;
-                  }
+                if (!nextMatrix[sz]) nextMatrix[sz] = { ...EMPTY_SIZE_ROW };
+                if (isGlass) {
+                  nextMatrix[sz].glassPrice = v.sale_price || v.price;
+                  nextMatrix[sz].glassStock = v.stock_quantity !== undefined ? v.stock_quantity : (v.stock || 0);
+                  if (v.sku) nextMatrix[sz].glassSku = v.sku;
+                } else if (isPvc) {
+                  nextMatrix[sz].pvcPrice = v.sale_price || v.price;
+                  nextMatrix[sz].pvcStock = v.stock_quantity !== undefined ? v.stock_quantity : (v.stock || 0);
+                  if (v.sku) nextMatrix[sz].pvcSku = v.sku;
                 }
               });
 
+              setStoredSizes(foundSizes);
+              setStoredVariantKeys(foundKeys);
               if (foundSizes.length > 0) {
-                setSelectedSizes(ALL_POSSIBLE_SIZES.filter((s) => foundSizes.includes(s)));
+                setSelectedSizes(sortSizes(foundSizes));
               } else if (isAttar) {
                 setSelectedSizes(['6 ml', '10 ml']);
               }
@@ -249,15 +284,17 @@ export default function AdminProductForm() {
   const handleCategoryChange = (e) => {
     const chosen = categories.find((c) => c.id === e.target.value);
     const newCat = chosen ? chosen.name : '';
-    const allowed = sizesForCategory(newCat);
+    const allowed = sizeOptions(newCat);
     setForm((prev) => ({ ...prev, category_id: chosen ? chosen.id : '', category: newCat }));
 
-    // Keep only sizes that exist for the new category (attar: 6/10 ml, perfume: 30/50/100 ml)
+    // Keep sizes valid for the new category plus every size the saved product already has
     setSelectedSizes((prev) => {
       const kept = prev.filter((s) => allowed.includes(s));
-      return kept.length > 0 ? kept : allowed;
+      return kept.length > 0 ? kept : isAttarName(newCat) ? ['6 ml', '10 ml'] : PERFUME_SIZES;
     });
 
+    // A saved product keeps the bottle types it has; defaults apply to new products only
+    if (storedVariantKeys.length > 0) return;
     if (isAttarName(newCat)) {
       setBottleOptions({ glass: true, pvc: false });
     } else {
@@ -273,7 +310,7 @@ export default function AdminProductForm() {
     setSelectedSizes((prev) => {
       if (prev.includes(sz)) return prev.filter((s) => s !== sz);
       const next = [...prev, sz];
-      return sizesForCategory(form.category).filter((s) => next.includes(s));
+      return sizeOptions(form.category).filter((s) => next.includes(s));
     });
   };
 
@@ -444,17 +481,16 @@ export default function AdminProductForm() {
       return;
     }
 
-    setSaving(true);
-    setErrorMsg('');
-    setSuccessMsg('');
-
-    // Generate exact variant records for enabled bottle types across the sizes valid for this category
+    // Generate exact variant records for enabled bottle types across the offered sizes
+    // (the category's sizes plus any size the saved product already has)
     const generatedVariants = [];
-    const allowedSizes = sizesForCategory(form.category);
+    const allowedSizes = sizeOptions(form.category);
     selectedSizes.filter((sz) => allowedSizes.includes(sz)).forEach((sz) => {
-      const cfg = variantMatrix[sz] || DEFAULT_VARIANT_MATRIX[sz];
+      const cfg = variantMatrix[sz] || DEFAULT_VARIANT_MATRIX[sz] || EMPTY_SIZE_ROW;
       const sizeNum = sz.replace(/\D/g, '');
 
+      // Variants stay active; product visibility is controlled by the product's own status.
+      // A SKU is generated only from a product SKU, never from an empty one.
       if (bottleOptions.glass) {
         generatedVariants.push({
           id: `var-${form.slug || 'prod'}-glass-${sizeNum}`,
@@ -464,9 +500,9 @@ export default function AdminProductForm() {
           sale_price: cfg.glassPrice,
           stock: cfg.glassStock,
           stock_quantity: cfg.glassStock,
-          sku: cfg.glassSku || `${form.sku}-GL-${sizeNum}`,
-          active: form.active,
-          is_active: form.active,
+          sku: cfg.glassSku || (form.sku ? `${form.sku}-GL-${sizeNum}` : ''),
+          active: true,
+          is_active: true,
         });
       }
 
@@ -479,12 +515,34 @@ export default function AdminProductForm() {
           sale_price: cfg.pvcPrice,
           stock: cfg.pvcStock,
           stock_quantity: cfg.pvcStock,
-          sku: cfg.pvcSku || `${form.sku}-PV-${sizeNum}`,
-          active: form.active,
-          is_active: form.active,
+          sku: cfg.pvcSku || (form.sku ? `${form.sku}-PV-${sizeNum}` : ''),
+          active: true,
+          is_active: true,
         });
       }
     });
+
+    // Saving replaces the variant matrix: never remove a saved variant without explicit confirmation
+    if (isEditing && storedVariantKeys.length > 0) {
+      const kept = new Set(generatedVariants.map((v) => `${v.bottle_type}|${sizeKey(v.size_ml)}`));
+      const removed = [...new Set(storedVariantKeys)].filter((k) => !kept.has(k));
+      if (removed.length > 0) {
+        const list = removed.map((k) => `• ${k.replace('|', ' — ')}`).join('\n');
+        const ok = window.confirm(
+          `Saving will remove ${removed.length} existing variant(s) from this product:\n\n${list}\n\n` +
+            'Variants with order history are deactivated instead of deleted. Continue?'
+        );
+        if (!ok) {
+          setActiveTab('variants');
+          setErrorMsg('Not saved. Re-enable the sizes or bottle types listed to keep those variants.');
+          return;
+        }
+      }
+    }
+
+    setSaving(true);
+    setErrorMsg('');
+    setSuccessMsg('');
 
     // Compute lowest variant price as base price, and total stock across active variants
     const allPrices = generatedVariants.map((v) => Number(v.sale_price || v.price)).filter((p) => p > 0);
@@ -659,7 +717,7 @@ export default function AdminProductForm() {
             <div className="ps-tab-pane">
               <h2 className="ps-pane-title">Variants & Pricing Matrix</h2>
               <p className="ps-pane-desc">
-                Configure bespoke sizes (6 ml, 10 ml for Attars; 30 ml, 50 ml, 100 ml for Perfumes) with individual pricing, inventory, and SKU management.
+                Configure bespoke sizes (3, 6, 8, 10, 12 ml for Attars; 30 ml, 50 ml, 100 ml for Perfumes) with individual pricing, inventory, and SKU management. Sizes this product already has are always listed.
               </p>
 
               {/* 1. Size Configuration Pill Controls */}
@@ -667,13 +725,13 @@ export default function AdminProductForm() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                   <h3 className="ps-sub-heading" style={{ margin: 0 }}>Offered Sizes (Toggle to Enable / Disable)</h3>
                   <span style={{ fontSize: '12px', color: '#8C8479' }}>
-                    {isAttarName(form.category) ? 'Attar sizes: 6 ml & 10 ml' : 'Perfume sizes: 30, 50, 100 ml'}
+                    {isAttarName(form.category) ? 'Attar sizes: 3, 6, 8, 10, 12 ml' : 'Perfume sizes: 30, 50, 100 ml'}
                   </span>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {sizesForCategory(form.category).map((sz) => {
+                  {sizeOptions(form.category).map((sz) => {
                     const isSelected = selectedSizes.includes(sz);
-                    const isAttarSize = sz === '6 ml' || sz === '10 ml';
+                    const isAttarSize = ATTAR_SIZES.includes(sz);
                     return (
                       <button
                         key={sz}
@@ -718,7 +776,7 @@ export default function AdminProductForm() {
                   </thead>
                   <tbody>
                     {selectedSizes.map((sz) => {
-                      const cfg = variantMatrix[sz] || DEFAULT_VARIANT_MATRIX[sz];
+                      const cfg = variantMatrix[sz] || DEFAULT_VARIANT_MATRIX[sz] || EMPTY_SIZE_ROW;
                       const sizeNum = sz.replace(/\D/g, '');
                       return (
                         <tr key={sz}>

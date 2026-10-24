@@ -26,6 +26,7 @@ const AdminHomepage = lazy(() => import('./admin/pages/AdminHomepage'));
 const AdminReels = lazy(() => import('./admin/pages/AdminReels'));
 const AdminProducts = lazy(() => import('./admin/pages/AdminProducts'));
 const AdminProductForm = lazy(() => import('./admin/pages/AdminProductForm'));
+const AdminProductImport = lazy(() => import('./admin/pages/AdminProductImport'));
 const AdminCategories = lazy(() => import('./admin/pages/AdminCategories'));
 const AdminCombos = lazy(() => import('./admin/pages/AdminCombos'));
 const AdminInventory = lazy(() => import('./admin/pages/AdminInventory'));
@@ -133,6 +134,7 @@ export default function App() {
           <Route path="reels" element={<AdminReels />} />
           <Route path="products" element={<AdminProducts />} />
           <Route path="products/new" element={<AdminProductForm />} />
+          <Route path="products/import" element={<AdminProductImport />} />
           <Route path="products/:id/edit" element={<AdminProductForm />} />
           <Route path="products/edit/:id" element={<AdminProductForm />} />
           <Route path="categories" element={<AdminCategories />} />

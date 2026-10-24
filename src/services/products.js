@@ -604,8 +604,15 @@ export async function createProduct(productData) {
       .replace(/(^-|-$)/g, '');
 
   if (isSupabaseConfigured && supabase) {
+    const isActive =
+      productData.active !== undefined
+        ? Boolean(productData.active)
+        : productData.is_active !== undefined
+        ? Boolean(productData.is_active)
+        : productData.status === 'active';
     const primaryImage = productData.main_image || productData.main_image_url || null;
-    if (!primaryImage) {
+    // Only the bulk importer opts out of the image rule, and only for unpublished drafts
+    if (!primaryImage && !(productData.allowMissingImage && !isActive)) {
       throw new Error('A primary campaign image is required.');
     }
     validateVariants(productData.variants);
@@ -623,12 +630,7 @@ export async function createProduct(productData) {
       category_id: categoryId,
       fragrance_notes: buildNotesMetadata(productData),
       ingredients: productData.ingredients || null,
-      is_active:
-        productData.active !== undefined
-          ? Boolean(productData.active)
-          : productData.is_active !== undefined
-          ? Boolean(productData.is_active)
-          : productData.status === 'active',
+      is_active: isActive,
       is_featured: Boolean(productData.featured || productData.is_featured),
       is_bestseller: Boolean(productData.bestseller || productData.is_bestseller),
       is_new_arrival: Boolean(productData.new_arrival || productData.is_new_arrival),
