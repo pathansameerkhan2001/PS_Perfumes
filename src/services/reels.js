@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { isValidUUID } from './products';
 import { dbError, assertRows } from './dbErrors';
+import { getPublicImageUrl } from '../lib/storage';
 
 const LOCAL_REELS_KEY = 'ps_db_reels';
 
@@ -52,6 +53,15 @@ export const INITIAL_REELS = [
   },
 ];
 
+// Display URL for a thumbnail: full URLs and site assets ("/assets/…") as stored; a bare
+// Storage path (or a row with only thumbnail_path) becomes the bucket's public URL
+function resolveThumbnail(url, path) {
+  const value = String(url || '').trim();
+  if (/^(https?:|blob:|data:)/i.test(value) || value.startsWith('/')) return value;
+  if (value) return getPublicImageUrl(value);
+  return path ? getPublicImageUrl(path) : '';
+}
+
 function formatReel(row) {
   const captionText = row.title || row.caption || '';
   return {
@@ -59,7 +69,9 @@ function formatReel(row) {
     title: captionText,
     caption: captionText,
     instagram_url: row.instagram_url || '',
-    thumbnail_url: row.thumbnail_url || '',
+    thumbnail_url: resolveThumbnail(row.thumbnail_url, row.thumbnail_path),
+    // Values exactly as stored, so an edit saves back what is in the database
+    stored_thumbnail_url: row.thumbnail_url || '',
     thumbnail_path: row.thumbnail_path || '',
     display_order: Number(row.display_order) || 1,
     is_active: row.is_active !== false,

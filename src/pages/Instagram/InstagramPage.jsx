@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { ExternalLink, Play } from 'lucide-react';
-import { getReels } from '../../services/reels';
+import { getReels, validateInstagramUrl } from '../../services/reels';
 import './InstagramPage.css';
 import { useSeo } from '../../utils/useSeo';
+
+const PROFILE_URL = 'https://www.instagram.com/ps_perfumes_kadapa/?hl=en';
+
+// Only valid https Instagram links are opened; anything else falls back to the profile
+function safeInstagramUrl(value) {
+  try {
+    return validateInstagramUrl(value);
+  } catch {
+    return PROFILE_URL;
+  }
+}
 
 function InstagramIcon({ size = 18 }) {
   return (
@@ -81,7 +92,7 @@ export default function InstagramPage() {
             {reels.map((reel) => (
               <a
                 key={reel.id}
-                href={reel.instagram_url || 'https://www.instagram.com/ps_perfumes_kadapa/?hl=en'}
+                href={safeInstagramUrl(reel.instagram_url)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="ps-insta-card"

@@ -1,7 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, ArrowUp, ArrowDown, ExternalLink, Play, X, Upload, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, Edit2, Trash2, ArrowUp, ArrowDown, ExternalLink, Play, X, Upload, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { getReels, createReel, updateReel, deleteReel, validateInstagramUrl } from '../../services/reels';
 import { uploadImage } from '../../lib/storage';
+import './AdminReels.css';
+
+const DEFAULT_INSTAGRAM_URL = 'https://www.instagram.com/ps_perfumes_kadapa/?hl=en';
+// Same limits the shared Storage upload helper applies to images
+const THUMB_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const MAX_THUMB_BYTES = 10 * 1024 * 1024;
+
+const formatBytes = (n) => (n >= 1024 * 1024 ? `${(n / (1024 * 1024)).toFixed(1)} MB` : `${Math.round(n / 1024)} KB`);
+
+/** Pixel size of an image file, or null when the browser cannot decode it. */
+async function readImageSize(file) {
+  try {
+    const bmp = await createImageBitmap(file);
+    const size = { width: bmp.width, height: bmp.height };
+    bmp.close?.();
+    return size;
+  } catch {
+    return null;
+  }
+}
 
 export default function AdminReels() {
   const [reels, setReels] = useState([]);
@@ -9,25 +29,35 @@ export default function AdminReels() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingReel, setEditingReel] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  // Page-level messages (list actions); the modal has its own so they are never hidden behind it
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
   const [formData, setFormData] = useState({
-    instagram_url: 'https://www.instagram.com/ps_perfumes_kadapa/?hl=en',
+    instagram_url: DEFAULT_INSTAGRAM_URL,
     thumbnail_url: '',
+    thumbnail_path: '',
     caption: '',
     display_order: 1,
     is_active: true,
   });
+  const [formError, setFormError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  // Thumbnail upload: { state: 'idle' | 'uploading' | 'done' | 'error', message, warning }
+  const [upload, setUpload] = useState({ state: 'idle', message: '', warning: '' });
+  const [localPreview, setLocalPreview] = useState('');
+  const [brokenPreview, setBrokenPreview] = useState('');
+  const submittingRef = useRef(false);
+  // Incremented whenever the modal opens or closes, so a late upload result never lands in another form
+  const formSessionRef = useRef(0);
 
   const loadData = async () => {
     setLoading(true);
     try {
       const data = await getReels(true);
       setReels(data);
-    } catch {
-      setErrorMsg('Failed to load reels.');
+    } catch (err) {
+      setErrorMsg(`Failed to load reels: ${err.message || 'database error'}`);
     } finally {
       setLoading(false);
     }
@@ -37,27 +67,45 @@ export default function AdminReels() {
     loadData();
   }, []);
 
+  // Release the local preview image when it is replaced or the page closes
+  useEffect(() => () => {
+    if (localPreview) URL.revokeObjectURL(localPreview);
+  }, [localPreview]);
+
+  const resetModalState = () => {
+    formSessionRef.current += 1;
+    setFormError('');
+    setFieldErrors({});
+    setUpload({ state: 'idle', message: '', warning: '' });
+    setLocalPreview('');
+  };
+
   const handleNew = () => {
+    resetModalState();
     setEditingReel(null);
     setErrorMsg('');
     setSuccessMsg('');
+    const maxOrder = reels.reduce((m, r) => Math.max(m, Number(r.display_order) || 0), 0);
     setFormData({
-      instagram_url: 'https://www.instagram.com/ps_perfumes_kadapa/?hl=en',
+      instagram_url: DEFAULT_INSTAGRAM_URL,
       thumbnail_url: '',
+      thumbnail_path: '',
       caption: '',
-      display_order: reels.length + 1,
+      display_order: maxOrder + 1,
       is_active: true,
     });
     setIsFormOpen(true);
   };
 
   const handleEdit = (reel) => {
+    resetModalState();
     setEditingReel(reel);
     setErrorMsg('');
     setSuccessMsg('');
     setFormData({
       instagram_url: reel.instagram_url || '',
-      thumbnail_url: reel.thumbnail_url || '',
+      // The stored value is saved back unchanged unless a new thumbnail is uploaded
+      thumbnail_url: reel.stored_thumbnail_url || reel.thumbnail_url || '',
       thumbnail_path: reel.thumbnail_path || '',
       caption: reel.caption || reel.title || '',
       display_order: reel.display_order || 1,
@@ -66,77 +114,128 @@ export default function AdminReels() {
     setIsFormOpen(true);
   };
 
-  const handleThumbnailUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const closeForm = () => {
+    if (saving) return;
+    resetModalState();
+    setIsFormOpen(false);
+  };
 
+  const handleThumbnailSelect = async (e) => {
+    const file = e.target.files?.[0];
     e.target.value = '';
-    setErrorMsg('');
-    // Thumbnails are images only (the bucket also accepts MP4, which is not a thumbnail)
+    if (!file) return;
+    setFormError('');
+    setFieldErrors((prev) => ({ ...prev, thumbnail: '' }));
+
     const type = (file.type || '').toLowerCase();
-    if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(type)) {
-      setErrorMsg(`"${file.name}" is not a JPEG, PNG or WebP image. Use a 9:16 still from the reel.`);
+    if (!THUMB_TYPES.includes(type)) {
+      setUpload({ state: 'error', message: `"${file.name}" is not a JPEG, PNG or WebP image. Use a 9:16 still from the reel.`, warning: '' });
       return;
     }
-    setIsUploading(true);
+    if (file.size > MAX_THUMB_BYTES) {
+      setUpload({ state: 'error', message: `"${file.name}" is ${formatBytes(file.size)}; the limit is 10 MB.`, warning: '' });
+      return;
+    }
 
+    const session = formSessionRef.current;
+    // Show the chosen image immediately, before the upload finishes
+    setLocalPreview(URL.createObjectURL(file));
+
+    const dims = await readImageSize(file);
+    let warning = '';
+    if (!dims) {
+      warning = 'The image could not be read for a size check; it will still be uploaded.';
+    } else {
+      const ratio = dims.width / dims.height;
+      if (Math.abs(ratio - 9 / 16) > 0.03) {
+        warning = `This image is ${dims.width} × ${dims.height}. Thumbnails are shown as vertical 9:16 (for example 1080 × 1920), so it will be cropped.`;
+      }
+    }
+    if (session !== formSessionRef.current) return;
+
+    setUpload({ state: 'uploading', message: `Uploading ${file.name} (${formatBytes(file.size)}) to Storage folder reels/…`, warning });
     try {
       const { url, path, error } = await uploadImage(file, 'reels', 'thumb');
-      if (error || !url) {
-        setErrorMsg(`Failed to upload thumbnail: ${error || 'Storage did not return the uploaded file.'}`);
-      } else {
-        setFormData((prev) => ({ ...prev, thumbnail_url: url, thumbnail_path: path }));
-        setSuccessMsg('Thumbnail uploaded to Supabase Storage.');
-        setTimeout(() => setSuccessMsg(''), 2500);
+      if (session !== formSessionRef.current) return; // modal was closed or reopened meanwhile
+      if (error || !url || !path) {
+        setLocalPreview('');
+        setUpload({
+          state: 'error',
+          message: `Thumbnail was not uploaded: ${error || 'Storage did not return the uploaded file.'}${formData.thumbnail_url ? ' The previous thumbnail is kept.' : ''}`,
+          warning,
+        });
+        return;
       }
+      setFormData((prev) => ({ ...prev, thumbnail_url: url, thumbnail_path: path }));
+      // From now on the preview shows the uploaded file from its public Storage URL
+      setLocalPreview('');
+      setUpload({ state: 'done', message: `Uploaded to ${path}.`, warning });
     } catch (err) {
-      setErrorMsg(`Upload error: ${err.message || 'Storage error'}`);
-    } finally {
-      setIsUploading(false);
+      if (session !== formSessionRef.current) return;
+      setLocalPreview('');
+      setUpload({ state: 'error', message: `Thumbnail was not uploaded: ${err.message || 'Storage error'}`, warning });
     }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    try {
+      validateInstagramUrl(formData.instagram_url);
+    } catch (err) {
+      errors.instagram_url = err.message;
+    }
+    if (upload.state === 'uploading') {
+      errors.thumbnail = 'Wait for the thumbnail upload to finish.';
+    } else if (!formData.thumbnail_url) {
+      errors.thumbnail = 'Upload a 9:16 thumbnail image for this reel.';
+    }
+    const order = Number(formData.display_order);
+    if (!Number.isInteger(order) || order < 1) {
+      errors.display_order = 'Display order must be a whole number of 1 or more.';
+    }
+    return errors;
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
+    if (submittingRef.current) return;
 
-    // Same rule the database write uses: an https Instagram reel/post link or the profile link
-    try {
-      validateInstagramUrl(formData.instagram_url);
-    } catch (err) {
-      setErrorMsg(err.message);
+    const errors = validateForm();
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setFormError('Please fix the highlighted fields.');
       return;
     }
 
-    if (!formData.thumbnail_url) {
-      setErrorMsg('Please upload a 9:16 thumbnail image for this Instagram reel.');
-      return;
-    }
-
-    if (formData.thumbnail_url.startsWith('blob:')) {
-      setErrorMsg('Please wait for the thumbnail image upload to complete.');
-      return;
-    }
-
+    submittingRef.current = true;
     setSaving(true);
-    setErrorMsg('');
-    setSuccessMsg('');
+    setFormError('');
+
+    const payload = {
+      instagram_url: formData.instagram_url.trim(),
+      thumbnail_url: formData.thumbnail_url,
+      thumbnail_path: formData.thumbnail_path || '',
+      caption: formData.caption.trim(),
+      display_order: Number(formData.display_order),
+      is_active: Boolean(formData.is_active),
+    };
 
     try {
       if (editingReel) {
-        await updateReel(editingReel.id, formData);
-        setSuccessMsg('Instagram Reel updated successfully.');
+        await updateReel(editingReel.id, payload);
       } else {
-        await createReel(formData);
-        setSuccessMsg('Instagram Reel registered successfully.');
+        await createReel(payload);
       }
-      setTimeout(async () => {
-        setIsFormOpen(false);
-        await loadData();
-      }, 700);
+      resetModalState();
+      setIsFormOpen(false);
+      setSuccessMsg(editingReel ? 'Instagram reel updated.' : 'Instagram reel added.');
+      setTimeout(() => setSuccessMsg(''), 3000);
+      await loadData();
     } catch (err) {
       console.error('Save reel error:', err);
-      setErrorMsg(`Failed to save reel: ${err.message || 'Database error'}`);
+      setFormError(`Reel was not saved: ${err.message || 'Database error'}`);
     } finally {
+      submittingRef.current = false;
       setSaving(false);
     }
   };
@@ -184,6 +283,11 @@ export default function AdminReels() {
     }
   };
 
+  const previewSrc = localPreview || (editingReel && formData.thumbnail_url === (editingReel.stored_thumbnail_url || editingReel.thumbnail_url)
+    ? editingReel.thumbnail_url
+    : formData.thumbnail_url);
+  const isUploading = upload.state === 'uploading';
+
   return (
     <div className="ps-admin-reels-page">
       <div className="ps-admin-page-header">
@@ -201,8 +305,8 @@ export default function AdminReels() {
         </button>
       </div>
 
-      {successMsg && <div className="ps-form-success-banner" style={{ margin: '16px 0' }}>{successMsg}</div>}
-      {errorMsg && <div className="ps-form-error-banner" style={{ margin: '16px 0' }}>{errorMsg}</div>}
+      {successMsg && <div className="ps-form-success-banner" role="status" style={{ margin: '16px 0' }}>{successMsg}</div>}
+      {errorMsg && <div className="ps-form-error-banner" role="alert" style={{ margin: '16px 0' }}>{errorMsg}</div>}
 
       {loading ? (
         <div className="ps-admin-loading" style={{ padding: '60px', textAlign: 'center' }}>Loading Reels...</div>
@@ -229,7 +333,9 @@ export default function AdminReels() {
                 <tr key={reel.id}>
                   <td>
                     <div style={{ width: 50, height: 88, borderRadius: 4, overflow: 'hidden', background: '#000', border: '1px solid #ddd', position: 'relative' }}>
-                      <img src={reel.thumbnail_url} alt="Reel thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      {reel.thumbnail_url ? (
+                        <img src={reel.thumbnail_url} alt="Reel thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : null}
                       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(0,0,0,0.6)', borderRadius: '50%', padding: 4 }}>
                         <Play size={10} fill="#fff" color="#fff" />
                       </div>
@@ -318,118 +424,146 @@ export default function AdminReels() {
 
       {/* Modal: Add / Edit Reel */}
       {isFormOpen && (
-        <div className="ps-admin-modal-overlay" onClick={() => !saving && setIsFormOpen(false)}>
-          <div className="ps-admin-modal-card" style={{ maxWidth: 600 }} onClick={(e) => e.stopPropagation()}>
-            <div className="ps-modal-header">
-              <h3>{editingReel ? 'Edit Instagram Reel' : 'Add Instagram Reel'}</h3>
-              <button
-                type="button"
-                className="ps-modal-close"
-                onClick={() => setIsFormOpen(false)}
-                disabled={saving}
-              >
+        <div className="ps-admin-modal-overlay" onClick={closeForm}>
+          <div
+            className="ps-admin-modal-card ps-reel-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ps-reel-modal-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="ps-reel-modal-header">
+              <h3 id="ps-reel-modal-title">{editingReel ? 'Edit Instagram Reel' : 'Add Instagram Reel'}</h3>
+              <button type="button" className="ps-reel-modal-close" onClick={closeForm} disabled={saving} aria-label="Close">
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSave} style={{ display: 'grid', gridTemplateColumns: '1fr 180px', gap: 20 }}>
-              <div>
-                <div className="ps-form-group">
-                  <label>Instagram URL *</label>
+            {formError && <div className="ps-reel-alert is-error" role="alert"><AlertCircle size={14} /> <span>{formError}</span></div>}
+
+            <form onSubmit={handleSave} className="ps-reel-modal-form" noValidate>
+              <div className="ps-reel-modal-fields">
+                <div className="ps-reel-field">
+                  <label htmlFor="reel-url">Instagram URL *</label>
                   <input
+                    id="reel-url"
                     type="url"
                     placeholder="https://www.instagram.com/reel/..."
                     value={formData.instagram_url}
-                    onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
-                    required
+                    onChange={(e) => {
+                      setFormData({ ...formData, instagram_url: e.target.value });
+                      if (fieldErrors.instagram_url) setFieldErrors((p) => ({ ...p, instagram_url: '' }));
+                    }}
+                    aria-invalid={Boolean(fieldErrors.instagram_url)}
+                    disabled={saving}
                   />
+                  {fieldErrors.instagram_url ? (
+                    <small className="ps-reel-field-error">{fieldErrors.instagram_url}</small>
+                  ) : (
+                    <small className="ps-reel-hint">A reel or post link (…/reel/CODE/) or the profile link.</small>
+                  )}
                 </div>
 
-                <div className="ps-form-group">
-                  <label>Thumbnail Media (Supabase Storage folder: reels/) *</label>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <label className="ps-combo-upload-btn" style={{ cursor: isUploading ? 'not-allowed' : 'pointer' }}>
-                      {isUploading ? (
-                        <Loader2 size={14} className="ps-spin" style={{ animation: 'spin 1s linear infinite' }} />
-                      ) : (
-                        <Upload size={14} color="#c8a45d" />
-                      )}
-                      <span>{isUploading ? 'Uploading...' : 'Upload 9:16 Thumbnail'}</span>
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        onChange={handleThumbnailUpload}
-                        disabled={isUploading}
-                        style={{ display: 'none' }}
-                      />
-                    </label>
-                  </div>
-                  <small style={{ color: '#888', fontSize: 11, marginTop: 4, display: 'block' }}>
-                    Recommended aspect ratio: 9:16 vertical cover image.
-                  </small>
+                <div className="ps-reel-field">
+                  <span className="ps-reel-label">Thumbnail (Storage folder reels/) *</span>
+                  <label className={`ps-reel-upload-btn ${isUploading || saving ? 'is-disabled' : ''}`}>
+                    {isUploading ? <Loader2 size={14} className="ps-reel-spin" /> : <Upload size={14} />}
+                    <span>{isUploading ? 'Uploading…' : formData.thumbnail_url ? 'Replace 9:16 Thumbnail' : 'Upload 9:16 Thumbnail'}</span>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleThumbnailSelect}
+                      disabled={isUploading || saving}
+                      hidden
+                    />
+                  </label>
+                  <small className="ps-reel-hint">JPEG, PNG or WebP, up to 10 MB. Vertical 9:16, e.g. 1080 × 1920.</small>
+                  {isUploading && (
+                    <div className="ps-reel-progress" role="status">
+                      <div className="ps-reel-progress-bar" />
+                      <small>{upload.message}</small>
+                    </div>
+                  )}
+                  {upload.state === 'done' && (
+                    <small className="ps-reel-ok"><CheckCircle size={12} /> {upload.message}</small>
+                  )}
+                  {upload.state === 'error' && <small className="ps-reel-field-error" role="alert">{upload.message}</small>}
+                  {upload.warning && <small className="ps-reel-warn">{upload.warning}</small>}
+                  {fieldErrors.thumbnail && upload.state !== 'error' && (
+                    <small className="ps-reel-field-error">{fieldErrors.thumbnail}</small>
+                  )}
                 </div>
 
-                <div className="ps-form-group">
-                  <label>Caption / Hook Text</label>
+                <div className="ps-reel-field">
+                  <label htmlFor="reel-caption">Caption / Hook Text</label>
                   <textarea
+                    id="reel-caption"
                     rows="3"
                     placeholder="Describe the fragrance or unboxing ritual..."
                     value={formData.caption}
                     onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
+                    disabled={saving}
                   />
                 </div>
 
-                <div className="ps-form-row">
-                  <div className="ps-form-group">
-                    <label>Display Order</label>
+                <div className="ps-reel-row">
+                  <div className="ps-reel-field">
+                    <label htmlFor="reel-order">Display Order</label>
                     <input
+                      id="reel-order"
                       type="number"
+                      min="1"
+                      step="1"
                       value={formData.display_order}
-                      onChange={(e) => setFormData({ ...formData, display_order: Number(e.target.value) })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, display_order: e.target.value });
+                        if (fieldErrors.display_order) setFieldErrors((p) => ({ ...p, display_order: '' }));
+                      }}
+                      aria-invalid={Boolean(fieldErrors.display_order)}
+                      disabled={saving}
                     />
+                    {fieldErrors.display_order && <small className="ps-reel-field-error">{fieldErrors.display_order}</small>}
                   </div>
-                  <div className="ps-form-group" style={{ justifyContent: 'center' }}>
-                    <label className="ps-checkbox-label" style={{ marginTop: 20 }}>
-                      <input
-                        type="checkbox"
-                        checked={formData.is_active}
-                        onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                      />
-                      <span>Active on Website</span>
-                    </label>
-                  </div>
+                  <label className="ps-reel-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_active}
+                      onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                      disabled={saving}
+                    />
+                    <span>Active on Website</span>
+                  </label>
                 </div>
 
-                <div className="ps-modal-actions" style={{ marginTop: 16 }}>
-                  <button type="button" className="ps-builder-btn-cancel" onClick={() => setIsFormOpen(false)} disabled={saving}>
+                <div className="ps-reel-actions">
+                  <button type="button" className="ps-reel-btn-cancel" onClick={closeForm} disabled={saving}>
                     Cancel
                   </button>
-                  <button type="submit" className="ps-builder-btn-save" disabled={saving || isUploading}>
-                    {saving ? 'Saving...' : 'Save Reel'}
+                  <button type="submit" className="ps-reel-btn-save" disabled={saving || isUploading}>
+                    {saving ? 'Saving…' : 'Save Reel'}
                   </button>
                 </div>
               </div>
 
               {/* Live Preview Column */}
-              <div>
-                <span className="ps-admin-eyebrow" style={{ marginBottom: 8, display: 'block' }}>LIVE PREVIEW</span>
-                <div style={{ width: 180, height: 320, borderRadius: 6, overflow: 'hidden', background: '#000', border: '1px solid #ddd', position: 'relative' }}>
-                  {formData.thumbnail_url ? (
-                    <img src={formData.thumbnail_url} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: 11, padding: 12, textAlign: 'center' }}>
-                      No Thumbnail Uploaded
+              <div className="ps-reel-preview-col">
+                <span className="ps-admin-eyebrow">LIVE PREVIEW</span>
+                <div className="ps-reel-preview">
+                  {previewSrc && brokenPreview === previewSrc ? (
+                    <div className="ps-reel-preview-empty is-error">
+                      The image could not be loaded from {previewSrc.startsWith('blob:') ? 'this file' : 'its Storage URL'}.
                     </div>
+                  ) : previewSrc ? (
+                    <img src={previewSrc} alt="Thumbnail preview" onError={() => setBrokenPreview(previewSrc)} />
+                  ) : (
+                    <div className="ps-reel-preview-empty">No Thumbnail Uploaded</div>
                   )}
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.85) 100%)' }} />
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(0,0,0,0.6)', borderRadius: '50%', padding: 10 }}>
+                  <div className="ps-reel-preview-vignette" />
+                  <div className="ps-reel-preview-play">
                     <Play size={16} fill="#fff" color="#fff" />
                   </div>
-                  {formData.caption && (
-                    <p style={{ position: 'absolute', bottom: 8, left: 8, right: 8, margin: 0, fontSize: 10, color: '#fff', lineHeight: 1.3 }}>
-                      {formData.caption}
-                    </p>
-                  )}
+                  {isUploading && <div className="ps-reel-preview-status">Uploading…</div>}
+                  {formData.caption && <p className="ps-reel-preview-caption">{formData.caption}</p>}
                 </div>
               </div>
             </form>

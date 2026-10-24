@@ -447,23 +447,25 @@ export default function ProductDetailPage() {
             {/* Product Title */}
             <h1 className="ps-pdp-product-title">{product.name}</h1>
 
-            {/* Rating Stars & Customer Review Count */}
-            <div className="ps-pdp-rating-row">
-              <div className="ps-pdp-stars" aria-hidden="true">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    size={15}
-                    fill={i < Math.floor(rating) ? '#C9A96E' : '#E7D7BA'}
-                    color={i < Math.floor(rating) ? '#C9A96E' : '#E7D7BA'}
-                  />
-                ))}
+            {/* Rating Stars & Customer Review Count (only when the product has reviews) */}
+            {hasReviews && (
+              <div className="ps-pdp-rating-row">
+                <div className="ps-pdp-stars" aria-hidden="true">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      size={15}
+                      fill={i < Math.floor(rating) ? '#C9A96E' : '#E7D7BA'}
+                      color={i < Math.floor(rating) ? '#C9A96E' : '#E7D7BA'}
+                    />
+                  ))}
+                </div>
+                <span className="ps-pdp-rating-number">{rating}</span>
+                <span className="ps-pdp-reviews-count">
+                  ({reviewCount} review{reviewCount === 1 ? '' : 's'})
+                </span>
               </div>
-              {hasReviews && <span className="ps-pdp-rating-number">{rating}</span>}
-              <span className="ps-pdp-reviews-count">
-                {hasReviews ? `(${reviewCount} review${reviewCount === 1 ? '' : 's'})` : 'No reviews yet'}
-              </span>
-            </div>
+            )}
 
             {/* Pricing Row */}
             <div className="ps-pdp-price-row">
@@ -847,7 +849,8 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            {/* Card 4: Reviews */}
+            {/* Card 4: Reviews (only when the product has approved reviews) */}
+            {hasReviews && (
             <div className="ps-pdp-accordion-card">
               <button
                 type="button"
@@ -884,7 +887,7 @@ export default function ProductDetailPage() {
                       </div>
                     </div>
                     <span className="ps-pdp-verified-note">
-                      {hasReviews ? `Based on ${reviewCount} review${reviewCount === 1 ? '' : 's'}` : 'No reviews yet'}
+                      Based on {reviewCount} review{reviewCount === 1 ? '' : 's'}
                     </span>
                   </div>
 
@@ -914,15 +917,11 @@ export default function ProductDetailPage() {
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <p className="ps-pdp-muted-text">
-                      No customer reviews yet. Be the first to share your experience with{' '}
-                      {product.name}.
-                    </p>
-                  )}
+                  ) : null}
                 </div>
               )}
             </div>
+            )}
           </div>
         </div>
 

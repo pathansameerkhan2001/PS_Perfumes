@@ -158,28 +158,24 @@ export default function ProductCard({ product, priority = false }) {
             <span className="ps-pcard-bottles">{bottleOptions.join(' · ')}</span>
           )}
 
-          {/* Compact Ratings */}
-          <div className="ps-pcard-rating-row">
-            {hasReviews ? (
-              <>
-                <div className="ps-pcard-stars" aria-hidden="true">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      size={13}
-                      fill={i < Math.floor(rating) ? '#d4a017' : '#e5e7eb'}
-                      color={i < Math.floor(rating) ? '#d4a017' : '#e5e7eb'}
-                    />
-                  ))}
-                </div>
-                <span className="ps-pcard-rating-text">
-                  {rating} ({reviewCount})
-                </span>
-              </>
-            ) : (
-              <span className="ps-pcard-no-reviews">No reviews yet</span>
-            )}
-          </div>
+          {/* Compact Ratings (only when the product has reviews) */}
+          {hasReviews && (
+            <div className="ps-pcard-rating-row">
+              <div className="ps-pcard-stars" aria-hidden="true">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    size={13}
+                    fill={i < Math.floor(rating) ? '#d4a017' : '#e5e7eb'}
+                    color={i < Math.floor(rating) ? '#d4a017' : '#e5e7eb'}
+                  />
+                ))}
+              </div>
+              <span className="ps-pcard-rating-text">
+                {rating} ({reviewCount})
+              </span>
+            </div>
+          )}
 
           {/* Pricing Row */}
           <div className="ps-pcard-pricing-row">

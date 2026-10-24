@@ -1,0 +1,417 @@
+/* ==========================================================================
+   PS PERFUMES — Admin Instagram Reels
+   Self-contained modal styles: the page must look the same whether or not another admin
+   page (Products form, Combos) was opened first.
+   ========================================================================== */
+
+.ps-reel-modal.ps-admin-modal-card {
+  max-width: 640px;
+  text-align: left;
+  padding: 24px;
+}
+
+.ps-reel-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ps-reel-modal-header h3 {
+  margin: 0;
+  font-family: var(--ps-admin-font-serif, 'Cormorant Garamond', Georgia, serif);
+  font-size: 22px;
+  font-weight: 600;
+  color: #1A1714;
+}
+
+.ps-reel-modal-close {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #E5E0D8;
+  background: #FFFFFF;
+  color: #6F675E;
+  cursor: pointer;
+}
+
+.ps-reel-modal-close:hover {
+  border-color: #C9A96E;
+  color: #1A1714;
+}
+
+.ps-reel-modal-form {
+  display: grid;
+  grid-template-columns: 1fr 180px;
+  gap: 20px;
+}
+
+.ps-reel-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+  min-width: 0;
+}
+
+.ps-reel-field label,
+.ps-reel-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #8C8479;
+  text-transform: uppercase;
+}
+
+.ps-reel-field input,
+.ps-reel-field textarea {
+  padding: 9px 12px;
+  background: #FAF8F5;
+  border: 1px solid #E5E0D8;
+  border-radius: 6px;
+  color: #1A1714;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ps-reel-field textarea {
+  resize: vertical;
+}
+
+.ps-reel-field input:focus,
+.ps-reel-field textarea:focus {
+  border-color: #C9A96E;
+  background: #FFFFFF;
+}
+
+.ps-reel-field input[aria-invalid='true'] {
+  border-color: #DC2626;
+}
+
+.ps-reel-hint {
+  font-size: 11px;
+  color: #8C8479;
+}
+
+.ps-reel-field-error {
+  font-size: 11.5px;
+  color: #B91C1C;
+}
+
+.ps-reel-warn {
+  font-size: 11.5px;
+  color: #B45309;
+}
+
+.ps-reel-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  color: #2D6A4F;
+  word-break: break-all;
+}
+
+.ps-reel-upload-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1.5px dashed #D4C7B0;
+  border-radius: 8px;
+  background: #FAF8F5;
+  color: #1A1714;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.ps-reel-upload-btn svg {
+  color: #C9A96E;
+}
+
+.ps-reel-upload-btn:hover {
+  border-color: #C9A96E;
+  background: #FFFFFF;
+}
+
+.ps-reel-upload-btn.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.ps-reel-spin {
+  animation: ps-reel-spin 0.9s linear infinite;
+}
+
+@keyframes ps-reel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Indeterminate bar: the Storage client does not report byte progress */
+.ps-reel-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11.5px;
+  color: #6F675E;
+}
+
+.ps-reel-progress-bar {
+  position: relative;
+  height: 4px;
+  border-radius: 2px;
+  background: #ECE7DF;
+  overflow: hidden;
+}
+
+.ps-reel-progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 35%;
+  background: #C9A96E;
+  border-radius: 2px;
+  animation: ps-reel-progress 1.1s ease-in-out infinite;
+}
+
+@keyframes ps-reel-progress {
+  from {
+    left: -35%;
+  }
+  to {
+    left: 100%;
+  }
+}
+
+.ps-reel-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.ps-reel-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  font-size: 13px;
+  color: #1A1714;
+  cursor: pointer;
+}
+
+.ps-reel-checkbox input {
+  accent-color: #C9A96E;
+  width: 16px;
+  height: 16px;
+}
+
+.ps-reel-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.ps-reel-btn-cancel,
+.ps-reel-btn-save {
+  padding: 9px 20px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ps-reel-btn-cancel {
+  background: #FFFFFF;
+  border: 1px solid #E5E0D8;
+  color: #6F675E;
+}
+
+.ps-reel-btn-cancel:hover:not(:disabled) {
+  border-color: #C9A96E;
+  color: #1A1714;
+}
+
+.ps-reel-btn-save {
+  background: #11100F;
+  border: 1px solid #C9A96E;
+  color: #C9A96E;
+  letter-spacing: 0.03em;
+}
+
+.ps-reel-btn-save:hover:not(:disabled) {
+  background: #C9A96E;
+  color: #11100F;
+}
+
+.ps-reel-btn-cancel:disabled,
+.ps-reel-btn-save:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ps-reel-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  margin-bottom: 14px;
+}
+
+.ps-reel-alert.is-error {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #B91C1C;
+}
+
+.ps-reel-alert svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Live preview: vertical 9:16 */
+.ps-reel-preview-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ps-reel-preview {
+  position: relative;
+  width: 180px;
+  aspect-ratio: 9 / 16;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid #DDD;
+}
+
+.ps-reel-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ps-reel-preview-empty {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  text-align: center;
+  font-size: 11px;
+  color: #888;
+}
+
+.ps-reel-preview-empty.is-error {
+  color: #FCA5A5;
+}
+
+.ps-reel-preview-vignette {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.85) 100%);
+  pointer-events: none;
+}
+
+.ps-reel-preview-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  padding: 10px;
+  display: flex;
+}
+
+.ps-reel-preview-status {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #C9A96E;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.ps-reel-preview-caption {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.3;
+  color: #FFFFFF;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Reorder buttons in the list */
+.ps-reorder-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #E5E0D8;
+  border-radius: 6px;
+  background: #FFFFFF;
+  color: #1A1714;
+  cursor: pointer;
+}
+
+.ps-reorder-btn:hover:not(:disabled) {
+  border-color: #C9A96E;
+}
+
+/* Phones: preview above the fields, single column */
+@media (max-width: 640px) {
+  .ps-reel-modal.ps-admin-modal-card {
+    padding: 18px;
+  }
+
+  .ps-reel-modal-form {
+    grid-template-columns: 1fr;
+  }
+
+  .ps-reel-preview-col {
+    order: -1;
+    align-items: center;
+  }
+
+  .ps-reel-preview {
+    width: 140px;
+  }
+
+  .ps-reel-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ps-reel-checkbox {
+    margin-top: 0;
+    margin-bottom: 12px;
+  }
+}

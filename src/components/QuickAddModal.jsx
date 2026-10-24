@@ -190,28 +190,24 @@ export default function QuickAddModal({ product, isOpen, onClose }) {
               {product.name}
             </h3>
 
-            {/* Compact Ratings */}
-            <div className="ps-quickadd-rating-row">
-              {hasReviews ? (
-                <>
-                  <div className="ps-quickadd-stars">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        size={12}
-                        fill={i < Math.floor(rating) ? '#d4a017' : '#e5e7eb'}
-                        color={i < Math.floor(rating) ? '#d4a017' : '#e5e7eb'}
-                      />
-                    ))}
-                  </div>
-                  <span className="ps-quickadd-rating-text">
-                    {rating} ({reviewCount})
-                  </span>
-                </>
-              ) : (
-                <span className="ps-quickadd-no-reviews">No reviews yet</span>
-              )}
-            </div>
+            {/* Compact Ratings (only when the product has reviews) */}
+            {hasReviews && (
+              <div className="ps-quickadd-rating-row">
+                <div className="ps-quickadd-stars">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      size={12}
+                      fill={i < Math.floor(rating) ? '#d4a017' : '#e5e7eb'}
+                      color={i < Math.floor(rating) ? '#d4a017' : '#e5e7eb'}
+                    />
+                  ))}
+                </div>
+                <span className="ps-quickadd-rating-text">
+                  {rating} ({reviewCount})
+                </span>
+              </div>
+            )}
 
             {/* Price Preview */}
             <div className="ps-quickadd-price-header">
