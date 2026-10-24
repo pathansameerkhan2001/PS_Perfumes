@@ -397,6 +397,45 @@
   transition: width 0.3s ease;
 }
 
+/* Product Images workflow (shares the import page styles) */
+.ps-imgwf-stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  cursor: pointer;
+}
+
+.ps-imgwf-stage:disabled {
+  cursor: not-allowed;
+}
+
+.ps-imgwf-thumb {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--ps-admin-border-subtle, #ECE7DF);
+  background: var(--ps-admin-bg-card-subtle, #FAF7F2);
+}
+
+.ps-imgwf-prompt {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ps-admin-text-secondary, #746B61);
+  max-width: 640px;
+  margin-bottom: 6px;
+}
+
+.ps-imgwf-break {
+  word-break: break-all;
+  max-width: 360px;
+}
+
 @media (max-width: 640px) {
   .ps-imp-card {
     padding: 14px;

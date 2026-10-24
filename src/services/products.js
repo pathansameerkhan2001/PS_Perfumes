@@ -890,6 +890,71 @@ export async function deleteProduct(id) {
 }
 
 /**
+ * Fill EMPTY image fields of one product: the primary image (main_image_url/path) and the
+ * glass/PVC bottle images kept in fragrance_notes. Nothing else changes: not the status,
+ * prices, variants, notes or any image that is already set. Unlike updateProduct, the other
+ * fragrance_notes keys are merged, not rebuilt. Concept (unverified) images are accepted for
+ * inactive products only, so they never appear on the storefront.
+ * @param {string} id
+ * @param {{ main?: { url: string, path: string }, glass?: { url: string, path: string }, pvc?: { url: string, path: string } }} images
+ * @param {{ concept: boolean }} options
+ */
+export async function assignProductImages(id, images, { concept }) {
+  assertSupabaseRecordId(id);
+  const { data: row, error } = await supabase
+    .from('products')
+    .select('id, name, is_active, main_image_url, main_image_path, fragrance_notes, updated_at')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw new Error(`Could not read the product: ${describeDbError(error)}`);
+  if (!row) throw new Error('The product no longer exists.');
+  if (concept && row.is_active) {
+    throw new Error(`"${row.name}" is active; concept images can only be assigned to draft products.`);
+  }
+
+  let notes = {};
+  if (row.fragrance_notes && typeof row.fragrance_notes === 'object' && !Array.isArray(row.fragrance_notes)) {
+    notes = row.fragrance_notes;
+  } else if (typeof row.fragrance_notes === 'string' && row.fragrance_notes.trim()) {
+    try {
+      notes = JSON.parse(row.fragrance_notes);
+    } catch {
+      throw new Error(`"${row.name}" has unreadable fragrance_notes; not changed.`);
+    }
+  }
+
+  const updates = {};
+  if (images.main) {
+    if (row.main_image_url || row.main_image_path) {
+      throw new Error(`"${row.name}" already has a primary image; it was not overwritten.`);
+    }
+    updates.main_image_url = images.main.url;
+    updates.main_image_path = images.main.path;
+  }
+  const nextNotes = { ...notes };
+  for (const slot of ['glass', 'pvc']) {
+    if (!images[slot]) continue;
+    if (notes[`${slot}_image`] || notes[`${slot}_image_path`]) {
+      throw new Error(`"${row.name}" already has a ${slot} bottle image; it was not overwritten.`);
+    }
+    nextNotes[`${slot}_image`] = images[slot].url;
+    nextNotes[`${slot}_image_path`] = images[slot].path;
+  }
+  if (images.glass || images.pvc) updates.fragrance_notes = nextNotes;
+  if (Object.keys(updates).length === 0) throw new Error('No image to assign.');
+
+  // Only if nobody changed the row since it was read, and the primary image is still empty
+  let query = supabase.from('products').update(updates).eq('id', id).eq('updated_at', row.updated_at);
+  if (images.main) query = query.or('main_image_url.is.null,main_image_url.eq.');
+  const { data: changed, error: updErr } = await query.select('id');
+  if (updErr) throw new Error(`Images were not assigned: ${describeDbError(updErr)}`);
+  if (!changed || changed.length === 0) {
+    throw new Error(`Images were not assigned to "${row.name}": the product changed since it was read, or this account may not edit products.`);
+  }
+  return { id, fields: Object.keys(updates) };
+}
+
+/**
  * Set the stock of one product variant (Inventory page). Product visibility is not touched:
  * a variant with 0 stock simply shows as out of stock on the storefront.
  */
