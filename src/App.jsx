@@ -51,7 +51,7 @@ function AdminLoadingFallback() {
         minHeight: '60vh',
         gap: '12px',
         color: '#C9A96E',
-        fontFamily: "'Cormorant Garamond', Georgia, serif",
+        fontFamily: 'var(--font-serif)',
       }}
     >
       <div

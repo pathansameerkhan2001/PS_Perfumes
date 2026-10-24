@@ -46,7 +46,7 @@
 }
 
 .ps-fragrance-eyebrow {
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.16em;
@@ -62,7 +62,7 @@
 }
 
 .ps-fragrance-title {
-  font-family: 'Cormorant Garamond', 'Cinzel', serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: clamp(30px, 2.5vw, 38px);
   font-weight: 500;
   color: #171513;
@@ -75,7 +75,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.14em;
@@ -200,7 +200,7 @@
 
 /* Category Typography: Refined Serif / Display */
 .ps-category-name {
-  font-family: 'Cinzel', 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: clamp(14px, 0.95vw, 15.5px);
   font-weight: 600;
   letter-spacing: 0.16em;

@@ -45,7 +45,7 @@
 }
 
 .ps-collection-hero-eyebrow {
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.32em;
@@ -64,7 +64,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 11.5px;
   font-weight: 500;
   letter-spacing: 0.12em;
@@ -95,7 +95,7 @@
 
 /* Heading */
 .ps-collection-hero-title {
-  font-family: 'Cinzel', 'Cormorant Garamond', serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: clamp(38px, 4.2vw, 64px);
   font-weight: 500;
   color: #F8F3E9;
@@ -114,7 +114,7 @@
 
 /* Short Category Description */
 .ps-collection-hero-description {
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: clamp(14px, 1.05vw, 16px);
   font-weight: 300;
   line-height: 1.75;
@@ -193,7 +193,7 @@
   background-color: #FAF8F4;
   border: 1px solid rgba(23, 21, 19, 0.15);
   border-radius: 4px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 12.5px;
   font-weight: 600;
   color: #171513;
@@ -241,7 +241,7 @@
   background-color: #FAF8F4;
   border: 1px solid rgba(23, 21, 19, 0.15);
   border-radius: 4px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 12.5px;
   font-weight: 500;
   color: #171513;
@@ -270,7 +270,7 @@
 }
 
 .ps-toolbar-count {
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 12.5px;
   color: #77716A;
 }
@@ -327,7 +327,7 @@
 }
 
 .ps-active-filters-label {
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 11px;
   font-weight: 600;
   color: #8C847A;
@@ -343,7 +343,7 @@
   border: 1px solid rgba(201, 164, 92, 0.45);
   padding: 4px 10px;
   border-radius: 14px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 11px;
   font-weight: 500;
   color: #171513;
@@ -361,7 +361,7 @@
   background: none;
   border: none;
   color: #C9A45C;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 11.5px;
   font-weight: 600;
   text-decoration: underline;
@@ -426,7 +426,7 @@
 }
 
 .ps-drawer-title {
-  font-family: 'Cinzel', 'Cormorant Garamond', serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 19px;
   font-weight: 600;
   color: #171513;
@@ -462,7 +462,7 @@
 }
 
 .ps-drawer-subtitle {
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -479,7 +479,7 @@
 }
 
 .ps-drawer-price-val {
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 14px;
   font-weight: 700;
   color: #C9A45C;
@@ -494,7 +494,7 @@
 .ps-drawer-slider-ends {
   display: flex;
   justify-content: space-between;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 11px;
   color: #8C847A;
   margin-top: 6px;
@@ -504,7 +504,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 13px;
   color: #171513;
   padding: 8px 0;
@@ -535,7 +535,7 @@
   background-color: transparent;
   border: 1px solid rgba(23, 21, 19, 0.2);
   border-radius: 4px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -556,7 +556,7 @@
   color: #FFFFFF;
   border: 1px solid #171513;
   border-radius: 4px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -582,6 +582,9 @@
 .ps-collection-grid {
   display: grid;
   width: 100%;
+  /* Cards about 12% narrower than the full container on wide screens */
+  max-width: 1340px;
+  margin-inline: auto;
 }
 
 /* 4-Column Desktop Default Grid */
@@ -641,7 +644,7 @@
 }
 
 .ps-empty-heading {
-  font-family: 'Cinzel', 'Cormorant Garamond', serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 24px;
   font-weight: 500;
   color: #171513;
@@ -649,7 +652,7 @@
 }
 
 .ps-empty-sub {
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 13.5px;
   color: #77716A;
   line-height: 1.6;
@@ -666,7 +669,7 @@
   color: #FFFFFF;
   border: 1px solid #171513;
   border-radius: 4px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -701,7 +704,7 @@
   color: #171513;
   border: 1px solid #171513;
   border-radius: 4px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -716,7 +719,7 @@
 }
 
 .ps-collection-load-progress {
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 12px;
   color: #8C847A;
 }

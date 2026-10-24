@@ -20,7 +20,7 @@
 
 .ps-reel-modal-header h3 {
   margin: 0;
-  font-family: var(--ps-admin-font-serif, 'Cormorant Garamond', Georgia, serif);
+  font-family: var(--ps-admin-font-serif, "Times New Roman", Times, serif);
   font-size: 22px;
   font-weight: 600;
   color: #1A1714;

@@ -148,7 +148,7 @@ export default function PSPerfumesLogo({
             y="94"
             textAnchor="middle"
             fill="url(#psGoldMonogramGrad)"
-            fontFamily="'Cinzel', 'Cormorant Garamond', serif"
+            fontFamily="'Times New Roman', Times, serif"
             fontSize="14.5"
             fontWeight="600"
             letterSpacing="0.34em"

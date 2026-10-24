@@ -136,7 +136,7 @@ export default function AdminEnquiries() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <h3 style={{ fontFamily: 'Cinzel, serif', color: '#F8F5EE', fontSize: '1.1rem', margin: 0 }}>
+                    <h3 style={{ fontFamily: 'var(--font-serif)', color: '#F8F5EE', fontSize: '1.1rem', margin: 0 }}>
                       {item.name}
                     </h3>
                     <span

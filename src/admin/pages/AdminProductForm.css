@@ -186,7 +186,7 @@
 }
 
 .ps-pane-title {
-  font-family: var(--font-serif, 'Cormorant Garamond', serif);
+  font-family: var(--font-serif, "Times New Roman", Times, serif);
   font-size: 20px;
   font-weight: 600;
   color: #1A1714;

@@ -12,7 +12,7 @@
   justify-content: center;
   padding: 24px 16px;
   box-sizing: border-box;
-  font-family: var(--font-sans, 'Montserrat', sans-serif);
+  font-family: var(--font-sans, "Times New Roman", Times, serif);
   position: relative;
   background-image: radial-gradient(circle at 50% 30%, rgba(201, 169, 110, 0.05) 0%, rgba(17, 16, 15, 0) 70%);
 }

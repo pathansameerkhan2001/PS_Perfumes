@@ -24,7 +24,7 @@
   border-radius: 7px;
   color: #9E9487;
   text-decoration: none;
-  font-family: var(--ps-admin-font-sans, 'Montserrat', sans-serif);
+  font-family: var(--ps-admin-font-sans, "Times New Roman", Times, serif);
   font-size: 12px;
   font-weight: 450;
   line-height: 1.2;

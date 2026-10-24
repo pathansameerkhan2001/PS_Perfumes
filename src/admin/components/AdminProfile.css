@@ -53,7 +53,7 @@
   background: transparent;
   border: none;
   color: #9C9488;
-  font-family: var(--ps-admin-font-sans, 'Montserrat', sans-serif);
+  font-family: var(--ps-admin-font-sans, "Times New Roman", Times, serif);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;

@@ -8,6 +8,13 @@ import '../styles/adminTheme.css';
 // Shared admin page styles (page header, tables, modals). Loaded here so every admin page has
 // them, not only pages opened after the Products page.
 import '../pages/AdminProducts.css';
+// Form controls, switches and builder bars (Categories, Coupons, Combos, Settings, …), the
+// upload button shared by Combos/Hero/Users, card headers, status pills and plain tables:
+// loaded once so a page never depends on which other admin page was opened first
+import '../pages/AdminProductForm.css';
+import '../pages/AdminCombos.css';
+import '../components/AdminCard.css';
+import '../styles/adminShared.css';
 import './AdminLayout.css';
 
 /**

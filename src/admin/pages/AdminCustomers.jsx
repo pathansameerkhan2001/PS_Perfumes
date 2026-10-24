@@ -117,7 +117,7 @@ export default function AdminCustomers() {
               {filtered.map((client) => (
                 <tr key={client.key}>
                   <td>
-                    <div style={{ fontWeight: '600', color: 'var(--ps-admin-text-primary, #1A1714)', fontFamily: 'Cinzel, serif' }}>
+                    <div style={{ fontWeight: '600', color: 'var(--ps-admin-text-primary, #1A1714)', fontFamily: 'var(--font-serif)' }}>
                       {client.name || '—'}
                     </div>
                   </td>

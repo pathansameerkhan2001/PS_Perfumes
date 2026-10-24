@@ -8,7 +8,7 @@
   min-height: 100vh;
   background-color: #f7f4ee;
   color: #171411;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   padding-bottom: 80px;
 }
 
@@ -41,14 +41,14 @@
 }
 
 .ps-pdp-loading-text {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 18px;
   color: #756b60;
   letter-spacing: 0.05em;
 }
 
 .ps-pdp-not-found h2 {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 32px;
   color: #171411;
   margin-bottom: 10px;
@@ -278,7 +278,7 @@
 }
 
 .ps-pdp-product-title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 38px;
   font-weight: 600;
   color: #171411;
@@ -715,7 +715,7 @@
 }
 
 .ps-pdp-accordion-heading {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 19px;
   font-weight: 600;
   color: #171411;
@@ -908,7 +908,7 @@
 }
 
 .ps-pdp-related-title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 32px;
   font-weight: 600;
   color: #171411;

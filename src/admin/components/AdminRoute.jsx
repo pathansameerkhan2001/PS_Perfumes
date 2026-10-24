@@ -21,7 +21,7 @@ export default function AdminRoute({ children }) {
           justifyContent: 'center',
           gap: '14px',
           color: '#C9A96E',
-          fontFamily: "'Cormorant Garamond', Georgia, serif",
+          fontFamily: 'var(--font-serif)',
           letterSpacing: '0.12em',
         }}
       >

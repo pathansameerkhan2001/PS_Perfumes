@@ -233,7 +233,8 @@ export async function createCombo(comboData) {
   const row = toComboRow(comboData);
   if (!row.name) throw new Error('Combo name is required.');
   if (!row.image_url) throw new Error('A combo image is required.');
-  if (!(Number(row.price) > 0)) throw new Error('Combo price must be greater than 0.');
+  // The combo (selling) price itself must be set; an original price alone would show as ₹0
+  if (!(Number(comboData.combo_price ?? row.price) > 0)) throw new Error('Combo price must be greater than 0.');
   validateItems(comboData.items);
 
   const { data, error } = await supabase
@@ -260,7 +261,10 @@ export async function updateCombo(id, updates) {
   if (!isValidUUID(id)) throw new Error('This combo is not a database record. Reload the page.');
 
   const row = toComboRow(updates);
-  if (row.price !== undefined && !(Number(row.price) > 0)) {
+  if (
+    (row.price !== undefined && !(Number(row.price) > 0)) ||
+    (updates.combo_price !== undefined && !(Number(updates.combo_price) > 0))
+  ) {
     throw new Error('Combo price must be greater than 0.');
   }
   const { data, error } = await supabase

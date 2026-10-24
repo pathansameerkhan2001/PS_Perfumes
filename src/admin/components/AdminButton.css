@@ -3,7 +3,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-family: var(--ps-admin-font-sans, 'Montserrat', sans-serif);
+  font-family: var(--ps-admin-font-sans, "Times New Roman", Times, serif);
   font-weight: 500;
   border-radius: 8px;
   border: 1px solid transparent;

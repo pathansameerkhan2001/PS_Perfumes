@@ -48,8 +48,8 @@
   --ps-admin-header-height: 68px;
 
   /* Typography */
-  --ps-admin-font-serif: var(--font-serif, 'Cormorant Garamond', 'Playfair Display', Georgia, serif);
-  --ps-admin-font-sans: var(--font-sans, 'Montserrat', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
+  --ps-admin-font-serif: var(--font-serif, "Times New Roman", Times, serif);
+  --ps-admin-font-sans: var(--font-sans, "Times New Roman", Times, serif);
 }
 
 /* Reset / Base utility for admin scope */

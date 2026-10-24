@@ -20,7 +20,7 @@
 }
 
 .ps-admin-page-title {
-  font-family: var(--font-serif, 'Cormorant Garamond', serif);
+  font-family: var(--font-serif, "Times New Roman", Times, serif);
   font-size: 28px;
   font-weight: 600;
   color: #1A1714;
@@ -322,7 +322,7 @@
 }
 
 .ps-modal-title {
-  font-family: var(--font-serif, 'Cormorant Garamond', serif);
+  font-family: var(--font-serif, "Times New Roman", Times, serif);
   font-size: 20px;
   color: #1A1714;
   margin: 0 0 8px 0;

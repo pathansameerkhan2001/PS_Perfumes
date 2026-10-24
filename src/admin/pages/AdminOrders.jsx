@@ -18,6 +18,7 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [notice, setNotice] = useState(null); // { type: 'success' | 'error', text }
+  const [updatingId, setUpdatingId] = useState(null);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -35,7 +36,9 @@ export default function AdminOrders() {
   }, []);
 
   const handleStatusChange = async (orderId, newStatus) => {
+    if (updatingId) return;
     setNotice(null);
+    setUpdatingId(orderId);
     try {
       await updateOrderStatus(orderId, newStatus);
       if (selectedOrder && selectedOrder.id === orderId) {
@@ -45,6 +48,7 @@ export default function AdminOrders() {
     } catch (err) {
       setNotice({ type: 'error', text: err.message });
     } finally {
+      setUpdatingId(null);
       fetchOrders();
     }
   };
@@ -124,6 +128,7 @@ export default function AdminOrders() {
                       className="ps-status-select"
                       value={ord.order_status}
                       onChange={(e) => handleStatusChange(ord.id, e.target.value)}
+                      disabled={Boolean(updatingId)}
                       aria-label={`Status of order ${ord.order_number}`}
                       style={{
                         background: '#FFFFFF',
@@ -253,6 +258,17 @@ export default function AdminOrders() {
               </div>
             </div>
 
+            {/* Result of a status change made here (the page banner is behind this overlay) */}
+            {notice && (
+              <div
+                className={notice.type === 'error' ? 'ps-form-error-banner' : 'ps-form-success-banner'}
+                role={notice.type === 'error' ? 'alert' : 'status'}
+                style={{ marginTop: 16 }}
+              >
+                {notice.text}
+              </div>
+            )}
+
             {/* Status Control */}
             <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
               <label htmlFor="order-detail-status" style={{ fontSize: 12, color: 'var(--color-muted)' }}>Update Order Status:</label>
@@ -260,6 +276,7 @@ export default function AdminOrders() {
                 id="order-detail-status"
                 value={selectedOrder.order_status}
                 onChange={(e) => handleStatusChange(selectedOrder.id, e.target.value)}
+                disabled={Boolean(updatingId)}
                 style={{
                   background: 'var(--color-secondary)',
                   border: '1px solid var(--color-gold)',

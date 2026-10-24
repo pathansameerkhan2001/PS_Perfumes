@@ -35,7 +35,7 @@ export default function WishlistPage() {
             </Link>
           </div>
         ) : (
-          <div className="ps-shop-products-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
+          <div className="ps-shop-products-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))' }}>
             {wishlist.map((prod) => (
               // Product cards carry only Add to Cart, so removal lives below each saved card
               <div key={prod.id} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

@@ -16,11 +16,12 @@ export default function AdminCategories() {
     image_url: '',
     display_order: 1,
     is_active: true,
-    is_featured: false,
   });
 
   const [notice, setNotice] = useState(null); // { type: 'success' | 'error', text }
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [formError, setFormError] = useState('');
 
   const loadData = async () => {
     setLoading(true);
@@ -47,9 +48,8 @@ export default function AdminCategories() {
       image_path: cat.image_path || '',
       display_order: cat.display_order || 1,
       is_active: cat.is_active,
-      is_featured: Boolean(cat.is_featured),
     });
-    setIsFormOpen(true);
+    openForm();
   };
 
   const handleNew = () => {
@@ -62,26 +62,43 @@ export default function AdminCategories() {
       image_path: '',
       display_order: categories.length + 1,
       is_active: true,
-      is_featured: false,
     });
-    setIsFormOpen(true);
+    openForm();
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
+    if (saving) return;
+    setFormError('');
+    const slug = String(formData.slug || '').trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/(^-|-$)/g, '');
+    if (!String(formData.name || '').trim() || !slug) {
+      setFormError('Enter a category name and a slug made of letters, numbers or hyphens.');
+      return;
+    }
+    const order = Number(formData.display_order);
+    if (!Number.isInteger(order) || order < 1) {
+      setFormError('Display order must be a whole number of 1 or more.');
+      return;
+    }
+    if (uploading) {
+      setFormError('Wait for the image upload to finish.');
+      return;
+    }
     setSaving(true);
     setNotice(null);
     try {
+      const payload = { ...formData, name: formData.name.trim(), slug, display_order: order };
       if (editingCat) {
-        await updateCategory(editingCat.id, formData);
+        await updateCategory(editingCat.id, payload);
       } else {
-        await createCategory(formData);
+        await createCategory(payload);
       }
       setIsFormOpen(false);
-      setNotice({ type: 'success', text: `Category "${formData.name}" saved.` });
+      setNotice({ type: 'success', text: `Category "${payload.name}" saved.` });
       loadData();
     } catch (err) {
-      setNotice({ type: 'error', text: `Category was not saved: ${err.message}` });
+      // Shown inside the modal, which stays open so nothing typed is lost
+      setFormError(`Category was not saved: ${err.message}`);
     } finally {
       setSaving(false);
     }
@@ -101,17 +118,27 @@ export default function AdminCategories() {
 
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
+    e.target.value = ''; // choosing the same file again must trigger a new upload
     if (!file) return;
+    setFormError('');
+    setUploading(true);
     try {
       const { url, path, error } = await uploadImage(file, 'categories', formData.slug || 'cat');
       if (error || !url) {
-        alert(`Category image upload failed: ${error || 'Storage did not return the uploaded file.'}`);
+        setFormError(`Category image was not uploaded: ${error || 'Storage did not return the uploaded file.'}`);
       } else {
         setFormData((prev) => ({ ...prev, image_url: url, image_path: path }));
       }
     } catch (err) {
-      alert(`Category image upload error: ${err?.message || 'Storage error'}`);
+      setFormError(`Category image was not uploaded: ${err?.message || 'Storage error'}`);
+    } finally {
+      setUploading(false);
     }
+  };
+
+  const openForm = () => {
+    setFormError('');
+    setIsFormOpen(true);
   };
 
   return (
@@ -149,7 +176,6 @@ export default function AdminCategories() {
                 <th>Slug</th>
                 <th>Order</th>
                 <th>Active</th>
-                <th>Featured</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -177,13 +203,6 @@ export default function AdminCategories() {
                     </span>
                   </td>
                   <td>
-                    {cat.is_featured ? (
-                      <span className="ps-table-badge ps-badge-gold">FEATURED</span>
-                    ) : (
-                      <span style={{ color: '#666', fontSize: 11 }}>—</span>
-                    )}
-                  </td>
-                  <td>
                     <div className="ps-table-actions">
                       <button
                         type="button"
@@ -205,6 +224,13 @@ export default function AdminCategories() {
                   </td>
                 </tr>
               ))}
+              {categories.length === 0 && (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: 28, color: '#8C8479' }}>
+                    No categories yet. Click “+ ADD CATEGORY” to create one.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -217,6 +243,12 @@ export default function AdminCategories() {
             <h2 className="ps-card-title" style={{ marginBottom: 16 }}>
               {editingCat ? `Edit Category: ${editingCat.name}` : 'Add New Category'}
             </h2>
+
+            {formError && (
+              <div className="ps-form-error-banner" role="alert" style={{ marginBottom: 12 }}>
+                {formError}
+              </div>
+            )}
 
             <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div className="ps-form-group">
@@ -258,8 +290,14 @@ export default function AdminCategories() {
                   {formData.image_url && (
                     <img src={formData.image_url} alt="Preview" style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 4 }} />
                   )}
-                  <input type="file" accept="image/*" onChange={handleImageUpload} />
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleImageUpload}
+                    disabled={uploading || saving}
+                  />
                 </div>
+                {uploading && <small style={{ color: '#8C7343' }}>Uploading image…</small>}
               </div>
 
               <div className="ps-form-row">
@@ -268,18 +306,12 @@ export default function AdminCategories() {
                   <input
                     type="number"
                     value={formData.display_order}
-                    onChange={(e) => setFormData({ ...formData, display_order: Number(e.target.value) })}
+                    min="1"
+                    step="1"
+                    onChange={(e) => setFormData({ ...formData, display_order: e.target.value })}
                   />
                 </div>
                 <div className="ps-form-group" style={{ justifyContent: 'center' }}>
-                  <label className="ps-checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_featured}
-                      onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
-                    />
-                    <span>Featured Category</span>
-                  </label>
                   <label className="ps-checkbox-label">
                     <input
                       type="checkbox"
@@ -292,10 +324,10 @@ export default function AdminCategories() {
               </div>
 
               <div className="ps-modal-actions" style={{ marginTop: 12 }}>
-                <button type="button" className="ps-btn-cancel" onClick={() => setIsFormOpen(false)}>
+                <button type="button" className="ps-btn-cancel" onClick={() => setIsFormOpen(false)} disabled={saving}>
                   Cancel
                 </button>
-                <button type="submit" className="ps-btn-gold-primary" style={{ padding: '10px 18px' }} disabled={saving}>
+                <button type="submit" className="ps-btn-gold-primary" style={{ padding: '10px 18px' }} disabled={saving || uploading}>
                   {saving ? 'Saving…' : 'Save Category'}
                 </button>
               </div>

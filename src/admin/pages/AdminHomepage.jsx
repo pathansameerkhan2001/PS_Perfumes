@@ -77,6 +77,7 @@ export default function AdminHomepage() {
 
   const handleMove = async (index, direction) => {
     if (
+      saving ||
       (direction === -1 && index === 0) ||
       (direction === 1 && index === sections.length - 1)
     ) {
@@ -90,12 +91,16 @@ export default function AdminHomepage() {
     reordered[targetIndex] = temp;
 
     setStatusMessage({ type: '', text: '' });
+    // One reorder at a time: overlapping writes could leave two sections at the same position
+    setSaving(true);
     try {
       await reorderSections(reordered.map((s) => s.id));
       setSections(reordered);
     } catch (err) {
       setStatusMessage({ type: 'error', text: `Reorder failed: ${err.message}` });
       loadData();
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -238,7 +243,7 @@ export default function AdminHomepage() {
                   backgroundColor: '#050505',
                   border: '1px solid rgba(200,164,93,0.3)',
                   color: '#C8A45D',
-                  fontFamily: 'Cinzel, serif',
+                  fontFamily: 'var(--font-serif)',
                   fontSize: '0.85rem',
                   fontWeight: '700',
                 }}
@@ -250,7 +255,7 @@ export default function AdminHomepage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
                   <span
                     style={{
-                      fontFamily: 'Cinzel, serif',
+                      fontFamily: 'var(--font-serif)',
                       fontSize: '0.75rem',
                       color: '#C8A45D',
                       letterSpacing: '0.05em',
@@ -292,7 +297,7 @@ export default function AdminHomepage() {
                     border: '1px solid rgba(200,164,93,0.2)',
                     color: '#F8F5EE',
                     padding: '0.4rem 0.75rem',
-                    fontFamily: 'Cormorant Garamond, serif',
+                    fontFamily: 'var(--font-serif)',
                     fontSize: '1.1rem',
                     width: '100%',
                     maxWidth: '450px',

@@ -94,7 +94,29 @@ export default function AdminSettings() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (loadError) return;
+    if (loadError || saving) return;
+    // The header Save button bypasses the browser's form validation, so links are checked here
+    const LINK_FIELDS = {
+      website_url: 'Website domain',
+      google_maps_url: 'Google Maps URL',
+      instagram_url: 'Instagram URL',
+      whatsapp_url: 'WhatsApp URL',
+    };
+    for (const [key, label] of Object.entries(LINK_FIELDS)) {
+      const value = String(settings[key] || '').trim();
+      if (!value) continue;
+      let ok = false;
+      try {
+        const u = new URL(value);
+        ok = u.protocol === 'https:' || u.protocol === 'http:';
+      } catch {
+        ok = false;
+      }
+      if (!ok) {
+        setStatusMessage({ type: 'error', text: `${label} must be a full link starting with https:// — nothing was saved.` });
+        return;
+      }
+    }
     setSaving(true);
     setStatusMessage({ type: '', text: '' });
 

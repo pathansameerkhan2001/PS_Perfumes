@@ -140,7 +140,7 @@ export default function SearchPage() {
             <div style={{ marginBottom: 24, fontSize: 13, color: 'var(--color-muted)' }}>
               Found <strong>{products.length}</strong> creations matching "{queryParam}":
             </div>
-            <div className="ps-shop-products-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
+            <div className="ps-shop-products-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))' }}>
               {products.map((prod) => (
                 <ProductCard key={prod.id} product={prod} />
               ))}

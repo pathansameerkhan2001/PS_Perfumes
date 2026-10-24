@@ -57,7 +57,7 @@
 }
 
 .ps-admin-brand-tagline {
-  font-family: var(--ps-admin-font-sans, 'Montserrat', sans-serif);
+  font-family: var(--ps-admin-font-sans, "Times New Roman", Times, serif);
   font-size: 8.5px;
   font-weight: 600;
   letter-spacing: 0.24em;

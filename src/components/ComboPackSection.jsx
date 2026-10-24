@@ -93,11 +93,11 @@ export default function ComboPackSection({ title = 'Combo Collections', subtitle
                   {/* Badges: Bestseller & Discount */}
                   <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', flexDirection: 'column', gap: 6, zIndex: 3 }}>
                     {combo.featured && (
-                      <span className="ps-pcard-badge ps-badge-primary" style={{ background: '#000', color: '#c8a45d', border: '1px solid #c8a45d', fontSize: '10px', padding: '3px 8px', letterSpacing: '0.08em', fontWeight: 600 }}>
+                      <span className="ps-pcard-badge ps-badge-primary" style={{ background: '#000', color: '#c8a45d', border: '1px solid #c8a45d', fontSize: '10px', padding: '3px 8px', letterSpacing: '0.08em', fontWeight: 600, borderRadius: 4, lineHeight: 1.2 }}>
                         FEATURED
                       </span>
                     )}
-                    {discountPct && (
+                    {Number(discountPct) > 0 && (
                       <span className="ps-combopack-discount-badge" style={{ position: 'static' }}>
                         {discountPct}% OFF
                       </span>

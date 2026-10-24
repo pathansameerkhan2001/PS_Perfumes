@@ -578,13 +578,13 @@ export default function AdminProductForm() {
         await createProduct(payload);
       }
       setSuccessMsg('Product, flacon images, and variant matrix saved successfully!');
+      // Buttons stay disabled until the page changes, so a second click cannot save again
       setTimeout(() => {
         navigate('/admin/products');
       }, 1200);
     } catch (err) {
       console.error('Save product error:', err);
       setErrorMsg(`Failed to save product in database: ${err.message || 'Unknown database error'}`);
-    } finally {
       setSaving(false);
     }
   };

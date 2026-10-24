@@ -389,6 +389,8 @@ export default function AdminHero() {
                 <X size={18} />
               </button>
             </div>
+            {/* Upload, validation and save errors: the page banner is hidden behind this overlay */}
+            {errorMsg && <div className="ps-form-error-banner" role="alert" style={{ marginBottom: 14 }}>{errorMsg}</div>}
 
             <form onSubmit={handleSave}>
               <div className="ps-form-row">

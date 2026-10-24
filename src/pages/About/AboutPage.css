@@ -13,8 +13,8 @@
   --ab-brown: #4A3528;
   --ab-brown-soft: rgba(74, 53, 40, 0.8);
   --ab-burgundy: #722F37;
-  --ab-serif: var(--font-editorial, 'Cormorant Garamond', Garamond, serif);
-  --ab-sans: var(--font-sans, 'Montserrat', sans-serif);
+  --ab-serif: var(--font-editorial, "Times New Roman", Times, serif);
+  --ab-sans: var(--font-sans, "Times New Roman", Times, serif);
   --ab-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
   background: var(--ab-ivory);

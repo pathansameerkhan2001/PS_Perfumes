@@ -22,7 +22,7 @@
 }
 
 .ps-dash-heading {
-  font-family: var(--ps-admin-font-serif, 'Cormorant Garamond', Georgia, serif);
+  font-family: var(--ps-admin-font-serif, "Times New Roman", Times, serif);
   font-size: 28px;
   font-weight: 600;
   color: var(--ps-admin-text-primary, #1A1714);
@@ -32,7 +32,7 @@
 }
 
 .ps-dash-subheading {
-  font-family: var(--ps-admin-font-sans, 'Montserrat', sans-serif);
+  font-family: var(--ps-admin-font-sans, "Times New Roman", Times, serif);
   font-size: 13px;
   color: var(--ps-admin-text-secondary, #746B61);
   margin: 4px 0 0 0;
@@ -54,7 +54,7 @@
   border: 1px solid var(--ps-admin-border-subtle, #ECE7DF);
   border-radius: 7px;
   color: var(--ps-admin-text-secondary, #746B61);
-  font-family: var(--ps-admin-font-sans, 'Montserrat', sans-serif);
+  font-family: var(--ps-admin-font-sans, "Times New Roman", Times, serif);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
@@ -254,7 +254,7 @@
 }
 
 .ps-kpi-label {
-  font-family: var(--ps-admin-font-sans, 'Montserrat', sans-serif);
+  font-family: var(--ps-admin-font-sans, "Times New Roman", Times, serif);
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -264,7 +264,7 @@
 }
 
 .ps-kpi-number {
-  font-family: var(--ps-admin-font-sans, 'Montserrat', sans-serif);
+  font-family: var(--ps-admin-font-sans, "Times New Roman", Times, serif);
   font-size: 22px;
   font-weight: 700;
   color: var(--ps-admin-text-primary, #1A1714);
@@ -343,7 +343,7 @@
 }
 
 .ps-panel-title {
-  font-family: var(--ps-admin-font-serif, 'Cormorant Garamond', Georgia, serif);
+  font-family: var(--ps-admin-font-serif, "Times New Roman", Times, serif);
   font-size: 18px;
   font-weight: 600;
   color: var(--ps-admin-text-primary, #1A1714);

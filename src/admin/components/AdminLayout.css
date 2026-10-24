@@ -8,7 +8,7 @@
   min-height: 100vh;
   background-color: #F7F4EE;
   color: #1A1714;
-  font-family: var(--font-sans, 'Montserrat', -apple-system, sans-serif);
+  font-family: var(--font-sans, "Times New Roman", Times, serif);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -66,7 +66,7 @@
 }
 
 .ps-admin-tagline {
-  font-family: var(--font-serif, 'Cormorant Garamond', serif);
+  font-family: var(--font-serif, "Times New Roman", Times, serif);
   font-size: 9.5px;
   font-weight: 600;
   letter-spacing: 0.28em;

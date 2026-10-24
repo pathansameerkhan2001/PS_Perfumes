@@ -63,7 +63,7 @@
 }
 
 .ps-imp-card h2 {
-  font-family: var(--ps-admin-font-serif, 'Cormorant Garamond', Georgia, serif);
+  font-family: var(--ps-admin-font-serif, "Times New Roman", Times, serif);
   font-size: 22px;
   font-weight: 600;
   color: var(--ps-admin-text-primary, #1A1714);

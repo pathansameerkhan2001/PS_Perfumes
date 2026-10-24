@@ -1,16 +1,14 @@
 /* ==========================================================================
-   PS PERFUMES — Luxury Product Card Stylesheet
-   Approved Editorial Luxury Fragrance Design
+   PS PERFUMES — Storefront Product Card
+   Image, name, price and ADD TO CART only.
    ========================================================================== */
 
 .ps-pcard {
   background-color: #ffffff;
   border: 1px solid #ebe6df;
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.28s ease,
-              border-color 0.28s ease;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -21,92 +19,43 @@
 
 .ps-pcard:hover {
   border-color: rgba(186, 143, 76, 0.5);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.07);
-  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.07);
 }
 
-/* 1. Media Container (~4:5 Aspect Ratio, 55-60% of Card Height) */
+.ps-pcard:focus-visible {
+  outline: 2px solid #c8a45d;
+  outline-offset: 3px;
+}
+
+/* Image: about 12% shorter than the former 4:5 frame; the whole image stays visible */
 .ps-pcard-media {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 5;
-  background-color: #0d0c0a;
+  aspect-ratio: 1 / 1.1;
+  background-color: #f6f2ea;
   overflow: hidden;
-  border-radius: 12px 12px 0 0;
 }
 
 .ps-pcard-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
-  transition: transform 0.48s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.ps-pcard:hover .ps-pcard-img {
-  transform: scale(1.04);
-}
-
-/* Badges (Top-Left) */
-.ps-pcard-badges {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  z-index: 2;
-}
-
-.ps-pcard-badge {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  padding: 3.5px 8px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  line-height: 1.2;
-}
-
-.ps-badge-bestseller {
-  background-color: #171513;
-  color: #c8a45d;
-  border: 1px solid rgba(200, 164, 93, 0.45);
-}
-
-.ps-badge-new {
-  background-color: #8b1e1e;
-  color: #ffffff;
-}
-
-/* 2. Product Details */
 .ps-pcard-details {
-  padding: 18px 18px 20px 18px;
+  padding: 14px 14px 16px;
   display: flex;
   flex-direction: column;
   flex: 1;
 }
 
-/* Category */
-.ps-pcard-type {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #b59050;
-  margin-bottom: 6px;
-  line-height: 1.2;
-}
-
-/* Product Name */
 .ps-pcard-title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 20px;
-  font-weight: 600;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
   color: #171513;
-  letter-spacing: -0.01em;
-  margin: 0 0 8px 0;
+  margin: 0 0 8px;
   line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
@@ -118,64 +67,38 @@
   color: #ba8f4c;
 }
 
-/* Ratings Row */
-.ps-pcard-rating-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-bottom: 16px;
-}
-
-.ps-pcard-stars {
-  display: flex;
-  align-items: center;
-  gap: 1.5px;
-}
-
-.ps-pcard-rating-text {
-  font-size: 13px;
-  color: #78716c;
-  font-weight: 500;
-  margin-left: 2px;
-}
-
-.ps-pcard-no-reviews {
-  font-size: 12px;
-  color: #8c827a;
-  font-style: italic;
-}
-
-/* Pricing Row */
 .ps-pcard-pricing-row {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 8px;
   margin-top: auto;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .ps-pcard-price {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
-  font-size: 21px;
+  font-family: inherit;
+  font-size: 19px;
   font-weight: 700;
   color: #111111;
-  letter-spacing: -0.01em;
   line-height: 1.1;
 }
 
-.ps-pcard-orig-price {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
+.ps-pcard-price.is-muted {
   font-size: 14px;
-  color: #9ca3af;
-  text-decoration: line-through;
   font-weight: 400;
+  color: #6b645b;
 }
 
-/* Single Primary Action: ADD TO CART Button */
+.ps-pcard-orig-price {
+  font-family: inherit;
+  font-size: 13px;
+  color: #9ca3af;
+  text-decoration: line-through;
+}
+
 .ps-pcard-add-btn {
   width: 100%;
-  height: 46px;
-  min-height: 46px;
+  height: 42px;
   border-radius: 8px;
   border: none;
   background-color: #ba8f4c;
@@ -184,144 +107,73 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.22s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 2px 8px rgba(186, 143, 76, 0.2);
 }
 
 .ps-pcard-add-btn:hover {
   background-color: #a87d3a;
   box-shadow: 0 4px 14px rgba(186, 143, 76, 0.35);
-  transform: translateY(-1px);
-}
-
-.ps-pcard-add-btn:active {
-  transform: translateY(0);
 }
 
 .ps-pcard-add-btn.is-success {
   background-color: #108474;
-  color: #ffffff;
 }
 
-/* ==========================================================================
-   Responsive Adaptations
-   ========================================================================== */
+.ps-pcard-add-btn.is-soldout {
+  background: #f1eee9;
+  color: #6b645b;
+  box-shadow: none;
+}
 
-/* Tablet (<= 1024px) */
+/* Tablet */
 @media (max-width: 1024px) {
-  .ps-pcard-details {
-    padding: 16px 14px 18px 14px;
-  }
   .ps-pcard-title {
-    font-size: 18px;
+    font-size: 17px;
   }
   .ps-pcard-price {
-    font-size: 19px;
+    font-size: 18px;
   }
 }
 
-/* Mobile (<= 768px): 2 columns */
+/* Mobile: two columns */
 @media (max-width: 768px) {
-  .ps-pcard {
-    border-radius: 10px;
-  }
-  .ps-pcard-media {
-    border-radius: 10px 10px 0 0;
-  }
-  .ps-pcard-badges {
-    top: 8px;
-    left: 8px;
-    gap: 4px;
-  }
-  .ps-pcard-badge {
-    font-size: 8.5px;
-    padding: 2.5px 6px;
-  }
   .ps-pcard-details {
-    padding: 12px 10px 14px 10px;
-  }
-  .ps-pcard-type {
-    font-size: 9.5px;
-    margin-bottom: 4px;
+    padding: 10px 10px 12px;
   }
   .ps-pcard-title {
     font-size: 15px;
     margin-bottom: 6px;
-  }
-  .ps-pcard-rating-row {
-    margin-bottom: 10px;
-    gap: 3px;
-  }
-  .ps-pcard-rating-text {
-    font-size: 11px;
   }
   .ps-pcard-pricing-row {
     margin-bottom: 10px;
     gap: 6px;
   }
   .ps-pcard-price {
-    font-size: 17px;
+    font-size: 16px;
   }
   .ps-pcard-orig-price {
     font-size: 12px;
   }
   .ps-pcard-add-btn {
-    height: 44px;
-    min-height: 44px;
+    height: 40px;
     font-size: 11px;
-    letter-spacing: 0.08em;
-    border-radius: 8px;
+    letter-spacing: 0.06em;
+    gap: 6px;
   }
 }
 
-/* Small Mobile (<= 380px) */
 @media (max-width: 380px) {
-  .ps-pcard-details {
-    padding: 10px 8px 12px 8px;
-  }
   .ps-pcard-title {
     font-size: 14px;
-  }
-  .ps-pcard-price {
-    font-size: 15.5px;
   }
   .ps-pcard-add-btn {
     font-size: 10.5px;
   }
-}
-
-/* Discreet NEW label (Admin → Products "New Arrival") */
-.ps-badge-new {
-  background-color: rgba(23, 21, 19, 0.88);
-  color: #E5C77A;
-  border: 1px solid rgba(200, 164, 93, 0.55);
-  letter-spacing: 0.16em;
-}
-
-.ps-badge-soldout {
-  background-color: rgba(255, 255, 255, 0.92);
-  color: #5c564e;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-/* Bottle options configured for the product (Glass · PVC) */
-.ps-pcard-bottles {
-  display: block;
-  font-family: var(--font-sans);
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
-  color: #8a8175;
-  margin: -2px 0 4px;
-}
-
-.ps-pcard-add-btn.is-soldout {
-  background: #f1eee9;
-  color: #6b645b;
-  border-color: #e3ded6;
 }

@@ -1,8 +1,6 @@
 /* ==========================================================================
    PS PERFUMES — Collection Product Card
-   Matches Master Attar Reference:
-   White/ivory card, subtle gold/hairline border, floating wishlist,
-   calculated discount badge, brand label, price row, and dual actions.
+   Image, name, price and ADD TO CART only (grid and list views).
    ========================================================================== */
 
 .ps-col-card {
@@ -12,265 +10,95 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  height: 100%;
   position: relative;
-  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-              border-color 0.3s ease,
-              box-shadow 0.3s ease;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
   cursor: pointer;
   box-sizing: border-box;
   box-shadow: 0 2px 8px rgba(23, 21, 19, 0.04);
 }
 
-.ps-col-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(201, 164, 92, 0.5);
-  box-shadow: 0 14px 30px rgba(23, 21, 19, 0.09),
-              0 2px 10px rgba(201, 164, 92, 0.12);
+.ps-col-card:focus-visible {
+  outline: 2px solid #C9A45C;
+  outline-offset: 3px;
 }
 
-/* 1. Media Area */
+@media (hover: hover) and (pointer: fine) {
+  .ps-col-card:hover {
+    border-color: rgba(201, 164, 92, 0.5);
+    box-shadow: 0 12px 26px rgba(23, 21, 19, 0.08);
+  }
+  .ps-col-card:hover .ps-col-card-name {
+    color: #A07A35;
+  }
+}
+
+/* Image: whole product visible on an ivory ground */
 .ps-col-card-media {
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
   background-color: #FAF8F4;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .ps-col-card-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center;
+  object-fit: contain;
   display: block;
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.ps-col-card:hover .ps-col-card-img {
-  transform: scale(1.05);
-}
-
-/* Top-Left Discount Badge */
-.ps-col-card-badge-discount {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background-color: #E31B23;
-  color: #FFFFFF;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 3px 7px;
-  border-radius: 3px;
-  z-index: 3;
-  line-height: 1.2;
-  box-shadow: 0 2px 6px rgba(227, 27, 35, 0.35);
-}
-
-/* Quick View Overlay on Desktop */
-.ps-col-card-quickview {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translate(-50%, 8px);
-  opacity: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(23, 21, 19, 0.88);
-  border: 1px solid rgba(201, 164, 92, 0.45);
-  color: #F8F5EF;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 6px 14px;
-  border-radius: 20px;
-  cursor: pointer;
-  z-index: 3;
-  transition: all 0.25s ease;
-  backdrop-filter: blur(4px);
-  pointer-events: none;
-}
-
-.ps-col-card:hover .ps-col-card-quickview {
-  opacity: 1;
-  transform: translate(-50%, 0);
-  pointer-events: auto;
-}
-
-.ps-col-card-quickview:hover {
-  background: #C9A45C;
-  color: #171513;
-  border-color: #C9A45C;
-}
-
-/* 2. Content Details */
 .ps-col-card-body {
-  padding: 14px 14px 16px 14px;
+  padding: 12px 12px 14px;
   display: flex;
   flex-direction: column;
   flex: 1;
-  background-color: #FFFFFF;
-  box-sizing: border-box;
-}
-
-.ps-col-card-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 5px;
-}
-
-.ps-col-card-brand {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: #8C7D68;
-  text-transform: uppercase;
-}
-
-.ps-col-card-category {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 9.5px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: #B5A895;
-  text-transform: uppercase;
 }
 
 .ps-col-card-name {
-  font-family: 'Cormorant Garamond', 'Cinzel', serif;
-  font-size: 16px;
-  font-weight: 600;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.25;
   color: #171513;
-  letter-spacing: 0.01em;
-  line-height: 1.3;
-  margin: 0 0 6px 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  margin: 0 0 8px;
+  white-space: nowrap;
   overflow: hidden;
-  min-height: 42px;
+  text-overflow: ellipsis;
   transition: color 0.2s ease;
 }
 
-.ps-col-card:hover .ps-col-card-name {
-  color: #C9A45C;
-}
-
-.ps-col-card-description {
-  display: none;
-}
-
-/* Rating Row */
-.ps-col-card-rating {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-bottom: 8px;
-}
-
-.ps-col-card-stars {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.ps-col-card-rating-num {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
-  color: #77716A;
-  font-weight: 500;
-}
-
-/* Pricing Row */
 .ps-col-card-pricing {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin-bottom: 12px;
   margin-top: auto;
+  margin-bottom: 10px;
 }
 
 .ps-col-card-price {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 16.5px;
+  font-family: inherit;
+  font-size: 18px;
   font-weight: 700;
   color: #171513;
-  letter-spacing: -0.01em;
 }
 
 .ps-col-card-compare-price {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 12.5px;
-  color: #8C847A;
+  font-family: inherit;
+  font-size: 13px;
+  color: #9A938A;
   text-decoration: line-through;
-  font-weight: 500;
 }
 
-/* Minimal Luxury Variant Selectors */
-.ps-col-card-variants {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-bottom: 12px;
+.ps-col-card-unavailable {
+  font-size: 13px;
+  color: #6B645B;
 }
 
-.ps-col-var-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.ps-col-var-lbl {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 10px;
-  color: #77716A;
-  font-weight: 500;
-  min-width: 36px;
-}
-
-.ps-col-pills {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.ps-col-pill {
-  padding: 2px 7px;
-  font-size: 10.5px;
-  font-family: 'Montserrat', sans-serif;
-  background: #FDFBF7;
-  border: 1px solid #E5DFD3;
-  color: #2B2520;
-  border-radius: 2px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  line-height: 1.2;
-}
-
-.ps-col-pill:hover,
-.ps-col-pill.is-active {
-  background: #171513;
-  border-color: #171513;
-  color: #C9A45C;
-  font-weight: 600;
-}
-
-/* Action Controls: [ ADD TO CART ] */
 .ps-col-card-actions {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 8px;
-  align-items: center;
-  margin-top: auto;
 }
 
 .ps-col-card-add-btn {
@@ -284,13 +112,13 @@
   color: #FFFFFF;
   border: 1px solid #171513;
   border-radius: 4px;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
+  font-family: inherit;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.22s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   white-space: nowrap;
 }
 
@@ -306,203 +134,74 @@
   color: #FFFFFF;
 }
 
-/* ==========================================================================
-   LIST VIEW OVERRIDE
-   Horizontal presentation with extended editorial data
-   ========================================================================== */
-
-.ps-col-card.is-list-view {
-  display: grid;
-  grid-template-columns: 240px 1fr auto;
-  align-items: center;
-  gap: 20px;
-  padding: 16px;
-  border-radius: 6px;
+.ps-col-card-add-btn.is-muted {
+  background-color: #F1EEE9;
+  border-color: #E3DED6;
+  color: #6B645B;
 }
 
-.ps-col-card.is-list-view .ps-col-card-media {
-  width: 240px;
-  height: 240px;
-  border-radius: 4px;
-}
-
-.ps-col-card.is-list-view .ps-col-card-body {
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.ps-col-card.is-list-view .ps-col-card-name {
-  font-size: 20px;
-  min-height: auto;
-  margin-bottom: 8px;
-}
-
-.ps-col-card.is-list-view .ps-col-card-description {
-  display: block;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 12.5px;
-  line-height: 1.55;
-  color: #55504A;
-  margin: 0 0 10px 0;
-}
-
-.ps-col-card.is-list-view .ps-col-card-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 150px;
-  margin-top: 0;
-  align-items: stretch;
-}
-
-.ps-col-card.is-list-view .ps-col-card-pricing {
-  margin-bottom: 12px;
-}
-
-/* ==========================================================================
-   Mobile & Tablet Responsiveness
-   ========================================================================== */
-
-@media (max-width: 900px) {
-  .ps-col-card.is-list-view {
-    grid-template-columns: 180px 1fr;
-    gap: 16px;
-  }
-
-  .ps-col-card.is-list-view .ps-col-card-media {
-    width: 180px;
-    height: 180px;
-  }
-
-  .ps-col-card.is-list-view .ps-col-card-actions {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 600px) {
-  .ps-col-card.is-list-view {
-    display: flex;
-    flex-direction: column;
-    padding: 0;
-  }
-
-  .ps-col-card.is-list-view .ps-col-card-media {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 1 / 1;
-  }
-
-  .ps-col-card.is-list-view .ps-col-card-body {
-    padding: 12px;
-  }
-
-  .ps-col-card-body {
-    padding: 10px 10px 12px 10px;
-  }
-
-  .ps-col-card-name {
-    font-size: 14px;
-    min-height: 36px;
-    margin-bottom: 4px;
-  }
-
-  .ps-col-card-price {
-    font-size: 15px;
-  }
-
-  .ps-col-card-add-btn {
-    height: 35px;
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    padding: 0 8px;
-  }
-}
-
-/* ==========================================================================
-   Availability states (variants come from the product's real data)
-   ========================================================================== */
-.ps-col-card-unavailable,
-.ps-col-card-stock-note {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #8C5A3C;
-}
-
-.ps-col-card-stock-note {
-  margin-left: auto;
-  font-size: 10px;
-}
-
-/* A size that exists but is out of stock: still selectable (to see its price), visibly muted */
-.ps-col-pill.is-unavailable {
-  color: #A79F94;
-  text-decoration: line-through;
-  text-decoration-color: rgba(140, 132, 122, 0.6);
-}
-
-.ps-col-pill.is-unavailable.is-active {
-  color: #D8CFC2;
-}
-
-.ps-col-pill:focus-visible,
 .ps-col-card-add-btn:focus-visible {
   outline: 2px solid #C9A45C;
   outline-offset: 2px;
 }
 
-.ps-col-card:focus-visible {
-  outline: 2px solid #C9A45C;
-  outline-offset: 3px;
+/* List view: image, details and action side by side */
+.ps-col-card.is-list-view {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  align-items: stretch;
 }
 
-.ps-col-card-add-btn:disabled {
-  background-color: #EFEBE4;
-  border-color: #E2DCD2;
-  color: #8C847A;
-  cursor: not-allowed;
+.ps-col-card.is-list-view .ps-col-card-media {
+  height: 100%;
+  aspect-ratio: auto;
+  min-height: 200px;
 }
 
-.ps-col-card-add-btn:disabled:hover {
-  background-color: #EFEBE4;
-  border-color: #E2DCD2;
-  color: #8C847A;
+.ps-col-card.is-list-view .ps-col-card-body {
+  padding: 18px 20px;
+  justify-content: center;
 }
 
-/* ==========================================================================
-   Hover only where hover exists; touch screens get a short press effect instead
-   (hover styles otherwise "stick" after a tap on phones).
-   ========================================================================== */
-@media (hover: hover) and (pointer: fine) {
-  .ps-col-card:hover {
-    border-color: rgba(201, 164, 92, 0.5);
-    border-color: color-mix(in srgb, var(--family-accent, #C9A45C) 65%, transparent);
-  }
+.ps-col-card.is-list-view .ps-col-card-name {
+  font-size: 20px;
+  white-space: normal;
 }
 
-@media (hover: none) {
-  .ps-col-card:hover {
-    transform: none;
-    border-color: rgba(23, 21, 19, 0.09);
-    box-shadow: 0 2px 8px rgba(23, 21, 19, 0.04);
-  }
+.ps-col-card.is-list-view .ps-col-card-pricing {
+  margin-top: 0;
+}
 
-  .ps-col-card:hover .ps-col-card-img {
-    transform: none;
-  }
+.ps-col-card.is-list-view .ps-col-card-actions {
+  max-width: 220px;
+}
 
-  .ps-col-card:hover .ps-col-card-name {
-    color: #171513;
+@media (max-width: 600px) {
+  .ps-col-card.is-list-view {
+    grid-template-columns: 120px 1fr;
   }
-
-  .ps-col-card:active {
-    transform: scale(0.99);
-    border-color: rgba(201, 164, 92, 0.45);
+  .ps-col-card.is-list-view .ps-col-card-media {
+    min-height: 120px;
+  }
+  .ps-col-card.is-list-view .ps-col-card-body {
+    padding: 12px;
+  }
+  .ps-col-card.is-list-view .ps-col-card-name {
+    font-size: 16px;
+  }
+  .ps-col-card-body {
+    padding: 10px 10px 12px;
+  }
+  .ps-col-card-name {
+    font-size: 15px;
+  }
+  .ps-col-card-price {
+    font-size: 16px;
+  }
+  .ps-col-card-add-btn {
+    height: 36px;
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    padding: 0 8px;
   }
 }

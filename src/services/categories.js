@@ -194,10 +194,14 @@ export async function deleteCategory(id) {
   if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     try {
       // Check if products are currently linked to this category to protect foreign key relationships
-      const { count } = await supabase
+      const { count, error: countErr } = await supabase
         .from('products')
         .select('id', { count: 'exact', head: true })
         .eq('category_id', id);
+      // Without a reliable count, do not delete: products would silently lose their category
+      if (countErr) {
+        return { success: false, error: `Could not check which products use this category: ${countErr.message}` };
+      }
 
       if (count && count > 0) {
         return {

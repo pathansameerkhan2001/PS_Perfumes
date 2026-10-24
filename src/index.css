@@ -40,9 +40,9 @@
   --text-muted: #8F8A80;
 
   /* Font Families */
-  --font-serif: 'Cinzel', Georgia, serif;
-  --font-editorial: 'Cormorant Garamond', Garamond, serif;
-  --font-sans: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: "Times New Roman", Times, serif;
+  --font-editorial: "Times New Roman", Times, serif;
+  --font-sans: "Times New Roman", Times, serif;
 
   /* Layout Standards */
   --container-max-width: 1360px;
@@ -140,6 +140,14 @@ button {
   font-family: inherit;
 }
 
+/* Form controls do not inherit the page font by default */
+input,
+select,
+textarea,
+optgroup {
+  font-family: inherit;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -193,7 +201,7 @@ img {
 
 /* Optional section subtitle set in Admin → Homepage (inherits the section's text colour) */
 .ps-section-subtitle {
-  font-family: var(--font-sans, 'Montserrat', sans-serif);
+  font-family: var(--font-sans, "Times New Roman", Times, serif);
   font-size: 14px;
   line-height: 1.7;
   color: inherit;

@@ -603,7 +603,7 @@ export default function ProductDetailPage() {
                       }}
                     >
                       <span className="ps-pdp-size-name">{sz}</span>
-                      {priceForSz && (
+                      {priceForSz > 0 && (
                         <span className="ps-pdp-size-price">{formatINR(priceForSz)}</span>
                       )}
                     </button>

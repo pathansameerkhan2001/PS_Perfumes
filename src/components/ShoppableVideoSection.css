@@ -25,7 +25,7 @@
 }
 
 .ps-shoppable-heading {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 32px;
   font-weight: 700;
   color: #111111;
@@ -133,7 +133,7 @@
 }
 
 .ps-reel-quote-badge {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: "Times New Roman", Times, serif;
   font-style: italic;
   font-size: 13.5px;
   color: #fff9e6;
@@ -212,7 +212,7 @@
 
 .ps-reel-prod-title {
   color: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 12.5px;
   font-weight: 700;
   white-space: nowrap;

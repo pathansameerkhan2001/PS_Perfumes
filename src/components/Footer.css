@@ -8,7 +8,7 @@
   background-color: #0A0908;
   color: #E8E2D5;
   border-top: 1px solid rgba(201, 169, 110, 0.22);
-  font-family: var(--font-sans, 'Montserrat', sans-serif);
+  font-family: var(--font-sans, "Times New Roman", Times, serif);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -224,5 +224,13 @@
   .ps-footer-pill,
   .ps-footer-chevron {
     transition: none;
+  }
+}
+
+/* Phones: room below the last footer line so the floating contact dock (left) and bag
+   button (right) never cover it at the end of the page */
+@media (max-width: 768px) {
+  .ps-public-footer {
+    padding-bottom: 140px;
   }
 }
