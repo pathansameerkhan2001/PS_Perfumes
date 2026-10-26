@@ -7,10 +7,11 @@ import './OptimizedImage.css';
  * - Aspect ratio enforcement (prevents CLS)
  * - Automatic loading priority (eager + fetchPriority="high" for hero, lazy for others)
  * - Smooth fade-in on load
- * - Fallback handling
+ * - Fallback handling (fallbackSrc is tried once before the brand placeholder)
  */
 export default function OptimizedImage({
   src,
+  fallbackSrc,
   alt = '',
   className = '',
   wrapperClassName = '',
@@ -26,6 +27,8 @@ export default function OptimizedImage({
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
+  const currentSrc = useFallback ? fallbackSrc : src;
 
   return (
     <div
@@ -45,7 +48,7 @@ export default function OptimizedImage({
         </div>
       ) : (
         <img
-          src={src}
+          src={currentSrc}
           alt={alt}
           width={width}
           height={height}
@@ -55,7 +58,10 @@ export default function OptimizedImage({
           sizes={sizes}
           srcSet={srcSet}
           onLoad={() => setIsLoaded(true)}
-          onError={() => setHasError(true)}
+          onError={() => {
+            if (!useFallback && fallbackSrc && fallbackSrc !== src) setUseFallback(true);
+            else setHasError(true);
+          }}
           className={`ps-opt-img ${isLoaded ? 'is-loaded' : ''} ${className}`}
           style={imgStyle}
         />

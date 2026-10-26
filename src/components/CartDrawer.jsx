@@ -3,6 +3,7 @@ import { X, Trash2, ShoppingBag, ArrowRight, Tag, Check, Truck } from 'lucide-re
 import { useNavigate } from 'react-router-dom';
 import { useCart, maxQuantityFor } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
+import { cardImageUrl, fullImageFallback } from '../lib/storage';
 import './CartDrawer.css';
 
 export default function CartDrawer() {
@@ -143,9 +144,11 @@ export default function CartDrawer() {
                   <div key={`${prod.id}-${identifier}-${index}`} className="ps-cart-item">
                     <div className="ps-cart-item-img-wrap">
                       <img
-                        src={img}
+                        src={cardImageUrl(img)}
                         alt={item.name || prod.name}
                         className="ps-cart-item-img"
+                        decoding="async"
+                        onError={fullImageFallback(img)}
                       />
                     </div>
 

@@ -4,6 +4,7 @@ import { getCombos, toComboCartProduct } from '../services/combos';
 import { formatINR } from '../utils/formatCurrency';
 import { useCart } from '../context/CartContext';
 import OptimizedImage from './OptimizedImage';
+import { cardImageUrl } from '../lib/storage';
 import './ComboPackSection.css';
 
 export default function ComboPackSection({ title = 'Combo Collections', subtitle = '' }) {
@@ -82,7 +83,8 @@ export default function ComboPackSection({ title = 'Combo Collections', subtitle
                 {/* Media Container with Discount Badge & Wishlist */}
                 <div className="ps-combopack-media">
                   <OptimizedImage
-                    src={combo.image_url || combo.image}
+                    src={cardImageUrl(combo.image_url || combo.image)}
+                    fallbackSrc={combo.image_url || combo.image}
                     alt={combo.name}
                     className="ps-combopack-img"
                     aspectRatio="1 / 1"

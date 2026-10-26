@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { isValidUUID } from './products';
 import { dbError, assertRows } from './dbErrors';
+import { invalidateCached } from '../lib/requestCache';
 
 
 // Section keys the storefront can actually render (pages/Home/HomePage.jsx renderSection).
@@ -163,7 +164,7 @@ export async function getHomepageSections() {
 }
 
 /** Writes the built-in layout to the database (only when the table is empty). */
-export async function initializeHomepageSections() {
+async function initializeHomepageSectionsRecord() {
   const { count, error: countErr } = await supabase
     .from('homepage_sections')
     .select('id', { count: 'exact', head: true });
@@ -201,7 +202,7 @@ function toSectionRow(updates) {
   return row;
 }
 
-export async function updateHomepageSection(id, updates) {
+async function updateHomepageSectionRecord(id, updates) {
   if (!isValidUUID(id)) {
     throw new Error('Homepage sections are not saved in the database yet. Use "Save layout to database" first.');
   }
@@ -215,7 +216,7 @@ export async function updateHomepageSection(id, updates) {
   return { success: true, data: formatSection(data[0]) };
 }
 
-export async function reorderSections(orderedIds) {
+async function reorderSectionsRecord(orderedIds) {
   const results = [];
   for (let i = 0; i < orderedIds.length; i += 1) {
     const { data } = await updateHomepageSection(orderedIds[i], { display_order: i + 1 });
@@ -229,7 +230,7 @@ export async function reorderSections(orderedIds) {
  * Existing rows — their titles, visibility and order — are never changed. New rows are
  * appended after the current last position. Returns the inserted sections.
  */
-export async function restoreMissingDefaultSections() {
+async function restoreMissingDefaultSectionsRecord() {
   const { data: existing, error: readErr } = await supabase
     .from('homepage_sections')
     .select('section_key, display_order');
@@ -259,3 +260,19 @@ export async function restoreMissingDefaultSections() {
   if ((data || []).length !== rows.length) throw new Error('Not all missing sections were added (permission denied?).');
   return data.map(formatSection);
 }
+
+// Section writes clear this tab's cached homepage layout ("home:" keys, see pages/Home/HomePage.jsx)
+function clearingHomeCacheAfter(write) {
+  return async (...args) => {
+    try {
+      return await write(...args);
+    } finally {
+      invalidateCached('home:');
+    }
+  };
+}
+
+export const initializeHomepageSections = clearingHomeCacheAfter(initializeHomepageSectionsRecord);
+export const updateHomepageSection = clearingHomeCacheAfter(updateHomepageSectionRecord);
+export const reorderSections = clearingHomeCacheAfter(reorderSectionsRecord);
+export const restoreMissingDefaultSections = clearingHomeCacheAfter(restoreMissingDefaultSectionsRecord);

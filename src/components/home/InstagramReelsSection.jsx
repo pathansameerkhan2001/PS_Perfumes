@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { getReels } from '../../services/reels';
 import { SITE_CONFIG } from '../../config/siteConfig';
+import { cardImageUrl, fullImageFallback } from '../../lib/storage';
 import './InstagramReelsSection.css';
 
 // The homepage shows the first reels only; the full list is on /instagram
@@ -130,8 +131,9 @@ export default function InstagramReelsSection({
                   >
                     <span className="ps-reel-media">
                       <img
-                        src={reel.thumbnail_url || LOGO_FALLBACK}
+                        src={cardImageUrl(reel.thumbnail_url) || LOGO_FALLBACK}
                         onError={(e) => {
+                          if (fullImageFallback(reel.thumbnail_url)(e)) return;
                           // Missing or deleted thumbnail: show the brand logo instead of a broken image
                           const img = e.currentTarget;
                           if (img.dataset.fallback !== '1') {

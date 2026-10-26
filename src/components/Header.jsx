@@ -2,11 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, ShoppingBag, MapPin, User, Menu } from 'lucide-react';
 import PSPerfumesLogo from './common/PSPerfumesLogo';
-import MobileNav from './MobileNav';
 const SearchModal = React.lazy(() => import('./SearchModal'));
 import { useCart } from '../context/CartContext';
 import { useStorefrontCategories } from '../utils/useStorefrontCategories';
+import { whenIdleAfterLoad } from '../utils/idlePrefetch';
 import './Header.css';
+
+// The mobile menu (with its animation library) is not needed for the first render: it is
+// fetched in the background once the page is idle, or as soon as the menu button is touched
+const loadMobileNav = () => import('./MobileNav');
+const MobileNav = React.lazy(loadMobileNav);
 
 const FIXED_NAV_ITEMS = [
   { name: 'Home', path: '/' },
@@ -17,7 +22,20 @@ const MAX_INLINE_CATEGORIES = 7;
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // The menu is mounted from its first opening on (it stays mounted so closing animates)
+  const [hasOpenedMobileMenu, setHasOpenedMobileMenu] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  useEffect(() => {
+    whenIdleAfterLoad(() => {
+      loadMobileNav().catch(() => {});
+    });
+  }, []);
+
+  const openMobileMenu = () => {
+    setHasOpenedMobileMenu(true);
+    setIsMobileMenuOpen(true);
+  };
   const [isScrolled, setIsScrolled] = useState(false);
 
   const { itemCount, setIsCartOpen, setSelectedCategory } = useCart();
@@ -81,7 +99,8 @@ export default function Header() {
             <button
               type="button"
               className="ps-mobile-toggle-btn"
-              onClick={() => setIsMobileMenuOpen(true)}
+              onPointerDown={() => loadMobileNav().catch(() => {})}
+              onClick={openMobileMenu}
               aria-expanded={isMobileMenuOpen}
               aria-haspopup="dialog"
               aria-label="Open Navigation Menu"
@@ -229,31 +248,35 @@ export default function Header() {
       )}
 
       {/* Mobile Navigation Drawer */}
-      <MobileNav
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-        activeLink={location.pathname}
-        onSelectLink={(target, name) => {
-          setIsMobileMenuOpen(false);
-          if (name && !['Home', 'About Us', 'New Arrival', 'Offers', 'Track Order'].includes(name)) {
-            setSelectedCategory(name);
-          }
-          if (target.startsWith('/')) {
-            navigate(target);
-          } else if (target === 'Home') {
-            navigate('/');
-          } else if (target === 'About Us') {
-            navigate('/about');
-          } else {
-            setSelectedCategory(target);
-            navigate(`/category/${target.toLowerCase()}`);
-          }
-        }}
-        onOpenSearch={() => {
-          setIsMobileMenuOpen(false);
-          setIsSearchOpen(true);
-        }}
-      />
+      {hasOpenedMobileMenu && (
+        <React.Suspense fallback={null}>
+          <MobileNav
+            isOpen={isMobileMenuOpen}
+            onClose={() => setIsMobileMenuOpen(false)}
+            activeLink={location.pathname}
+            onSelectLink={(target, name) => {
+              setIsMobileMenuOpen(false);
+              if (name && !['Home', 'About Us', 'New Arrival', 'Offers', 'Track Order'].includes(name)) {
+                setSelectedCategory(name);
+              }
+              if (target.startsWith('/')) {
+                navigate(target);
+              } else if (target === 'Home') {
+                navigate('/');
+              } else if (target === 'About Us') {
+                navigate('/about');
+              } else {
+                setSelectedCategory(target);
+                navigate(`/category/${target.toLowerCase()}`);
+              }
+            }}
+            onOpenSearch={() => {
+              setIsMobileMenuOpen(false);
+              setIsSearchOpen(true);
+            }}
+          />
+        </React.Suspense>
+      )}
     </>
   );
 }

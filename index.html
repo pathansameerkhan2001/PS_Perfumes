@@ -20,10 +20,26 @@
 
     <!-- Typography: Times New Roman (system font), so no web fonts are downloaded -->
 
-    <!-- Immediate High-Priority Preloading for LCP Assets -->
-    <link rel="preload" as="image" href="/assets/ps-perfumes-logo.webp" fetchpriority="high" type="image/webp" />
-    <!-- The hero poster is bundled by Vite (src/assets) and requested by the hero itself; the old
-         /assets/hero-*.webp images are not used on the homepage, so they are not preloaded -->
+    <!-- Homepage LCP: the hero poster (public/assets, see src/services/hero.js) is preloaded only on
+         "/", so it downloads alongside the scripts instead of after them. Same 768px breakpoint as
+         the hero. The header logo is an inline SVG, so no logo image is preloaded. -->
+    <script>
+      if (location.pathname === '/') {
+        [
+          ['/assets/hero-poster-mobile-v1.webp', '(max-width: 768px)'],
+          ['/assets/hero-poster-desktop-v1.webp', '(min-width: 769px)'],
+        ].forEach(function (p) {
+          var l = document.createElement('link');
+          l.rel = 'preload';
+          l.as = 'image';
+          l.type = 'image/webp';
+          l.href = p[0];
+          l.media = p[1];
+          l.setAttribute('fetchpriority', 'high');
+          document.head.appendChild(l);
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

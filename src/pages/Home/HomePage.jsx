@@ -8,9 +8,20 @@ import NewArrivalsSection from '../../components/home/NewArrivalsSection';
 import ComboPackSection from '../../components/ComboPackSection';
 import InstagramReelsSection from '../../components/home/InstagramReelsSection';
 import ReviewsSection from '../../components/ReviewsSection';
-import { getHomepageProductSections } from '../../services/homepageService';
+import { getHomepageProductSections, HOMEPAGE_PRODUCTS_CACHE_KEY } from '../../services/homepageService';
 import { getHomepageSections, INITIAL_SECTIONS } from '../../services/homepage';
+import { cachedRequest, peekCached } from '../../lib/requestCache';
 import { useSeo } from '../../utils/useSeo';
+
+const SECTIONS_CACHE_KEY = 'home:sections';
+
+// Active sections in display order; the built-in layout if none are saved
+function toVisibleSections(rawSections) {
+  const list = Array.isArray(rawSections) && rawSections.length > 0 ? rawSections : INITIAL_SECTIONS;
+  return list
+    .filter((s) => s.is_active !== false)
+    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+}
 
 export default function HomePage() {
   useSeo({
@@ -34,12 +45,15 @@ export default function HomePage() {
       sameAs: ['https://www.instagram.com/ps_perfumes_kadapa/'],
     },
   });
-  const [bestSellers, setBestSellers] = useState([]);
-  const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [newArrivals, setNewArrivals] = useState([]);
+  // Returning to the homepage within the cache lifetime renders the last result at once
+  const [cachedProducts] = useState(() => peekCached(HOMEPAGE_PRODUCTS_CACHE_KEY));
+  const [cachedSections] = useState(() => peekCached(SECTIONS_CACHE_KEY));
+  const [bestSellers, setBestSellers] = useState(cachedProducts?.bestSellers || []);
+  const [featuredProducts, setFeaturedProducts] = useState(cachedProducts?.featuredProducts || []);
+  const [newArrivals, setNewArrivals] = useState(cachedProducts?.newArrivals || []);
   // null until loaded; then the active sections in display order (may be empty)
-  const [sections, setSections] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [sections, setSections] = useState(() => (cachedSections ? toVisibleSections(cachedSections) : null));
+  const [loading, setLoading] = useState(!(cachedProducts && cachedSections));
 
   useEffect(() => {
     let mounted = true;
@@ -49,7 +63,7 @@ export default function HomePage() {
         const [{ bestSellers: bs, featuredProducts: fp, newArrivals: na }, rawSections] = await Promise.all([
           getHomepageProductSections(),
           // A sections error falls back to the built-in layout without hiding the products
-          getHomepageSections().catch((err) => {
+          cachedRequest(SECTIONS_CACHE_KEY, getHomepageSections).catch((err) => {
             console.error('Could not load homepage sections:', err);
             return INITIAL_SECTIONS;
           }),
@@ -58,12 +72,7 @@ export default function HomePage() {
           setBestSellers(bs || []);
           setFeaturedProducts(fp || []);
           setNewArrivals(na || []);
-          const list = Array.isArray(rawSections) && rawSections.length > 0 ? rawSections : INITIAL_SECTIONS;
-          setSections(
-            list
-              .filter((s) => s.is_active !== false)
-              .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-          );
+          setSections(toVisibleSections(rawSections));
           setLoading(false);
         }
       } catch {

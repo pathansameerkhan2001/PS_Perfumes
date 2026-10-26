@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, ArrowRight, ShieldCheck, Tag, ArrowLeft, ShoppingBag } from 'lucide-react';
 import { useCart, maxQuantityFor } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatCurrency';
+import { cardImageUrl, fullImageFallback } from '../../lib/storage';
 import './CartPage.css';
 import { useSeo } from '../../utils/useSeo';
 
@@ -87,7 +88,13 @@ export default function CartPage() {
                 return (
                   <div key={`${prod.id}-${identifier}-${idx}`} className="ps-cart-row">
                     <div className="ps-cart-product-cell">
-                      <img src={img} alt={item.name || prod.name} className="ps-cart-item-thumb" />
+                      <img
+                        src={cardImageUrl(img)}
+                        alt={item.name || prod.name}
+                        className="ps-cart-item-thumb"
+                        decoding="async"
+                        onError={fullImageFallback(img)}
+                      />
                       <div className="ps-cart-item-meta">
                         <Link to={`/product/${prod.slug || prod.id}`} className="ps-cart-item-name">
                           {item.name || prod.name}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Minus } from 'lucide-react';
 import { getProducts, updateVariantStock, isValidUUID } from '../../services/products';
 import { formatINR } from '../../utils/formatCurrency';
+import { cardImageUrl, fullImageFallback } from '../../lib/storage';
 
 const LOW_STOCK_LIMIT = 5;
 
@@ -139,7 +140,7 @@ export default function AdminInventory() {
               {filtered.map((row) => (
                 <tr key={row.id}>
                   <td>
-                    {row.image ? <img src={row.image} alt={row.productName} className="ps-prod-table-thumb" /> : null}
+                    {row.image ? <img src={cardImageUrl(row.image)} loading="lazy" decoding="async" onError={fullImageFallback(row.image)} alt={row.productName} className="ps-prod-table-thumb" /> : null}
                   </td>
                   <td>
                     <strong>{row.productName}</strong>

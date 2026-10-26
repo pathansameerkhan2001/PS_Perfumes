@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { getCategories } from '../services/categories';
-import attarArt from '../assets/categories/fragrance-attar.png';
-import perfumeArt from '../assets/categories/fragrance-perfume.png';
-import bakhoorArt from '../assets/categories/fragrance-bakhoor.png';
-import muskyArt from '../assets/categories/fragrance-musky.png';
-import oudArt from '../assets/categories/fragrance-oud.png';
-import floralArt from '../assets/categories/fragrance-floral.png';
-import woodyArt from '../assets/categories/fragrance-woody.png';
+import attarArt from '../assets/categories/fragrance-attar.webp';
+import perfumeArt from '../assets/categories/fragrance-perfume.webp';
+import bakhoorArt from '../assets/categories/fragrance-bakhoor.webp';
+import muskyArt from '../assets/categories/fragrance-musky.webp';
+import oudArt from '../assets/categories/fragrance-oud.webp';
+import floralArt from '../assets/categories/fragrance-floral.webp';
+import woodyArt from '../assets/categories/fragrance-woody.webp';
 
 /*
  * One shared source for the storefront's category links: header, mobile menu, footer and the

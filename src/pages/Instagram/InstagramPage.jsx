@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ExternalLink, Play } from 'lucide-react';
 import { getReels, validateInstagramUrl } from '../../services/reels';
+import { cardImageUrl, fullImageFallback } from '../../lib/storage';
 import './InstagramPage.css';
 import { useSeo } from '../../utils/useSeo';
 
@@ -99,8 +100,9 @@ export default function InstagramPage() {
               >
                 <div className="ps-insta-media">
                   <img
-                    src={reel.thumbnail_url || '/assets/ps-perfumes-logo.webp'}
+                    src={cardImageUrl(reel.thumbnail_url) || '/assets/ps-perfumes-logo.webp'}
                     onError={(e) => {
+                      if (fullImageFallback(reel.thumbnail_url)(e)) return;
                       // Missing or deleted thumbnail: show the brand logo instead of a broken image
                       const img = e.currentTarget;
                       if (img.dataset.fallback !== '1') {
@@ -113,6 +115,7 @@ export default function InstagramPage() {
                     alt={reel.caption || 'PS Perfumes Reel'}
                     className="ps-insta-img"
                     loading="lazy"
+                    decoding="async"
                   />
                   <div className="ps-insta-vignette" />
 

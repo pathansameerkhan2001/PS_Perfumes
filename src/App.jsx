@@ -1,21 +1,38 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import PublicLayout from './components/layout/PublicLayout';
+import { whenIdleAfterLoad } from './utils/idlePrefetch';
 
 // Public Storefront Pages
+// The homepage is part of the main bundle. The cart page is too: CartDrawer.css (loaded with the
+// drawer) shares class names with CartPage.css and must keep coming after it. Every other page is
+// loaded when first opened and fetched in the background once the first page is idle.
 import HomePage from './pages/Home/HomePage';
-import AboutPage from './pages/About/AboutPage';
-import ShopPage from './pages/Shop/ShopPage';
-import CollectionPage from './pages/Collection/CollectionPage';
-import ProductDetailPage from './pages/Product/ProductDetailPage';
 import CartPage from './pages/Cart/CartPage';
-import CheckoutPage from './pages/Checkout/CheckoutPage';
-import WishlistPage from './pages/Wishlist/WishlistPage';
-import ContactPage from './pages/Contact/ContactPage';
-import SearchPage from './pages/Search/SearchPage';
-import InstagramPage from './pages/Instagram/InstagramPage';
-import TrackOrderPage from './pages/TrackOrder/TrackOrderPage';
+
+const storefrontPages = {
+  shop: () => import('./pages/Shop/ShopPage'),
+  collection: () => import('./pages/Collection/CollectionPage'),
+  product: () => import('./pages/Product/ProductDetailPage'),
+  checkout: () => import('./pages/Checkout/CheckoutPage'),
+  about: () => import('./pages/About/AboutPage'),
+  wishlist: () => import('./pages/Wishlist/WishlistPage'),
+  contact: () => import('./pages/Contact/ContactPage'),
+  search: () => import('./pages/Search/SearchPage'),
+  instagram: () => import('./pages/Instagram/InstagramPage'),
+  trackOrder: () => import('./pages/TrackOrder/TrackOrderPage'),
+};
+const ShopPage = lazy(storefrontPages.shop);
+const CollectionPage = lazy(storefrontPages.collection);
+const ProductDetailPage = lazy(storefrontPages.product);
+const CheckoutPage = lazy(storefrontPages.checkout);
+const AboutPage = lazy(storefrontPages.about);
+const WishlistPage = lazy(storefrontPages.wishlist);
+const ContactPage = lazy(storefrontPages.contact);
+const SearchPage = lazy(storefrontPages.search);
+const InstagramPage = lazy(storefrontPages.instagram);
+const TrackOrderPage = lazy(storefrontPages.trackOrder);
 
 const AdminLogin = lazy(() => import('./admin/pages/AdminLogin'));
 const AdminRoute = lazy(() => import('./admin/components/AdminRoute'));
@@ -72,6 +89,14 @@ function AdminLoadingFallback() {
 }
 
 export default function App() {
+  // Storefront pages are fetched in the background after the first page, so later navigation
+  // does not wait for them (admin code is never prefetched)
+  useEffect(() => {
+    whenIdleAfterLoad(() => {
+      Object.values(storefrontPages).forEach((load) => load().catch(() => {}));
+    });
+  }, []);
+
   return (
     <CartProvider>
       <Routes>

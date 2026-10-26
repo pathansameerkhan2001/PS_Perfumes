@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { getPublicImageUrl } from '../lib/storage';
 import { getProducts } from './products';
+import { cachedRequest } from '../lib/requestCache';
 
 /**
  * PS PERFUMES — High Performance Homepage Service
@@ -413,16 +414,21 @@ export async function getHomepageCategories() {
   return [];
 }
 
-/**
- * Parallel fetcher for Best Sellers and Featured Products
- */
-export async function getHomepageProductSections() {
-  const [bestSellers, featuredProducts, newArrivals] = await Promise.all([
-    getBestSellingProducts(),
-    getFeaturedProducts(),
-    getNewArrivalProducts(),
-  ]);
+export const HOMEPAGE_PRODUCTS_CACHE_KEY = 'home:product-sections';
 
-  return { bestSellers, featuredProducts, newArrivals };
+/**
+ * Parallel fetcher for Best Sellers and Featured Products.
+ * Shared through the storefront request cache, so returning to the homepage within a minute
+ * shows the sections at once without new requests (cleared by product writes in this tab).
+ */
+export function getHomepageProductSections() {
+  return cachedRequest(HOMEPAGE_PRODUCTS_CACHE_KEY, async () => {
+    const [bestSellers, featuredProducts, newArrivals] = await Promise.all([
+      getBestSellingProducts(),
+      getFeaturedProducts(),
+      getNewArrivalProducts(),
+    ]);
+    return { bestSellers, featuredProducts, newArrivals };
+  });
 }
 

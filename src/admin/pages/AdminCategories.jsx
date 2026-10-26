@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Upload, Check } from 'lucide-react';
 import { getCategories, createCategory, updateCategory, deleteCategory } from '../../services/categories';
-import { uploadImage } from '../../lib/storage';
+import { uploadImage, cardImageUrl, fullImageFallback } from '../../lib/storage';
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState([]);
@@ -184,7 +184,7 @@ export default function AdminCategories() {
                 <tr key={cat.id}>
                   <td>
                     {cat.image_url ? (
-                      <img src={cat.image_url} alt={cat.name} className="ps-prod-table-thumb" />
+                      <img src={cardImageUrl(cat.image_url)} loading="lazy" decoding="async" onError={fullImageFallback(cat.image_url)} alt={cat.name} className="ps-prod-table-thumb" />
                     ) : (
                       <div className="ps-prod-table-thumb" style={{ background: '#222' }} />
                     )}

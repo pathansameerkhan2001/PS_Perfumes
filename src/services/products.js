@@ -1,6 +1,16 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getPublicImageUrl, deleteStorageFiles } from '../lib/storage';
+import { cachedRequest, invalidateCached } from '../lib/requestCache';
 import { PRODUCTS } from '../data/products';
+
+// requestCache keys: "products:" = storefront catalogue reads, "home:" = homepage sections
+export const PRODUCTS_CACHE_PREFIX = 'products:';
+export const HOME_CACHE_PREFIX = 'home:';
+
+/** Call after any product write so this tab's storefront shows the change at once. */
+export function invalidateProductCaches() {
+  invalidateCached(PRODUCTS_CACHE_PREFIX, HOME_CACHE_PREFIX);
+}
 
 const LOCAL_PRODUCTS_KEY = 'ps_db_products';
 
@@ -424,10 +434,21 @@ export async function getProducts(options = {}) {
         query = query.limit(limit);
       }
 
-      const { data, error } = await query;
-      if (error) {
-        throw new Error(`Could not load products: ${error.message}${error.code ? ` (code ${error.code})` : ''}`);
-      }
+      const runQuery = async () => {
+        const { data: rows, error } = await query;
+        if (error) {
+          throw new Error(`Could not load products: ${error.message}${error.code ? ` (code ${error.code})` : ''}`);
+        }
+        return rows || [];
+      };
+      // Storefront reads share a short-lived cache (raw rows; formatted per call, so every caller
+      // gets its own objects). Admin reads (allStatuses) always go to the database.
+      const data = allStatuses
+        ? await runQuery()
+        : await cachedRequest(
+            `${PRODUCTS_CACHE_PREFIX}${JSON.stringify([effectiveStatus, featured, new_arrival, bestseller, search, sort, limit])}`,
+            runQuery
+          );
       // The database answered: show its real state (even an empty list), never demo data.
       let list = (data || []).map((item) => formatProduct(item));
       if (category && category !== 'ALL') {
@@ -595,7 +616,7 @@ function validateVariants(variants) {
  * Throws with the real database error; nothing is reported as saved unless the
  * product row AND all variant rows were written.
  */
-export async function createProduct(productData) {
+async function createProductRecord(productData) {
   const autoSlug =
     productData.slug ||
     productData.name
@@ -680,7 +701,7 @@ export async function createProduct(productData) {
  * Update existing product with variants in Supabase database.
  * Throws with the real database error, including when RLS silently matches no rows.
  */
-export async function updateProduct(id, updates) {
+async function updateProductRecord(id, updates) {
   if (isSupabaseConfigured && supabase) {
     assertSupabaseRecordId(id);
 
@@ -848,7 +869,7 @@ export async function updateProduct(id, updates) {
  *   transaction, and uploaded images that no other record references are removed from Storage.
  * @returns {Promise<{ action: 'deleted' | 'archived', name: string, references: object, storage: object }>}
  */
-export async function deleteProduct(id) {
+async function deleteProductRecord(id) {
   if (!isSupabaseConfigured || !supabase) {
     const list = getLocalProducts();
     saveLocalProducts(list.filter((p) => p.id !== id));
@@ -893,7 +914,7 @@ export async function deleteProduct(id) {
  * Set the stock of one product variant (Inventory page). Product visibility is not touched:
  * a variant with 0 stock simply shows as out of stock on the storefront.
  */
-export async function updateVariantStock(variantId, stockQuantity) {
+async function updateVariantStockRecord(variantId, stockQuantity) {
   assertSupabaseRecordId(variantId);
   const stock = Math.max(0, Math.floor(Number(stockQuantity) || 0));
   const { data, error } = await supabase
@@ -909,3 +930,20 @@ export async function updateVariantStock(variantId, stockQuantity) {
   }
   return Number(data[0].stock_quantity) || 0;
 }
+
+// Every product write clears this tab's storefront caches once it has finished (whatever the
+// outcome), so the shop and homepage show the saved state immediately
+function clearingCachesAfter(write) {
+  return async (...args) => {
+    try {
+      return await write(...args);
+    } finally {
+      invalidateProductCaches();
+    }
+  };
+}
+
+export const createProduct = clearingCachesAfter(createProductRecord);
+export const updateProduct = clearingCachesAfter(updateProductRecord);
+export const deleteProduct = clearingCachesAfter(deleteProductRecord);
+export const updateVariantStock = clearingCachesAfter(updateVariantStockRecord);

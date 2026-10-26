@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Edit2, Trash2, ArrowUp, ArrowDown, ExternalLink, Play, X, Upload, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { getReels, createReel, updateReel, deleteReel, validateInstagramUrl } from '../../services/reels';
-import { uploadImage } from '../../lib/storage';
+import { uploadImage, cardImageUrl, fullImageFallback } from '../../lib/storage';
 import './AdminReels.css';
 
 const DEFAULT_INSTAGRAM_URL = 'https://www.instagram.com/ps_perfumes_kadapa/?hl=en';
@@ -334,7 +334,7 @@ export default function AdminReels() {
                   <td>
                     <div style={{ width: 50, height: 88, borderRadius: 4, overflow: 'hidden', background: '#000', border: '1px solid #ddd', position: 'relative' }}>
                       {reel.thumbnail_url ? (
-                        <img src={reel.thumbnail_url} alt="Reel thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={cardImageUrl(reel.thumbnail_url)} loading="lazy" decoding="async" onError={fullImageFallback(reel.thumbnail_url)} alt="Reel thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : null}
                       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(0,0,0,0.6)', borderRadius: '50%', padding: 4 }}>
                         <Play size={10} fill="#fff" color="#fff" />

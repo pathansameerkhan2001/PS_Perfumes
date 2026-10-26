@@ -15,7 +15,7 @@ import {
   deleteCombo,
 } from '../../services/combos';
 import { getProducts } from '../../services/products';
-import { uploadImage } from '../../lib/storage';
+import { uploadImage, cardImageUrl, fullImageFallback } from '../../lib/storage';
 import { formatINR } from '../../utils/formatCurrency';
 import './AdminCombos.css';
 
@@ -371,7 +371,7 @@ export default function AdminCombos() {
                 <div key={`${item.product_id}-${idx}`} className="ps-combo-item-row">
                   <div className="ps-combo-item-left">
                     {item.image ? (
-                      <img src={item.image} alt={item.product_name} className="ps-combo-item-thumb" />
+                      <img src={cardImageUrl(item.image)} loading="lazy" decoding="async" onError={fullImageFallback(item.image)} alt={item.product_name} className="ps-combo-item-thumb" />
                     ) : null}
                     <span className="ps-combo-item-title">
                       {item.product_name} × {item.quantity || 1}
@@ -581,7 +581,7 @@ export default function AdminCombos() {
                   <tr key={c.id}>
                     <td>
                       <div className="ps-combo-td-cell">
-                        {c.image_url ? <img src={c.image_url} alt={c.name} className="ps-combo-thumb" /> : null}
+                        {c.image_url ? <img src={cardImageUrl(c.image_url)} loading="lazy" decoding="async" onError={fullImageFallback(c.image_url)} alt={c.name} className="ps-combo-thumb" /> : null}
                         <strong>{c.name}</strong>
                       </div>
                     </td>

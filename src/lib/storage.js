@@ -32,6 +32,47 @@ const SUPPORTED_LABEL = 'JPEG, PNG or WebP images, or MP4 videos';
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
 
+// Every upload gets a unique, timestamped object name, so a replaced image always has a new URL
+// and browsers/CDN may keep each file for a year without ever showing a stale image
+const UPLOAD_CACHE_CONTROL = '31536000';
+
+// Optimized uploads are stored as "<name>.opt.webp" (full size) with a smaller "<name>.card.webp"
+// next to it (see imageOptimize.js). Older uploads have no card version and are used as they are.
+const OPT_SUFFIX = '.opt.webp';
+const CARD_SUFFIX = '.card.webp';
+const OPT_PATTERN = /\.opt\.webp(?=$|[?#])/i;
+
+/**
+ * Small (card/thumbnail) version of an uploaded image: the ".card.webp" sibling of an optimized
+ * upload, otherwise the same URL. Use for product cards, thumbnails and admin tables.
+ * @param {string} url
+ * @returns {string}
+ */
+export function cardImageUrl(url) {
+  return typeof url === 'string' ? url.replace(OPT_PATTERN, CARD_SUFFIX) : url;
+}
+
+/**
+ * onError handler for an <img> showing cardImageUrl(fullUrl): if the card version is missing,
+ * the full image is shown instead (once). Callers with their own fallback can chain after it.
+ * @param {string} fullUrl
+ * @returns {(e: Event) => boolean} true when it switched the image to the full version
+ */
+export function fullImageFallback(fullUrl) {
+  return (e) => {
+    const img = e.currentTarget;
+    if (!fullUrl || img.dataset.fullFallback === '1' || cardImageUrl(fullUrl) === fullUrl) return false;
+    img.dataset.fullFallback = '1';
+    img.src = fullUrl;
+    return true;
+  };
+}
+
+/** Storage path of the card version of an optimized upload, or '' for any other path. */
+function cardSiblingPath(path) {
+  return OPT_PATTERN.test(path) ? path.replace(OPT_PATTERN, CARD_SUFFIX) : '';
+}
+
 /**
  * Sanitizes a file name for safe storage path
  * @param {string} name - Raw file name
@@ -156,14 +197,51 @@ export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS,
 
   // 6. Upload. File names are unique (timestamped), so no upsert: a plain INSERT
   //    only needs the admin INSERT policy, while upsert would also need SELECT + UPDATE.
+  //    Images are first resized and re-encoded as WebP; the card version is uploaded before the
+  //    full one, so an ".opt.webp" object always has its ".card.webp" sibling.
+  let body = file;
+  let uploadPath = filePath;
+  let uploadType = contentType;
+  let cardPath = '';
   try {
+    if (!isVideo) {
+      // Loaded on demand: only the admin uploads, so the storefront never downloads it. If it
+      // cannot be loaded, the original file is uploaded as before.
+      const optimized = await import('./imageOptimize')
+        .then(({ optimizeImageForUpload }) => optimizeImageForUpload(file, cleanFolder))
+        .catch(() => null);
+      if (optimized) {
+        const stem = filePath.replace(/\.[^./]+$/, '');
+        const { error: cardErr } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .upload(`${stem}${CARD_SUFFIX}`, optimized.card, {
+            cacheControl: UPLOAD_CACHE_CONTROL,
+            upsert: false,
+            contentType: 'image/webp',
+          });
+        if (cardErr) {
+          console.warn('Card-size image was not uploaded; the full image is used everywhere.', cardErr.message);
+        } else {
+          cardPath = `${stem}${CARD_SUFFIX}`;
+        }
+        body = optimized.full;
+        uploadType = 'image/webp';
+        uploadPath = cardPath ? `${stem}${OPT_SUFFIX}` : `${stem}.webp`;
+      }
+    }
+
     const { data, error } = await supabase.storage
       .from(STORAGE_BUCKET)
-      .upload(filePath, file, {
-        cacheControl: '3600',
+      .upload(uploadPath, body, {
+        cacheControl: UPLOAD_CACHE_CONTROL,
         upsert: false,
-        contentType,
+        contentType: uploadType,
       });
+
+    if (error && cardPath) {
+      // Do not leave an orphaned card image behind
+      await supabase.storage.from(STORAGE_BUCKET).remove([cardPath]).catch(() => {});
+    }
 
     if (error) {
       console.error('Supabase Storage upload error:', error);
@@ -189,9 +267,9 @@ export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS,
             : `The Storage policies for bucket "${STORAGE_BUCKET}" do not allow ${userEmail} to upload to "${cleanFolder}/".`;
         userFriendlyMsg = `Storage rejected the upload (${statusCode || '403'}: ${rawMsg}). ${cause} Fix: run supabase/new-project/03_storage.sql, and make sure this account has an active admin_users row (04_bootstrap_admin.sql) — see supabase/new-project/README.md.`;
       } else if (rawMsg.includes('Invalid key')) {
-        userFriendlyMsg = `Invalid storage object key "${filePath}" (${rawMsg}).`;
+        userFriendlyMsg = `Invalid storage object key "${uploadPath}" (${rawMsg}).`;
       } else if (rawMsg.includes('mime type') || rawMsg.includes('not allowed')) {
-        userFriendlyMsg = `MIME type "${contentType}" is rejected by bucket "${STORAGE_BUCKET}" (${rawMsg}). Allowed formats: WebP, JPEG, PNG, MP4.`;
+        userFriendlyMsg = `MIME type "${uploadType}" is rejected by bucket "${STORAGE_BUCKET}" (${rawMsg}). Allowed formats: WebP, JPEG, PNG, MP4.`;
       } else if (rawMsg.toLowerCase().includes('exceeded') || String(statusCode) === '413') {
         userFriendlyMsg = `File is larger than the bucket limit (${rawMsg}).`;
       }
@@ -240,9 +318,10 @@ export async function deleteStorageFile(pathOrUrl) {
 
     cleanPath = cleanPath.replace(/^\/+/, '');
 
+    const sibling = cardSiblingPath(cleanPath);
     const { error } = await supabase.storage
       .from(STORAGE_BUCKET)
-      .remove([cleanPath]);
+      .remove(sibling ? [cleanPath, sibling] : [cleanPath]);
 
     if (error) {
       return { success: false, error: error.message };
@@ -270,6 +349,11 @@ export async function deleteStorageFiles(paths) {
   }
   const removed = (data || []).map((o) => o.name);
   const failed = clean.filter((p) => !removed.includes(p));
+  // Card versions of optimized images go with them (best effort; not part of the report)
+  const siblings = clean.filter((p) => removed.includes(p)).map(cardSiblingPath).filter(Boolean);
+  if (siblings.length > 0) {
+    await supabase.storage.from(STORAGE_BUCKET).remove(siblings).catch(() => {});
+  }
   return {
     removed,
     failed,

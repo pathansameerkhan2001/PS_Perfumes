@@ -2,14 +2,19 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { isValidUUID } from './products';
 import { dbError, assertRows } from './dbErrors';
 import { getPublicImageUrl } from '../lib/storage';
-import heroLuxuryDesktop from '../assets/hero-luxury-cinematic.png';
-import heroLuxuryMobile from '../assets/hero-luxury-cinematic-mobile.png';
 import heroSlide2 from '../assets/hero-slide2.webp';
 import heroSlide2Mobile from '../assets/hero-slide2-mobile.webp';
 import promoBanner from '../assets/promo-banner.webp';
 import promoBannerMobile from '../assets/promo-banner-mobile.webp';
 
 const LOCAL_HERO_KEY = 'ps_db_hero_slides';
+
+// Built-in hero posters (WebP, public/assets). The homepage hero uses the same files, and
+// index.html preloads them on the homepage; bump the "-v1" suffix when replacing an image.
+export const BUILT_IN_HERO_POSTER_DESKTOP = '/assets/hero-poster-desktop-v1.webp';
+export const BUILT_IN_HERO_POSTER_MOBILE = '/assets/hero-poster-mobile-v1.webp';
+const heroLuxuryDesktop = BUILT_IN_HERO_POSTER_DESKTOP;
+const heroLuxuryMobile = BUILT_IN_HERO_POSTER_MOBILE;
 
 export const INITIAL_HERO_SLIDES = [
   {

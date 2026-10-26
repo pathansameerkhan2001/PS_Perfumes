@@ -4,6 +4,7 @@ import { Search, X, ArrowRight } from 'lucide-react';
 import { getProducts } from '../services/products';
 import { formatINR } from '../utils/formatCurrency';
 import { useCart } from '../context/CartContext';
+import { cardImageUrl, fullImageFallback } from '../lib/storage';
 import './SearchModal.css';
 
 export default function SearchModal({ isOpen, onClose }) {
@@ -148,7 +149,13 @@ export default function SearchModal({ isOpen, onClose }) {
                         onClick={() => handleSelectProduct(product)}
                       >
                         <div className="search-result-thumb">
-                          <img src={product.image} alt={product.name} />
+                          <img
+                            src={cardImageUrl(product.image)}
+                            alt={product.name}
+                            loading="lazy"
+                            decoding="async"
+                            onError={fullImageFallback(product.image)}
+                          />
                         </div>
                         <div className="search-result-info">
                           <h4 className="search-result-name">{product.name}</h4>

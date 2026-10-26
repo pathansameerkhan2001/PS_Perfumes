@@ -16,6 +16,7 @@ import {
 import { getProducts, deleteProduct, createProduct, updateProduct } from '../../services/products';
 import { formatINR } from '../../utils/formatCurrency';
 import './AdminProducts.css';
+import { cardImageUrl, fullImageFallback } from '../../lib/storage';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -365,7 +366,10 @@ export default function AdminProducts() {
                 <tr key={prod.id}>
                   <td>
                     <img
-                      src={prod.main_image || prod.image}
+                      src={cardImageUrl(prod.main_image || prod.image)}
+                      loading="lazy"
+                      decoding="async"
+                      onError={fullImageFallback(prod.main_image || prod.image)}
                       alt={prod.name}
                       className="ps-prod-table-thumb"
                     />

@@ -26,6 +26,7 @@ import {
 import { formatINR } from '../../utils/formatCurrency';
 import AdminPageContainer from '../components/AdminPageContainer';
 import './AdminDashboard.css';
+import { cardImageUrl, fullImageFallback } from '../../lib/storage';
 
 // null = the query failed (shown as "—"), never coerced to 0
 const EMPTY_METRICS = {
@@ -319,7 +320,7 @@ export default function AdminDashboard() {
                           <span className={`ps-rank-circle is-${item.rankType}`}>{item.rank}</span>
                         </td>
                         <td className="ps-td-product">
-                          <img src={item.image} alt={item.name} className="ps-td-thumb" />
+                          <img src={cardImageUrl(item.image)} loading="lazy" decoding="async" onError={fullImageFallback(item.image)} alt={item.name} className="ps-td-thumb" />
                           <span className="ps-td-prod-name">{item.name}</span>
                         </td>
                         <td className="ps-td-cat">{item.category}</td>
@@ -439,7 +440,7 @@ export default function AdminDashboard() {
                     {lowStock.map((item, idx) => (
                       <tr key={item.id || idx}>
                         <td className="ps-td-product">
-                          <img src={item.image} alt={item.name} className="ps-td-thumb-sm" />
+                          <img src={cardImageUrl(item.image)} loading="lazy" decoding="async" onError={fullImageFallback(item.image)} alt={item.name} className="ps-td-thumb-sm" />
                           <span className="ps-td-prod-name">{item.name}</span>
                         </td>
                         <td className="ps-td-variant">{item.variant}</td>

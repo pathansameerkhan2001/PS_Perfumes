@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Pause, Play } from 'lucide-react';
 import { getStoragePublicUrl } from '../../lib/storage';
-import { getActiveHeroFilm } from '../../services/hero';
-import posterDesktop from '../../assets/hero-luxury-cinematic.png';
-import posterMobile from '../../assets/hero-luxury-cinematic-mobile.png';
+import {
+  getActiveHeroFilm,
+  BUILT_IN_HERO_POSTER_DESKTOP as posterDesktop,
+  BUILT_IN_HERO_POSTER_MOBILE as posterMobile,
+} from '../../services/hero';
 import './HeroCinematic.css';
 
 // Built-in film (Supabase Storage, configured bucket "Ps-perfumes-media"), used when no active
@@ -16,6 +18,11 @@ const SETTING_TIMEOUT_MS = 1500;
 // The resolved setting is kept for this browser tab, so returning to the homepage starts the
 // film at once instead of waiting for the database; it is still re-checked every time
 const SETTING_CACHE_KEY = 'ps_hero_film_v1';
+// The film is requested once the page has finished loading (or after this long at most), so it
+// never competes with the poster, scripts and above-the-fold images for bandwidth
+const FILM_DEFER_MAX_MS = 2500;
+// Network classes on which a multi-megabyte film is not started on its own
+const SLOW_NETWORKS = new Set(['slow-2g', '2g', '3g']);
 
 function readCachedFilm() {
   try {
@@ -45,8 +52,11 @@ function writeCachedFilm(film) {
  *   the tab becomes visible again. If the file fails to load, it is retried once; otherwise
  *   the poster remains, so the hero is never blank.
  * - The film pauses while scrolled out of view (saves battery and CPU) and resumes on return.
- * - Visitors who ask for reduced motion (prefers-reduced-motion: reduce) or use Data Saver see
- *   the poster and a clear play control; the film is not downloaded until they press it.
+ * - Visitors who ask for reduced motion (prefers-reduced-motion: reduce), use Data Saver or are on
+ *   a 2G/3G-class connection see the poster and a clear play control; the film is not downloaded
+ *   until they press it.
+ * - Otherwise the film is requested only after the page has loaded (poster first), so it does not
+ *   delay the first render or the rest of the page.
  * - A small, discreet pause/resume control (bottom-right corner, icon only) lets anyone stop or
  *   start the film. A deliberate pause is never undone automatically.
  * - The film and poster come from Admin → Hero Sections (active record with the lowest display
@@ -59,15 +69,33 @@ export default function HeroCinematic() {
   const retriedLoadRef = useRef(false);
   const inViewRef = useRef(true);
   const defaultVideoUrl = getStoragePublicUrl(HERO_VIDEO_PATH);
-  // Phones get the lighter built-in poster (620×384, ~0.6 MB instead of ~1 MB)
+  // Phones get the lighter built-in poster (620×384 instead of 1024×384; same breakpoint as the
+  // preload in index.html)
   const isNarrow = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 768px)').matches;
   const defaultPoster = isNarrow ? posterMobile : posterDesktop;
   const prefersReducedMotion =
     typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  // Data Saver / "Lite mode": do not start a multi-megabyte film on its own; the poster and the
-  // play control stay, and the visitor can start it with one tap
-  const saveData = typeof navigator !== 'undefined' && navigator.connection?.saveData === true;
-  const autoStart = !prefersReducedMotion && !saveData;
+  // Data Saver / "Lite mode" or a 2G/3G-class connection: do not start a multi-megabyte film on
+  // its own; the poster and the play control stay, and the visitor can start it with one tap
+  const connection = typeof navigator !== 'undefined' ? navigator.connection : undefined;
+  const saveData = connection?.saveData === true;
+  const slowNetwork = SLOW_NETWORKS.has(connection?.effectiveType);
+  const autoStart = !prefersReducedMotion && !saveData && !slowNetwork;
+
+  // True once the page has finished loading (immediately when returning to the homepage)
+  const [pageLoaded, setPageLoaded] = useState(
+    () => typeof document !== 'undefined' && document.readyState === 'complete'
+  );
+  useEffect(() => {
+    if (pageLoaded) return undefined;
+    const done = () => setPageLoaded(true);
+    window.addEventListener('load', done, { once: true });
+    const timer = window.setTimeout(done, FILM_DEFER_MAX_MS);
+    return () => {
+      window.removeEventListener('load', done);
+      window.clearTimeout(timer);
+    };
+  }, [pageLoaded]);
 
   // The film to play: resolved once from the admin setting before any video is requested, so
   // the built-in film and a configured one are never both downloaded. null = still resolving.
@@ -114,7 +142,9 @@ export default function HeroCinematic() {
     // Resolved once per mount; the defaults do not change during a visit
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const videoUrl = source?.videoUrl || '';
+  // The film is attached only after the page has loaded (see pageLoaded); until then only the
+  // poster is shown
+  const videoUrl = pageLoaded ? source?.videoUrl || '' : '';
   const poster = source?.poster || defaultPoster;
 
   // Whether the film should be playing. Every automatic start (initial, retries, coming back into
@@ -224,6 +254,11 @@ export default function HeroCinematic() {
     if (!video) return;
     if (video.paused) {
       wantsPlayRef.current = true;
+      // Pressed before the page finished loading: attach the film now (its effect starts playback)
+      if (!pageLoaded) {
+        setPageLoaded(true);
+        return;
+      }
       tryPlay();
     } else {
       wantsPlayRef.current = false;

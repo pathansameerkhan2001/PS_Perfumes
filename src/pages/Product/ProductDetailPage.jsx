@@ -19,6 +19,7 @@ import { getProductBySlug, getProducts } from '../../services/products';
 import { getReviews } from '../../services/reviews';
 import { useCart } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatCurrency';
+import { cardImageUrl, fullImageFallback } from '../../lib/storage';
 import ProductCard from '../../components/ProductCard';
 import { useSeo, SITE_URL } from '../../utils/useSeo';
 import './ProductDetailPage.css';
@@ -97,30 +98,39 @@ export default function ProductDetailPage() {
             setSelectedSize(isAttar ? '6 ml' : '50 ml');
           }
           setQuantity(1);
-
-          // Fetch real customer reviews
-          try {
-            // Only this product's approved reviews — never reviews of other products
-            const ownRevs = await getReviews(false, { productId: prod.id });
-            if (mounted) setProductReviews(Array.isArray(ownRevs) ? ownRevs : []);
-          } catch (err) {
-            console.error('Could not load reviews:', err);
-            if (mounted) setProductReviews([]);
-          }
-
-          // Fetch curated companions
-          try {
-            const catalog = await getProducts({ category: prod.category, limit: 4 });
-            if (mounted && Array.isArray(catalog)) {
-              setRelated(catalog.filter((p) => p.id !== prod.id).slice(0, 4));
-            }
-          } catch {}
+          // Clear the previous product's extras; they are loaded below without holding up the page
+          setProductReviews([]);
+          setRelated([]);
+          loadExtras(prod);
         }
       } catch (err) {
         console.error('Error loading product detail:', err);
       } finally {
+        // The product (image, prices, variants) is shown as soon as it has loaded
         if (mounted) setLoading(false);
       }
+    }
+
+    // Reviews and related products are below the fold: fetched in parallel after the product
+    function loadExtras(prod) {
+      // Only this product's approved reviews — never reviews of other products
+      getReviews(false, { productId: prod.id })
+        .then((ownRevs) => {
+          if (mounted) setProductReviews(Array.isArray(ownRevs) ? ownRevs : []);
+        })
+        .catch((err) => {
+          console.error('Could not load reviews:', err);
+          if (mounted) setProductReviews([]);
+        });
+
+      // Curated companions
+      getProducts({ category: prod.category, limit: 4 })
+        .then((catalog) => {
+          if (mounted && Array.isArray(catalog)) {
+            setRelated(catalog.filter((p) => p.id !== prod.id).slice(0, 4));
+          }
+        })
+        .catch(() => {});
     }
 
     loadData();
@@ -392,7 +402,12 @@ export default function ProductDetailPage() {
                         onClick={() => setActiveImage(img)}
                         aria-label={`View flacon image angle ${idx + 1}`}
                       >
-                        <img src={img} alt={`${product.name} thumbnail ${idx + 1}`} />
+                        <img
+                          src={cardImageUrl(img)}
+                          alt={`${product.name} thumbnail ${idx + 1}`}
+                          decoding="async"
+                          onError={fullImageFallback(img)}
+                        />
                       </button>
                     );
                   })}
@@ -408,6 +423,7 @@ export default function ProductDetailPage() {
                   width="600"
                   height="750"
                   decoding="async"
+                  fetchPriority="high"
                 />
 
                 {/* Circular Top-Right Wishlist Button */}

@@ -23,7 +23,11 @@ export default function PublicLayout() {
 
       {/* Main Content Viewport */}
       <main className="ps-main-content">
-        <Outlet />
+        {/* Pages other than the homepage and cart load on first visit (see App.jsx); the
+            placeholder keeps the footer from jumping up meanwhile */}
+        <React.Suspense fallback={<div aria-busy="true" style={{ minHeight: '70vh' }} />}>
+          <Outlet />
+        </React.Suspense>
       </main>
 
       {/* Luxury Brand Footer */}

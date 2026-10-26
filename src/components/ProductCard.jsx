@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
 import { defaultVariant, variantPrice, variantStock, variantComparePrice } from '../utils/productVariants';
+import { cardImageUrl, fullImageFallback } from '../lib/storage';
 import './ProductCard.css';
 
 /**
@@ -17,7 +18,9 @@ export default function ProductCard({ product, priority = false }) {
   const [isAddedAnim, setIsAddedAnim] = useState(false);
   const navigate = useNavigate();
 
-  const imageSrc = product.main_image || product.image || '/assets/ps-perfumes-logo.webp';
+  const fullImageSrc = product.main_image || product.image || '/assets/ps-perfumes-logo.webp';
+  // Card-size version when the image was uploaded optimized (see lib/storage.js)
+  const imageSrc = cardImageUrl(fullImageSrc);
   const slug = product.slug || product.id;
 
   const variant = defaultVariant(product);
@@ -60,8 +63,11 @@ export default function ProductCard({ product, priority = false }) {
           alt={product.name}
           className="ps-pcard-img"
           loading={priority ? 'eager' : 'lazy'}
+          fetchPriority={priority ? 'high' : undefined}
+          decoding="async"
           width="400"
           height="440"
+          onError={fullImageFallback(fullImageSrc)}
         />
       </div>
 

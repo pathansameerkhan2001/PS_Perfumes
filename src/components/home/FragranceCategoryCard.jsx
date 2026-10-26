@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { cardImageUrl, fullImageFallback } from '../../lib/storage';
 
 const LOGO_FALLBACK = '/assets/ps-perfumes-logo.webp';
 
@@ -20,14 +21,16 @@ export default function FragranceCategoryCard({ name, slug, path, image, isBuilt
       <div className="ps-category-circle-wrapper">
         <div className="ps-category-circle-frame">
           <img
-            src={image || LOGO_FALLBACK}
+            src={cardImageUrl(image) || LOGO_FALLBACK}
             alt={`PS PERFUMES ${name} Collection`}
             className="ps-category-img"
             loading="lazy"
+            decoding="async"
             width="240"
             height="240"
             style={image ? undefined : { objectFit: 'contain', background: '#0D0D0D' }}
             onError={(e) => {
+              if (fullImageFallback(image)(e)) return;
               // Deleted or broken category image: show the brand logo instead of a broken image
               const img = e.currentTarget;
               if (img.dataset.fallback !== '1') {
