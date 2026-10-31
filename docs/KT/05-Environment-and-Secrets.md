@@ -28,7 +28,7 @@ Things that are **not** environment variables but behave like config (hard-coded
 
 - Vite **inlines `import.meta.env.VITE_*` at build time**. The deployed JS contains the literal values. Changing a variable in Vercel has **no effect until you redeploy (rebuild)**.
 - Only variables prefixed `VITE_` are exposed; anything else in `.env` is ignored by the client bundle.
-- There are **no server-side variables** because there is no server code.
+- Server-side variables exist only for the Razorpay functions in `/api`; they are listed in [15](15-Razorpay-Payments.md).
 - ⚠ **Never** put the Supabase `service_role`/secret key, database password, or any payment-gateway secret in a `VITE_` variable — it would be shipped to every visitor. If server-side secrets are needed later, introduce a server component (Supabase Edge Function or Vercel Function) and keep the secret there ([12](12-Future-Implementation-Roadmap.md)).
 
 ## 3. Local configuration

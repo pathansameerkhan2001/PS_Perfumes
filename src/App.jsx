@@ -33,6 +33,8 @@ const ContactPage = lazy(storefrontPages.contact);
 const SearchPage = lazy(storefrontPages.search);
 const InstagramPage = lazy(storefrontPages.instagram);
 const TrackOrderPage = lazy(storefrontPages.trackOrder);
+// Opened only from a private link, so it is not prefetched with the storefront pages
+const ReceiptPage = lazy(() => import('./pages/Receipt/ReceiptPage'));
 
 const AdminLogin = lazy(() => import('./admin/pages/AdminLogin'));
 const AdminRoute = lazy(() => import('./admin/components/AdminRoute'));
@@ -175,6 +177,8 @@ export default function App() {
         </Route>
 
         {/* Fallback route */}
+        <Route path="/receipt/:token" element={<ReceiptPage />} />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </CartProvider>

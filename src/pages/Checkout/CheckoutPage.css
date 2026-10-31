@@ -304,6 +304,18 @@
   border-bottom: none;
 }
 
+.ps-success-payment-id {
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.ps-success-secondary-link {
+  display: block;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--color-gold-bright);
+}
+
 .ps-success-row span:first-child {
   color: var(--color-muted);
 }

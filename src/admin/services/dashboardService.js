@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import { getPublicImageUrl } from '../../lib/storage';
+import { isAwaitingPayment } from '../../services/orders';
 
 /**
  * Service providing real aggregated data for the PS PERFUMES Admin Dashboard
@@ -10,6 +11,9 @@ import { getPublicImageUrl } from '../../lib/storage';
  * Note that RLS does not raise errors for reads — rows the caller may not see are simply
  * left out — so the dashboard also shows whether the database recognises the admin.
  */
+
+// Unpaid online checkouts are not orders yet: same rule as isAwaitingPayment, as a query filter
+const REAL_ORDERS_FILTER = 'payment_method.neq.RAZORPAY,payment_status.in.(paid,refunded)';
 
 function describeQueryError(error) {
   if (!error) return 'unknown error';
@@ -29,10 +33,10 @@ export async function getDashboardMetrics() {
   };
 
   const [ordersRes, revenueRes, productsRes, customersRes] = await Promise.all([
-    supabase.from('orders').select('id', { count: 'exact', head: true }),
+    supabase.from('orders').select('id', { count: 'exact', head: true }).or(REAL_ORDERS_FILTER),
     // Revenue: orders recorded as paid, or delivered (cash on delivery is collected on delivery);
-    // cancelled orders never count. No payment gateway exists, so payment_status changes only
-    // when the store records it — nothing is assumed here.
+    // cancelled orders never count. payment_status changes only through a verified Razorpay
+    // payment or when the store records it — nothing is assumed here.
     supabase
       .from('orders')
       .select('total_amount')
@@ -62,7 +66,8 @@ export async function getDashboardMetrics() {
   } else {
     const { data: orderCusts, error: custErr } = await supabase
       .from('orders')
-      .select('customer_email, customer_id');
+      .select('customer_email, customer_id')
+      .or(REAL_ORDERS_FILTER);
     if (custErr) {
       fail('Customers', custErr);
     } else {
@@ -90,7 +95,7 @@ export async function getBestSellingProducts() {
   try {
     const { data: items, error } = await supabase
       .from('order_items')
-      .select('product_id, product_name, quantity, total_price, unit_price, bottle_type, size_ml, orders!inner(order_status)')
+      .select('product_id, product_name, quantity, total_price, unit_price, bottle_type, size_ml, orders!inner(order_status, payment_method, payment_status)')
       // Items of cancelled orders are not sales
       .neq('orders.order_status', 'cancelled');
 
@@ -104,6 +109,7 @@ export async function getBestSellingProducts() {
     // Group sales by product_id or product_name
     const salesMap = {};
     for (const item of items) {
+      if (isAwaitingPayment(item.orders)) continue;
       const key = item.product_id || item.product_name;
       if (!key) continue;
       const itemRev = Number(item.total_price) || (Number(item.unit_price || 0) * (Number(item.quantity) || 1));
@@ -296,6 +302,7 @@ export async function getRecentOrders(limit = 5) {
     const { data, error } = await supabase
       .from('orders')
       .select('id, order_number, customer_name, shipping_address, total_amount, order_status, payment_status, payment_method, created_at')
+      .or(REAL_ORDERS_FILTER)
       .order('created_at', { ascending: false })
       .limit(limit);
 

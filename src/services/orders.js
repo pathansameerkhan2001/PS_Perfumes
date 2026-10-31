@@ -101,17 +101,21 @@ function isComboItem(it) {
  * Checkout attempt key (idempotency). One random key per checkout attempt, kept in
  * sessionStorage while the bag and coupon stay the same, so a retry after a lost response
  * (or a page reload) sends the same key and place_order returns the order already saved
- * instead of creating a second one (migration 08). A different bag or coupon starts a new
- * attempt; the key is cleared once an order is confirmed.
+ * instead of creating a second one (migration 08). A different bag, coupon or payment method
+ * starts a new attempt; the key is cleared once an order is confirmed. An online attempt also
+ * ends when the delivery details change: a shopper may cancel the payment and correct the
+ * address, and the replay must not return the order with the old one.
  */
 const ATTEMPT_KEY = 'ps_checkout_attempt';
 
-function attemptSignature(items, couponCode) {
+function attemptSignature(items, couponCode, paymentMethod, customer) {
   return JSON.stringify({
     lines: items
       .map((it) => [isComboItem(it) ? `c:${it.product_id || it.product?.id}` : `v:${it.variant_id}`, Number(it.quantity)])
       .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
     coupon: String(couponCode || '').trim().toUpperCase(),
+    method: paymentMethod || 'COD',
+    customer: paymentMethod === 'RAZORPAY' ? customer : null,
   });
 }
 
@@ -139,31 +143,37 @@ function clearAttemptKey() {
   } catch {}
 }
 
+function toOrderLines(items) {
+  return items.map((it) =>
+    isComboItem(it)
+      ? { type: 'combo', combo_id: it.product_id || it.product?.id, quantity: Number(it.quantity) }
+      : { type: 'variant', variant_id: it.variant_id, quantity: Number(it.quantity) }
+  );
+}
+
+function toCustomer(orderPayload) {
+  return {
+    first_name: orderPayload.firstName,
+    last_name: orderPayload.lastName,
+    email: orderPayload.email,
+    phone: orderPayload.phone,
+    address: orderPayload.address,
+    city: orderPayload.city,
+    state: orderPayload.state,
+    pincode: orderPayload.pincode,
+    landmark: orderPayload.landmark || '',
+  };
+}
+
 /**
  * Preferred path: place_order() (migration 20261022) prices every line, the shipping fee and
  * the coupon from the database in one transaction. Returns null when the function is not
  * installed yet, so the caller can use the direct insert below.
  */
 async function placeOrderOnServer(orderPayload, items, attemptKey) {
-  const lines = items.map((it) =>
-    isComboItem(it)
-      ? { type: 'combo', combo_id: it.product_id || it.product?.id, quantity: Number(it.quantity) }
-      : { type: 'variant', variant_id: it.variant_id, quantity: Number(it.quantity) }
-  );
-
   const params = {
-    p_customer: {
-      first_name: orderPayload.firstName,
-      last_name: orderPayload.lastName,
-      email: orderPayload.email,
-      phone: orderPayload.phone,
-      address: orderPayload.address,
-      city: orderPayload.city,
-      state: orderPayload.state,
-      pincode: orderPayload.pincode,
-      landmark: orderPayload.landmark || '',
-    },
-    p_items: lines,
+    p_customer: toCustomer(orderPayload),
+    p_items: toOrderLines(items),
     p_coupon_code: String(orderPayload.couponCode || '').trim().toUpperCase() || null,
     p_payment_method: orderPayload.paymentMethod || 'COD',
   };
@@ -251,7 +261,7 @@ export async function createOrder(orderPayload) {
   const items = (orderPayload.items || []).filter((it) => Number(it.quantity) > 0);
   if (items.length === 0) throw new Error('Your cart is empty.');
 
-  const signature = attemptSignature(items, orderPayload.couponCode);
+  const signature = attemptSignature(items, orderPayload.couponCode, 'COD');
   const { key: attemptKey, isRetry } = getAttemptKey(signature);
 
   // On a retry of the same attempt the server decides (it may return the order already saved)
@@ -320,7 +330,7 @@ export async function createOrder(orderPayload) {
     discount_amount: discount,
     total_amount: total,
     payment_method: orderPayload.paymentMethod || 'COD',
-    // No payment gateway is integrated: every order starts unpaid until confirmed by the store
+    // Every order starts unpaid; only a verified Razorpay payment changes this on the server
     payment_status: 'pending',
     order_status: 'pending',
     notes: couponCode ? `Coupon: ${couponCode}` : null,
@@ -360,6 +370,46 @@ export async function createOrder(orderPayload) {
   saveLocalOrder(order);
   clearAttemptKey();
   return { order, error: null };
+}
+
+/**
+ * The request body for /api/create-order: what is being bought, never what it costs. The key
+ * stays saved after a cancelled or failed payment, so paying again reuses the same order.
+ */
+export async function prepareOnlineOrder(orderPayload) {
+  const items = (orderPayload.items || []).filter((it) => Number(it.quantity) > 0);
+  if (items.length === 0) throw new Error('Your cart is empty.');
+
+  const customer = toCustomer(orderPayload);
+  const signature = attemptSignature(items, orderPayload.couponCode, 'RAZORPAY', customer);
+  const { key: attemptKey, isRetry } = getAttemptKey(signature);
+  if (!isRetry) await revalidateComboLines(items);
+  rememberAttempt(attemptKey, signature);
+
+  return {
+    customer,
+    items: toOrderLines(items),
+    couponCode: String(orderPayload.couponCode || '').trim().toUpperCase(),
+    attemptKey,
+  };
+}
+
+/** The saved order of this attempt was cancelled: the next Pay Now starts a new order. */
+export function resetOnlineAttempt() {
+  clearAttemptKey();
+}
+
+/** A paid order, as returned by the server: ends the attempt and keeps it for /track-order. */
+export function completeOnlineOrder(receipt) {
+  clearAttemptKey();
+  const order = formatOrder(receipt);
+  saveLocalOrder({ ...order, id: receipt.order_number });
+  return order;
+}
+
+/** An unpaid Razorpay order is a checkout in progress, not an order to fulfil. */
+export function isAwaitingPayment(order) {
+  return order?.payment_method === 'RAZORPAY' && ['pending', 'failed'].includes(order?.payment_status);
 }
 
 export async function updateOrderStatus(orderId, status) {

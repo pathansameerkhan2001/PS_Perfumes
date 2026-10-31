@@ -33,14 +33,17 @@
 | 11 | [Testing and Operations](11-Testing-and-Operations.md) | Manual tests, smoke test, monitoring, backups, incidents |
 | 12 | [Future Implementation Roadmap](12-Future-Implementation-Roadmap.md) | Remaining work in phases |
 | 13 | [Production Migration and Handover](13-Production-Migration-and-Handover.md) | **Exact go-live procedure and readiness checklist** |
-| 14 | [AWS Migration Assessment](14-AWS-Migration-Assessment.md) | Supabase repair vs. S3 + RDS + API: effort, cost, risk, recommendation || — | [New Supabase project setup](../../supabase/new-project/README.md) | **Move to `pwacxxrghlglvdtclbig` / bucket `Ps-perfumes-media`**: ordered SQL, admin bootstrap, RLS/Storage plan, data + media migration, env vars, cutover |
+| 14 | [AWS Migration Assessment](14-AWS-Migration-Assessment.md) | Supabase repair vs. S3 + RDS + API: effort, cost, risk, recommendation |
+| 15 | [Razorpay Payments](15-Razorpay-Payments.md) | Payment flow, variables, webhook, Preview test script, go-live, soft stop |
+| 16 | [Razorpay Rollback Runbook](16-Razorpay-Rollback-Runbook.md) | Soft stop, reconciliation, database rollback, optional cleanup, reapplying |
+| — | [New Supabase project setup](../../supabase/new-project/README.md) | **Move to `pwacxxrghlglvdtclbig` / bucket `Ps-perfumes-media`**: ordered SQL, admin bootstrap, RLS/Storage plan, data + media migration, env vars, cutover |
 
 ## Five things to know first
 
 1. **The repo's `supabase/schema.sql` is stale.** The live schema is documented in [03](03-Database-and-Data-Model.md) §2 (verified 2026-10-19).
 2. **The migration is pending.** Until it runs, admin uploads and deletes fail and checkout/coupons may be blocked by permissions.
 3. **No demo data anymore.** The site shows only database content; empty tables mean empty sections.
-4. **Payment is COD only.** There is no gateway; never mark orders paid automatically.
+4. **Payment is COD until Razorpay goes live.** The integration is written but not applied or tested ([15](15-Razorpay-Payments.md)); only a verified payment may mark an order paid.
 5. **Every admin write now reports the real database error.** A save that RLS silently ignores is reported as a failure.
 
 No secrets are reproduced in these documents; placeholders such as `<SUPABASE_URL>` and `<project-ref>` are used.

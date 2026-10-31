@@ -1,0 +1,168 @@
+.ps-receipt-page {
+  min-height: 100vh;
+  padding: 40px 16px;
+  background-color: var(--color-primary);
+}
+
+/* Ivory paper, so the page prints as it looks */
+.ps-receipt-card {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 36px;
+  background: #fffdf9;
+  color: #1a1714;
+  border: 1px solid #e5e0d8;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.ps-receipt-header,
+.ps-receipt-parties {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.ps-receipt-header {
+  padding-bottom: 20px;
+  border-bottom: 2px solid #c8a45d;
+}
+
+.ps-receipt-header h1 {
+  margin: 0 0 4px;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  letter-spacing: 0.08em;
+  color: #1a1714;
+}
+
+.ps-receipt-title {
+  text-align: right;
+}
+
+.ps-receipt-title strong {
+  font-family: var(--font-serif);
+  font-size: 16px;
+}
+
+.ps-receipt-parties {
+  padding: 20px 0;
+}
+
+.ps-receipt-parties > div {
+  flex: 1;
+}
+
+.ps-receipt-parties h2 {
+  margin: 0 0 6px;
+  font-family: var(--font-serif);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8a6d33;
+}
+
+.ps-receipt-card p {
+  margin: 0;
+}
+
+.ps-receipt-items {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ps-receipt-items th {
+  padding: 8px 6px;
+  border-bottom: 1px solid #1a1714;
+  font-size: 12px;
+  text-align: right;
+}
+
+.ps-receipt-items td {
+  padding: 10px 6px;
+  border-bottom: 1px solid #e5e0d8;
+  text-align: right;
+  vertical-align: top;
+}
+
+.ps-receipt-items th:first-child,
+.ps-receipt-items td:first-child {
+  padding-left: 0;
+  text-align: left;
+}
+
+.ps-receipt-items small {
+  display: block;
+  color: #6b645a;
+}
+
+.ps-receipt-totals {
+  max-width: 280px;
+  margin: 16px 0 0 auto;
+}
+
+.ps-receipt-totals > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.ps-receipt-grand-total {
+  margin-top: 6px;
+  border-top: 1px solid #1a1714;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.ps-receipt-payment {
+  margin-top: 24px !important;
+  font-size: 13px;
+}
+
+.ps-receipt-print {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  padding: 10px 18px;
+  background: #1a1714;
+  color: #fffdf9;
+  border: none;
+  border-radius: 2px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+@media (max-width: 560px) {
+  .ps-receipt-card {
+    padding: 20px;
+  }
+
+  .ps-receipt-header,
+  .ps-receipt-parties {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .ps-receipt-title {
+    text-align: left;
+  }
+}
+
+@media print {
+  .ps-receipt-page {
+    padding: 0;
+    background: #fff;
+  }
+
+  .ps-receipt-card {
+    max-width: none;
+    border: none;
+  }
+
+  .ps-receipt-print {
+    display: none;
+  }
+}

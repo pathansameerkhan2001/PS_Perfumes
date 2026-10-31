@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { ShieldCheck, Lock, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatCurrency';
-import { createOrder } from '../../services/orders';
+import { createOrder, prepareOnlineOrder, completeOnlineOrder, resetOnlineAttempt } from '../../services/orders';
+import { onlinePaymentsEnabled, createPaymentOrder, openCheckout, verifyPayment } from '../../services/payments';
 import './CheckoutPage.css';
 import { useSeo } from '../../utils/useSeo';
 
@@ -27,8 +28,13 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [orderConfirmed, setOrderConfirmed] = useState(null);
+  const [paidOrder, setPaidOrder] = useState(null);
+  // A completed payment whose confirmation did not get through: the shopper rechecks it, never pays again
+  const [unconfirmedPayment, setUnconfirmedPayment] = useState(null);
   // Blocks a second submit before React re-renders the disabled button (double click / Enter)
   const submitLock = useRef(false);
+  // Server total the shopper has been shown, when it differed from the bag
+  const acceptedAmount = useRef(null);
 
   const validate = () => {
     const errs = {};
@@ -60,9 +66,87 @@ export default function CheckoutPage() {
     return Object.keys(errs).length === 0;
   };
 
+  const finishPaidOrder = (receipt) => {
+    setPaidOrder(completeOnlineOrder(receipt));
+    setUnconfirmedPayment(null);
+    clearCart();
+  };
+
+  const confirmPayment = async (response) => {
+    setUnconfirmedPayment(null);
+    try {
+      const result = await verifyPayment(response);
+      finishPaidOrder(result.order);
+    } catch (err) {
+      if (err.pending) {
+        setUnconfirmedPayment(response);
+        setErrors({
+          form: 'We could not confirm your payment yet. Please do not pay again: use the button below to check it. If money was taken, your order will still be confirmed by e-mail.',
+        });
+      } else {
+        setErrors({ form: err.message });
+      }
+    }
+  };
+
+  const payOnline = async (orderPayload) => {
+    let paymentOrder;
+    try {
+      paymentOrder = await createPaymentOrder(await prepareOnlineOrder(orderPayload));
+    } catch (err) {
+      if (err.restart) resetOnlineAttempt();
+      throw err;
+    }
+    if (paymentOrder.alreadyPaid) {
+      if (paymentOrder.order) {
+        finishPaidOrder(paymentOrder.order);
+      } else {
+        setErrors({ form: `Order ${paymentOrder.orderNumber} is already paid. Please check your e-mail for the receipt.` });
+      }
+      return;
+    }
+
+    // The window must only ever show a total the shopper has seen on this page
+    if (paymentOrder.amount !== Math.round(total * 100) && paymentOrder.amount !== acceptedAmount.current) {
+      acceptedAmount.current = paymentOrder.amount;
+      setErrors({
+        form: `Prices or stock have changed: the total for this order is now ${formatINR(paymentOrder.amount / 100, { showDecimals: true })}. Press Pay Now again to pay this amount.`,
+      });
+      return;
+    }
+
+    let failureMessage = '';
+    const result = await openCheckout(paymentOrder, (reason) => {
+      failureMessage = reason || 'The payment failed.';
+    });
+
+    if (result.status === 'paid') {
+      await confirmPayment(result.response);
+    } else {
+      setErrors({
+        form: failureMessage
+          ? `${failureMessage} Your order was not confirmed. You can try again or choose Cash on Delivery.`
+          : 'Payment cancelled. Your order was not confirmed. You can try again whenever you are ready.',
+      });
+    }
+  };
+
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     if (submitLock.current) return;
+
+    if (unconfirmedPayment) {
+      submitLock.current = true;
+      setSubmitting(true);
+      try {
+        await confirmPayment(unconfirmedPayment);
+      } finally {
+        submitLock.current = false;
+        setSubmitting(false);
+      }
+      return;
+    }
+
     if (!validate()) return;
     if (cartItems.length === 0) return;
 
@@ -88,6 +172,11 @@ export default function CheckoutPage() {
         items: cartItems,
       };
 
+      if (formData.paymentMethod === 'RAZORPAY') {
+        await payOnline(orderPayload);
+        return;
+      }
+
       const result = await createOrder(orderPayload);
       if (result.order) {
         setOrderConfirmed(result.order);
@@ -100,6 +189,58 @@ export default function CheckoutPage() {
       setSubmitting(false);
     }
   };
+
+  if (paidOrder) {
+    const paidCancelled = paidOrder.order_status === 'cancelled';
+    return (
+      <div className="ps-checkout-success-page">
+        <div className="ps-checkout-success-card">
+          <CheckCircle2 size={56} color="#c8a45d" className="ps-success-icon" />
+          <span className="ps-success-tag">{paidCancelled ? 'PAYMENT RECEIVED' : 'PAYMENT SUCCESSFUL'}</span>
+          <h1 className="ps-success-title">Thank You For Your Patronage</h1>
+          <p className="ps-success-order-num">
+            Order Reference: <strong>{paidOrder.order_number}</strong>
+          </p>
+          {paidCancelled ? (
+            <p className="ps-success-text">
+              We received your payment, but this order had already been cancelled, so it will not be
+              dispatched. We will refund your payment and contact you at <strong>{paidOrder.email}</strong>.
+            </p>
+          ) : (
+            <p className="ps-success-text">
+              Your payment has been received and your order is confirmed. A receipt is on its way to{' '}
+              <strong>{paidOrder.email}</strong>. Keep your order reference to follow it on the{' '}
+              <Link to="/track-order">Track Order</Link> page.
+            </p>
+          )}
+          <div className="ps-success-details">
+            {paidOrder.items.map((it, idx) => (
+              <div className="ps-success-row" key={idx}>
+                <span>
+                  {it.product_name} ({it.size}) × {it.quantity}
+                </span>
+                <span>{formatINR(it.total, { showDecimals: true })}</span>
+              </div>
+            ))}
+            <div className="ps-success-row">
+              <span>Total Paid:</span>
+              <strong>{formatINR(paidOrder.total, { showDecimals: true })}</strong>
+            </div>
+            <div className="ps-success-row">
+              <span>Razorpay Payment ID:</span>
+              <span className="ps-success-payment-id">{paidOrder.razorpay_payment_id}</span>
+            </div>
+          </div>
+          <Link to={`/receipt/${paidOrder.receipt_token}`} className="ps-btn-gold-primary ps-success-home-btn">
+            VIEW RECEIPT
+          </Link>
+          <Link to="/" className="ps-success-secondary-link">
+            Return to Atelier Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (orderConfirmed) {
     return (
@@ -327,7 +468,21 @@ export default function CheckoutPage() {
                     <span>Pay when your order is delivered</span>
                   </div>
                 </label>
-                {/* Online payment is not offered: no payment gateway is integrated yet. */}
+                {onlinePaymentsEnabled && (
+                  <label className={`ps-payment-option ${formData.paymentMethod === 'RAZORPAY' ? 'is-selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="RAZORPAY"
+                      checked={formData.paymentMethod === 'RAZORPAY'}
+                      onChange={() => setFormData({ ...formData, paymentMethod: 'RAZORPAY' })}
+                    />
+                    <div className="ps-payment-text">
+                      <strong>Pay Online</strong>
+                      <span>UPI, cards, net banking and more, secured by Razorpay</span>
+                    </div>
+                  </label>
+                )}
               </div>
             </div>
           </div>
@@ -388,7 +543,11 @@ export default function CheckoutPage() {
                 disabled={submitting}
               >
                 {submitting ? (
-                  <span>CONFIRMING DISPATCH...</span>
+                  <span>{formData.paymentMethod === 'RAZORPAY' ? 'PROCESSING PAYMENT...' : 'CONFIRMING DISPATCH...'}</span>
+                ) : unconfirmedPayment ? (
+                  <span>CHECK PAYMENT STATUS</span>
+                ) : formData.paymentMethod === 'RAZORPAY' ? (
+                  <span>PAY NOW ({formatINR(total)})</span>
                 ) : (
                   <span>PLACE ORDER ({formatINR(total)})</span>
                 )}

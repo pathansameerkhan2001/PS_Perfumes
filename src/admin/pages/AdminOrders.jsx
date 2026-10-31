@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, X } from 'lucide-react';
-import { getOrders, updateOrderStatus } from '../../services/orders';
+import { getOrders, updateOrderStatus, isAwaitingPayment } from '../../services/orders';
 import { formatINR } from '../../utils/formatCurrency';
 
 const ORDER_STATUSES = [
@@ -13,7 +13,14 @@ const ORDER_STATUSES = [
   'cancelled',
 ];
 
+// An unpaid Razorpay order can only be left or cancelled (the database enforces the same rule)
+const statusesFor = (order) => (isAwaitingPayment(order) ? ['pending', 'cancelled'] : ORDER_STATUSES);
+
+const paymentMethodLabel = (order) =>
+  order.payment_method === 'COD' ? 'Cash on Delivery' : order.payment_method === 'RAZORPAY' ? 'Razorpay' : order.payment_method;
+
 export default function AdminOrders() {
+  const [showAwaitingPayment, setShowAwaitingPayment] = useState(false);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -53,6 +60,9 @@ export default function AdminOrders() {
     }
   };
 
+  const awaitingCount = orders.filter(isAwaitingPayment).length;
+  const visibleOrders = orders.filter((ord) => isAwaitingPayment(ord) === showAwaitingPayment);
+
   return (
     <div className="ps-admin-orders-page">
       <div className="ps-admin-page-header">
@@ -60,7 +70,25 @@ export default function AdminOrders() {
           <span className="ps-admin-eyebrow">ORDER FULFILLMENT</span>
           <h1 className="ps-admin-page-title">Patron Dispatches & Orders</h1>
         </div>
+        <label style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span>View:</span>
+          <select
+            className="ps-status-select"
+            value={showAwaitingPayment ? 'awaiting' : 'orders'}
+            onChange={(e) => setShowAwaitingPayment(e.target.value === 'awaiting')}
+            style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', color: '#1A1714', padding: '6px 8px', fontSize: 12, borderRadius: 6 }}
+          >
+            <option value="orders">Orders to fulfil</option>
+            <option value="awaiting">Awaiting payment ({awaitingCount})</option>
+          </select>
+        </label>
       </div>
+
+      {showAwaitingPayment && (
+        <p style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 14 }}>
+          Online checkouts that were not paid: abandoned, cancelled or failed. Do not dispatch these.
+        </p>
+      )}
 
       {notice && (
         <div className={notice.type === 'error' ? 'ps-form-error-banner' : 'ps-form-success-banner'} role="status">
@@ -70,8 +98,10 @@ export default function AdminOrders() {
 
       {loading ? (
         <div className="ps-admin-loading">Loading Orders...</div>
-      ) : orders.length === 0 ? (
-        <div className="ps-admin-empty-table">No orders registered yet.</div>
+      ) : visibleOrders.length === 0 ? (
+        <div className="ps-admin-empty-table">
+          {showAwaitingPayment ? 'No unpaid online checkouts.' : 'No orders registered yet.'}
+        </div>
       ) : (
         <div className="ps-admin-table-container">
           <table className="ps-admin-products-table">
@@ -88,7 +118,7 @@ export default function AdminOrders() {
               </tr>
             </thead>
             <tbody>
-              {orders.map((ord) => (
+              {visibleOrders.map((ord) => (
                 <tr key={ord.id}>
                   <td>
                     <strong style={{ color: 'var(--color-champagne)' }}>{ord.order_number}</strong>
@@ -118,7 +148,7 @@ export default function AdminOrders() {
                   </td>
                   <td>
                     <span style={{ fontSize: 11, color: '#c9c1b2' }}>{ord.payment_method}</span>
-                    {/* As stored on the order; no payment gateway updates it */}
+                    {/* As stored on the order; Razorpay orders are updated only by a verified payment */}
                     <div style={{ fontSize: 10, color: ord.payment_status === 'paid' ? '#4ade80' : 'var(--color-muted)' }}>
                       {String(ord.payment_status || 'pending').toUpperCase()}
                     </div>
@@ -140,7 +170,7 @@ export default function AdminOrders() {
                         cursor: 'pointer',
                       }}
                     >
-                      {ORDER_STATUSES.map((st) => (
+                      {statusesFor(ord).map((st) => (
                         <option key={st} value={st}>
                           {st.replace(/_/g, ' ').toUpperCase()}
                         </option>
@@ -248,7 +278,7 @@ export default function AdminOrders() {
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Payment</span>
                 <span>
-                  {selectedOrder.payment_method === 'COD' ? 'Cash on Delivery' : selectedOrder.payment_method} ·{' '}
+                  {paymentMethodLabel(selectedOrder)} ·{' '}
                   {String(selectedOrder.payment_status || 'pending').toUpperCase()}
                 </span>
               </div>
@@ -257,6 +287,38 @@ export default function AdminOrders() {
                 <span>{formatINR(selectedOrder.total)}</span>
               </div>
             </div>
+
+            {/* Razorpay payment details */}
+            {selectedOrder.payment_method === 'RAZORPAY' && (
+              <div style={{ background: '#FAF8F5', border: '1px solid var(--color-border)', borderRadius: 8, padding: 18, marginTop: 20, overflowWrap: 'anywhere' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
+                  <div><strong>Razorpay Order ID:</strong> {selectedOrder.razorpay_order_id || '—'}</div>
+                  <div><strong>Razorpay Payment ID:</strong> {selectedOrder.razorpay_payment_id || '—'}</div>
+                  <div><strong>Payment Date:</strong> {selectedOrder.paid_at ? new Date(selectedOrder.paid_at).toLocaleString('en-IN') : '—'}</div>
+                  <div>
+                    <strong>Emails:</strong> Customer {selectedOrder.customer_email_sent_at ? 'sent' : 'not sent'} · Owner{' '}
+                    {selectedOrder.owner_email_sent_at ? 'sent' : 'not sent'}
+                  </div>
+                  {selectedOrder.payment_status === 'paid' && (
+                    <div>
+                      <strong>Receipt:</strong>{' '}
+                      <a href={`/receipt/${selectedOrder.receipt_token}`} target="_blank" rel="noreferrer">Open receipt</a>
+                    </div>
+                  )}
+                  {isAwaitingPayment(selectedOrder) && (
+                    <div style={{ color: '#b45309' }}><strong>Not paid. Do not dispatch this order.</strong></div>
+                  )}
+                  {selectedOrder.payment_error && (
+                    <div style={{ color: '#b91c1c' }}><strong>Payment note:</strong> {selectedOrder.payment_error}</div>
+                  )}
+                  {selectedOrder.duplicate_payment_id && (
+                    <div style={{ color: '#b91c1c' }}>
+                      <strong>Second payment, refund it in Razorpay:</strong> {selectedOrder.duplicate_payment_id}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Result of a status change made here (the page banner is behind this overlay) */}
             {notice && (
@@ -287,7 +349,7 @@ export default function AdminOrders() {
                   fontSize: 12,
                 }}
               >
-                {ORDER_STATUSES.map((st) => (
+                {statusesFor(selectedOrder).map((st) => (
                   <option key={st} value={st}>{st.replace(/_/g, ' ').toUpperCase()}</option>
                 ))}
               </select>

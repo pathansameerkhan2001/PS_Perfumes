@@ -51,6 +51,8 @@ Check before every run: the browser URL contains `/project/pwacxxrghlglvdtclbig/
 | — | Dashboard → Authentication → Users | Only if step 0 showed the UID missing or unconfirmed: fix it there (the UID `a5b3ff02-…` was supplied as already created) |
 | ⛔ 4 | `04_bootstrap_admin.sql` | Creates or updates the **single** `admin_users` row for UID `a5b3ff02-8d08-454a-8474-d5f51a4d890f` (super_admin, active) after re-checking the UID/e-mail match. Then runs `is_admin()`/`is_super_admin()` as that user and **rolls back** unless both are true |
 | 5 | `05_verify.sql` | Read-only checks + rolled-back permission probes; expected values are in its header. Export the grid as CSV |
+| ⛔ 8 | `08_checkout_hardening.sql` | Run `08_preflight_readonly.sql` first. Combo validation and idempotent checkout |
+| ⛔ 9 | `09_razorpay_payments.sql` | Razorpay columns, server-only payment functions and the payment guard trigger. Requires 08. Check with `09_verify_readonly.sql`; see [docs/KT/15](../../docs/KT/15-Razorpay-Payments.md). To remove it, follow [docs/KT/16](../../docs/KT/16-Razorpay-Rollback-Runbook.md), never the files alone |
 | ⛔ opt. | `../migrations/20261020_contact_enquiries_optional.sql` | Only if contact-form messages should be stored (owner decision). Works unchanged on the new project after step 2 |
 
 **Do not run** the old-project files `20261019_*`, `20261022_*`, `20261023_*` or `repairs/*` on the new project; their content is already included in steps 2–3.
