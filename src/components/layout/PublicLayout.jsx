@@ -19,6 +19,8 @@ const WishlistDrawer = React.lazy(() => import('../WishlistDrawer'));
 export default function PublicLayout() {
   const { pathname } = useLocation();
   const { isCartOpen, setIsCartOpen } = useCart();
+  // The floating buttons would cover the checkout form and its Place Order button
+  const isCheckout = pathname.replace(/\/+$/, '') === '/checkout';
 
   return (
     <div className="ps-app-root">
@@ -41,10 +43,10 @@ export default function PublicLayout() {
       <Footer />
 
       {/* Luxury Floating Social & Contact Concierge (Bottom-Left) */}
-      <FloatingContactDock />
+      {!isCheckout && <FloatingContactDock />}
 
       {/* Quick Action Floating Cart Pill (Bottom-Right) */}
-      <FloatingCartButton />
+      {!isCheckout && <FloatingCartButton />}
 
       {/* Drawers & Dialogs */}
       {/* A failing drawer closes on its own; the page behind it keeps working */}

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Lock, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { ShieldCheck, Lock, CheckCircle2, ArrowLeft, CreditCard, Banknote } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatCurrency';
 import { createOrder, prepareOnlineOrder, completeOnlineOrder, resetOnlineAttempt } from '../../services/orders';
@@ -455,21 +455,8 @@ export default function CheckoutPage() {
             <div className="ps-checkout-card">
               <h2 className="ps-checkout-card-title">3. Payment Method</h2>
               <div className="ps-payment-options-grid">
-                <label className={`ps-payment-option ${formData.paymentMethod === 'COD' ? 'is-selected' : ''}`}>
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="COD"
-                    checked={formData.paymentMethod === 'COD'}
-                    onChange={() => setFormData({ ...formData, paymentMethod: 'COD' })}
-                  />
-                  <div className="ps-payment-text">
-                    <strong>Cash on Delivery (COD)</strong>
-                    <span>Pay when your order is delivered</span>
-                  </div>
-                </label>
                 {onlinePaymentsEnabled && (
-                  <label className={`ps-payment-option ${formData.paymentMethod === 'RAZORPAY' ? 'is-selected' : ''}`}>
+                  <label className={`ps-payment-option ps-payment-option--online ${formData.paymentMethod === 'RAZORPAY' ? 'is-selected' : ''}`}>
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -477,12 +464,31 @@ export default function CheckoutPage() {
                       checked={formData.paymentMethod === 'RAZORPAY'}
                       onChange={() => setFormData({ ...formData, paymentMethod: 'RAZORPAY' })}
                     />
+                    <span className="ps-payment-icon" aria-hidden="true">
+                      <CreditCard size={21} strokeWidth={1.7} />
+                    </span>
                     <div className="ps-payment-text">
                       <strong>Pay Online</strong>
-                      <span>UPI, cards, net banking and more, secured by Razorpay</span>
+                      <span>UPI, credit and debit cards, net banking and more, secured by Razorpay</span>
                     </div>
                   </label>
                 )}
+                <label className={`ps-payment-option ps-payment-option--cod ${formData.paymentMethod === 'COD' ? 'is-selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="COD"
+                    checked={formData.paymentMethod === 'COD'}
+                    onChange={() => setFormData({ ...formData, paymentMethod: 'COD' })}
+                  />
+                  <span className="ps-payment-icon" aria-hidden="true">
+                    <Banknote size={21} strokeWidth={1.7} />
+                  </span>
+                  <div className="ps-payment-text">
+                    <strong>Cash on Delivery (COD)</strong>
+                    <span>Pay when your order is delivered</span>
+                  </div>
+                </label>
               </div>
             </div>
           </div>
