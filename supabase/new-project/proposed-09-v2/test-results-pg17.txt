@@ -1,0 +1,226 @@
+safety: hostname 5875cb73208c; network routes: 0; interfaces: lo 
+safety: credential-like env vars: 0
+safety: .env files visible: 0
+safety: no remote-capable statement in v2 files
+server version: PostgreSQL 17.11 (Debian 17.11-1.pgdg13+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+server_version: 17.11 (Debian 17.11-1.pgdg13+2) / data dir /pgdata/d
+migration v2 under test: /sql/proposed-09-v2/09v2_razorpay_payments.sql md5 5d807a61da0fb149f49fdce737dc919f
+rollback v2 under test:  md5 1399cf8b55adcc6be7a5f5e861be6def
+precheck md5 2caf6b05512379515b3177aae7abf357 verify md5 daa3ff33cd6410c97009091ee544c029
+08 md5 aa62c871b2e0c4dd415e636a12d746d3; original 09 md5 6059fe81a8d593b5a26f0acfc750b30d
+=== PHASE 1: baseline on Migration 08 ===
+  applied 01_schema
+  applied 02_auth_functions_rls
+  applied 08_checkout_hardening
+  fingerprint on Migration 08: f58df5ff55e84e958d1e27336cd82f6e
+  PASS  B0 live fingerprint equals the value in the v2 files
+  PASS  B1 seed: 8 COD orders, none Razorpay
+  PASS  B2 seed: combo and coupon orders present
+=== PHASE 2: complete migration from a clean database ===
+  PASS  C1 pre-check runs read-only
+  PASS  C2 pre-check: no false rows
+  PASS  C3 before: nothing of step 09 exists
+  PASS  C4 migration ran
+  PASS  C5 after: 9 columns, 9 functions, 1 trigger, 3 indexes
+  PASS  C6 verify runs read-only
+  PASS  C7 verify: no false rows
+  PASS  C8 fingerprint unchanged
+  PASS  C9 first COD order on a clean store
+  PASS  C10 first Razorpay order on a clean store
+  PASS  C11 both new orders have tokens
+  PASS  C12 second run stops, changes nothing  [place_order_core already exists — step 09 appears to be applied already]
+  PASS  C13 still one of everything
+=== PHASE 3: representative store with existing COD orders ===
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+  PASS  R1 pre-check: no false rows
+  PASS  R2 pre-check counts 8 orders
+  PASS  R3 pre-check reports the paid COD order as info
+  PASS  R4 read-only proof: pre-check left the store identical
+  PASS  R5 migration ran with existing orders
+  PASS  R6 NO TABLE REWRITE: orders filenode unchanged
+  PASS  R7 every order, item, customer, coupon, catalogue row identical (value, xmin, ctid)
+  PASS  R8 updated_at did not move
+  PASS  R9 existing orders keep NULL token
+  PASS  R10 COD function byte-identical to Migration 08
+  PASS  R11 verify: no false rows
+  PASS  R12 read-only proof: verify left the store identical
+  PASS  R13 a read-only session cannot write (control)
+  PASS  R14 COD with coupon works after migration
+  PASS  R15 COD coupon counted (8 to 9), note unchanged
+  PASS  R16 COD total matches Migration 08 pricing
+  PASS  R17 same COD order priced on Migration 08
+  -- negative control: the same rewrite test on the ORIGINAL migration
+  PASS  R18 control: test detects the original's rewrite
+  PASS  R19 control: test detects the original replacing place_order
+  PASS  R20 v2 rollback refuses a database on the original migration  [place_order differs from step 08. Dropping place_order_core could break COD. Review first.]
+  PASS  R21 refused rollback changed nothing
+  -- rollback of v2 on the representative store
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+  PASS  R22 rollback ran
+  PASS  R23 all store rows identical after rollback
+  PASS  R24 fingerprint still Migration 08
+  PASS  R25 postcheck: no false rows
+  PASS  R26 kept: 9 columns, receipt fn + guard fn, trigger, 3 indexes
+  PASS  R27 COD with coupon works after rollback
+  PASS  R28 COD retry replays after rollback
+  PASS  R29 coupon counted once after rollback
+  PASS  R30 online refused by Migration 08 after rollback
+  PASS  R31 reapply after rollback
+  PASS  R32 verify after reapply: no false rows
+=== PHASE 4: functional tests (adapted original suite) ===
+  applied v2
+  PASS  F0 verify: no false rows
+  PASS  F1 parallel payment: one paid, five already_paid
+  PASS  F2 control: a double payment is detected
+  PASS  F3 control: an error line is detected
+  PASS  F4 parallel: coupon +1 only
+  PASS  F5 parallel: same Razorpay key gives one order
+  PASS  F6 verify after tests: only the deliberate second payment is flagged
+  PASS  F7 fingerprint unchanged after all tests
+=== PHASE 5: rollback preparation and rollback ===
+  PASS  K1 existing preflight runs on v2
+  PASS  K2 preflight false only for the 60-minute rule
+  PASS  K3 preflight counts second payments
+  PASS  K4 preflight counts paid after cancel
+  PASS  K5 preflight counts orders to cancel
+  PASS  K6 reconciliation lists every Razorpay order
+  PASS  K7 reconciliation flags second payment
+  PASS  K8 reconciliation flags paid after cancel
+  PASS  K9 reconciliation runs before cancellation can happen: pending orders still pending
+  PASS  K10 60-minute stop  [An unpaid Razorpay order is newer than 01:00:00. Confirm the kill switch and wait.]
+  PASS  K11 stop changed nothing
+  PASS  K12 stop: unpaid order being processed  [An unpaid Razorpay order is being processed. Resolve it before rolling back.]
+  PASS  K13 stop: paid order without paid date  [A paid Razorpay order has no payment id or paid date. Resolve it before rolling back.]
+  PASS  K14 preflight clean after the wait
+  paid/refunded rows snapshotted: 9
+  PASS  K15 rollback ran
+  PASS  K16 legacy COD orders untouched by rollback
+  PASS  K17 fingerprint Migration 08 after rollback
+  PASS  K18 postcheck runs
+  PASS  K19 postcheck: no false rows
+  PASS  K20 rollback twice stops  [place_order_core not found — step 09 is not applied, or was already rolled back]
+=== PHASE 6: reapplication ===
+  PASS  A1 reapply ran
+  PASS  A2 verify: only the deliberate second payment is flagged
+  PASS  A3 applying twice stops  [place_order_core already exists — step 09 appears to be applied already]
+  PASS  A4 stop: paid order lost its payment id  [A paid Razorpay order has no payment id or paid date. Restore that data first.]
+  PASS  A5 stop: partial columns  [Only 8 of the 9 payment columns exist. Review before continuing.]
+  PASS  A6 stop: Razorpay orders without columns  [Orders exist that are not COD orders. Review them before continuing.]
+=== PHASE 7: optional cleanup still works with v2 ===
+  PASS  O1 payment records refuse cleanup  [Payment records exist. They must be kept: this cleanup does not run on this database.]
+  PASS  O2 refusal kept the data
+  PASS  O3 unconfirmed stops first  [Backup and export are not confirmed: read the header of this file]
+  PASS  O4 confirmed but 09 still applied stops  [Step 09 is still applied: run 09_rollback.sql first]
+  PASS  O5 rollback on clean copy
+  PASS  O6 postcheck no false rows
+  PASS  O7 confirmed cleanup ran
+  PASS  O8 columns, guard, receipt fn removed
+  PASS  O9 order rows kept
+  PASS  O10 COD works after cleanup
+  PASS  O11 reapply after cleanup with a cancelled unpaid Razorpay order kept
+  PASS  O12 verify no false rows
+=== PHASE 8: lock timeout and statement timeout ===
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+  PASS  L1 pre-check flags nothing yet (blocker under 1 minute)
+  PASS  L2 migration gave up on the lock
+  PASS  L3 gave up between 4.5 and 7 seconds (5062 ms)
+  PASS  L4 a COD order during the wait still succeeded
+  note: COD order waited 4059 ms behind the queued migration
+  PASS  L5 COD wait bounded by the lock timeout
+  PASS  L6 nothing changed
+  PASS  L7 same file succeeds once the blocker is gone
+  PASS  L8 verify no false rows after retry
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+  PASS  L9 test copy differs from v2 by one added line
+  PASS  L10 statement timeout fired
+  PASS  L11 fired at 60 seconds (60101 ms)
+  PASS  L12 work done before the timeout was undone
+  PASS  L13 store identical
+  PASS  L14 rollback gives up on a locked order
+  PASS  L15 rollback gave up within 7 seconds (5076 ms)
+  PASS  L16 functions and order unchanged
+=== PHASE 9: deliberate failures and transaction rollback ===
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+  PASS  X1 injected copy differs by one line
+  PASS  X2 failure at the very end  [division by zero]
+  PASS  X3 nothing remains
+  PASS  X4 store identical
+  PASS  X5 COD works after the failed run
+  PASS  X6 real file succeeds after the failed run
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+  PASS  X7 post-condition catches a visitor grant  [Wrong privileges on public.mark_order_paid(text, text, bigint) — rolling back]
+  PASS  X8 nothing remains
+  PASS  X9 store identical
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+  PASS  X10 stops when place_order differs by one byte  [place_order differs from step 08. Review before continuing.]
+  PASS  X11 nothing remains
+  PASS  X12 pre-check also flags it
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+  PASS  X13 stops on an existing RAZORPAY/pending order  [Orders exist that are not COD orders. Review them before continuing.]
+  PASS  X14 RAZORPAY/pending: row kept, nothing changed
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+  PASS  X13 stops on an existing razorpay/pending order  [Orders exist that are not COD orders. Review them before continuing.]
+  PASS  X14 razorpay/pending: row kept, nothing changed
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+  PASS  X13 stops on an existing RAZORPAY/paid order  [Orders exist that are not COD orders. Review them before continuing.]
+  PASS  X14 RAZORPAY/paid: row kept, nothing changed
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+  PASS  X13 stops on an existing RAZORPAY/refunded order  [Orders exist that are not COD orders. Review them before continuing.]
+  PASS  X14 RAZORPAY/refunded: row kept, nothing changed
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+  PASS  X13 stops on an existing UPI/pending order  [Orders exist that are not COD orders. Review them before continuing.]
+  PASS  X14 UPI/pending: row kept, nothing changed
+  PASS  X15 stops on partial columns  [Only 1 of the 9 payment columns exist. Review before continuing.]
+  PASS  X16 stops without Migration 08  [place_order(…, uuid) not found — apply 08_checkout_hardening.sql first]
+  PASS  X17 stops on two place_order functions  [Expected exactly one place_order function. Review before continuing.]
+  PASS  X18 rollback fails at the very end  [division by zero]
+  PASS  X19 functions and unpaid order restored
+=== PHASE 10: concurrency and idempotency ===
+  PASS  Y1 same COD key in parallel: one order
+  PASS  Y2 all six calls succeeded
+  PASS  Y3 one-use coupon in parallel: one winner
+  PASS  Y4 e-mail claim in parallel: exactly one wins
+  PASS  Y5 attach in parallel: every caller gets the same id
+  PASS  Y6 paid racing failed: paid wins
+  PASS  Y7 six different payments: one paid, five flagged
+  PASS  Y8 first payment kept
+  PASS  Y9 four migrations at once: exactly one succeeds
+  PASS  Y10 the others stopped cleanly
+  PASS  Y11 one complete copy of everything
+  PASS  Y12 verify no false rows
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+  PASS  Y13 migration succeeded during live checkouts (127 ms)
+  PASS  Y14 all 60 live COD orders succeeded, no deadlock
+  PASS  Y15 each live order saved once
+  PASS  Y16 session opened before the migration replays after it
+  PASS  Y17 that session places a new COD order after it
+  PASS  Y18 verify no false rows
+  PASS  Y19 fingerprint unchanged
+=== RESULTS ===
+  P1 SQL checks: pass 9, fail 0
+  P2 SQL checks: pass 73, fail 0
+  P2X SQL checks: pass 33, fail 0
+  P4 SQL checks: pass 24, fail 0
+  P5 SQL checks: pass 17, fail 0
+  SQL checks total: pass 156, fail 0
+  scripted checks:  pass 156, fail 0
+  GRAND TOTAL: pass 312, fail 0
+repo SQL files changed during run: 0
+migration md5 at end: 5d807a61da0fb149f49fdce737dc919f
+harness exit: 0
+network=none ports={} image=postgres:17.11
+server log deadlocks: 0
+container left: 0

@@ -1,6 +1,8 @@
 # 16 — Razorpay Rollback Runbook
 
-> Status: prepared. **The SQL has run only on a disposable local PostgreSQL, never on Supabase,** and the kill switch has not been deployed or run. Every stage needs written approval.
+> Status at 2026-10-31: prepared for **Migration 09 v2**, which is not applied. **`09v2_rollback.sql` has run only on a disposable PostgreSQL 17.11 container, never on Supabase.** The owner reports the kill switch on in Production, and an empty `POST /api/create-order` returned HTTP 503. Every stage needs written approval.
+>
+> Files marked `09v2_` are in `supabase/new-project/proposed-09-v2/`, and `09v2r1_verify_readonly.sql` is in `supabase/new-project/proposed-09-v2-r1/`. The other `09_` files named here are in `supabase/new-project/` and were tested with v2. **Do not run `09_rollback.sql` or `09_razorpay_payments.sql`:** they belong to the original migration, which replaces `place_order`. Some older SQL file headers and messages still name them.
 
 ## 1. Choose the smallest stage that solves the problem
 
@@ -8,7 +10,7 @@
 |---|---|---|---|
 | 1. Soft stop | Stop new online payments | No | Yes: undo the variables and redeploy |
 | 2. Reconciliation | Account for every payment | Only to record a confirmed payment or refund | Records are corrected by hand |
-| 3. Database rollback | Remove step 09's checkout functions | Yes; no column or order removed | Yes: run `09_razorpay_payments.sql` again |
+| 3. Database rollback | Remove the v2 checkout functions | Yes; no column or order removed | Yes: run `09v2_razorpay_payments.sql` again |
 | 4. Destructive cleanup | Remove payment columns | Yes | **No, only by restoring a backup** |
 
 Most incidents need only Stage 1. Stage 4 is never part of a routine rollback, and it refuses to run if any payment record exists.
@@ -16,6 +18,8 @@ Most incidents need only Stage 1. Stage 4 is never part of a routine rollback, a
 **This runbook never issues a refund.** Every refund is a person's decision, made in the Razorpay dashboard.
 
 ## 2. Stage 1 — Soft stop
+
+Until Pay Online goes live, this is already the intended Production state: the kill switch on and `VITE_RAZORPAY_KEY_ID` unset.
 
 In Vercel, Production environment:
 
@@ -27,14 +31,15 @@ In Vercel, Production environment:
 
 Check:
 
-- A new visitor sees COD only, and one COD test order works.
+- A new visitor sees COD only.
+- COD test order: a production COD test order requires separate written approval, because it creates a real production database record. After approval, place one test order and confirm it works in Admin → Orders, then cancel it after verification.
 - A checkout page loaded before the redeploy gets "Online payment is not available right now" when it presses Pay Now.
 
 ## 3. Stage 2 — Reconciliation
 
 The kill switch stops new Razorpay orders, but a payment window that is already open may still complete. Razorpay does not tell us when every window has closed.
 
-1. Wait at least 60 minutes after the redeploy. `09_rollback.sql` enforces this for unpaid orders.
+1. Wait at least 60 minutes after the redeploy. `09v2_rollback.sql` enforces this for unpaid orders.
 2. Confirm the webhook delivery log in the Razorpay dashboard shows no unresolved failures.
 3. Run `09_reconciliation_readonly.sql` and export the CSV. Handle it as customer data: keep it off Git and off shared drives.
 4. In the Razorpay dashboard, export or list all payments for the period Razorpay was live. Include every status.
@@ -48,10 +53,10 @@ The kill switch stops new Razorpay orders, but a payment window that is already 
 | Second payment in `duplicate_payment_id` | Refund decision for that payment |
 | `paid` order that is `cancelled` | Refund decision |
 | Payment authorized but not captured | Check its state in Razorpay. Do not capture it for a cancelled order |
-| `paid` order with an e-mail "not sent" | Contact the customer or owner by hand; `09_rollback.sql` removes the sending functions |
-| Failed payment or abandoned order | Nothing to do; `09_rollback.sql` cancels open orders |
+| `paid` order with an e-mail "not sent" | Contact the customer or owner by hand; `09v2_rollback.sql` removes the sending functions |
+| Failed payment or abandoned order | Nothing to do; `09v2_rollback.sql` cancels open orders |
 
-**Record a confirmed payment.** Run this in the SQL Editor with values copied from Razorpay. It needs step 09, so do it before Stage 3. It does not send e-mails.
+**Record a confirmed payment.** Run this in the SQL Editor with values copied from Razorpay. It needs Migration 09 v2 in place, so do it before Stage 3. It does not send e-mails.
 
 ```sql
 select public.mark_order_paid('<razorpay_order_id>', '<razorpay_payment_id>', <amount_in_paise>);
@@ -80,9 +85,9 @@ Steps:
 
 1. In Razorpay, **disable the webhook** on `https://psperfumes.com/api/razorpay-webhook`. Do this now, not earlier: until here it has been recording payments.
 2. Run `09_rollback_preflight_readonly.sql`. Export the grid. Every `true` row must be true, and every REVIEW row needs a recorded decision. Keep the "record these" counts.
-3. Confirm the URL contains `/project/pwacxxrghlglvdtclbig/`, then run the whole of `09_rollback.sql`. It is one transaction: if it stops, nothing changed. Read its message.
+3. Confirm the URL contains `/project/pwacxxrghlglvdtclbig/`, then run the whole of `09v2_rollback.sql`. It is one transaction: if it stops, nothing changed. Read its message. It does not touch `place_order`, and it stops if `place_order` differs from Migration 08.
 4. Run `09_rollback_postcheck_readonly.sql`. No row may be `false`, and the counts must match step 2.
-5. Place one COD test order, confirm it in Admin → Orders, then cancel it.
+5. COD test order: a production COD test order requires separate written approval, because it creates a real row in the live database. After approval, place one test order, confirm it in Admin → Orders, and cancel it after verification.
 6. Open one existing receipt link.
 
 **Keep these Vercel variables after Stage 3:**
@@ -101,7 +106,7 @@ The Razorpay key and webhook secret can then be removed, with a redeploy. Regene
 
 | Item | After Stage 3 |
 |---|---|
-| COD checkout | Works, using the exact `place_order` of step 08 |
+| COD checkout | Works. v2 never replaced `place_order`, so it is still the exact function of Migration 08 |
 | `orders.idempotency_key`, combo checks, stock checks | Unchanged |
 | Paid orders, payment IDs, paid dates | Kept |
 | Admin → Orders payment details | Kept |
@@ -125,27 +130,33 @@ Use it only where Razorpay orders were never paid, such as after a rehearsal. Be
 
 After it runs, any earlier receipt link stops working permanently.
 
-## 6. Reapplying step 09
+## 6. Reapplying Migration 09 v2
+
+Reapply only `09v2_razorpay_payments.sql`, never `09_razorpay_payments.sql`. The original would replace `place_order`, and `09v2_rollback.sql` would then refuse to run. Do not rerun or edit Migration 08.
+
+`09v2_precheck_readonly.sql` is for a first run. After Stage 3 it reports the kept columns, indexes, trigger and functions as `false`, so use `09_rollback_postcheck_readonly.sql` to confirm the starting state instead.
+
+**Never run the verification script before the migration.** After a rollback, `09v2r1_verify_readonly.sql` stops with `Migration 09 v2 is not applied, so nothing was verified. No data was changed.` until the reapply has succeeded. That message is expected at that point and is not a rollback failure.
 
 | State | Reapply |
 |---|---|
-| After Stage 3 | Run `09_razorpay_payments.sql`, then `09_verify_readonly.sql`. It keeps the columns, so payment IDs and receipt links survive. Then reverse Stage 1 and enable the webhook, each with approval |
-| After Stage 4 | Runs as a first install. Stage 4 only ran because no payment record existed |
+| After Stage 3 | Run `09v2_razorpay_payments.sql`, then `09v2r1_verify_readonly.sql`. It keeps the columns, so payment IDs and receipt links survive. Then reverse Stage 1 and enable the webhook, each with approval |
+| After Stage 4 | Runs as a first install. Stage 4 only ran because no payment record existed. Cancelled unpaid Razorpay orders stay, and do not stop the migration |
 | Columns dropped by hand with paid orders | **No safe path.** The preflight refuses. Without it, the guard would block every later update to those orders, including dispatch. Restore from backup first |
 
 **Limits:**
 
-- Reapplying passed on a disposable local PostgreSQL only, with test data. It has not run on Supabase.
+- Reapplying passed on a disposable PostgreSQL 17.11 container only, with test data. It has not run on Supabase.
 - Orders cancelled by the rollback stay cancelled. A customer who returns to an old checkout starts a new order.
 - COD orders placed after Stage 3 keep working after reapplying.
 
 ## 7. Remaining risks and manual actions
 
-- **Nothing here has run on Supabase.** The SQL files and the reapply path were validated on a disposable local PostgreSQL only.
+- **The rollback has not run on Supabase.** `09v2_rollback.sql` and the reapply path were validated on a disposable PostgreSQL 17.11 container only.
 - **Late payments:** nothing proves every payment window has closed. A payment can arrive after the webhook is disabled, so the Razorpay list must be watched by hand.
 - **Refunds are manual,** and so is recording them.
-- **Backups are unverified** for this project.
-- **The 60-minute wait is a chosen value,** not a Razorpay guarantee. Lengthen `c_quiet` in `09_rollback.sql` if needed, and the matching check in the preflight.
+- **Supabase backups are unverified** for this project. The manual backup taken before Migration 09 v2 passed its file checks, but no restore has been tested.
+- **The 60-minute wait is a chosen value,** not a Razorpay guarantee. Lengthen `c_quiet` in `09v2_rollback.sql` if needed, and the matching check in the preflight.
 - **`mark_order_paid` run by hand sends no e-mail.**
 - **The kill switch needs a redeploy,** so it is not instant.
 - **The reconciliation depends on Razorpay's dashboard.** Check its current reports when rehearsing; this runbook does not assume a specific report name.

@@ -1,0 +1,90 @@
+server: 17.11 (Debian 17.11-1.pgdg13+2)
+network routes: 0; .env visible: 0
+migration md5 5d807a61da0fb149f49fdce737dc919f; verify md5 daa3ff33cd6410c97009091ee544c029; candidate verify md5 246864ce0deda5107b2384ca1925b088
+=== A: reproduce the reported error ===
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+    ERROR:  42703: column "receipt_token" does not exist
+    LINE 113: ...blic.orders where payment_method = 'RAZORPAY' and receipt_to...
+  PASS  A1 v2 verify before the migration fails
+  PASS  A2 same SQLSTATE 42703
+  PASS  A3 same message
+  PASS  A4 same line number
+  PASS  A5 same predicate (psql truncates the line shown)
+  PASS  A6 nothing changed
+  PASS  A7 precheck still 19 rows, no false
+=== B: the competing explanations ===
+  PASS  B1 migration line 113 is not the failing statement
+  PASS  B2 failing predicate is absent from the migration
+  PASS  B3 migration as one request succeeds, no 42703
+  PASS  B4 applied in full
+  PASS  B5 migration then verify in ONE request cannot give this error
+  PASS  B6 verify first in ONE request gives this error at LINE 113
+  PASS  B7 a failing migration reports ITS OWN error, not 42703
+  PASS  B8 verify after that failure gives the same error
+  PASS  B9 only a request starting at the verify header puts it on line 113
+=== C: complete run in SQL Editor mode, clean database ===
+  PASS  C1 pre-check
+  PASS  C2 migration
+  PASS  C3 objects
+  PASS  C4 verify 26 rows, no false
+  PASS  C5 fingerprint
+  PASS  C6 new COD order has a token
+  PASS  C7 second run stops, changes nothing
+=== D: complete run in SQL Editor mode, simulated production baseline ===
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+  PASS  D1 pre-check
+  PASS  D2 migration
+  PASS  D3 no table rewrite
+  PASS  D4 every order and catalogue row identical (value, xmin, ctid)
+  PASS  D5 updated_at unchanged
+  PASS  D6 existing orders keep NULL token
+  PASS  D7 fingerprint
+  PASS  D8 verify 26 rows, no false
+  PASS  D9 guard trigger enabled, updated_at trigger kept
+  PASS  D10 server functions: service_role only
+  PASS  D11 COD works
+  PASS  D12 Razorpay order works for the server
+  PASS  D13 and has a token
+  PASS  D14 rollback
+  PASS  D15 rollback kept fingerprint, cancelled unpaid order
+  PASS  D16 postcheck no false
+  PASS  D17 COD after rollback
+  PASS  D18 reapply
+  PASS  D19 verify after reapply
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+  PASS  D20 failure in one request leaves nothing behind
+  PASS  D21 real file works after that failure
+=== E: regression tests for this incident ===
+  PASS  E0a branch is guarded by v_columns = 9
+  PASS  E0b the branch holds the only earlier use of the columns
+  PASS  E0c first install passed that branch: PL/pgSQL plans a statement only when it runs
+  PASS  E1 razorpay_order_id is first used by its own ADD COLUMN (line 95)
+  PASS  E1 razorpay_payment_id is first used by its own ADD COLUMN (line 96)
+  PASS  E1 duplicate_payment_id is first used by its own ADD COLUMN (line 97)
+  PASS  E1 paid_at is first used by its own ADD COLUMN (line 98)
+  PASS  E1 payment_error is first used by its own ADD COLUMN (line 99)
+  PASS  E1 coupon_code is first used by its own ADD COLUMN (line 100)
+  PASS  E1 receipt_token is first used by its own ADD COLUMN (line 101)
+  PASS  E1 customer_email_sent_at is first used by its own ADD COLUMN (line 102)
+  PASS  E1 owner_email_sent_at is first used by its own ADD COLUMN (line 103)
+  PASS  E2 ADD COLUMN precedes every function that reads the columns
+  PASS  E3 migration never contains a verification query
+  PASS  E4 candidate verify differs only by added lines and its header
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+  PASS  E5 candidate before migration: plain message
+  PASS  E6 candidate before migration: no 42703
+  PASS  E7 candidate before migration: changed nothing
+  PASS  E8 candidate stops on partial columns
+  PASS  E9 candidate after migration: 26 rows, no false, read-only
+  PASS  E10 candidate result rows equal v2 verify rows
+=== RESULTS ===
+  pass 65, fail 0
+repo SQL files changed during run: 0
+harness exit: 0
+network=none ports={} image=postgres:17.11
+server log deadlocks: 0
+container left: 0

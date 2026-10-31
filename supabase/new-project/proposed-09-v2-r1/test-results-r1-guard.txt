@@ -1,0 +1,24 @@
+server: 17.11 (Debian 17.11-1.pgdg13+2); migration md5 5d807a61da0fb149f49fdce737dc919f; candidate verify md5 246864ce0deda5107b2384ca1925b088
+NOTICE:  table "b_orders" does not exist, skipping
+NOTICE:  table "b_tab" does not exist, skipping
+  PASS  G1 not applied: exact message
+  PASS  G2 not applied: fails rather than returning rows
+  PASS  G3 not applied: store identical, no object created
+  PASS  G4 guard leaves no function or temp object
+  PASS  G5 one column only: message
+  PASS  G6 applied: 26 rows
+  PASS  G7 applied: exactly 19 checks true
+  PASS  G8 applied: exactly 7 information rows
+  PASS  G9 applied: no false rows
+  PASS  G10 applied: guard does not fire
+  PASS  G11 a dropped column after the migration: message
+  PASS  G12 missing trigger: still reported, as false rows
+  PASS  G13 missing server function: still reported, as false rows
+  PASS  G14 after rollback (columns kept, functions gone): message
+  PASS  G15 read-only session refuses a write (control)
+=== RESULTS ===
+  pass 15, fail 0
+harness exit: 0
+network=none ports={} image=postgres:17.11
+server log deadlocks: 0
+container left: 0
