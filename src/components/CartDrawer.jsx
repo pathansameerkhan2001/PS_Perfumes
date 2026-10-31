@@ -29,6 +29,7 @@ export default function CartDrawer() {
   const navigate = useNavigate();
   const [inputCode, setInputCode] = useState('');
   const [promoFeedback, setPromoFeedback] = useState(null);
+  const [applying, setApplying] = useState(false);
 
   useEffect(() => {
     if (isCartOpen) {
@@ -42,8 +43,6 @@ export default function CartDrawer() {
   }, [isCartOpen]);
 
   if (!isCartOpen) return null;
-
-  const [applying, setApplying] = useState(false);
 
   const handleApplyPromo = async (e) => {
     e.preventDefault();
