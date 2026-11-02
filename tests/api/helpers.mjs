@@ -4,7 +4,11 @@ import crypto from 'node:crypto';
 import assert from 'node:assert/strict';
 import { createClient } from '@supabase/supabase-js';
 
-const REST = 'http://ps-api-test-rest:3000';
+// API_DB=target: the recovery target, Migrations 08 + 09 v2 + 10 without 11. Otherwise all migrations.
+export const WITH_MIGRATION_11 = process.env.API_DB !== 'target';
+const REST = WITH_MIGRATION_11 ? 'http://ps-api-test-rest:3000' : 'http://ps-api-test-rest-target:3000';
+// Production today: Migrations 08 and 09 v2 only (no 10, no 11)
+const REST_PROD = 'http://ps-api-test-rest-prod:3000';
 
 function signJwt(role) {
   const part = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
@@ -109,6 +113,7 @@ async function resend(_url, init) {
 globalThis.fetch = async (input, init = {}) => {
   const url = String(input?.url ?? input);
   if (url.startsWith(`${REST}/`)) return rest(url, init);
+  if (url.startsWith(`${REST_PROD}/`)) return realFetch(url.replace('/rest/v1', ''), init);
   if (url.startsWith('https://api.razorpay.com/')) return razorpay(url, init);
   if (url.startsWith('https://api.resend.com/')) return resend(url, init);
   if (url.startsWith('/api/') && stub.browser) return stub.browser(url, init);
@@ -117,6 +122,8 @@ globalThis.fetch = async (input, init = {}) => {
 
 export const service = createClient(REST, ENV.SUPABASE_SECRET_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 export const anon = createClient(REST, signJwt('anon'), { auth: { persistSession: false, autoRefreshToken: false } });
+export const anonProd = createClient(REST_PROD, signJwt('anon'), { auth: { persistSession: false, autoRefreshToken: false } });
+export const serviceProd = createClient(REST_PROD, ENV.SUPABASE_SECRET_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 
 export async function db(name, args = {}) {
   const { data, error } = await service.rpc(name, args);
@@ -129,13 +136,16 @@ export const orderRow = (rz) => db('test_order', { p_rz: rz });
 export const makeDue = () => db('test_make_due');
 
 export async function waitForRest() {
-  for (let i = 0; i < 100; i += 1) {
-    try {
-      if ((await realFetch(`${REST}/`)).status < 500) return;
-    } catch { /* still starting */ }
-    await new Promise((resolve) => setTimeout(resolve, 200));
+  for (const server of [REST, REST_PROD]) {
+    let up = false;
+    for (let i = 0; i < 100 && !up; i += 1) {
+      try {
+        up = (await realFetch(`${server}/`)).status < 500;
+      } catch { /* still starting */ }
+      if (!up) await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+    if (!up) throw new Error(`PostgREST did not start: ${server}`);
   }
-  throw new Error('PostgREST did not start');
 }
 
 let serial = 0;

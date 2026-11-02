@@ -1,17 +1,22 @@
 #!/bin/bash
 # Runs the API tests in disposable containers on an internal Docker network: no internet route, no
 # published ports, data in memory, everything removed afterwards. Only api/, tests/, node_modules,
-# the SQL files and src/services/payments.js are mounted, so .env is never visible. All
-# credentials are fake.
+# the SQL files and src/services are mounted, so .env is never visible. All credentials are fake.
+# Three databases, each with its own PostgREST:
+#   apitest        Migrations 08, 09 v2, 10 and 11 (everything proposed)
+#   apitestprod    Production today: 08 and 09 v2 only
+#   apitesttarget  The recovery target: 08, 09 v2 and 10, no 11
+# The suite runs twice: on apitest, then on apitesttarget without the Migration 11 tests.
 # Usage, from the repository root: bash tests/api/run_api_tests.sh [output-file]
 export MSYS_NO_PATHCONV=1
 # pwd -W gives the Windows path under Git Bash; plain pwd is the fallback elsewhere
 ROOT=$(cd "$(dirname "$0")/../.." && { pwd -W 2>/dev/null || pwd; })
-NET=ps-api-test-net; DB=ps-api-test-db; REST=ps-api-test-rest; NODE=ps-api-test-node
+NET=ps-api-test-net; DB=ps-api-test-db; NODE=ps-api-test-node
+REST=ps-api-test-rest; RESTP=ps-api-test-rest-prod; RESTT=ps-api-test-rest-target
 JWT_SECRET=local-test-only-not-a-real-secret-0123456789
 OUT="${1:-api-test-output.txt}"
 
-cleanup(){ docker rm -fv $NODE $REST $DB >/dev/null 2>&1; docker network rm $NET >/dev/null 2>&1; }
+cleanup(){ docker rm -fv $NODE $REST $RESTP $RESTT $DB >/dev/null 2>&1; docker network rm $NET >/dev/null 2>&1; }
 cleanup
 docker network create --internal $NET >/dev/null || exit 1
 
@@ -26,23 +31,35 @@ for i in $(seq 1 300); do
 done
 docker exec $DB bash /fx/setup_db.sh > "$OUT" 2>&1 || { cat "$OUT"; cleanup; exit 1; }
 
-docker run -d --name $REST --network $NET \
-  -e PGRST_DB_URI="postgres://authenticator@$DB:5432/apitest" -e PGRST_DB_SCHEMAS=public \
-  -e PGRST_DB_ANON_ROLE=anon -e PGRST_JWT_SECRET="$JWT_SECRET" -e PGRST_DB_CHANNEL_ENABLED=false \
-  public.ecr.aws/supabase/postgrest:v16.4 >/dev/null || { cleanup; exit 1; }
+rest(){
+  docker run -d --name "$1" --network $NET \
+    -e PGRST_DB_URI="postgres://authenticator@$DB:5432/$2" -e PGRST_DB_SCHEMAS=public \
+    -e PGRST_DB_ANON_ROLE=anon -e PGRST_JWT_SECRET="$JWT_SECRET" -e PGRST_DB_CHANNEL_ENABLED=false \
+    public.ecr.aws/supabase/postgrest:v16.4 >/dev/null
+}
+rest $REST apitest && rest $RESTP apitestprod && rest $RESTT apitesttarget || { cleanup; exit 1; }
 
-docker run --rm --name $NODE --network $NET \
-  -v "$ROOT/api:/app/api:ro" -v "$ROOT/tests:/app/tests:ro" -v "$ROOT/node_modules:/app/node_modules:ro" \
-  -v "$ROOT/package.json:/app/package.json:ro" -v "$ROOT/supabase/new-project:/app/supabase/new-project:ro" \
-  -v "$ROOT/src/services/payments.js:/app/src/services/payments.js:ro" \
-  -e JWT_SECRET="$JWT_SECRET" -w /app node:24.12.0-alpine \
-  node --test --test-reporter=spec tests/api/api.test.mjs >> "$OUT" 2>&1
-RC=$?
+# API_DB picks the database the API code talks to; each run starts from the state setup_db.sh built
+suite(){
+  echo "=== run: $1" >> "$OUT"
+  docker run --rm --name $NODE --network $NET \
+    -v "$ROOT/api:/app/api:ro" -v "$ROOT/tests:/app/tests:ro" -v "$ROOT/node_modules:/app/node_modules:ro" \
+    -v "$ROOT/package.json:/app/package.json:ro" -v "$ROOT/supabase/new-project:/app/supabase/new-project:ro" \
+    -v "$ROOT/src/services:/app/src/services:ro" \
+    -e JWT_SECRET="$JWT_SECRET" -e API_DB="$2" -w /app node:24.12.0-alpine \
+    node --test --test-reporter=spec tests/api/api.test.mjs >> "$OUT" 2>&1
+  local rc=$?
+  echo "test exit ($1): $rc" >> "$OUT"
+  return $rc
+}
+suite "full: Migrations 08 + 09 v2 + 10 + 11" full; RC1=$?
+suite "target: Migrations 08 + 09 v2 + 10, no 11" target; RC2=$?
+RC=$(( RC1 || RC2 ))
 
 echo "test exit: $RC" >> "$OUT"
 docker network inspect $NET --format 'network internal={{.Internal}}' >> "$OUT"
-docker inspect $DB $REST --format '{{.Name}} ports={{json .HostConfig.PortBindings}} image={{.Config.Image}}' >> "$OUT"
+docker inspect $DB $REST $RESTP $RESTT --format '{{.Name}} ports={{json .HostConfig.PortBindings}} image={{.Config.Image}}' >> "$OUT"
 cleanup
 echo "containers left: $(docker ps -a --filter name=ps-api-test -q | wc -l); networks left: $(docker network ls --filter name=$NET -q | wc -l)" >> "$OUT"
-grep -E '^ℹ (tests|pass|fail|cancelled|skipped)|^✖ failing|test exit|left:' "$OUT"
+grep -E '^=== run|^ℹ (tests|pass|fail|cancelled|skipped)|^✖ failing|test exit|left:' "$OUT"
 exit $RC

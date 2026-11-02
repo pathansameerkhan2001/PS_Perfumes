@@ -14,7 +14,12 @@ ow -f $R/08_checkout_hardening.sql
 su -f $F/harness.sql
 su -f $F/seed.sql
 ow -f $R/proposed-09-v2/09v2_razorpay_payments.sql
+# Production today: Migrations 08 and 09 v2 only, served by a second PostgREST
+psql -X -q -U checker -d postgres -c 'create database apitestprod template apitest'
 ow -f $R/proposed-10-outbox/10_outbox.sql
-ow -f $R/proposed-11-shipping/11_shipping.sql
 su -f /fx/api_harness.sql
+# The recovery target: 08 + 09 v2 + 10, no 11, served by a third PostgREST
+psql -X -q -U checker -d postgres -c 'create database apitesttarget template apitest'
+ow -f $R/proposed-11-shipping/11_shipping.sql
+su -f /fx/api_harness_11.sql
 echo "database ready"

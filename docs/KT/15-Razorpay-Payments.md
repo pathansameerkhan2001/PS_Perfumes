@@ -1,13 +1,14 @@
 # 15 — Razorpay Payments
 
-> Status at 2026-10-31: **Migration 08 is applied and verified on Supabase. The owner reports Migration 09 v2 applied and verified there, with all 19 checks passed. Pay Online is not enabled, and no test payment has been made.**
+> Status at 2026-11-02: **Production runs commit `044d9ca`, and its database has Migrations 08 and 09 v2 only. Online payment is off and cannot work until Migration 10 is applied. No test payment has been made.**
 >
-> - The Razorpay code and the redesigned checkout are deployed to Production (commit `664969c`). Checkout offers Cash on Delivery only, because the live build has no `VITE_RAZORPAY_KEY_ID`.
-> - The owner reports `RAZORPAY_NEW_ORDERS_DISABLED=true` in Production. An empty `POST /api/create-order` returned HTTP 503 on 2026-10-31. That response does not name its cause, so confirm the variable in Vercel.
-> - Migration 09 v2 passed 312 of 312 checks on a disposable PostgreSQL 17.11 container before it was applied.
-> - Migration 10, the durable notification outbox, is in `supabase/new-project/proposed-10-outbox/`. It is tested locally only and **not applied**.
-> - The API changes that use it (§1, §9) are local and **not deployed**. **Do not deploy them before Migration 10 is applied and the worker's schedule is ready:** without the migration every payment call fails, and without the schedule webhook-only orders are never e-mailed.
-> - A first production attempt on 2026-10-31 stopped with `column "receipt_token" does not exist`. That error comes from the verification script, not the migration: the script ran while the migration was not applied. The owner's read-only diagnostics found production unchanged.
+> - **The deployed payment code needs Migration 10, which is not applied.** `044d9ca` deployed the outbox code (§1, §9): `verify-payment` and the webhook call `finalize_payment_and_enqueue`, which does not exist in Production yet, and `/api/process-notifications` is deployed but has nothing to work on. No payment can start meanwhile (next two points), so shoppers are not affected. A `payment.captured` event reaching the live webhook would get HTTP 500, and Razorpay disables a webhook after 24 hours of failures: check its delivery log before §2 Part B.
+> - The kill switch is on: an empty `POST /api/create-order` returned HTTP 503 on 2026-11-02. That response does not say whether the switch or the server keys refused it, so confirm `RAZORPAY_NEW_ORDERS_DISABLED=true` in Vercel.
+> - `VITE_RAZORPAY_KEY_ID` was set to the text `absent` in Production, which showed a Pay Online option that failed with HTTP 503. The owner has removed it, and the live checkout no longer shows the option. The storefront now offers Pay Online only for a real `rzp_live_` / `rzp_test_` Key ID (local change, not yet deployed).
+> - **Recovery path:** apply Migration 10 (§2 Part B), set up the notification worker's schedule, then test in Razorpay Test Mode (§2 Part C). Reverting the API code to `c75510a` instead would lose the payment fixes (no second capture, refunded orders, strict kill switch, pending verification) and is not recommended.
+> - Migration 10 is in `supabase/new-project/proposed-10-outbox/`: 169 of 169 SQL checks pass, and the API suite passes against a database in the exact target state (08 + 09 v2 + 10, no 11).
+> - Migration 11 (shipping by PIN code) is separate, also not applied, and must come **after** Migration 10. Its storefront code is deployed and falls back to the standard ₹99 / free-over-₹1,500 rule while it is absent; the browser console shows one 404 for `get_shipping_quote` per page load, which the code handles.
+> - Migration 09 v2 passed 312 of 312 checks on a disposable PostgreSQL 17.11 container before it was applied. A first production attempt on 2026-10-31 stopped with `column "receipt_token" does not exist`; that came from the verification script running before the migration, and production was unchanged.
 >
 > **Use `supabase/new-project/proposed-09-v2/09v2_razorpay_payments.sql`.** The original `09_razorpay_payments.sql` is superseded and must not be run.
 
@@ -48,7 +49,21 @@ Files are in `supabase/new-project/proposed-09-v2/`, except the verification scr
 - `08_checkout_hardening.sql` must remain unchanged, because its `place_order` is what that fingerprint describes.
 - No existing order is written. Existing orders keep an empty `receipt_token`; only new orders receive one.
 
-**Part B: enable Pay Online (a separate approval)**
+**Part B: apply Migration 10 and start the notification worker (does not enable Pay Online)**
+
+The deployed payment code needs this before any payment can complete. Files are in `supabase/new-project/proposed-10-outbox/`. Keep the kill switch on throughout.
+
+1. Check the live Razorpay webhook's delivery log. A recent failed `payment.captured` delivery hit the code before Migration 10: reconcile it by hand ([16](16-Razorpay-Rollback-Runbook.md) §3).
+2. Take a backup and verify it, as in Part A step 3.
+3. Run `10_precheck_readonly.sql`. Continue only with no `false` row (fingerprints of steps 08 and 09 v2 unchanged, step 10 not started, no transaction open for over a minute), and save its counts.
+4. Run the whole of `10_outbox.sql`, then `10_verify_readonly.sql`. Never run the verify script first: it stops with `Migration 10 is not applied`.
+5. Confirm the §3 e-mail and worker variables exist in Production (names only): `RESEND_API_KEY`, `EMAIL_FROM` on a domain verified in Resend, `OWNER_NOTIFICATION_EMAIL`, `NOTIFICATION_WORKER_SECRET`, and `SUPABASE_URL` / `SUPABASE_SECRET_KEY`.
+6. Create the worker's schedule (§9 *Scheduler*), a separate approval. Check: a call without the secret gets 401; the scheduler's calls get 200 with `"claimed"` counts in the Vercel logs.
+7. Optional, with its own approval: one COD test order, confirmed in Admin → Orders and then cancelled. Migration 10 changes no COD object.
+
+Rollback: stop the schedule, then follow `proposed-10-outbox/README.md`. Code from `044d9ca` onwards needs Migration 10, so rolling it back also means redeploying the API code of `c75510a`.
+
+**Part C: enable Pay Online (a separate approval)**
 
 1. Set the Preview variables (§3) and deploy a Preview.
 2. Configure the webhook (§4) and run the tests (§5).
@@ -60,16 +75,16 @@ Project → Settings → Environment Variables. Redeploy after any change.
 
 | Variable | Preview | Production before go-live | Sensitive | Value |
 |---|---|---|---|---|
-| `VITE_RAZORPAY_KEY_ID` | Set | **Leave unset** | No | Test Key ID. Controls whether "Pay Online" appears |
+| `VITE_RAZORPAY_KEY_ID` | Set | **Leave unset** (not a placeholder such as `absent`) | No | Test Key ID. Controls whether "Pay Online" appears; only an `rzp_live_` / `rzp_test_` value shows it |
 | `RAZORPAY_KEY_ID` | Set | Not needed yet; see below | No | Same Key ID |
 | `RAZORPAY_KEY_SECRET` | Set | Not needed yet; see below | **Yes** | Regenerated test Key Secret |
-| `RAZORPAY_WEBHOOK_SECRET` | Set | Not needed yet; see below | **Yes** | The secret you type in §4 |
-| `SUPABASE_URL` | Set | Not needed yet; see below | No | `https://pwacxxrghlglvdtclbig.supabase.co` |
-| `SUPABASE_SECRET_KEY` | Set | Not needed yet; see below | **Yes** | Supabase → Project Settings → API Keys → Secret key |
-| `RESEND_API_KEY` | Set | Not needed yet; see below | **Yes** | From your Resend account. Without it payments work and e-mails wait in the outbox, using no attempts |
-| `EMAIL_FROM` | Set | Not needed yet; see below | No | A sender on a domain verified in Resend |
+| `RAZORPAY_WEBHOOK_SECRET` | Set | Must match the live webhook before go-live | **Yes** | The secret you type in §4 |
+| `SUPABASE_URL` | Set | **Required** (receipts, verification, webhook) | No | `https://pwacxxrghlglvdtclbig.supabase.co` |
+| `SUPABASE_SECRET_KEY` | Set | **Required** (receipts, verification, webhook) | **Yes** | Supabase → Project Settings → API Keys → Secret key |
+| `RESEND_API_KEY` | Set | Required from §2 Part B | **Yes** | From your Resend account. Without it payments work and e-mails wait in the outbox, using no attempts |
+| `EMAIL_FROM` | Set | Required from §2 Part B | No | A sender on a domain verified in Resend |
 | `OWNER_NOTIFICATION_EMAIL` | Required | Required | No | Address for owner order and refund alerts |
-| `NOTIFICATION_WORKER_SECRET` | Set | Not needed yet; see below | **Yes** | A long random value. The scheduler sends it to `/api/process-notifications`. Without it the worker refuses every call |
+| `NOTIFICATION_WORKER_SECRET` | Set | Required from §2 Part B | **Yes** | A long random value. The scheduler sends it to `/api/process-notifications`. Without it the worker refuses every call |
 | `SITE_URL` | Set to the Preview URL | Optional | No | Base URL for e-mail links. Defaults to `https://psperfumes.com` |
 | `RAZORPAY_NEW_ORDERS_DISABLED` | Unset | **`true`** | No | Kill switch. `true` blocks new Razorpay orders; verification and the webhook keep working. It fails closed: any value except empty, `false`, `0`, `no` or `off` blocks, ignoring case and spaces. Removed only in §6 |
 
@@ -118,9 +133,14 @@ There is no staging database, so these tests create **real rows in the live data
 
 ## 6. Go live
 
-This is Part B of §2. Do not start it until Migration 09 v2 is applied and verified, and §5 has passed.
+This is Part C of §2. Do not start it until all of these hold:
 
-1. Complete Razorpay account activation. Razorpay usually expects refund, terms, privacy and shipping policy pages, and the site has none yet.
+- Migrations 09 v2 and 10 are applied and verified, and the worker's schedule runs (§2 Part B).
+- §5 has passed in Test Mode, including UPI, Visa, Mastercard, RuPay and net banking.
+- The site has refund, terms, privacy and shipping policy pages. It has none yet, and Razorpay usually expects them.
+- In Razorpay **Live Mode**: automatic capture is on, and the existing live webhook is active, has `payment.captured`, `payment.failed` and `order.paid`, and uses the secret in `RAZORPAY_WEBHOOK_SECRET`.
+
+1. Complete Razorpay account activation.
 2. Use regenerated live keys. The live webhook on `https://psperfumes.com/api/razorpay-webhook` already exists; do not add a second one. Its events `order.notification.delivered` and `order.notification.failed` are acknowledged and ignored.
 3. Set the §3 variables for Production with live values, including `VITE_RAZORPAY_KEY_ID`, and remove `RAZORPAY_NEW_ORDERS_DISABLED`. Then redeploy. Pay Online appears only after this redeploy, and it needs both changes: the variable alone shows a button that fails with HTTP 503.
 4. Make one small real payment and refund it.
@@ -133,7 +153,7 @@ A soft stop does not change the database. To remove Migration 09 v2 from the dat
 
 ## 8. Known limits
 
-- Until Migration 10 and the §9 code are live, the webhook waits for e-mail before answering Razorpay, and an e-mail can be lost if a function crashes after claiming it. Unknown-order and amount-mismatch payments reach only the logs.
+- The §9 code is deployed but Migration 10 is not applied, so verification and the webhook cannot complete a payment until it is (§2 Part B).
 - The browser creates COD orders through `place_order`, with no server step, so they send no e-mails. Only paid online orders do.
 - `place_order` and `place_order_core` each hold their own copy of the pricing logic. Any future pricing change must be made in both.
 - Stock is checked when the order is created and not decremented, as with COD. Two shoppers can pay for the last unit; the second needs a refund.
@@ -143,7 +163,15 @@ A soft stop does not change the database. To remove Migration 09 v2 from the dat
 
 ## 9. Notifications (Migration 10)
 
-Local and not deployed. The table, keys and retry rules are in `supabase/new-project/proposed-10-outbox/README.md`.
+The code is deployed (commit `044d9ca`); Migration 10 is not applied yet (§2 Part B). The table, keys and retry rules are in `supabase/new-project/proposed-10-outbox/README.md`.
+
+**Scheduler.** Something must call `POST https://psperfumes.com/api/process-notifications` with the header `Authorization: Bearer <NOTIFICATION_WORKER_SECRET>` every 1 to 5 minutes. Each call handles at most 20 due rows. Without it, payments confirmed in the browser are still e-mailed at once, but payments confirmed only by the webhook, and every retry, wait in the outbox.
+
+- Vercel Cron does not fit as the code stands: it calls with GET, which this endpoint refuses (HTTP 405), and the Hobby plan runs crons once a day. Using it needs a GET handler that checks `CRON_SECRET`, and a paid plan.
+- An external HTTP scheduler that can send POST with a custom header works without code changes.
+- Supabase `pg_cron` with `pg_net` also works, but stores the worker secret in the database: a database change needing its own approval.
+
+Choosing one is an owner decision. Check it afterwards in the Vercel logs: calls answer 200 with counts; 401 means the secret differs; 503 means `RESEND_API_KEY` or `EMAIL_FROM` is missing.
 
 | Sender | Sends? | Claims |
 |---|---|---|
@@ -193,3 +221,13 @@ bash tests/api/run_api_tests.sh tests/api/test-results.txt
 ```
 
 They run on an internal Docker network with real PostgreSQL and PostgREST and stubbed Razorpay and Resend. Credentials are fake, `.env` is not mounted, and everything is removed afterwards. Keep tests outside `api/`: Vercel deploys every file there as a function.
+
+Three disposable databases are built from the real migration files:
+
+| Database | Migrations | Used for |
+|---|---|---|
+| `apitest` | 08, 09 v2, 10, 11 | First pass: the whole suite |
+| `apitesttarget` | 08, 09 v2, 10 | Second pass: the whole suite except the Migration 11 tests. This is the state §2 Part B creates |
+| `apitestprod` | 08, 09 v2 | Production today: the missing shipping quote and COD on the step 08 `place_order` |
+
+`migration files unchanged` checks the SQL files against their recorded fingerprints, and `database function fingerprints as expected` checks that the target state holds exactly the step 08 and 09 v2 checkout functions.

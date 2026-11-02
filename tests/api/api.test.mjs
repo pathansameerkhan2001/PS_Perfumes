@@ -6,8 +6,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-  ENV, anon, captured, checkoutResponse, db, jsonResponse, logs, makeDue, minutesAway, newOrder, orderRow, outbox,
-  resetStubs, service, stub, types, verifyRequest, waitForRest, webhookRequest, workerRequest,
+  ENV, WITH_MIGRATION_11, anon, anonProd, captured, checkoutResponse, db, jsonResponse, logs, makeDue, minutesAway,
+  newOrder, orderRow, outbox, resetStubs, service, serviceProd, stub, types, verifyRequest, waitForRest, webhookRequest,
+  workerRequest,
 } from './helpers.mjs';
 
 const { POST: webhook } = await import('../../api/razorpay-webhook.js');
@@ -18,13 +19,35 @@ const { callRpc } = await import('../../api/_lib/supabaseAdmin.js');
 const { customerEmail } = await import('../../api/_lib/email.js');
 const { finalizePayment } = await import('../../api/_lib/finalizePayment.js');
 
-// The checkout's browser module, with the one build-time value Vite would fill in
-const browserSource = fs.readFileSync('src/services/payments.js', 'utf8')
-  .replace(/import\.meta\.env\.VITE_RAZORPAY_KEY_ID/g, "'rzp_test_fake'");
-assert.ok(!browserSource.includes('import.meta'));
-const browserFile = path.join(os.tmpdir(), `ps-payments-${crypto.randomUUID()}.mjs`);
-fs.writeFileSync(browserFile, browserSource);
-const browser = await import(pathToFileURL(browserFile).href);
+// A browser module from src/services, rewritten as a build would leave it, in its own folder
+async function loadBrowserModule(file, edits, extraFiles = {}) {
+  let source = fs.readFileSync(`src/services/${file}`, 'utf8');
+  for (const [from, to] of edits) {
+    assert.ok(source.includes(from), `${file}: ${from} not found`);
+    source = source.replaceAll(from, to);
+  }
+  assert.ok(!source.includes('import.meta'), `${file} still reads import.meta`);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ps-browser-'));
+  for (const [name, text] of Object.entries(extraFiles)) fs.writeFileSync(path.join(dir, name), text);
+  const target = path.join(dir, file.replace(/\.js$/, '.mjs'));
+  fs.writeFileSync(target, source);
+  return import(pathToFileURL(target).href);
+}
+
+// Vite replaces import.meta.env.VITE_RAZORPAY_KEY_ID with the value set for the build
+const loadPayments = (keyId) =>
+  loadBrowserModule('payments.js', [['import.meta.env.VITE_RAZORPAY_KEY_ID', keyId === undefined ? 'undefined' : JSON.stringify(keyId)]]);
+const browser = await loadPayments('rzp_test_fake');
+
+// shipping.js talks to whichever database a test chooses, as the storefront's Supabase client would
+const shipping = await loadBrowserModule(
+  'shipping.js',
+  [
+    ["import { supabase } from '../lib/supabase';", 'const supabase = { rpc: (...a) => globalThis.__shippingClient.rpc(...a), from: (...a) => globalThis.__shippingClient.from(...a) };'],
+    ["from './dbErrors';", "from './dbErrors.js';"],
+  ],
+  { 'dbErrors.js': fs.readFileSync('src/services/dbErrors.js', 'utf8') }
+);
 
 const ZERO_LEASE = '00000000-0000-0000-0000-000000000000';
 const rpcNames = () => stub.rpcCalls.map((call) => call.name);
@@ -43,8 +66,10 @@ before(waitForRest);
 beforeEach(async () => {
   resetStubs();
   await db('test_reset');
-  await db('test_shipping', { p_pincode: null, p_charge: null });
+  if (WITH_MIGRATION_11) await db('test_shipping', { p_pincode: null, p_charge: null });
 });
+// Tests that exist because of Migration 11
+const needs11 = { skip: !WITH_MIGRATION_11 && 'Migration 11 is not in the target state' };
 
 describe('design checks: Migration 10 through real PostgREST', () => {
   test('the service key really acts as service_role, and the anon key as anon', async () => {
@@ -1106,30 +1131,32 @@ describe('COD and the kill switch', () => {
   });
 });
 
-describe('shipping by PIN code (Migration 11)', () => {
-  // 516001 at 120 is a test fixture, not a business rate
-  const customer = (pincode, extra = {}) => ({
-    first_name: 'A', last_name: 'B', email: 'a@example.com', phone: '9876543210',
-    address: '1 Street', city: 'Kadapa', state: 'AP', pincode, landmark: '', ...extra,
-  });
-  const orderRequest = (pincode, extra = {}, body = {}) => new Request('http://test.invalid/api/create-order', {
-    method: 'POST',
-    body: JSON.stringify({
-      customer: customer(pincode, extra),
-      items: [{ type: 'variant', variant_id: '00000000-0000-0000-0000-00000000000a', quantity: 1 }],
-      couponCode: '',
-      attemptKey: crypto.randomUUID(),
-      ...body,
-    }),
-  });
+// 516001 at 120 below is a test fixture, not a business rate
+const customer = (pincode, extra = {}) => ({
+  first_name: 'A', last_name: 'B', email: 'a@example.com', phone: '9876543210',
+  address: '1 Street', city: 'Kadapa', state: 'AP', pincode, landmark: '', ...extra,
+});
+const orderRequest = (pincode, extra = {}, body = {}) => new Request('http://test.invalid/api/create-order', {
+  method: 'POST',
+  body: JSON.stringify({
+    customer: customer(pincode, extra),
+    items: [{ type: 'variant', variant_id: '00000000-0000-0000-0000-00000000000a', quantity: 1 }],
+    couponCode: '',
+    attemptKey: crypto.randomUUID(),
+    ...body,
+  }),
+});
 
-  test('legacy mode: create-order charges the standard rule, as before', async () => {
+describe('create-order', () => {
+  test('standard shipping (with Migration 11 in legacy mode, or without it): ₹1,000 + ₹99', async () => {
     const res = await createOrder(orderRequest('516001'));
     assert.equal(res.status, 200);
     assert.equal((await res.json()).amount, 109900);
     assert.equal(stub.rzOrders[0].amount, 109900);
   });
+});
 
+describe('shipping by PIN code (Migration 11)', needs11, () => {
   test('pincode mode: the Razorpay amount includes the PIN code charge', async () => {
     await db('test_shipping', { p_pincode: '516001', p_charge: 120 });
     const res = await createOrder(orderRequest('516001'));
@@ -1182,16 +1209,110 @@ describe('shipping by PIN code (Migration 11)', () => {
   });
 });
 
+describe('Production today: Migrations 10 and 11 not applied', () => {
+  const items = (quantity) => [{ type: 'variant', variant_id: '00000000-0000-0000-0000-00000000000a', quantity }];
+  // Exactly the call src/services/orders.js makes for a COD order
+  const placeCod = (client, quantity, key = crypto.randomUUID()) => client.rpc('place_order', {
+    p_customer: {
+      first_name: 'A', last_name: 'B', email: 'a@example.com', phone: '9876543210',
+      address: '1 Street', city: 'Kadapa', state: 'AP', pincode: '516001', landmark: '',
+    },
+    p_items: items(quantity),
+    p_coupon_code: null,
+    p_payment_method: 'COD',
+    p_idempotency_key: key,
+  });
+
+  test('the shipping quote function is missing: 404 with PGRST202, as Production answers', async () => {
+    const res = await anonProd.rpc('get_shipping_quote', { p_pincode: null, p_subtotal: 0 });
+    assert.equal(res.status, 404);
+    assert.equal(res.error.code, 'PGRST202');
+  });
+
+  test('the storefront treats that as "not installed": no error, the standard rule applies', async () => {
+    globalThis.__shippingClient = anonProd;
+    assert.equal(await shipping.getShippingQuote(null, 0), null);
+    assert.equal(await shipping.getShippingQuote('516001', 1000), null);
+  });
+
+  test('with Migration 11 in legacy mode the quote is the standard rule: ₹99 under ₹1,500, free from it', needs11, async () => {
+    globalThis.__shippingClient = anon;
+    assert.deepEqual(await shipping.getShippingQuote(null, 1000), {
+      mode: 'legacy', ok: true, amount: 99, message: '', needsPincode: false, freeShippingThreshold: null,
+    });
+    assert.equal((await shipping.getShippingQuote(null, 1500)).amount, 0);
+  });
+
+  test('any other database error is reported, not mistaken for "not installed"', async () => {
+    globalThis.__shippingClient = { rpc: async () => ({ data: null, error: { code: '42501', message: 'permission denied' } }) };
+    await assert.rejects(shipping.getShippingQuote(null, 0), /delivery charge could not be checked/);
+  });
+
+  test('COD without Migration 11: placed by place_order of step 08, standard ₹99 under ₹1,500', async () => {
+    const key = crypto.randomUUID();
+    const { data, error } = await placeCod(anonProd, 1, key);
+    assert.equal(error, null);
+    assert.deepEqual([data.subtotal, data.shipping_amount, data.total_amount].map(Number), [1000, 99, 1099]);
+    const stored = (await serviceProd.from('orders').select('*').eq('order_number', data.order_number).single()).data;
+    assert.equal(Number(stored.total_amount), 1099);
+    assert.equal(stored.payment_method, 'COD');
+    assert.ok(!('shipping_rate' in stored) && !('shipping_pincode' in stored), 'Migration 11 columns do not exist there');
+    assert.equal((await placeCod(anonProd, 1, key)).data.replayed, true);
+  });
+
+  test('COD without Migration 11: free from ₹1,500', async () => {
+    const { data } = await placeCod(anonProd, 2);
+    assert.deepEqual([data.shipping_amount, data.total_amount].map(Number), [0, 2000]);
+  });
+
+  // Full run: Migration 11's place_order in legacy mode. Target run: the step 08 place_order itself.
+  test('COD on the API database: the same ₹99 and totals', async () => {
+    const { data, error } = await placeCod(anon, 1);
+    assert.equal(error, null);
+    assert.deepEqual([data.subtotal, data.shipping_amount, data.total_amount].map(Number), [1000, 99, 1099]);
+  });
+
+  test('the COD order code never calls the shipping quote', () => {
+    const orders = fs.readFileSync('src/services/orders.js', 'utf8');
+    assert.doesNotMatch(orders, /get_shipping_quote|shipping\.js|getShippingQuote/);
+  });
+
+  test('Pay Online is offered only for a real Razorpay Key ID, never for a placeholder', async () => {
+    for (const keyId of [undefined, '', 'absent', 'false', 'undefined', 'null', 'rzp_test_', 'rzp_LIVE_x']) {
+      assert.equal((await loadPayments(keyId)).onlinePaymentsEnabled, false, `key ${JSON.stringify(keyId)}`);
+    }
+    for (const keyId of ['rzp_test_AbC123', 'rzp_live_AbC123']) {
+      assert.equal((await loadPayments(keyId)).onlinePaymentsEnabled, true, `key ${keyId}`);
+    }
+  });
+
+  test('with the kill switch on, create-order refuses before reading the request or the database', async () => {
+    process.env.RAZORPAY_NEW_ORDERS_DISABLED = 'true';
+    const res = await createOrder(new Request('http://test.invalid/api/create-order', { method: 'POST', body: 'not json' }));
+    assert.equal(res.status, 503);
+    assert.deepEqual(rpcNames(), []);
+  });
+});
+
 describe('nothing else moved', () => {
-  // place_order and place_order_core are the Migration 11 versions; the payment functions are untouched
+  // Full run: the Migration 11 checkout functions. Target run: exactly those of steps 08 and 09 v2.
+  // The payment functions are untouched in both.
   test('database function fingerprints as expected', async () => {
     const { mark_order_paid, place_order, place_order_core, ps_orders_payment_guard } = await db('test_fingerprints');
     assert.deepEqual({ mark_order_paid, place_order, place_order_core, ps_orders_payment_guard }, {
       mark_order_paid: 'ae7666b99cc00a000ebe74611c4e1f24',
-      place_order: '5bb8e3ce49eafb371a0644a783c921a2',
-      place_order_core: 'b229458111f7d02b5e3a26f642bcdfbb',
+      place_order: WITH_MIGRATION_11 ? '5bb8e3ce49eafb371a0644a783c921a2' : 'f58df5ff55e84e958d1e27336cd82f6e',
+      place_order_core: WITH_MIGRATION_11 ? 'b229458111f7d02b5e3a26f642bcdfbb' : '11e685594045be8687ee025bcba72c8c',
       ps_orders_payment_guard: 'acfa79d5e0d9f1f6adabc914cb1ba7fe',
     });
+  });
+
+  test('target state has Migration 10 and not Migration 11', async () => {
+    const outbox10 = await callRpc('claim_notifications', { p_limit: 1, p_lease_seconds: 30 });
+    assert.ok(Array.isArray(outbox10));
+    const quote = await anon.rpc('get_shipping_quote', { p_pincode: null, p_subtotal: 0 });
+    if (WITH_MIGRATION_11) assert.equal(quote.error, null);
+    else assert.equal(quote.error.code, 'PGRST202');
   });
 
   test('the old e-mail functions still exist in the database', async () => {

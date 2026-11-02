@@ -8,8 +8,9 @@ const CHECKOUT_SCRIPT = 'https://checkout.razorpay.com/v1/checkout.js';
 const VERIFY_TIMEOUT_MS = 30000;
 const UNCONFIRMED_KEY = 'ps_unconfirmed_payment';
 
-// Online payment is offered only where the public key is configured (see docs/KT/15)
-export const onlinePaymentsEnabled = Boolean(KEY_ID);
+// Online payment is offered only where a real public Key ID is configured (see docs/KT/15). A
+// placeholder such as "absent" or "false" must not show a Pay Online option that cannot work.
+export const onlinePaymentsEnabled = /^rzp_(live|test)_[A-Za-z0-9]+$/.test(String(KEY_ID ?? '').trim());
 
 function pendingError(message) {
   const err = new Error(message);
