@@ -275,6 +275,19 @@ export default function AdminOrders() {
                 <span>Shipping Fee</span>
                 <span>{selectedOrder.shipping_fee === 0 ? 'FREE' : formatINR(selectedOrder.shipping_fee)}</span>
               </div>
+              {/* How shipping was priced (Migration 11); older orders have no record */}
+              {selectedOrder.shipping_rate?.source && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--color-muted)' }}>
+                  <span>Priced by</span>
+                  <span>
+                    {{ legacy: 'Standard rule', pincode: 'PIN code rate', zone: `Zone ${selectedOrder.shipping_rate.zone_name || ''}`, fallback: 'Fallback charge' }[
+                      selectedOrder.shipping_rate.source
+                    ] || selectedOrder.shipping_rate.source}
+                    {selectedOrder.shipping_pincode ? ` · PIN ${selectedOrder.shipping_pincode}` : ''}
+                    {selectedOrder.shipping_rate.free_shipping_applied ? ' · free-shipping rule' : ''}
+                  </span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Payment</span>
                 <span>

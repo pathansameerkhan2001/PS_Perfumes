@@ -53,6 +53,7 @@ const AdminCustomers = lazy(() => import('./admin/pages/AdminCustomers'));
 const AdminReviews = lazy(() => import('./admin/pages/AdminReviews'));
 const AdminEnquiries = lazy(() => import('./admin/pages/AdminEnquiries'));
 const AdminCoupons = lazy(() => import('./admin/pages/AdminCoupons'));
+const AdminShipping = lazy(() => import('./admin/pages/AdminShipping'));
 const AdminSettings = lazy(() => import('./admin/pages/AdminSettings'));
 const AdminUsers = lazy(() => import('./admin/pages/AdminUsers'));
 
@@ -170,6 +171,7 @@ export default function App() {
           <Route path="reviews" element={<AdminReviews />} />
           <Route path="enquiries" element={<AdminEnquiries />} />
           <Route path="coupons" element={<AdminCoupons />} />
+          <Route path="shipping" element={<AdminShipping />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="admin-users" element={<AdminUsers />} />
           <Route path="users" element={<Navigate to="/admin/admin-users" replace />} />

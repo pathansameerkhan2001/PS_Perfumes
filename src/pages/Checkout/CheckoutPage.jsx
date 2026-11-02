@@ -1,16 +1,27 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Lock, CheckCircle2, ArrowLeft, CreditCard, Banknote } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatCurrency';
 import { createOrder, prepareOnlineOrder, completeOnlineOrder, resetOnlineAttempt } from '../../services/orders';
-import { onlinePaymentsEnabled, createPaymentOrder, openCheckout, verifyPayment } from '../../services/payments';
+import {
+  onlinePaymentsEnabled,
+  createPaymentOrder,
+  openCheckout,
+  verifyPayment,
+  rememberUnconfirmedPayment,
+  getUnconfirmedPayment,
+} from '../../services/payments';
+import { getShippingQuote } from '../../services/shipping';
 import './CheckoutPage.css';
 import { useSeo } from '../../utils/useSeo';
 
+const UNCONFIRMED_MESSAGE =
+  'We could not confirm your payment yet. Please do not pay again: use the button below to check it. If money was taken, your order will still be confirmed by e-mail.';
+
 export default function CheckoutPage() {
   useSeo({ title: 'Checkout', path: '/checkout', noindex: true });
-  const { cartItems, subtotal, shipping, discountAmount, total, clearCart, promoCode } = useCart();
+  const { cartItems, subtotal, shipping, shippingMode, shippingModeChecked, discountAmount, clearCart, promoCode } = useCart();
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -25,16 +36,69 @@ export default function CheckoutPage() {
     paymentMethod: 'COD',
   });
 
-  const [errors, setErrors] = useState({});
+  // A completed payment whose confirmation did not get through: the shopper rechecks it, never pays
+  // again or places a COD order instead. Kept for this tab, so a reload still offers the check.
+  const [unconfirmedPayment, setUnconfirmedPayment] = useState(getUnconfirmedPayment);
+  const [errors, setErrors] = useState(() => (unconfirmedPayment ? { form: UNCONFIRMED_MESSAGE } : {}));
   const [submitting, setSubmitting] = useState(false);
   const [orderConfirmed, setOrderConfirmed] = useState(null);
   const [paidOrder, setPaidOrder] = useState(null);
-  // A completed payment whose confirmation did not get through: the shopper rechecks it, never pays again
-  const [unconfirmedPayment, setUnconfirmedPayment] = useState(null);
+  useEffect(() => rememberUnconfirmedPayment(unconfirmedPayment), [unconfirmedPayment]);
   // Blocks a second submit before React re-renders the disabled button (double click / Enter)
   const submitLock = useRef(false);
   // Server total the shopper has been shown, when it differed from the bag
   const acceptedAmount = useRef(null);
+
+  // Pincode mode: the delivery charge for the PIN code typed, as the server quotes it. The order is
+  // priced again on the server, so this only decides what the page shows and whether it may submit.
+  const [shippingQuote, setShippingQuote] = useState({ pincode: '', status: 'idle', amount: null, message: '' });
+  const quotedPincode = formData.pincode.trim();
+  const pincodeComplete = /^[1-9]\d{5}$/.test(quotedPincode);
+
+  useEffect(() => {
+    if (shippingMode !== 'pincode' || !pincodeComplete) return undefined;
+    let current = true;
+    setShippingQuote({ pincode: quotedPincode, status: 'loading', amount: null, message: '' });
+    const timer = setTimeout(() => {
+      getShippingQuote(quotedPincode, subtotal)
+        .then((quote) => {
+          if (!current) return;
+          setShippingQuote(
+            quote?.ok
+              ? { pincode: quotedPincode, status: 'ok', amount: quote.amount, message: '' }
+              : { pincode: quotedPincode, status: 'refused', amount: null, message: quote?.message || 'Delivery is not available for this PIN code.' }
+          );
+        })
+        .catch(() => {
+          if (current) {
+            setShippingQuote({ pincode: quotedPincode, status: 'error', amount: null, message: 'The delivery charge could not be checked. Please try again.' });
+          }
+        });
+    }, 400);
+    return () => {
+      current = false;
+      clearTimeout(timer);
+    };
+  }, [shippingMode, pincodeComplete, quotedPincode, subtotal]);
+
+  const byPincode = shippingMode === 'pincode';
+  const quoteReady = byPincode && shippingQuote.status === 'ok' && shippingQuote.pincode === quotedPincode;
+  // What this page shows and sends; null while the PIN code's charge is not known yet
+  const checkoutShipping = byPincode ? (quoteReady ? shippingQuote.amount : null) : shipping;
+  const checkoutTotal = Math.max(0, subtotal - discountAmount + (checkoutShipping ?? 0));
+  const shippingLabel = !byPincode
+    ? shipping === 0 ? 'FREE' : formatINR(shipping)
+    : quoteReady
+      ? checkoutShipping === 0 ? 'FREE' : formatINR(checkoutShipping)
+      : !pincodeComplete
+        ? 'Enter PIN code'
+        : shippingQuote.status === 'loading' || shippingQuote.pincode !== quotedPincode
+          ? 'Checking…'
+          : 'Not available';
+  const pincodeShippingError =
+    byPincode && pincodeComplete && shippingQuote.pincode === quotedPincode && ['refused', 'error'].includes(shippingQuote.status)
+      ? shippingQuote.message
+      : '';
 
   const validate = () => {
     const errs = {};
@@ -48,6 +112,7 @@ export default function CheckoutPage() {
     if (!formData.city.trim()) errs.city = 'City is required';
     if (!formData.state.trim()) errs.state = 'State is required';
     if (!/^[1-9]\d{5}$/.test(formData.pincode.trim())) errs.pincode = 'Enter a valid 6-digit PIN code';
+    else if (byPincode && !quoteReady) errs.pincode = pincodeShippingError || 'Checking the delivery charge for this PIN code…';
     setErrors(errs);
     const firstInvalid = Object.keys(errs)[0];
     if (firstInvalid) {
@@ -80,9 +145,7 @@ export default function CheckoutPage() {
     } catch (err) {
       if (err.pending) {
         setUnconfirmedPayment(response);
-        setErrors({
-          form: 'We could not confirm your payment yet. Please do not pay again: use the button below to check it. If money was taken, your order will still be confirmed by e-mail.',
-        });
+        setErrors({ form: UNCONFIRMED_MESSAGE });
       } else {
         setErrors({ form: err.message });
       }
@@ -107,7 +170,7 @@ export default function CheckoutPage() {
     }
 
     // The window must only ever show a total the shopper has seen on this page
-    if (paymentOrder.amount !== Math.round(total * 100) && paymentOrder.amount !== acceptedAmount.current) {
+    if (paymentOrder.amount !== Math.round(checkoutTotal * 100) && paymentOrder.amount !== acceptedAmount.current) {
       acceptedAmount.current = paymentOrder.amount;
       setErrors({
         form: `Prices or stock have changed: the total for this order is now ${formatINR(paymentOrder.amount / 100, { showDecimals: true })}. Press Pay Now again to pay this amount.`,
@@ -165,10 +228,10 @@ export default function CheckoutPage() {
         landmark: formData.landmark,
         paymentMethod: formData.paymentMethod,
         subtotal,
-        shipping,
+        shipping: checkoutShipping,
         discountAmount,
         couponCode: discountAmount > 0 ? promoCode : '',
-        total,
+        total: checkoutTotal,
         items: cartItems,
       };
 
@@ -435,7 +498,9 @@ export default function CheckoutPage() {
                     value={formData.pincode}
                     onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
                   />
-                  {errors.pincode && <span className="ps-field-err">{errors.pincode}</span>}
+                  {(errors.pincode || pincodeShippingError) && (
+                    <span className="ps-field-err" role="alert">{errors.pincode || pincodeShippingError}</span>
+                  )}
                 </div>
 
                 <div className="ps-form-group">
@@ -532,12 +597,12 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 <div className="ps-summary-line">
-                  <span>Pan-India Air Shipping</span>
-                  <span>{shipping === 0 ? 'FREE' : formatINR(shipping)}</span>
+                  <span>{byPincode ? `Delivery${quoteReady ? ` to ${quotedPincode}` : ''}` : 'Pan-India Air Shipping'}</span>
+                  <span>{shippingLabel}</span>
                 </div>
                 <div className="ps-summary-line ps-summary-total">
-                  <span>Total Due</span>
-                  <span>{formatINR(total)}</span>
+                  <span>{checkoutShipping === null ? 'Total before delivery' : 'Total Due'}</span>
+                  <span>{formatINR(checkoutTotal)}</span>
                 </div>
               </div>
 
@@ -546,16 +611,18 @@ export default function CheckoutPage() {
               <button
                 type="submit"
                 className="ps-btn-gold-primary ps-place-order-btn"
-                disabled={submitting}
+                disabled={submitting || !shippingModeChecked}
               >
                 {submitting ? (
                   <span>{formData.paymentMethod === 'RAZORPAY' ? 'PROCESSING PAYMENT...' : 'CONFIRMING DISPATCH...'}</span>
                 ) : unconfirmedPayment ? (
                   <span>CHECK PAYMENT STATUS</span>
+                ) : checkoutShipping === null ? (
+                  <span>{formData.paymentMethod === 'RAZORPAY' ? 'PAY NOW' : 'PLACE ORDER'}</span>
                 ) : formData.paymentMethod === 'RAZORPAY' ? (
-                  <span>PAY NOW ({formatINR(total)})</span>
+                  <span>PAY NOW ({formatINR(checkoutTotal)})</span>
                 ) : (
-                  <span>PLACE ORDER ({formatINR(total)})</span>
+                  <span>PLACE ORDER ({formatINR(checkoutTotal)})</span>
                 )}
               </button>
 

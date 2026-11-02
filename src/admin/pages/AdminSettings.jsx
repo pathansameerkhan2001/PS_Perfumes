@@ -384,6 +384,9 @@ export default function AdminSettings() {
             <Truck size={20} className="ps-admin-gold-icon" />
             <h2 className="ps-admin-card-title">Pan-India Shipping & Rates</h2>
           </div>
+          <span className="ps-admin-input-hint">
+            The standard rule. Checkout uses it unless Admin → Shipping is switched to PIN code rates.
+          </span>
 
           <div className="ps-admin-row-2">
             <div className="ps-admin-input-group">

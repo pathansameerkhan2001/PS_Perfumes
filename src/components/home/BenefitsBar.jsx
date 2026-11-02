@@ -35,7 +35,11 @@ const BENEFITS = [
 
 export default function BenefitsBar() {
   const { freeShippingThreshold } = useCart();
-  const shippingText = `On all orders over ${formatINR(freeShippingThreshold)}`;
+  // No free-shipping promise when shipping is priced by PIN code without one
+  const freeShipping = freeShippingThreshold != null;
+  const shippingText = freeShipping
+    ? `On all orders over ${formatINR(freeShippingThreshold)}`
+    : 'Charge shown by PIN code at checkout';
 
   return (
     <section className="ps-benefits-bar" aria-label="Brand Guarantees & Pillars">
@@ -45,7 +49,7 @@ export default function BenefitsBar() {
             <BenefitItem
               key={item.id}
               icon={item.icon}
-              title={item.title}
+              title={item.id === 'shipping' && !freeShipping ? 'DELIVERY' : item.title}
               description={item.id === 'shipping' ? shippingText : item.description}
               isLast={index === BENEFITS.length - 1}
             />

@@ -1,0 +1,236 @@
+psql:/sql/02_auth_functions_rls.sql:670: NOTICE:  policy "ps_admin_manage_categories" for relation "public.categories" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:670: NOTICE:  policy "ps_public_read_categories" for relation "public.categories" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:671: NOTICE:  policy "ps_admin_manage_products" for relation "public.products" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:671: NOTICE:  policy "ps_public_read_products" for relation "public.products" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:673: NOTICE:  policy "ps_admin_manage_product_variants" for relation "public.product_variants" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:673: NOTICE:  policy "ps_public_read_product_variants" for relation "public.product_variants" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:675: NOTICE:  policy "ps_admin_manage_product_images" for relation "public.product_images" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:675: NOTICE:  policy "ps_public_read_product_images" for relation "public.product_images" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:676: NOTICE:  policy "ps_admin_manage_combos" for relation "public.combos" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:676: NOTICE:  policy "ps_public_read_combos" for relation "public.combos" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:678: NOTICE:  policy "ps_admin_manage_combo_items" for relation "public.combo_items" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:678: NOTICE:  policy "ps_public_read_combo_items" for relation "public.combo_items" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:679: NOTICE:  policy "ps_admin_manage_reviews" for relation "public.reviews" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:679: NOTICE:  policy "ps_public_read_reviews" for relation "public.reviews" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:680: NOTICE:  policy "ps_admin_manage_hero_slides" for relation "public.hero_slides" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:680: NOTICE:  policy "ps_public_read_hero_slides" for relation "public.hero_slides" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:681: NOTICE:  policy "ps_admin_manage_instagram_reels" for relation "public.instagram_reels" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:681: NOTICE:  policy "ps_public_read_instagram_reels" for relation "public.instagram_reels" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:682: NOTICE:  policy "ps_admin_manage_homepage_sections" for relation "public.homepage_sections" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:682: NOTICE:  policy "ps_public_read_homepage_sections" for relation "public.homepage_sections" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:687: NOTICE:  policy "ps_admin_manage_store_settings" for relation "public.store_settings" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:687: NOTICE:  policy "ps_public_read_store_settings" for relation "public.store_settings" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:689: NOTICE:  policy "ps_admin_manage_coupons" for relation "public.coupons" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:689: NOTICE:  policy "ps_public_read_coupons" for relation "public.coupons" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:690: NOTICE:  policy "ps_admin_manage_customers" for relation "public.customers" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:690: NOTICE:  policy "ps_public_read_customers" for relation "public.customers" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:691: NOTICE:  policy "ps_admin_manage_orders" for relation "public.orders" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:691: NOTICE:  policy "ps_public_read_orders" for relation "public.orders" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:692: NOTICE:  policy "ps_admin_manage_order_items" for relation "public.order_items" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:692: NOTICE:  policy "ps_public_read_order_items" for relation "public.order_items" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:696: NOTICE:  policy "ps_admin_users_read_own" for relation "public.admin_users" does not exist, skipping
+psql:/sql/02_auth_functions_rls.sql:697: NOTICE:  policy "ps_admin_users_admin_read" for relation "public.admin_users" does not exist, skipping
+psql:/sql/proposed-09-v2/09v2_razorpay_payments.sql:523: NOTICE:  trigger "ps_orders_payment_guard" for relation "public.orders" does not exist, skipping
+psql:/sql/proposed-10-outbox/10_outbox.sql:116: NOTICE:  trigger "ps_set_updated_at" for relation "public.notification_outbox" does not exist, skipping
+psql:/sql/proposed-11-shipping/11_shipping.sql:136: NOTICE:  trigger "ps_set_updated_at" for relation "public.shipping_zones" does not exist, skipping
+psql:/sql/proposed-11-shipping/11_shipping.sql:139: NOTICE:  trigger "ps_set_updated_at" for relation "public.shipping_pincodes" does not exist, skipping
+psql:/sql/proposed-11-shipping/11_shipping.sql:142: NOTICE:  trigger "ps_set_updated_at" for relation "public.shipping_config" does not exist, skipping
+psql:/sql/proposed-11-shipping/11_shipping.sql:163: NOTICE:  policy "ps_admin_manage_shipping_zones" for relation "public.shipping_zones" does not exist, skipping
+psql:/sql/proposed-11-shipping/11_shipping.sql:166: NOTICE:  policy "ps_admin_manage_shipping_pincodes" for relation "public.shipping_pincodes" does not exist, skipping
+psql:/sql/proposed-11-shipping/11_shipping.sql:169: NOTICE:  policy "ps_admin_manage_shipping_config" for relation "public.shipping_config" does not exist, skipping
+psql:/sql/proposed-11-shipping/11_shipping.sql:333: NOTICE:  trigger "ps_shipping_config_guard" for relation "public.shipping_config" does not exist, skipping
+psql:/sql/proposed-11-shipping/11_shipping.sql:353: NOTICE:  trigger "ps_shipping_rates_guard" for relation "public.shipping_pincodes" does not exist, skipping
+psql:/sql/proposed-11-shipping/11_shipping.sql:357: NOTICE:  trigger "ps_shipping_rates_guard" for relation "public.shipping_zones" does not exist, skipping
+database ready
+▶ design checks: Migration 10 through real PostgREST
+  ✔ the service key really acts as service_role, and the anon key as anon (76.413083ms)
+  ✔ anon is refused on all five functions (59.091329ms)
+  ✔ service_role has functions only: the table itself is refused (19.93368ms)
+  ✔ claim_notifications returns arrays, empty included (39.9297ms)
+  ✔ scalar returns: enqueue and complete give booleans, a lost lease gives false or null (52.4563ms)
+  ✔ finalize return shape for all five results (67.038785ms)
+  ✔ P0001 keeps its code through callRpc, and a null amount never pays (32.331128ms)
+  ✔ a missing amount key is not a function PostgREST can find (12.772671ms)
+✔ design checks: Migration 10 through real PostgREST (757.606177ms)
+▶ webhook: payment outcomes
+  ✔ paid: stored, order paid, nothing sent (48.176911ms)
+  ✔ already_paid: redelivery and order.paid add nothing (46.700296ms)
+  ✔ five deliveries at once: one result, two rows (81.897568ms)
+  ✔ duplicate_payment: one alert, however often it arrives (85.704323ms)
+  ✔ amount_mismatch: order stays unpaid, alert has both amounts (63.575689ms)
+  ✔ not_found: unknown order is alerted with no order link (24.546679ms)
+  ✔ cancelled before payment: refund notices (45.688471ms)
+  ✔ returns without waiting for Resend, even if Resend would hang (27.789223ms)
+✔ webhook: payment outcomes (425.783074ms)
+▶ webhook: refused and invalid events
+  ✔ amount missing: not finalized, alert stored, acknowledged (57.445555ms)
+  ✔ amount null: not finalized, alert stored, acknowledged (36.769778ms)
+  ✔ amount zero: not finalized, alert stored, acknowledged (36.902921ms)
+  ✔ amount negative: not finalized, alert stored, acknowledged (37.864305ms)
+  ✔ amount decimal: not finalized, alert stored, acknowledged (42.080083ms)
+  ✔ amount string: not finalized, alert stored, acknowledged (34.581912ms)
+  ✔ non-INR captured payment: not finalized, alert stored without its amount (44.126713ms)
+  ✔ invalid signature: 400, nothing touched (24.682133ms)
+  ✔ payment not captured: ignored as before (17.119696ms)
+  ✔ event without an order: ignored as before (10.670797ms)
+  ✔ payment.failed still records the failure and queues nothing (35.194727ms)
+  ✔ unusable payment id: logged sanitized and acknowledged, since the outbox needs it (16.048842ms)
+  ✔ unusable order id with a good payment id: alert stored without it (26.63724ms)
+✔ webhook: refused and invalid events (422.730751ms)
+▶ webhook: failures
+  ✔ database unreachable: 500, then redelivery completes it (50.281869ms)
+  ✔ PostgREST 503: retryable (18.612066ms)
+  ✔ P0001 from finalize: acknowledged only after the incident is stored (29.646374ms)
+  ✔ P0001, then the incident cannot be stored for now: 500, so Razorpay retries (31.380834ms)
+  ✔ P0001 from the incident itself: logged and acknowledged, no endless retry (17.542383ms)
+  ✔ non-INR with the database down: 500, not a silent loss (17.821205ms)
+✔ webhook: failures (166.222251ms)
+▶ verify-payment
+  ✔ sends both e-mails at once, keyed by dedupe_key, only then marks sent (112.983123ms)
+  ✔ passes the amount Razorpay reports; anything the browser sends is ignored (65.987227ms)
+  ✔ authorized payment is captured, then finalized and e-mailed (55.129748ms)
+  ✔ capture reports another amount: that amount is what gets checked, so it is not paid (58.200059ms)
+  ✔ Resend failure does not change a verified payment; the row stays for retry (77.250863ms)
+  ✔ Resend timeout does not change a verified payment (68.292156ms)
+  ✔ claim failure does not change a verified payment; rows stay untouched (47.022039ms)
+  ✔ fail_notification failure does not change it either; the lease recovers the row (85.123963ms)
+  ✔ accepted, then complete fails: retry resends the same key and nothing goes out twice (96.149395ms)
+  ✔ missing e-mail settings: payment verified, nothing claimed, no attempt used (40.468345ms)
+  ✔ amount mismatch: same 400 answer, alert with both amounts, not finalized (33.47978ms)
+  ✔ wrong currency: same 400, alert leaves out the foreign amount (32.588139ms)
+  ✔ payment belongs to another order: same 400, alert stored (30.937274ms)
+  ✔ alert failure does not change the 400 (21.983228ms)
+  ✔ webhook and browser mismatch alerts share one key (38.394613ms)
+  ✔ duplicate payment: same 409, and the owner is told at once (67.959306ms)
+  ✔ authorized on a cancelled order: same 409, nothing captured (31.940448ms)
+  ✔ second payment authorized on a paid order: not captured, the first payment stays (38.063411ms)
+  ✔ if Razorpay captures that second payment anyway, the webhook still raises the refund alert (45.513123ms)
+  ✔ second payment authorized on a refunded order: not captured (31.536255ms)
+  ✔ Razorpay reports the payment refunded: structured 409, not pending, nothing finalized (31.075026ms)
+  ✔ order refunded in the database: no missing receipt, structured 409 (85.87623ms)
+  ✔ no receipt for a paid order: pending, never a success without one (60.73949ms)
+  ✔ invalid signature: same 400, no RPC (16.927439ms)
+  ✔ database failure during finalize: same 502 pending answer (20.82599ms)
+  ✔ webhook first, then the browser: the browser delivers; each person gets one e-mail (82.284226ms)
+  ✔ browser and webhook together: each person gets one e-mail (60.003196ms)
+✔ verify-payment (1440.359819ms)
+▶ checkout verification in the browser (src/services/payments.js)
+  ✔ verification answers 500: pending, never paid (10.946629ms)
+  ✔ platform error page instead of JSON (504): pending (9.911022ms)
+  ✔ non-JSON 200: pending, not a success (10.849456ms)
+  ✔ unreadable body cut off mid-answer: pending (10.835179ms)
+  ✔ verified but with no receipt: pending, never a success (12.026971ms)
+  ✔ no network: pending (12.099107ms)
+  ✔ verification times out after 30 seconds: pending (16.006229ms)
+  ✔ payment succeeds but browser verification fails: pending, then the check confirms it (77.498739ms)
+  ✔ a definite refusal (wrong signature) is not pending (18.860229ms)
+  ✔ refunded order: a clear refusal the page can show, no crash (76.857083ms)
+  ✔ second payment on a paid order: a clear refusal, not pending (27.049262ms)
+  ✔ an unconfirmed payment survives a reload, and is forgotten once settled (9.276572ms)
+  ✔ without session storage (private mode), nothing throws (12.166591ms)
+✔ checkout verification in the browser (src/services/payments.js) (306.673128ms)
+▶ Resend answers, through the worker
+  ✔ accepted with an id: sent (35.755963ms)
+  ✔ accepted with no id: not marked sent (32.67378ms)
+  ✔ 429 with Retry-After: retried, later as asked (32.719829ms)
+  ✔ 429 quota: retried (44.767187ms)
+  ✔ 500: retried on the first delay (30.117616ms)
+  ✔ 502: retried on the first delay (30.17803ms)
+  ✔ 503: retried on the first delay (25.572472ms)
+  ✔ timeout: retried (27.59853ms)
+  ✔ network failure: retried (26.904324ms)
+  ✔ 409 concurrent request: retried (27.392486ms)
+  ✔ 409 changed body: permanent, and the owner is told (29.388778ms)
+  ✔ 422: permanent at once, without the provider text (30.114012ms)
+  ✔ 401 missing_api_key: treated as settings, no attempt used, nothing failed (38.520947ms)
+  ✔ 403 restricted_api_key: treated as settings, no attempt used, nothing failed (29.255796ms)
+  ✔ 403 validation_error: treated as settings, no attempt used, nothing failed (26.863926ms)
+  ✔ an unrecognised error name is not stored (28.793395ms)
+✔ Resend answers, through the worker (498.309836ms)
+▶ worker
+  ✔ no secret configured: refuses everything (14.733696ms)
+  ✔ missing secret: 401, nothing claimed (8.37459ms)
+  ✔ wrong secret: 401, nothing claimed (8.00109ms)
+  ✔ no Bearer secret: 401, nothing claimed (9.217957ms)
+  ✔ correct secret: processes, and reports counts only (36.906271ms)
+  ✔ bounded batch: 25 due, 20 per call (215.585974ms)
+  ✔ concurrent calls: nothing sent twice (280.420352ms)
+  ✔ expired lease: recovered, and the crash counts as an attempt (45.706071ms)
+  ✔ missing RESEND_API_KEY or EMAIL_FROM: 503, nothing claimed, no attempt used (18.139152ms)
+  ✔ missing owner address: customer still sent, owner row keeps its attempts (47.585493ms)
+  ✔ all eight attempts, then one alert and no more (218.862387ms)
+  ✔ a failed-delivery alert that itself fails stays one try and adds no row (31.467832ms)
+  ✔ failed-delivery alert says nothing about the customer (45.554163ms)
+  ✔ KNOWN LIMIT: a crash on the final attempt fails inside the claim, so no alert is possible (35.488707ms)
+✔ worker (1017.571464ms)
+▶ templates and order state
+  ✔ active order: receipt and new-order mail (48.044233ms)
+  ✔ cancelled before payment: cancelled customer mail and refund-needed alert (60.089878ms)
+  ✔ cancelled after queuing: templates follow the current status (64.406615ms)
+  ✔ duplicate payment alert (67.823842ms)
+  ✔ amount mismatch alert shows both amounts (38.166409ms)
+  ✔ alert with no amounts says so (36.146903ms)
+  ✔ unknown order alert looks up no order (31.570996ms)
+  ✔ refunded order: no receipt, no owner mail, no failure alert (76.040017ms)
+  ✔ deleted order: receipts fail safely and the owner is told (60.155791ms)
+  ✔ deleted order: an alert still goes out (65.260209ms)
+  ✔ customer text is escaped (11.13728ms)
+✔ templates and order state (560.534995ms)
+▶ old claim mechanism
+  ✔ no API file calls it (61.170178ms)
+  ✔ never called across a whole payment, and dates appear only on acceptance (98.347355ms)
+✔ old claim mechanism (160.120788ms)
+▶ COD and the kill switch
+  ✔ COD order placed as a visitor queues nothing and calls no payment function (39.991731ms)
+  ✔ the worker has nothing to do for COD (26.49563ms)
+  ✔ create-order: 503 with the kill switch on, no RPC (15.901959ms)
+  ✔ create-order: control, with the switch off the request gets past it (10.394969ms)
+  ✔ create-order: kill switch "true" blocks new orders (12.462201ms)
+  ✔ create-order: kill switch "TRUE" blocks new orders (10.368618ms)
+  ✔ create-order: kill switch "True" blocks new orders (11.94862ms)
+  ✔ create-order: kill switch "  true  " blocks new orders (10.96882ms)
+  ✔ create-order: kill switch "\ttrue\n" blocks new orders (10.900147ms)
+  ✔ create-order: kill switch "1" blocks new orders (10.51161ms)
+  ✔ create-order: kill switch "yes" blocks new orders (12.277579ms)
+  ✔ create-order: kill switch "on" blocks new orders (18.114888ms)
+  ✔ create-order: kill switch "ture" blocks new orders (12.803191ms)
+  ✔ create-order: kill switch "" leaves new orders open (12.507722ms)
+  ✔ create-order: kill switch "   " leaves new orders open (44.510626ms)
+  ✔ create-order: kill switch "false" leaves new orders open (13.033437ms)
+  ✔ create-order: kill switch "FALSE" leaves new orders open (11.995016ms)
+  ✔ create-order: kill switch " 0 " leaves new orders open (13.209653ms)
+  ✔ create-order: kill switch "no" leaves new orders open (12.940867ms)
+  ✔ create-order: kill switch "off" leaves new orders open (11.99825ms)
+  ✔ the kill switch does not stop the webhook either (30.824497ms)
+  ✔ create-order: test keys are refused in Production regardless (10.952737ms)
+  ✔ the kill switch does not stop payments under way (63.585804ms)
+✔ COD and the kill switch (432.043548ms)
+▶ shipping by PIN code (Migration 11)
+  ✔ legacy mode: create-order charges the standard rule, as before (23.691518ms)
+  ✔ pincode mode: the Razorpay amount includes the PIN code charge (29.37796ms)
+  ✔ pincode mode: an unsupported PIN code is refused with the shopper message, no Razorpay order (20.179085ms)
+  ✔ shipping or totals sent by the browser are ignored (28.188559ms)
+  ✔ visitors get a quote, never the rate rows (28.355923ms)
+  ✔ legacy quote for visitors (12.995722ms)
+  ✔ COD in pincode mode: priced on the server, refused for an unsupported PIN code (37.142029ms)
+✔ shipping by PIN code (Migration 11) (180.611691ms)
+▶ nothing else moved
+  ✔ database function fingerprints as expected (15.974905ms)
+  ✔ the old e-mail functions still exist in the database (18.337534ms)
+  ✔ migration files unchanged (26.398381ms)
+  ✔ the environment holds no real settings (9.18814ms)
+  ✔ no customer detail in any log line (8.043139ms)
+✔ nothing else moved (78.746115ms)
+ℹ tests 153
+ℹ suites 13
+ℹ pass 153
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10425.778347
+test exit: 0
+network internal=true
+/ps-api-test-db ports={} image=postgres:17.11
+/ps-api-test-rest ports={} image=public.ecr.aws/supabase/postgrest:v16.4
+containers left: 0; networks left: 0

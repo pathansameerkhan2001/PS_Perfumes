@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getStorefrontSettings } from '../services/settings';
 import { validateCouponCode, computeCouponDiscount } from '../services/coupons';
 import { isComboRecord, toComboCartProduct } from '../services/combos';
+import { getShippingQuote } from '../services/shipping';
 
 // Shipping rule used until Store Settings has saved values in the database
 const DEFAULT_FREE_SHIPPING_THRESHOLD = 1500;
@@ -95,6 +96,25 @@ export function CartProvider({ children }) {
         }));
       })
       .catch((err) => console.error('Could not load shipping settings:', err));
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // 'pincode': the delivery PIN code decides shipping, so the bag cannot price it before checkout.
+  // Its free-shipping threshold is the owner's decision there (null: none).
+  const [pincodeShipping, setPincodeShipping] = useState(null);
+  // Checkout waits for this, so it never shows the standard charge for a PIN code priced store
+  const [shippingModeChecked, setShippingModeChecked] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    getShippingQuote(null, 0)
+      .then((quote) => {
+        if (mounted && quote?.mode === 'pincode') setPincodeShipping({ freeShippingThreshold: quote.freeShippingThreshold });
+      })
+      .catch((err) => console.error('Could not load the shipping mode:', err))
+      .finally(() => mounted && setShippingModeChecked(true));
     return () => {
       mounted = false;
     };
@@ -413,8 +433,13 @@ export function CartProvider({ children }) {
     (acc, item) => acc + (Number(item.price) || Number(item.product?.price) || 0) * item.quantity,
     0
   );
-  const freeShippingThreshold = shippingRule.threshold;
-  const shipping = subtotal >= freeShippingThreshold || subtotal === 0 ? 0 : shippingRule.fee;
+  const shippingMode = pincodeShipping ? 'pincode' : 'legacy';
+  // null in pincode mode: no free-shipping promise unless the owner set one
+  const freeShippingThreshold = pincodeShipping ? pincodeShipping.freeShippingThreshold : shippingRule.threshold;
+  // null in pincode mode: priced at checkout from the PIN code, and left out of the bag total
+  const shipping = pincodeShipping
+    ? null
+    : subtotal >= freeShippingThreshold || subtotal === 0 ? 0 : shippingRule.fee;
   // Recomputed whenever the cart changes; 0 if the subtotal drops below the coupon minimum
   const discountAmount = computeCouponDiscount(appliedCoupon, subtotal);
   const promoCode = appliedCoupon?.code || '';
@@ -423,7 +448,7 @@ export function CartProvider({ children }) {
     appliedCoupon && discountAmount === 0 && appliedCoupon.minimum_order_amount > subtotal
       ? `Add items worth ${Math.ceil(appliedCoupon.minimum_order_amount - subtotal)} more to use ${appliedCoupon.code}.`
       : '';
-  const total = Math.max(0, subtotal - discountAmount + shipping);
+  const total = Math.max(0, subtotal - discountAmount + (shipping ?? 0));
 
   return (
     <CartContext.Provider
@@ -436,6 +461,8 @@ export function CartProvider({ children }) {
         itemCount,
         subtotal,
         freeShippingThreshold,
+        shippingMode,
+        shippingModeChecked,
         shipping,
         discountAmount,
         discountPercent,

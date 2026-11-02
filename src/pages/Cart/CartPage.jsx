@@ -220,10 +220,10 @@ export default function CartPage() {
                 )}
                 <div className="ps-summary-line">
                   <span>Shipping (Pan-India)</span>
-                  <span>{shipping === 0 ? 'FREE' : formatINR(shipping)}</span>
+                  <span>{shipping === null ? 'By PIN code at checkout' : shipping === 0 ? 'FREE' : formatINR(shipping)}</span>
                 </div>
                 <div className="ps-summary-line ps-summary-total">
-                  <span>Total</span>
+                  <span>{shipping === null ? 'Total before delivery' : 'Total'}</span>
                   <span>{formatINR(total)}</span>
                 </div>
               </div>

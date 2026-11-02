@@ -1,10 +1,12 @@
 # 15 — Razorpay Payments
 
-> Status at 2026-10-31: **Migration 08 is applied and verified on Supabase. Migration 09 v2 is not applied there. Pay Online is not enabled, and no test payment has been made.**
+> Status at 2026-10-31: **Migration 08 is applied and verified on Supabase. The owner reports Migration 09 v2 applied and verified there, with all 19 checks passed. Pay Online is not enabled, and no test payment has been made.**
 >
 > - The Razorpay code and the redesigned checkout are deployed to Production (commit `664969c`). Checkout offers Cash on Delivery only, because the live build has no `VITE_RAZORPAY_KEY_ID`.
 > - The owner reports `RAZORPAY_NEW_ORDERS_DISABLED=true` in Production. An empty `POST /api/create-order` returned HTTP 503 on 2026-10-31. That response does not name its cause, so confirm the variable in Vercel.
-> - Migration 09 v2 passed 312 of 312 checks on a disposable PostgreSQL 17.11 container. It has not run on Supabase.
+> - Migration 09 v2 passed 312 of 312 checks on a disposable PostgreSQL 17.11 container before it was applied.
+> - Migration 10, the durable notification outbox, is in `supabase/new-project/proposed-10-outbox/`. It is tested locally only and **not applied**.
+> - The API changes that use it (§1, §9) are local and **not deployed**. **Do not deploy them before Migration 10 is applied and the worker's schedule is ready:** without the migration every payment call fails, and without the schedule webhook-only orders are never e-mailed.
 > - A first production attempt on 2026-10-31 stopped with `column "receipt_token" does not exist`. That error comes from the verification script, not the migration: the script ran while the migration was not applied. The owner's read-only diagnostics found production unchanged.
 >
 > **Use `supabase/new-project/proposed-09-v2/09v2_razorpay_payments.sql`.** The original `09_razorpay_payments.sql` is superseded and must not be run.
@@ -15,7 +17,8 @@
 2. The browser opens Razorpay Checkout. Closing it leaves the order unpaid; paying again reuses the same order.
 3. `POST /api/verify-payment` checks the signature (HTTP 400 on a mismatch), then asks Razorpay whether the payment is captured and matches the order and amount.
 4. `POST /api/razorpay-webhook` does the same from Razorpay's side, which covers a shopper who closes the tab after paying.
-5. Both call `mark_order_paid`, which sets the order to `paid` / `confirmed`, counts the coupon, and is safe to repeat. Then the customer and owner e-mails are sent, each once.
+5. Both call `finalize_payment_and_enqueue`, which runs `mark_order_paid` and stores the notifications in one transaction, and is safe to repeat. `mark_order_paid` sets the order to `paid` / `confirmed` and counts the coupon.
+6. `verify-payment` then tries to send the stored notifications at once. The webhook sends nothing, so it answers Razorpay quickly. `/api/process-notifications` sends whatever is left and handles retries. See §9.
 
 Unpaid online orders appear under **Admin → Orders → View: Awaiting payment** and are left out of dashboard figures. The trigger `ps_orders_payment_guard` refuses to process them, whoever tries. Signed-in admins can change only the fulfilment of a Razorpay order, so a refund is recorded in the SQL Editor until a refund flow exists.
 
@@ -63,11 +66,12 @@ Project → Settings → Environment Variables. Redeploy after any change.
 | `RAZORPAY_WEBHOOK_SECRET` | Set | Not needed yet; see below | **Yes** | The secret you type in §4 |
 | `SUPABASE_URL` | Set | Not needed yet; see below | No | `https://pwacxxrghlglvdtclbig.supabase.co` |
 | `SUPABASE_SECRET_KEY` | Set | Not needed yet; see below | **Yes** | Supabase → Project Settings → API Keys → Secret key |
-| `RESEND_API_KEY` | Set | Not needed yet; see below | **Yes** | From your Resend account. Without it payments work and e-mails are skipped |
+| `RESEND_API_KEY` | Set | Not needed yet; see below | **Yes** | From your Resend account. Without it payments work and e-mails wait in the outbox, using no attempts |
 | `EMAIL_FROM` | Set | Not needed yet; see below | No | A sender on a domain verified in Resend |
 | `OWNER_NOTIFICATION_EMAIL` | Required | Required | No | Address for owner order and refund alerts |
+| `NOTIFICATION_WORKER_SECRET` | Set | Not needed yet; see below | **Yes** | A long random value. The scheduler sends it to `/api/process-notifications`. Without it the worker refuses every call |
 | `SITE_URL` | Set to the Preview URL | Optional | No | Base URL for e-mail links. Defaults to `https://psperfumes.com` |
-| `RAZORPAY_NEW_ORDERS_DISABLED` | Unset | **`true`** | No | Kill switch. `true` blocks new Razorpay orders; verification and the webhook keep working. Removed only in §6 |
+| `RAZORPAY_NEW_ORDERS_DISABLED` | Unset | **`true`** | No | Kill switch. `true` blocks new Razorpay orders; verification and the webhook keep working. It fails closed: any value except empty, `false`, `0`, `no` or `off` blocks, ignoring case and spaces. Removed only in §6 |
 
 Before go-live, `RAZORPAY_NEW_ORDERS_DISABLED=true` is what must hold in Production. The status of the "not needed yet" variables is unconfirmed, and an API response cannot establish it. Inspect the actual Production environment variables in Vercel to confirm which exist, and do not assume they are either set or absent.
 
@@ -129,9 +133,63 @@ A soft stop does not change the database. To remove Migration 09 v2 from the dat
 
 ## 8. Known limits
 
+- Until Migration 10 and the §9 code are live, the webhook waits for e-mail before answering Razorpay, and an e-mail can be lost if a function crashes after claiming it. Unknown-order and amount-mismatch payments reach only the logs.
 - The browser creates COD orders through `place_order`, with no server step, so they send no e-mails. Only paid online orders do.
 - `place_order` and `place_order_core` each hold their own copy of the pricing logic. Any future pricing change must be made in both.
 - Stock is checked when the order is created and not decremented, as with COD. Two shoppers can pay for the last unit; the second needs a refund.
 - `/api/create-order` has no rate limit, the same exposure as the public `place_order`.
 - The receipt is an order receipt, not a GST tax invoice.
 - Refunds are made in the Razorpay dashboard. They do not update `payment_status` yet.
+
+## 9. Notifications (Migration 10)
+
+Local and not deployed. The table, keys and retry rules are in `supabase/new-project/proposed-10-outbox/README.md`.
+
+| Sender | Sends? | Claims |
+|---|---|---|
+| `api/razorpay-webhook.js` | Never | Nothing |
+| `api/verify-payment.js` | At once, inside the request | Up to 4 rows for that order, 30-second lease |
+| `api/process-notifications.js` | On a schedule | Up to 20 due rows, 120-second lease |
+
+A notification is `sent` only after Resend accepts it and returns a message id. `dedupe_key` is the `Idempotency-Key`, so a retry after a lost answer sends nothing twice for 24 hours. `claim_order_email` and `release_order_email` stay in the database, but no API code calls them. `customer_email_sent_at` and `owner_email_sent_at` now mean Resend accepted the message.
+
+**Webhook answers**
+
+| Event | Answer | What is stored |
+|---|---|---|
+| Any of the five payment results | 200 | As Migration 10 maps it |
+| Captured, not INR | 200 | `amount_mismatch` alert, no amounts |
+| Captured, amount not a positive whole number | 200 | `amount_mismatch` alert, no amounts |
+| Database refuses the payment (`P0001`) | 200 | `amount_mismatch` alert |
+| Unusable payment id | 200 | Log line only: the outbox needs that id |
+| Database or network failure, including while storing an alert | 500 | Nothing; Razorpay delivers again |
+
+Razorpay disables a webhook after 24 hours of failures, so refused data is never answered with an error. Migration 10 has one alert type for every kind of mismatch, so its e-mail says the payment does not match the order.
+
+**Resend answers**
+
+| Answer | Action | Uses an attempt |
+|---|---|---|
+| Accepted with a message id | `complete_notification` | Yes, the successful one |
+| Accepted with no message id | Retry | Yes |
+| Timeout, network error, 5xx, 429, other 409 | Retry, honouring `Retry-After` | Yes |
+| 409 `invalid_idempotent_request`, 422, other 4xx | Permanent failure | Yes |
+| 401, 403 | Retry later; our settings are wrong | **No** |
+| `RESEND_API_KEY` or `EMAIL_FROM` missing | Nothing is claimed | **No** |
+| `OWNER_NOTIFICATION_EMAIL` missing | Owner rows retry; customer mail still goes | **No** |
+
+The e-mail body follows the order's current status, so an order cancelled between two attempts changes the body. Resend then answers `invalid_idempotent_request`, the notification fails, and the owner is told.
+
+A refunded order sends nothing: its rows are closed as `failed` with `Skipped:` in `last_error`, and no alert goes out. A deleted order cannot be e-mailed to anyone, so its receipts fail and the owner is told; alerts still go out, without an order number.
+
+**Permanent failures.** The owner gets one direct e-mail, tried once, sent outside the outbox so it cannot create another failure. Its failure is only logged as `notification_failure_alert_failed`.
+
+**Not covered without a new migration.** A worker crash during the final attempt turns the row `failed` inside `claim_notifications`, which returns nothing, so no alert goes out. No function lists failed rows. Until a later migration adds one, check `10_verify_readonly.sql` for failed rows. 401 and 403 answers retry without limit, so watch the logs for `notification_rejected_by_settings`.
+
+**Tests.** With Docker running, from the repository root:
+
+```bash
+bash tests/api/run_api_tests.sh tests/api/test-results.txt
+```
+
+They run on an internal Docker network with real PostgreSQL and PostgREST and stubbed Razorpay and Resend. Credentials are fake, `.env` is not mounted, and everything is removed afterwards. Keep tests outside `api/`: Vercel deploys every file there as a function.

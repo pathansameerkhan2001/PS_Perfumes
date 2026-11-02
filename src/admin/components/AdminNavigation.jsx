@@ -13,6 +13,7 @@ import {
   Users,
   Star,
   Tag,
+  Truck,
   Settings,
   ShieldCheck,
   Mail,
@@ -36,8 +37,9 @@ import './AdminNavigation.css';
  * 10. Customers
  * 11. Reviews
  * 12. Coupons
- * 13. Store Settings
- * 14. Admin Users
+ * 13. Shipping
+ * 14. Store Settings
+ * 15. Admin Users
  * + Live Website (subtly separated at the bottom)
  */
 export const ADMIN_NAV_ITEMS = [
@@ -54,6 +56,7 @@ export const ADMIN_NAV_ITEMS = [
   { name: 'Reviews', path: '/admin/reviews', icon: Star },
   { name: 'Enquiries', path: '/admin/enquiries', icon: Mail },
   { name: 'Coupons', path: '/admin/coupons', icon: Tag },
+  { name: 'Shipping', path: '/admin/shipping', icon: Truck },
   { name: 'Store Settings', path: '/admin/settings', icon: Settings },
   { name: 'Admin Users', path: '/admin/admin-users', icon: ShieldCheck },
 ];

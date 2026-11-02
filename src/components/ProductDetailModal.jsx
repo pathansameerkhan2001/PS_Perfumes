@@ -255,7 +255,8 @@ export default function ProductDetailModal() {
                 <span className="ps-pdetail-current-price">Choose an option</span>
               )}
               <span className="ps-pdetail-tax-note">
-                Inclusive of all taxes • Free delivery over {formatINR(freeShippingThreshold)}
+                Inclusive of all taxes
+                {freeShippingThreshold != null && <> • Free delivery over {formatINR(freeShippingThreshold)}</>}
               </span>
             </div>
 
@@ -445,7 +446,11 @@ export default function ProductDetailModal() {
             <div className="ps-pdetail-perks">
               <div className="ps-perk-item">
                 <Truck size={15} color="#c5a059" />
-                <span>Free shipping across India over {formatINR(freeShippingThreshold)}</span>
+                <span>
+                  {freeShippingThreshold != null
+                    ? `Free shipping across India over ${formatINR(freeShippingThreshold)}`
+                    : 'Delivery charge shown by PIN code at checkout'}
+                </span>
               </div>
               <div className="ps-perk-item">
                 <ShieldCheck size={15} color="#c5a059" />

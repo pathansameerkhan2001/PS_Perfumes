@@ -1,6 +1,4 @@
-import { callRpc } from './supabaseAdmin.js';
-
-const OWNER_EMAIL = process.env.OWNER_NOTIFICATION_EMAIL;
+export const ownerAddress = () => process.env.OWNER_NOTIFICATION_EMAIL;
 
 const siteUrl = () => (process.env.SITE_URL || 'https://psperfumes.com').replace(/\/+$/, '');
 
@@ -10,21 +8,54 @@ const rupees = (amount) => `₹${Number(amount || 0).toLocaleString('en-IN', { m
 const esc = (value) =>
   String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
-function emailEnabled() {
+const paise = (amount) => rupees(Number(amount) / 100);
+
+export function emailEnabled() {
   return Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
 }
 
-async function sendEmail({ to, subject, html }) {
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ from: process.env.EMAIL_FROM, to, subject, html }),
-    signal: AbortSignal.timeout(5000),
-  });
-  if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text().catch(() => '')}`);
+/** kind: retry (try later), permanent (never), config (our settings, so it costs no attempt). */
+export class EmailError extends Error {
+  constructor(message, kind, retryAfter = null) {
+    super(message);
+    this.kind = kind;
+    this.retryAfter = retryAfter;
+  }
+}
+
+function failureKind(status, name) {
+  if (status === 401 || status === 403) return 'config';
+  if (status === 429 || status >= 500) return 'retry';
+  if (status === 409) return name === 'invalid_idempotent_request' ? 'permanent' : 'retry';
+  return 'permanent';
+}
+
+/** Returns Resend's message id. The message says nothing about the recipient or the mail. */
+export async function sendEmail({ to, subject, html, idempotencyKey }) {
+  let res;
+  try {
+    res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Idempotency-Key': idempotencyKey,
+      },
+      body: JSON.stringify({ from: process.env.EMAIL_FROM, to, subject, html }),
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch (err) {
+    throw new EmailError(err.name === 'TimeoutError' ? 'Resend timed out' : 'Resend could not be reached', 'retry');
+  }
+
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    const name = /^[a-z_]{1,64}$/.test(data?.name) ? data.name : 'error';
+    const retryAfter = Number.parseInt(res.headers.get('retry-after'), 10);
+    throw new EmailError(`Resend ${res.status} ${name}`, failureKind(res.status, name), Number.isNaN(retryAfter) ? null : retryAfter);
+  }
+  if (!data?.id) throw new EmailError('Resend gave no message id', 'retry');
+  return data.id;
 }
 
 function itemRows(order) {
@@ -63,7 +94,7 @@ const layout = (body) =>
     ${body}
   </div>`;
 
-function customerEmail(order) {
+export function customerEmail(order) {
   if (order.order_status === 'cancelled') {
     return {
       to: order.customer_email,
@@ -95,13 +126,10 @@ function customerEmail(order) {
   };
 }
 
-function ownerEmail(order) {
+export function ownerEmail(order) {
   return {
-    to: OWNER_EMAIL,
-    subject:
-      order.order_status === 'cancelled'
-        ? `Refund needed: payment on cancelled order ${order.order_number}`
-        : `New paid order ${order.order_number} (${rupees(order.total_amount)})`,
+    to: ownerAddress(),
+    subject: `New paid order ${order.order_number} (${rupees(order.total_amount)})`,
     html: layout(`
       <p><strong>New paid order: ${esc(order.order_number)}</strong></p>
       <p>
@@ -123,49 +151,87 @@ function ownerEmail(order) {
   };
 }
 
-async function sendOnce(order, kind, message) {
-  const claimed = await callRpc('claim_order_email', { p_order_id: order.id, p_kind: kind });
-  if (!claimed) return;
-  try {
-    await sendEmail(message);
-  } catch (err) {
-    console.error(`${kind} e-mail failed for ${order.order_number}:`, err.message);
-    await callRpc('release_order_email', { p_order_id: order.id, p_kind: kind });
-  }
+export function refundNeededEmail(order) {
+  return {
+    to: ownerAddress(),
+    subject: `Refund needed: payment on cancelled order ${order.order_number}`,
+    html: layout(`
+      <p><strong>Order ${esc(order.order_number)} was paid but is cancelled.</strong> It will not be
+      dispatched, so please refund this payment in the Razorpay dashboard.</p>
+      <p>
+        <strong>Amount:</strong> ${rupees(order.total_amount)}<br>
+        <strong>Razorpay payment ID:</strong> ${esc(order.razorpay_payment_id)}<br>
+        <strong>Razorpay order ID:</strong> ${esc(order.razorpay_order_id)}
+      </p>
+      <p><a href="${siteUrl()}/admin/orders">Open Admin → Orders</a></p>
+    `),
+  };
 }
 
-/** Never throws: a mail problem must not turn a successful payment into an error. */
-export async function sendPaidOrderEmails(razorpayOrderId) {
-  if (!emailEnabled()) {
-    console.warn('Order e-mails skipped: RESEND_API_KEY or EMAIL_FROM is not set');
-    return;
-  }
-  try {
-    const order = await callRpc('get_payment_order', { p_razorpay_order_id: razorpayOrderId });
-    if (!order || order.payment_status !== 'paid') return;
-    await Promise.all([
-      sendOnce(order, 'customer', customerEmail(order)),
-      ...(OWNER_EMAIL ? [sendOnce(order, 'owner', ownerEmail(order))] : []),
-    ]);
-  } catch (err) {
-    console.error('Order e-mails failed:', err.message);
-  }
+const orderLabel = (order) => (order ? `order ${order.order_number}` : 'an order that no longer exists');
+
+/** Second payment on an order that was already paid. The order may have been deleted since. */
+export function duplicatePaymentEmail(row, order) {
+  const label = orderLabel(order);
+  return {
+    to: ownerAddress(),
+    subject: `Refund needed: second payment on ${label}`,
+    html: layout(`
+      <p>A second payment was captured on ${esc(label)}: <strong>${esc(row.razorpay_payment_id)}</strong>.</p>
+      <p>The order keeps its first payment. Please refund this one in the Razorpay dashboard.</p>
+    `),
+  };
 }
 
-/** Alerts the owner to refund a second payment on an order that was already paid. */
-export async function sendDuplicatePaymentAlert({ orderNumber, razorpayPaymentId }) {
-  if (!emailEnabled() || !OWNER_EMAIL) return;
-  try {
-    await sendEmail({
-      to: OWNER_EMAIL,
-      subject: `Refund needed: second payment on order ${orderNumber}`,
-      html: layout(`
-        <p>Order <strong>${esc(orderNumber)}</strong> was already paid, and a second payment was captured:
-        <strong>${esc(razorpayPaymentId)}</strong>.</p>
-        <p>The order keeps its first payment. Please refund this one in the Razorpay dashboard.</p>
-      `),
-    });
-  } catch (err) {
-    console.error('Duplicate payment alert failed:', err.message);
-  }
+/** Amounts are missing when Razorpay sent none, or when the payment was not in rupees. */
+export function amountMismatchEmail(row, order) {
+  const { amount_paise: received, expected_paise: expected } = row.payload || {};
+  return {
+    to: ownerAddress(),
+    subject: `Check payment: it does not match ${orderLabel(order)}`,
+    html: layout(`
+      <p>Razorpay reported a payment that does not match ${esc(orderLabel(order))}, so the order was not
+      marked paid by it. Please review it in the Razorpay dashboard.</p>
+      <p>
+        <strong>Razorpay payment ID:</strong> ${esc(row.razorpay_payment_id)}<br>
+        <strong>Razorpay order ID:</strong> ${esc(row.razorpay_order_id || 'Unknown')}<br>
+        <strong>Received:</strong> ${received == null ? 'Not available' : paise(received)}<br>
+        <strong>Expected:</strong> ${expected == null ? 'Not available' : paise(expected)}
+      </p>
+    `),
+  };
+}
+
+/** No order matches this payment, so only what Razorpay reported is available. */
+export function unknownOrderEmail(row) {
+  const { amount_paise: received } = row.payload || {};
+  return {
+    to: ownerAddress(),
+    subject: `Check payment: no order matches ${row.razorpay_payment_id}`,
+    html: layout(`
+      <p>Razorpay reported a captured payment that matches no order. Please review it in the Razorpay
+      dashboard and refund it if needed.</p>
+      <p>
+        <strong>Razorpay payment ID:</strong> ${esc(row.razorpay_payment_id)}<br>
+        <strong>Razorpay order ID:</strong> ${esc(row.razorpay_order_id || 'Unknown')}<br>
+        <strong>Amount:</strong> ${received == null ? 'Not available' : paise(received)}
+      </p>
+    `),
+  };
+}
+
+export function deliveryFailedEmail(row, reason) {
+  return {
+    to: ownerAddress(),
+    subject: `Notification not delivered: ${row.notification_type}`,
+    html: layout(`
+      <p>A payment notification has permanently failed and will not be retried. Please follow it up by hand.</p>
+      <p>
+        <strong>Notification:</strong> ${esc(row.notification_type)}<br>
+        <strong>Razorpay payment ID:</strong> ${esc(row.razorpay_payment_id || 'Unknown')}<br>
+        <strong>Razorpay order ID:</strong> ${esc(row.razorpay_order_id || 'Unknown')}<br>
+        <strong>Reason:</strong> ${esc(reason)}
+      </p>
+    `),
+  };
 }

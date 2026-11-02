@@ -61,6 +61,8 @@ export default function CartDrawer() {
     navigate('/checkout');
   };
 
+  // No threshold when shipping is priced by PIN code without a free-shipping rule
+  const hasFreeShipping = freeShippingThreshold != null;
   const amountNeededForFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
   const progressPercent = Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
 
@@ -91,26 +93,28 @@ export default function CartDrawer() {
         </div>
 
         {/* Free Shipping Progress Bar */}
-        <div className="ps-shipping-bar-container">
-          <div className="ps-shipping-bar-text">
-            <Truck size={14} color="#c5a059" />
-            {amountNeededForFreeShipping > 0 ? (
-              <span>
-                Add <strong>{formatINR(amountNeededForFreeShipping)}</strong> more to enjoy <strong>Free Delivery Across India</strong>
-              </span>
-            ) : (
-              <span className="ps-shipping-unlocked">
-                🎉 Congratulations! You have unlocked <strong>Free Delivery Across India</strong>!
-              </span>
-            )}
+        {hasFreeShipping && (
+          <div className="ps-shipping-bar-container">
+            <div className="ps-shipping-bar-text">
+              <Truck size={14} color="#c5a059" />
+              {amountNeededForFreeShipping > 0 ? (
+                <span>
+                  Add <strong>{formatINR(amountNeededForFreeShipping)}</strong> more to enjoy <strong>Free Delivery Across India</strong>
+                </span>
+              ) : (
+                <span className="ps-shipping-unlocked">
+                  🎉 Congratulations! You have unlocked <strong>Free Delivery Across India</strong>!
+                </span>
+              )}
+            </div>
+            <div className="ps-shipping-progress-track">
+              <div
+                className="ps-shipping-progress-fill"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
           </div>
-          <div className="ps-shipping-progress-track">
-            <div
-              className="ps-shipping-progress-fill"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-        </div>
+        )}
 
         {/* Cart Items List */}
         <div className="ps-cart-items-body">
@@ -253,7 +257,7 @@ export default function CartDrawer() {
 
               <div className="ps-summary-row">
                 <span>Estimated Express Shipping</span>
-                <span>{shipping === 0 ? 'FREE' : formatINR(shipping)}</span>
+                <span>{shipping === null ? 'By PIN code at checkout' : shipping === 0 ? 'FREE' : formatINR(shipping)}</span>
               </div>
 
               <div className="ps-summary-row ps-total-row">

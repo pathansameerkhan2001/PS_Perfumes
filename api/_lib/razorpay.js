@@ -18,12 +18,19 @@ export function onlinePaymentsAvailable() {
   return keyId.startsWith(isProduction ? 'rzp_live_' : 'rzp_test_');
 }
 
+const SWITCH_OFF = ['', 'false', '0', 'no', 'off'];
+
 /**
  * Kill switch: blocks new Razorpay orders only. Verification and the webhook do not read it, so
- * payments already under way still complete while they are reconciled.
+ * payments already under way still complete while they are reconciled. It fails closed: any value
+ * but empty or an explicit "off" (case and spaces ignored) blocks, so a typo cannot reopen payments.
  */
+export function newOrdersDisabled() {
+  return !SWITCH_OFF.includes(String(process.env.RAZORPAY_NEW_ORDERS_DISABLED ?? '').trim().toLowerCase());
+}
+
 export function newOnlineOrdersAllowed() {
-  return onlinePaymentsAvailable() && process.env.RAZORPAY_NEW_ORDERS_DISABLED !== 'true';
+  return onlinePaymentsAvailable() && !newOrdersDisabled();
 }
 
 async function razorpayRequest(path, { method = 'GET', body } = {}) {

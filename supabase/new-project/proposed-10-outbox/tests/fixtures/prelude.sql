@@ -1,0 +1,13 @@
+create role anon nologin; create role authenticated nologin; create role service_role nologin bypassrls;
+create role postgres login nosuperuser bypassrls createrole;
+alter schema public owner to postgres;
+create schema auth authorization postgres;
+create table auth.users (id uuid primary key, email text, email_confirmed_at timestamptz, last_sign_in_at timestamptz);
+alter table auth.users owner to postgres;
+create function auth.uid() returns uuid language sql stable as $f$ select nullif(current_setting('app.uid', true), '')::uuid $f$;
+create function auth.jwt() returns jsonb language sql stable as $f$ select '{}'::jsonb $f$;
+grant usage on schema auth to anon, authenticated, service_role;
+grant execute on function auth.uid(), auth.jwt() to anon, authenticated, service_role;
+grant usage on schema public to service_role;
+alter default privileges for role postgres in schema public grant all on tables to anon, authenticated, service_role;
+alter default privileges for role postgres in schema public grant all on functions to anon, authenticated, service_role;

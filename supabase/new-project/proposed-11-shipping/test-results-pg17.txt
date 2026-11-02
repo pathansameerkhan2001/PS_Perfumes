@@ -1,0 +1,159 @@
+server: PostgreSQL 17.11 (Debian 17.11-1.pgdg13+2) on x86_64-pc-linu
+network routes: 0; .env visible: 0; credential-like env vars: 0
+md5 11_shipping 4117d3a1bebca4da69b38bbc6a88f246; verify 1c21b8f45f9c5edace9547ca90e76748; rollback f20bf7cdebeb131c165824e6a3e2c867
+=== 0. baseline and installation ===
+  PASS  T0.1 PostgreSQL is 17.11
+  PASS  T0.2 starting fingerprints are steps 08 to 10
+  PASS  T0.3 refuses without Migration 10
+  PASS  T0.4 verify before the migration stops with its plain message
+  PASS  T0.5 clean install as one request
+  PASS  T0.6 second run stops
+  PASS  T0.7 new checkout fingerprints, payment functions untouched
+  PASS  T0.8 verify runs read-only, no false rows
+    information: mode = legacy
+    information: active serviceable PIN codes = 0
+    information: zones = 0
+    information: fallback decision = NOT DECIDED
+    information: free shipping decision = NOT DECIDED
+  PASS  T0.8b open decisions are reported as not decided
+  PASS  T0.9 clean install statement by statement
+  PASS  T0.10 no rewrite of orders
+  PASS  T0.11 existing orders identical apart from the two new empty columns
+  PASS  T0.12 updated_at unchanged
+  PASS  T0.13 starts in legacy mode with nothing decided and no rates
+  PASS  T0.14 coupons, catalogue and settings unchanged
+=== 1. legacy mode: prices identical to steps 08 and 09 v2 ===
+  PASS  T1.1 [seeded 1500/99] place_order no coupon: same amounts (OK 1000.00/99/0/1099.00)
+  PASS  T1.2 [seeded 1500/99] place_order no coupon: same amounts (OK 2000.00/0/0/2000.00)
+  PASS  T1.3 [seeded 1500/99] place_order no coupon: same amounts (OK 350.00/99/0/449.00)
+  PASS  T1.4 [seeded 1500/99] place_order no coupon: same amounts (OK 1500.00/0/0/1500.00)
+  PASS  T1.5 [seeded 1500/99] place_order no coupon: same amounts (OK 2200.00/0/0/2200.00)
+  PASS  T1.6 [seeded 1500/99] place_order TEN: same amounts (OK 1000.00/99/100/999.00)
+  PASS  T1.7 [seeded 1500/99] place_order SEED: same amounts (OK 350.00/99/50.00/399.00)
+  PASS  T1.8 [seeded 1500/99] place_order_core no coupon: same amounts (OK 1000.00/99/0/1099.00)
+  PASS  T1.9 [seeded 1500/99] place_order_core TEN: same amounts (OK 2000.00/0/200/1800.00)
+  PASS  T1.10 [seeded 1500/99] place_order_core no coupon: same amounts (OK 1500.00/0/0/1500.00)
+  PASS  T1.11 [3000/149.50] place_order no coupon: same amounts (OK 1000.00/149.50/0/1149.50)
+  PASS  T1.12 [3000/149.50] place_order no coupon: same amounts (OK 2000.00/149.50/0/2149.50)
+  PASS  T1.13 [3000/149.50] place_order no coupon: same amounts (OK 350.00/149.50/0/499.50)
+  PASS  T1.14 [3000/149.50] place_order no coupon: same amounts (OK 1500.00/149.50/0/1649.50)
+  PASS  T1.15 [3000/149.50] place_order no coupon: same amounts (OK 2200.00/149.50/0/2349.50)
+  PASS  T1.16 [3000/149.50] place_order TEN: same amounts (OK 1000.00/149.50/100/1049.50)
+  PASS  T1.17 [3000/149.50] place_order SEED: same amounts (OK 350.00/149.50/50.00/449.50)
+  PASS  T1.18 [3000/149.50] place_order_core no coupon: same amounts (OK 1000.00/149.50/0/1149.50)
+  PASS  T1.19 [3000/149.50] place_order_core TEN: same amounts (OK 2000.00/149.50/200/1949.50)
+  PASS  T1.20 [3000/149.50] place_order_core no coupon: same amounts (OK 1500.00/149.50/0/1649.50)
+  PASS  T1.21 [malformed values] place_order no coupon: same amounts (OK 1000.00/99/0/1099.00)
+  PASS  T1.22 [malformed values] place_order no coupon: same amounts (OK 2000.00/0/0/2000.00)
+  PASS  T1.23 [malformed values] place_order no coupon: same amounts (OK 350.00/99/0/449.00)
+  PASS  T1.24 [malformed values] place_order no coupon: same amounts (OK 1500.00/0/0/1500.00)
+  PASS  T1.25 [malformed values] place_order no coupon: same amounts (OK 2200.00/0/0/2200.00)
+  PASS  T1.26 [malformed values] place_order TEN: same amounts (OK 1000.00/99/100/999.00)
+  PASS  T1.27 [malformed values] place_order SEED: same amounts (OK 350.00/99/50.00/399.00)
+  PASS  T1.28 [malformed values] place_order_core no coupon: same amounts (OK 1000.00/99/0/1099.00)
+  PASS  T1.29 [malformed values] place_order_core TEN: same amounts (OK 2000.00/0/200/1800.00)
+  PASS  T1.30 [malformed values] place_order_core no coupon: same amounts (OK 1500.00/0/0/1500.00)
+  PASS  T1.31 [no settings rows] place_order no coupon: same amounts (OK 1000.00/99/0/1099.00)
+  PASS  T1.32 [no settings rows] place_order no coupon: same amounts (OK 2000.00/0/0/2000.00)
+  PASS  T1.33 [no settings rows] place_order no coupon: same amounts (OK 350.00/99/0/449.00)
+  PASS  T1.34 [no settings rows] place_order no coupon: same amounts (OK 1500.00/0/0/1500.00)
+  PASS  T1.35 [no settings rows] place_order no coupon: same amounts (OK 2200.00/0/0/2200.00)
+  PASS  T1.36 [no settings rows] place_order TEN: same amounts (OK 1000.00/99/100/999.00)
+  PASS  T1.37 [no settings rows] place_order SEED: same amounts (OK 350.00/99/50.00/399.00)
+  PASS  T1.38 [no settings rows] place_order_core no coupon: same amounts (OK 1000.00/99/0/1099.00)
+  PASS  T1.39 [no settings rows] place_order_core TEN: same amounts (OK 2000.00/0/200/1800.00)
+  PASS  T1.40 [no settings rows] place_order_core no coupon: same amounts (OK 1500.00/0/0/1500.00)
+  PASS  T1.41 every legacy case placed an order
+  PASS  T1.42 coupon counts identical
+  PASS  T1.43 PIN code and legacy rule recorded on the order
+  PASS  T1.44 recorded amount equals the order's shipping
+  PASS  T1.45 legacy ignores the PIN code list
+  PASS  T1.46 legacy quote for visitors
+=== 2. access ===
+  PASS  T2.1 visitors cannot read PIN codes
+  PASS  T2.2 visitors cannot read the config
+  PASS  T2.3 visitors cannot call the internal rule
+  PASS  T2.4 signed-in non-admin sees no PIN codes
+  PASS  T2.5 signed-in non-admin cannot add one
+  PASS  T2.6 signed-in non-admin cannot change the mode
+  PASS  T2.7 admin adds a zone
+  PASS  T2.8 admin adds a PIN code
+  PASS  T2.9 admin cannot add a second config row
+  PASS  T2.10 admin cannot delete the config row
+  PASS  T2.11 the server role has no table access either
+=== 3. configuration rules ===
+  PASS  T3.1 PIN code must be 6 digits, not starting with 0
+  PASS  T3.2 serviceable PIN code needs a charge or a zone
+  PASS  T3.3 a not-serviceable PIN code needs no charge
+  PASS  T3.4 negative charge refused
+  PASS  T3.5 pincode mode refused while nothing is decided
+  PASS  T3.6 fallback allowed needs its charge
+  PASS  T3.7 free-shipping threshold needs its amount
+  PASS  T3.8 decisions recorded, but no deliverable PIN code
+  PASS  T3.9 config unchanged after the refusals
+  PASS  T3.10 with one deliverable PIN code, pincode mode starts
+  PASS  T3.11 deactivating the last deliverable PIN code is refused
+  PASS  T3.12 deleting it is refused
+  PASS  T3.13 marking it not serviceable is refused
+  PASS  T3.14 back to the standard rule is always allowed
+  PASS  T3.15 then the PIN code can be removed
+  PASS  T3.16 a zone with PIN codes cannot be deleted
+  PASS  T3.17 zone names are unique, ignoring case
+=== 4. pincode mode: pricing ===
+  PASS  T4.0 pincode mode on
+  PASS  T4.1 own charge (COD)
+  PASS  T4.2 zone charge (COD)
+  PASS  T4.3 own charge wins over its zone
+  PASS  T4.4 not serviceable: clear refusal
+  PASS  T4.5 inactive row is ignored: refused without a fallback
+  PASS  T4.6 zone switched off: refused
+  PASS  T4.7 unlisted, no fallback: refused
+  PASS  T4.8 Razorpay prices the same way
+  PASS  T4.9 Razorpay refuses the same PIN codes
+  PASS  T4.10 coupon unchanged by shipping (TEN on 1000)
+  PASS  T4.11 Razorpay coupon unchanged too
+  PASS  T4.12 shipping sent by the browser is ignored
+  PASS  T4.13 refused order saves nothing
+  PASS  T4.14 rule recorded with the order
+  PASS  T4.15 rate reference recorded
+  PASS  T4.16 approved fallback prices unlisted PIN codes
+  PASS  T4.17 fallback also covers an inactive row
+  PASS  T4.18 fallback never overrides 'not serviceable'
+  PASS  T4.19 fallback recorded as such
+  PASS  T4.20 free shipping at the threshold
+  PASS  T4.21 below the threshold it is charged
+  PASS  T4.22 threshold uses the item total before the coupon, as the legacy rule does
+  PASS  T4.23 free shipping recorded
+  PASS  T4.24 retry of a saved attempt keeps its price after a rate change
+  PASS  T4.25 a new order uses the new rate
+=== 5. the checkout page's quote ===
+  PASS  T5.1 quote matches the order
+  PASS  T5.2 quote shows no rate rows, ids or zone names
+  PASS  T5.3 no PIN code yet: asks for one
+  PASS  T5.4 refused PIN code: the shopper's message
+  PASS  T5.5 malformed PIN code
+  PASS  T5.6 free-shipping threshold shown for the bag
+  PASS  T5.7 absurd subtotal from the page is bounded and harmless
+=== 6. payments still work on shipping-priced orders ===
+  PASS  T6.1 paid with shipping in the amount (1000 + 120)
+  PASS  T6.2 an amount without the shipping is a mismatch
+=== 7. rollback ===
+  PASS  T7.1 rollback refuses while pincode mode is on, unless confirmed
+  PASS  T7.2 confirmed rollback
+  PASS  T7.3 steps 08 and 09 v2 functions restored exactly
+  PASS  T7.4 shipping functions removed
+  PASS  T7.5 rates, zones and config kept
+  PASS  T7.6 orders keep their shipping record
+  PASS  T7.7 checkout prices by the legacy rule again
+  PASS  T7.8 Migration 10 verify is clean again
+  PASS  T7.9 rollback in legacy mode needs no confirmation
+  PASS  T7.10 reapply after the rollback
+  PASS  T7.11 reapplied: owner's rates and mode still there
+  PASS  T7.12 09 v2 rollback refuses while step 11 is applied
+  PASS  T7.13 Migration 10 verify reports the replaced functions (documented)
+=== RESULTS ===
+  pass 137, fail 0
+SQL files changed during run: 0
+suite exit: 0
+network=none ports={} image=postgres:17.11
+container left: 0

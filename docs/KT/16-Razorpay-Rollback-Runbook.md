@@ -1,6 +1,6 @@
 # 16 — Razorpay Rollback Runbook
 
-> Status at 2026-10-31: prepared for **Migration 09 v2**, which is not applied. **`09v2_rollback.sql` has run only on a disposable PostgreSQL 17.11 container, never on Supabase.** The owner reports the kill switch on in Production, and an empty `POST /api/create-order` returned HTTP 503. Every stage needs written approval.
+> Status at 2026-10-31: prepared for **Migration 09 v2**, which the owner reports applied and verified. **`09v2_rollback.sql` has run only on a disposable PostgreSQL 17.11 container, never on Supabase.** The owner reports the kill switch on in Production, and an empty `POST /api/create-order` returned HTTP 503. Every stage needs written approval.
 >
 > Files marked `09v2_` are in `supabase/new-project/proposed-09-v2/`, and `09v2r1_verify_readonly.sql` is in `supabase/new-project/proposed-09-v2-r1/`. The other `09_` files named here are in `supabase/new-project/` and were tested with v2. **Do not run `09_rollback.sql` or `09_razorpay_payments.sql`:** they belong to the original migration, which replaces `place_order`. Some older SQL file headers and messages still name them.
 
@@ -74,8 +74,13 @@ Reconciliation is finished when every payment in the Razorpay list is accounted 
 
 ## 4. Stage 3 — Database rollback
 
+**If Migration 10 is applied, roll it back first.** Stop the worker's schedule, revert the application code, then run `supabase/new-project/proposed-10-outbox/10_rollback.sql`, each with approval. `09v2_rollback.sql` is not blocked by Migration 10, but running it first leaves `finalize_payment_and_enqueue` calling a function that no longer exists. Rolling back Migration 09 v2 afterwards is a separate decision, and needs its own approval.
+
+Keep that order. The worker must stop before the old code returns, or both send and customers can get two e-mails. The API code must be reverted before `10_rollback.sql`, because it calls the functions that file removes, and every payment call then fails. Undelivered notifications stay in `notification_outbox`; export them, because the old code does not read them.
+
 Gates, all required:
 
+- [ ] Migration 10 is not applied, or has been rolled back.
 - [ ] Stage 1 is deployed and checked.
 - [ ] Stage 2 is finished and the CSV is stored safely.
 - [ ] A **database backup is confirmed**: you have seen it in Supabase, with its date after the reconciliation. If the plan offers none, take a `pg_dump` and keep it off Git. Your docs list backups as unverified, so check this before an emergency.
@@ -157,6 +162,7 @@ Reapply only `09v2_razorpay_payments.sql`, never `09_razorpay_payments.sql`. The
 - **Refunds are manual,** and so is recording them.
 - **Supabase backups are unverified** for this project. The manual backup taken before Migration 09 v2 passed its file checks, but no restore has been tested.
 - **The 60-minute wait is a chosen value,** not a Razorpay guarantee. Lengthen `c_quiet` in `09v2_rollback.sql` if needed, and the matching check in the preflight.
-- **`mark_order_paid` run by hand sends no e-mail.**
+- **`mark_order_paid` run by hand sends no e-mail** and stores no notification.
+- **The soft stop leaves notifications running.** The kill switch blocks new orders only: verification, the webhook and the worker keep working, so payments under way still get their e-mails.
 - **The kill switch needs a redeploy,** so it is not instant.
 - **The reconciliation depends on Razorpay's dashboard.** Check its current reports when rehearsing; this runbook does not assume a specific report name.
