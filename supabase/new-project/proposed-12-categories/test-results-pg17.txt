@@ -1,0 +1,79 @@
+server: PostgreSQL 17.11 (Debian 17.11-1.pgdg13+2) on x86_64-pc-linu
+network routes: 0; .env visible: 0; credential-like env vars: 0
+md5 12_categories af848e53df98d8784fb423beccef9e8e; precheck f206589d28a193a823318b043fec3a7e; verify 1c266cbe358a7d66e8f3e1f6ba226878; rollback f785f26563932198dfa6b72b1e757e1e
+=== 0. baseline ===
+  PASS  T0.1 PostgreSQL is 17.11
+  PASS  T0.2 starting fingerprints are steps 08 to 10
+  PASS  T0.3 fixture: seven families, attars and sprays
+=== 1. precheck ===
+  PASS  T1.1 precheck runs read-only
+  PASS  T1.2 precheck: no false rows
+  PASS  T1.3 precheck lists the adopted slugs
+  PASS  T1.4 precheck move plan: one musky product
+  PASS  T1.5 verify before the migration stops with its plain message
+=== 2. installation ===
+  PASS  T2.1 migration as one request
+  PASS  T2.2 second run stops
+  PASS  T2.3 everything outside placement unchanged
+  PASS  T2.4 payment and checkout fingerprints unchanged
+  PASS  T2.5 verify runs read-only
+  PASS  T2.6 verify: no false rows
+  PASS  T2.7 migration statement by statement
+  PASS  T2.8 both installs give the same placement
+=== 3. tree and moves ===
+  PASS  T3.1 main categories in order
+  PASS  T3.2 subcategories of Attars
+  PASS  T3.3 subcategory count
+  PASS  T3.4 perfume → perfumes
+  PASS  T3.5 attar and woody → attars
+  PASS  T3.6 musky, oud, floral → their attar subcategories
+  PASS  T3.7 bakhoor adopted: same row, same products, now under Home Fragrance
+  PASS  T3.8 existing attars row adopted as the main category
+  PASS  T3.9 uncategorised and other products stay where they are
+  PASS  T3.10 the six retired families are inactive and empty
+  PASS  T3.11 no category deleted
+  PASS  T3.12 log: moves match the products
+=== 4. guards ===
+  PASS  T4.1 a category with products cannot be deleted
+  PASS  T4.2 a main category with subcategories cannot be deleted
+  PASS  T4.3 a subcategory cannot contain subcategories
+  PASS  T4.4 a main category with subcategories cannot become a subcategory
+  PASS  T4.5 a category cannot be its own parent
+  PASS  T4.6 an empty subcategory can be deleted
+  PASS  T4.7 a new subcategory can be added under a main category
+  PASS  T4.8 deleting a product is unaffected
+=== 5. visitors ===
+  PASS  T5.1 visitors read active categories with parent_id
+  PASS  T5.2 visitors do not see the retired families
+  PASS  T5.3 visitors cannot read the migration log
+  PASS  T5.4 visitors cannot add a category
+  PASS  T5.5 service_role cannot read the migration log
+=== 6. rollback ===
+  PASS  T6.1 rollback as one request
+  PASS  T6.2 every product back in its family
+  PASS  T6.3 categories exactly as before
+  PASS  T6.4 everything else unchanged
+  PASS  T6.5 parent_id, guards and log removed
+  PASS  T6.6 second rollback stops
+  PASS  T6.7 reinstall after rollback
+  PASS  T6.8 reinstall gives the same placement by slug
+  PASS  T6.9 verify after reinstall: no false rows
+  PASS  T6.10 stops when a product was later put in a new category
+  PASS  T6.11 that stop changed nothing
+  PASS  T6.12 stops when a subcategory was made later
+  PASS  T6.13 rollback with a later move to an older category
+  PASS  T6.14 that later choice is kept, the rest restored
+=== 7. locking ===
+  PASS  T7.1 a held lock makes the migration give up
+  PASS  T7.2 it gives up within lock_timeout
+  PASS  T7.3 nothing changed
+  PASS  T7.4 it runs once the lock is gone
+=== 8. end ===
+  PASS  T8.1 fingerprints at the end
+=== RESULTS ===
+  pass 60, fail 0
+SQL files changed during run: 0
+server log deadlocks: 0
+suite exit: 0
+network=none ports={} image=postgres:17.11
+container left: 0

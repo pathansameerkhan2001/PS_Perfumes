@@ -1,7 +1,10 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { isValidUUID } from './products';
+import { cachedRequest, invalidateCached } from '../lib/requestCache';
 
 const LOCAL_CATEGORIES_KEY = 'ps_db_categories';
+// Storefront category reads share one cached request; admin reads (all = true) never use it
+const CATEGORIES_CACHE_PREFIX = 'categories:';
 
 export const INITIAL_CATEGORIES = [
   {
@@ -92,16 +95,52 @@ function saveLocalCategories(cats) {
 
 export async function getCategories(all = false) {
   if (isSupabaseConfigured && supabase) {
-    let query = supabase.from('categories').select('*').order('display_order', { ascending: true });
-    if (!all) query = query.eq('is_active', true);
-    const { data, error } = await query;
-    if (error) throw new Error(`Could not load categories: ${error.message}`);
-    // The database answered: real categories only, never demo data
-    return data || [];
+    const load = async () => {
+      let query = supabase.from('categories').select('*').order('display_order', { ascending: true });
+      if (!all) query = query.eq('is_active', true);
+      const { data, error } = await query;
+      if (error) throw new Error(`Could not load categories: ${error.message}`);
+      // The database answered: real categories only, never demo data
+      return data || [];
+    };
+    // Header, footer, menu and category pages all ask for the active list: one request serves them
+    return all ? load() : cachedRequest(`${CATEGORIES_CACHE_PREFIX}active`, load);
   }
 
   const list = getLocalCategories();
   return all ? list : list.filter((c) => c.is_active);
+}
+
+/**
+ * Main categories, each with its subcategories, in display order.
+ *
+ * Works before and after Migration 12: without categories.parent_id (hasTree = false) every
+ * category is a main category with no subcategories, exactly as the storefront behaved before.
+ * A subcategory whose main category is not in rows (inactive, so hidden from visitors) is dropped.
+ */
+export function buildCategoryTree(rows) {
+  const list = (rows || []).filter((r) => r && r.id && r.slug);
+  const hasTree = list.some((r) => Object.prototype.hasOwnProperty.call(r, 'parent_id'));
+  const byOrder = (a, b) =>
+    (a.display_order || 0) - (b.display_order || 0) || String(a.name || '').localeCompare(String(b.name || ''));
+
+  const mains = list
+    .filter((r) => !hasTree || !r.parent_id)
+    .sort(byOrder)
+    .map((r) => ({ ...r, children: [] }));
+  if (hasTree) {
+    const mainById = new Map(mains.map((m) => [m.id, m]));
+    list
+      .filter((r) => r.parent_id)
+      .sort(byOrder)
+      .forEach((r) => mainById.get(r.parent_id)?.children.push(r));
+  }
+  return { hasTree, mains };
+}
+
+/** The storefront's active category tree (shares the cached categories request). */
+export async function getStorefrontCategoryTree() {
+  return buildCategoryTree(await getCategories(false));
 }
 
 export async function createCategory(cat) {
@@ -121,6 +160,7 @@ export async function createCategory(cat) {
 
       const { data, error } = await supabase.from('categories').insert([payload]).select().single();
       if (!error && data) {
+        invalidateCached(CATEGORIES_CACHE_PREFIX);
         createdRecord = data;
         const list = getLocalCategories();
         saveLocalCategories([...list, data]);
@@ -177,6 +217,7 @@ export async function updateCategory(id, updates) {
       if (!data || data.length === 0) {
         throw new Error('No row was changed (missing record or no permission).');
       }
+      invalidateCached(CATEGORIES_CACHE_PREFIX);
       return { data: data[0], error: null };
     } catch (e) {
       console.error('Supabase updateCategory error:', e);
@@ -217,6 +258,7 @@ export async function deleteCategory(id) {
       if (!deleted || deleted.length === 0) {
         return { success: false, error: 'Category was not deleted: no row changed (missing record or no permission).' };
       }
+      invalidateCached(CATEGORIES_CACHE_PREFIX);
       return { success: true };
     } catch (e) {
       return { success: false, error: e.message };

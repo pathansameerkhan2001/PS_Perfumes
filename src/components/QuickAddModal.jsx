@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, ShoppingBag, Check, Star, Minus, Plus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
+import { isAttarCategory } from '../services/products';
 import './QuickAddModal.css';
 
 /**
@@ -40,7 +41,7 @@ export default function QuickAddModal({ product, isOpen, onClose }) {
     );
   }, [product]);
 
-  const isAttar = product?.category?.toLowerCase() === 'attar';
+  const isAttar = isAttarCategory(product?.category_slug || product?.category);
 
   // Available bottle types — from the product's variants only (no invented options)
   const availableBottles = useMemo(() => {

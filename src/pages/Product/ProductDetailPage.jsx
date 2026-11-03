@@ -15,7 +15,7 @@ import {
   Layers,
   Sparkles,
 } from 'lucide-react';
-import { getProductBySlug, getProducts } from '../../services/products';
+import { getProductBySlug, getProducts, isAttarCategory } from '../../services/products';
 import { getReviews } from '../../services/reviews';
 import { useCart } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatCurrency';
@@ -87,7 +87,7 @@ export default function ProductDetailPage() {
           setActiveImage(prod.main_image || prod.image || '/assets/ps-perfumes-logo.webp');
 
           // Initialize variant defaults from real product data
-          const isAttar = prod.category?.toLowerCase() === 'attar';
+          const isAttar = isAttarCategory(prod.category_slug || prod.category);
           const firstActive = (prod.variants || []).find((v) => v.active !== false && v.is_active !== false);
           if (firstActive) {
             const firstVar = firstActive;
@@ -270,7 +270,8 @@ export default function ProductDetailPage() {
   const categoryName = (product.category || 'WOODY').toUpperCase();
   const genderName = product.gender ? String(product.gender).toUpperCase() : '';
 
-  const isAttar = product.category?.toLowerCase() === 'attar';
+  // 'attar' before Migration 12; 'attars' or an attar subcategory after it
+  const isAttar = isAttarCategory(product.category_slug || product.category);
 
   // Distinct bottle types offered in active variants
   const availableBottleTypes = (() => {

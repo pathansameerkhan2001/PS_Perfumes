@@ -1,0 +1,353 @@
+/* ==========================================================================
+   Shop by Category (/collections): ivory page, botanical green active state,
+   champagne gold lines and icons. Tokens are scoped to the page.
+   ========================================================================== */
+
+.ps-cbc-page {
+  --cbc-ivory: #fbf6ee;
+  --cbc-cream: #f4ece0;
+  --cbc-green: #1f4a34;
+  --cbc-green-deep: #173a28;
+  --cbc-gold: #b8924a;
+  --cbc-gold-line: rgba(184, 146, 74, 0.38);
+  --cbc-gold-hair: rgba(184, 146, 74, 0.18);
+  --cbc-ink: #1e1a16;
+  --cbc-muted: #6c6358;
+  --cbc-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  background: linear-gradient(180deg, var(--cbc-ivory) 0%, #fdfaf5 60%, var(--cbc-ivory) 100%);
+  color: var(--cbc-ink);
+  padding: clamp(32px, 5vw, 56px) 16px clamp(48px, 6vw, 88px);
+  min-height: 70vh;
+}
+
+/* Header ------------------------------------------------------------------ */
+.ps-cbc-header {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto clamp(24px, 3.5vw, 40px);
+}
+
+.ps-cbc-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  font-family: var(--cbc-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--cbc-ink);
+}
+
+.ps-cbc-eyebrow-line {
+  width: clamp(32px, 6vw, 64px);
+  height: 1px;
+  background: var(--cbc-gold);
+}
+
+.ps-cbc-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(34px, 5.4vw, 58px);
+  line-height: 1.1;
+  margin: 14px 0 10px;
+  color: var(--cbc-ink);
+}
+
+.ps-cbc-subtitle {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(15px, 1.6vw, 19px);
+  color: var(--cbc-muted);
+  margin: 0;
+}
+
+/* Category tabs ----------------------------------------------------------- */
+.ps-cbc-tabs {
+  max-width: 1340px;
+  margin: 0 auto;
+  border-bottom: 1px solid var(--cbc-gold-line);
+}
+
+.ps-cbc-tabs-track {
+  display: flex;
+  justify-content: center;
+  gap: clamp(8px, 3vw, 56px);
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+
+.ps-cbc-tabs-track::-webkit-scrollbar {
+  display: none;
+}
+
+.ps-cbc-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  flex: 0 0 auto;
+  padding: 14px clamp(10px, 1.6vw, 26px) 18px;
+  font-family: var(--font-serif);
+  font-size: clamp(17px, 1.9vw, 24px);
+  color: var(--cbc-ink);
+  text-decoration: none;
+  scroll-snap-align: center;
+  transition: color 0.25s ease;
+}
+
+.ps-cbc-tab svg {
+  color: var(--cbc-gold);
+  flex-shrink: 0;
+}
+
+.ps-cbc-tab::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #a07a34, var(--cbc-gold), #a07a34);
+  transform: scaleX(0);
+  transition: transform 0.3s var(--transition-smooth, ease);
+}
+
+.ps-cbc-tab:hover {
+  color: var(--cbc-green);
+}
+
+.ps-cbc-tab.is-active {
+  color: var(--cbc-green);
+  font-weight: 600;
+}
+
+.ps-cbc-tab.is-active::after {
+  transform: scaleX(1);
+}
+
+.ps-cbc-tab:focus-visible,
+.ps-cbc-pill:focus-visible,
+.ps-cbc-btn:focus-visible {
+  outline: 2px solid var(--cbc-green);
+  outline-offset: 3px;
+}
+
+.ps-cbc-tab-skeleton {
+  width: 170px;
+  height: 30px;
+  margin: 14px 12px 18px;
+  border-radius: 6px;
+  background: var(--cbc-cream);
+}
+
+/* Filter pills ------------------------------------------------------------ */
+.ps-cbc-filters {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  max-width: 1340px;
+  margin: 0 auto;
+  padding: clamp(20px, 2.6vw, 32px) 0;
+  border-bottom: 1px solid var(--cbc-gold-hair);
+}
+
+.ps-cbc-filter-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  font-family: var(--cbc-sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--cbc-green);
+}
+
+.ps-cbc-pills {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px;
+}
+
+.ps-cbc-pills::-webkit-scrollbar {
+  display: none;
+}
+
+.ps-cbc-pill {
+  flex: 0 0 auto;
+  padding: 10px 26px;
+  border: 1px solid var(--cbc-gold-line);
+  border-radius: 999px;
+  background: #fffdf9;
+  font-family: var(--font-serif);
+  font-size: 16px;
+  color: var(--cbc-ink);
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.ps-cbc-pill:hover {
+  border-color: var(--cbc-gold);
+}
+
+.ps-cbc-pill.is-active {
+  background: var(--cbc-green);
+  border-color: var(--cbc-green);
+  color: #fdf8ef;
+}
+
+/* Grid -------------------------------------------------------------------- */
+.ps-cbc-content {
+  max-width: 1340px;
+  margin: 0 auto;
+  padding-top: clamp(24px, 3vw, 40px);
+}
+
+.ps-cbc-count {
+  margin: 0 0 18px;
+  font-family: var(--cbc-sans);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--cbc-muted);
+}
+
+.ps-cbc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(16px, 1.8vw, 28px);
+}
+
+.ps-cbc-card-skeleton {
+  aspect-ratio: 1 / 1.35;
+  border-radius: 14px;
+  background: linear-gradient(90deg, var(--cbc-cream) 25%, #fbf7f0 50%, var(--cbc-cream) 75%);
+  background-size: 200% 100%;
+  animation: ps-cbc-shimmer 1.5s infinite;
+}
+
+@keyframes ps-cbc-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* States and buttons ------------------------------------------------------ */
+.ps-cbc-state {
+  max-width: 560px;
+  margin: clamp(24px, 4vw, 48px) auto;
+  padding: clamp(28px, 4vw, 44px) 24px;
+  text-align: center;
+  border: 1px solid var(--cbc-gold-hair);
+  border-radius: 18px;
+  background: #fffdf9;
+}
+
+.ps-cbc-state h2 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(22px, 2.6vw, 28px);
+  margin: 0 0 8px;
+}
+
+.ps-cbc-state p {
+  margin: 0 0 20px;
+  color: var(--cbc-muted);
+}
+
+.ps-cbc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 28px;
+  border: none;
+  border-radius: 999px;
+  background: var(--cbc-green);
+  color: #fdf8ef;
+  font-family: var(--cbc-sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.ps-cbc-btn:hover {
+  background: var(--cbc-green-deep);
+}
+
+.ps-cbc-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: clamp(28px, 4vw, 44px);
+  font-family: var(--cbc-sans);
+  font-size: 13px;
+  color: var(--cbc-muted);
+}
+
+/* Responsive -------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .ps-cbc-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .ps-cbc-tabs-track {
+    justify-content: flex-start;
+  }
+
+  .ps-cbc-filters {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .ps-cbc-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .ps-cbc-tab {
+    gap: 8px;
+    padding: 10px 12px 14px;
+  }
+
+  .ps-cbc-tab svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .ps-cbc-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .ps-cbc-pill {
+    padding: 8px 18px;
+    font-size: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-cbc-tab::after,
+  .ps-cbc-card-skeleton {
+    transition: none;
+    animation: none;
+  }
+}

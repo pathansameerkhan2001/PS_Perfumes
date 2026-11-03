@@ -352,6 +352,9 @@ function saveLocalProducts(products) {
 export async function getProducts(options = {}) {
   const {
     category,
+    // Category UUIDs (a main category and its subcategories): filtered in the database, so a
+    // category page downloads only its own products
+    categoryIds,
     status,
     allStatuses = false,
     featured,
@@ -408,6 +411,12 @@ export async function getProducts(options = {}) {
       if (effectiveStatus) {
         query = query.eq('is_active', effectiveStatus === 'active');
       }
+      const scopedIds = Array.isArray(categoryIds) ? categoryIds.filter(isValidUUID).sort() : null;
+      if (scopedIds) {
+        // An empty scope matches nothing (never the whole catalogue)
+        if (scopedIds.length === 0) return [];
+        query = query.in('category_id', scopedIds);
+      }
       if (featured !== undefined) {
         query = query.eq('is_featured', Boolean(featured));
       }
@@ -446,7 +455,7 @@ export async function getProducts(options = {}) {
       const data = allStatuses
         ? await runQuery()
         : await cachedRequest(
-            `${PRODUCTS_CACHE_PREFIX}${JSON.stringify([effectiveStatus, featured, new_arrival, bestseller, search, sort, limit])}`,
+            `${PRODUCTS_CACHE_PREFIX}${JSON.stringify([effectiveStatus, featured, new_arrival, bestseller, search, sort, limit, scopedIds])}`,
             runQuery
           );
       // The database answered: show its real state (even an empty list), never demo data.

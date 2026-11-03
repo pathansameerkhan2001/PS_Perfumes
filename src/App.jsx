@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import PublicLayout from './components/layout/PublicLayout';
+import LegacyCollectionRoute from './pages/Collections/LegacyCollectionRoute';
 import { whenIdleAfterLoad } from './utils/idlePrefetch';
 
 // Public Storefront Pages
@@ -14,6 +15,7 @@ import CartPage from './pages/Cart/CartPage';
 const storefrontPages = {
   shop: () => import('./pages/Shop/ShopPage'),
   collection: () => import('./pages/Collection/CollectionPage'),
+  collections: () => import('./pages/Collections/CollectionsPage'),
   product: () => import('./pages/Product/ProductDetailPage'),
   checkout: () => import('./pages/Checkout/CheckoutPage'),
   about: () => import('./pages/About/AboutPage'),
@@ -24,7 +26,7 @@ const storefrontPages = {
   trackOrder: () => import('./pages/TrackOrder/TrackOrderPage'),
 };
 const ShopPage = lazy(storefrontPages.shop);
-const CollectionPage = lazy(storefrontPages.collection);
+const CollectionsPage = lazy(storefrontPages.collections);
 const ProductDetailPage = lazy(storefrontPages.product);
 const CheckoutPage = lazy(storefrontPages.checkout);
 const AboutPage = lazy(storefrontPages.about);
@@ -110,15 +112,18 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/shop" element={<ShopPage />} />
-          {/* Reusable Master Fragrance Collection Routes */}
-          <Route path="/attar" element={<CollectionPage key="attar" category="attar" />} />
-          <Route path="/perfume" element={<CollectionPage key="perfume" category="perfume" />} />
-          <Route path="/bakhoor" element={<CollectionPage key="bakhoor" category="bakhoor" />} />
-          <Route path="/musky" element={<CollectionPage key="musky" category="musky" />} />
-          <Route path="/oud" element={<CollectionPage key="oud" category="oud" />} />
-          <Route path="/floral" element={<CollectionPage key="floral" category="floral" />} />
-          <Route path="/woody" element={<CollectionPage key="woody" category="woody" />} />
-          <Route path="/category/:slug" element={<CollectionPage />} />
+          {/* Shop by Category: main categories as tabs, subcategories as filters */}
+          <Route path="/collections" element={<CollectionsPage />} />
+          <Route path="/collections/:main" element={<CollectionsPage />} />
+          {/* Original collection URLs: redirect to Shop by Category once Migration 12 is applied */}
+          <Route path="/attar" element={<LegacyCollectionRoute key="attar" category="attar" />} />
+          <Route path="/perfume" element={<LegacyCollectionRoute key="perfume" category="perfume" />} />
+          <Route path="/bakhoor" element={<LegacyCollectionRoute key="bakhoor" category="bakhoor" />} />
+          <Route path="/musky" element={<LegacyCollectionRoute key="musky" category="musky" />} />
+          <Route path="/oud" element={<LegacyCollectionRoute key="oud" category="oud" />} />
+          <Route path="/floral" element={<LegacyCollectionRoute key="floral" category="floral" />} />
+          <Route path="/woody" element={<LegacyCollectionRoute key="woody" category="woody" />} />
+          <Route path="/category/:slug" element={<LegacyCollectionRoute />} />
           <Route path="/product/:slug" element={<ProductDetailPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />

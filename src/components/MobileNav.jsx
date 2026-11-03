@@ -44,6 +44,11 @@ const FAMILY_ICONS = {
   oud: Crown,
   floral: Flower2,
   woody: TreePine,
+  // Main categories of Migration 12
+  perfumes: SprayCan,
+  attars: Droplets,
+  'home-fragrance': Flame,
+  'body-care': Flower2,
 };
 
 export default function MobileNav({
