@@ -8,9 +8,8 @@
 with wanted(parent_slug, slug) as (
   values
     (null, 'perfumes'), (null, 'attars'), (null, 'home-fragrance'), (null, 'body-care'),
-    ('perfumes', 'arabic-perfumes'), ('perfumes', 'designer-inspired-perfumes'), ('perfumes', 'luxury-perfumes'),
-    ('attars', 'musk-attars'), ('attars', 'oud-attars'), ('attars', 'floral-attars'), ('attars', 'woody-attars'),
-    ('home-fragrance', 'bakhoor'), ('home-fragrance', 'incense-sticks'), ('home-fragrance', 'room-fragrances'),
+    ('attars', 'woody-attars'), ('attars', 'arabic-attars'), ('attars', 'traditional-attars'),
+    ('home-fragrance', 'bakhoor'), ('home-fragrance', 'room-fragrances'),
     ('body-care', 'body-lotions'), ('body-care', 'body-mists'), ('body-care', 'body-oils'), ('body-care', 'personal-care')
 )
 select w.parent_slug, w.slug,
@@ -25,9 +24,8 @@ select w.parent_slug, w.slug,
 select c.name, c.slug, c.is_active, (select count(*) from public.products p where p.category_id = c.id) as products
   from public.categories c
  where lower(c.slug) not in ('perfumes', 'attars', 'home-fragrance', 'body-care',
-   'arabic-perfumes', 'designer-inspired-perfumes', 'luxury-perfumes',
-   'musk-attars', 'oud-attars', 'floral-attars', 'woody-attars',
-   'bakhoor', 'incense-sticks', 'room-fragrances',
+   'woody-attars', 'arabic-attars', 'traditional-attars',
+   'bakhoor', 'room-fragrances',
    'body-lotions', 'body-mists', 'body-oils', 'personal-care')
  order by c.display_order, c.name;
 

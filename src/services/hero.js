@@ -9,10 +9,11 @@ import promoBannerMobile from '../assets/promo-banner-mobile.webp';
 
 const LOCAL_HERO_KEY = 'ps_db_hero_slides';
 
-// Built-in hero posters (WebP, public/assets). The homepage hero uses the same files, and
-// index.html preloads them on the homepage; bump the "-v1" suffix when replacing an image.
-export const BUILT_IN_HERO_POSTER_DESKTOP = '/assets/hero-poster-desktop-v1.webp';
-export const BUILT_IN_HERO_POSTER_MOBILE = '/assets/hero-poster-mobile-v1.webp';
+// Built-in hero posters (WebP, public/assets): the first frame of the built-in film, so the
+// poster and the start of the film are the same picture. index.html preloads them on the
+// homepage; bump the "-v2" suffix when replacing an image (or the film).
+export const BUILT_IN_HERO_POSTER_DESKTOP = '/assets/hero-poster-desktop-v2.webp';
+export const BUILT_IN_HERO_POSTER_MOBILE = '/assets/hero-poster-mobile-v2.webp';
 const heroLuxuryDesktop = BUILT_IN_HERO_POSTER_DESKTOP;
 const heroLuxuryMobile = BUILT_IN_HERO_POSTER_MOBILE;
 

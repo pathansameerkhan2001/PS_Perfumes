@@ -530,7 +530,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   Ivory and champagne-gold header (top bar, navigation bar, subcategory menus).
+   Header: black top logo bar, ivory navigation bar and white subcategory menus.
    The header's rules use the --lux-* palette; it is set here for the header
    only: cream top bar, white navigation bar, charcoal text, gold accents,
    deep green active item.
@@ -547,7 +547,7 @@
   --lux-green: #294532;       /* active item */
   --lux-border: #E5D7C1;
   --lux-shadow: 0 14px 34px rgba(41, 35, 29, 0.12);
-  background-color: #FBF8F1;
+  background-color: #FFFDF8;
   border-bottom: 1px solid rgba(198, 154, 69, 0.55);
   box-shadow: 0 4px 18px rgba(41, 35, 29, 0.06);
 }
@@ -556,9 +556,14 @@
   box-shadow: 0 6px 24px rgba(41, 35, 29, 0.1);
 }
 
+/* Top logo bar: black with the gold logo; its own palette, so the icons and location pill are
+   ivory and gold on black while the navigation bar below stays ivory */
 .ps-top-bar {
-  background: linear-gradient(180deg, #FFFDF8 0%, #FBF8F1 100%);
-  border-bottom: 1px solid rgba(198, 154, 69, 0.22);
+  --lux-text: #F8F4EC;
+  --lux-text-2: #D9CDB8;
+  --lux-gold-deep: #E3C58B;
+  background: #080706;
+  border-bottom: 1px solid #8C692F;
 }
 
 /* Search, account, wishlist, bag and menu: charcoal, gold on hover */
@@ -570,18 +575,28 @@
 
 .ps-icon-link:hover,
 .ps-mobile-toggle-btn:hover {
-  color: var(--lux-gold);
+  color: #E3C58B;
   opacity: 1;
 }
 
-.ps-delivery-location-pill {
-  background: rgba(198, 154, 69, 0.07);
-  border-color: rgba(198, 154, 69, 0.45);
-  color: var(--lux-text-2);
+/* Menu button on black: gold */
+.ps-mobile-toggle-btn {
+  color: #C69A45;
 }
 
+.ps-delivery-location-pill {
+  background: rgba(198, 154, 69, 0.08);
+  border-color: rgba(198, 154, 69, 0.6);
+  color: #E3C58B;
+}
+
+.ps-delivery-location-pill .ps-pin-icon {
+  color: #C69A45;
+}
+
+/* Navigation bar: ivory, charcoal text, gold hover and active underline */
 .ps-nav-bar {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-top: 0;
   border-bottom: 0;
 }
@@ -622,8 +637,10 @@
   transform: scaleX(1);
 }
 
+/* Active page: charcoal text, heavier, with the gold underline as its indicator */
 .ps-nav-menu-link.is-active {
-  color: var(--lux-green);
+  color: #2B2A27;
+  font-weight: 700;
 }
 
 .ps-nav-menu-link.is-active::after {

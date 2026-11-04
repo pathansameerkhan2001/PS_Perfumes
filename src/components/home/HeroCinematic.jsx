@@ -162,6 +162,9 @@ export default function HeroCinematic() {
 
   // 'loading' → 'playing' | 'paused' | 'blocked' (autoplay refused) | 'error' (file failed to load)
   const [status, setStatus] = useState(() => (autoStart ? 'loading' : 'paused'));
+  // The poster layer covers the film until it has really started (its first 'playing' event), so
+  // a refresh never shows a blank frame or a different picture in between; then it fades out
+  const [filmStarted, setFilmStarted] = useState(false);
 
   const tryPlay = useCallback(() => {
     const video = videoRef.current;
@@ -191,7 +194,11 @@ export default function HeroCinematic() {
     video.setAttribute('webkit-playsinline', '');
 
     let retryTimer = null;
-    const onPlaying = () => setStatus('playing');
+    setFilmStarted(false);
+    const onPlaying = () => {
+      setStatus('playing');
+      setFilmStarted(true);
+    };
     // Paused by the visitor or by scrolling out of view (a refused autoplay keeps 'blocked')
     const onPause = () => setStatus((s) => (s === 'error' || s === 'blocked' ? s : 'paused'));
     const onCanPlay = () => {
@@ -376,6 +383,18 @@ export default function HeroCinematic() {
           {/* Shown only by browsers without HTML5 video support */}
           <img src={poster} alt="" className="ps-hero-cinematic-video ps-hero-poster-fallback" />
         </video>
+
+        {/* Poster layer: the same picture as the film's first frame, cropped exactly like the
+            film (same class); it stays until playback starts, then fades away. If the film never
+            plays (autoplay refused, reduced motion, Data Saver, load error) it simply remains. */}
+        <img
+          src={poster}
+          alt=""
+          aria-hidden="true"
+          className={`ps-hero-cinematic-video ps-hero-poster-layer${filmStarted ? ' is-hidden' : ''}`}
+          decoding="async"
+          fetchPriority="high"
+        />
 
         {/* Subtle cinematic depth (no text or controls) */}
         <div className="ps-hero-delicate-vignette" aria-hidden="true" />

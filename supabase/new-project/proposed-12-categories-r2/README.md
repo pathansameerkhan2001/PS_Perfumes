@@ -1,4 +1,4 @@
-# Step 12, revision 2 (proposed): four main categories and 14 subcategories
+# Step 12, revision 2 (proposed): four main categories and 9 subcategories
 
 **Status: NOT APPLIED and not yet run against a test database.** Run only one of `proposed-12-categories/12_categories.sql` or `12r2_categories.sql`, never both.
 
@@ -17,20 +17,21 @@ Read-only check of Production, 2026-11-04:
 
 - Adds `parent_id` and the guards, unchanged from step 12.
 - Adopts the existing `perfumes`, `attars` and `home-fragrance` rows. Their id, name, image, status and products are kept.
-- Creates `body-care` and the 14 requested subcategories. Any slug that already exists, even an inactive one, is adopted instead of duplicated.
+- Creates `body-care` and the 9 requested subcategories (owner list of 2026-11-04, second message). Any slug that already exists, even an inactive one, is adopted instead of duplicated.
 - Moves **no products** and deactivates **nothing**.
 
 | Main category | Subcategories |
 |---|---|
-| Perfumes | Arabic Perfumes, Designer-Inspired Perfumes, Luxury Perfumes |
-| Attars | Musk Attars, Oud Attars, Floral Attars, Woody Attars |
-| Home Fragrance | Bakhoor, Incense Sticks, Room Fragrances |
+| Perfumes | none (only the All filter) |
+| Attars | Woody Attars, Arabic Attars, Traditional Attars |
+| Home Fragrance | Bakhoor, Room Fragrances |
 | Body Care | Body Lotions, Body Mists, Body Oils, Personal Care |
 
 ## Differences from step 12 (the earlier owner list)
 
-- **Attars:** adds Woody Attars; drops Arabic Attars and Traditional Attars.
-- **Home Fragrance:** adds Room Fragrances; drops Bakhoor Burners.
+- **Perfumes:** no subcategories (step 12 had Arabic, Designer-Inspired and Luxury Perfumes).
+- **Attars:** Woody, Arabic and Traditional Attars (step 12 had Arabic, Oud, Musk, Floral and Traditional).
+- **Home Fragrance:** Bakhoor and Room Fragrances (step 12 had Bakhoor, Incense Sticks and Bakhoor Burners).
 - **Body Care:** Body Lotions, Body Mists, Body Oils and Personal Care replace Perfume Cream, Body Cream and Fragrance Cream.
 - **Product moves:** none. Step 12 moved products out of the seven families, which no longer exist.
 

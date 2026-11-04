@@ -14,13 +14,14 @@
 -- What it adds
 --   1. categories.parent_id: a subcategory points at its main category. Two levels only (same
 --      structure and guards as step 12).
---   2. The four main categories and their fourteen subcategories, created once. A slug that
+--   2. The four main categories and their nine subcategories, created once. A slug that
 --      already exists is ADOPTED, never duplicated: perfumes, attars and home-fragrance keep their
 --      id, name, image, status and products; only their place in the tree and position change.
---        Perfumes       › Arabic Perfumes, Designer-Inspired Perfumes, Luxury Perfumes
---        Attars         › Musk Attars, Oud Attars, Floral Attars, Woody Attars
---        Home Fragrance › Bakhoor, Incense Sticks, Room Fragrances
+--        Perfumes       (no subcategories)
+--        Attars         › Woody Attars, Arabic Attars, Traditional Attars
+--        Home Fragrance › Bakhoor, Room Fragrances
 --        Body Care      › Body Lotions, Body Mists, Body Oils, Personal Care
+--      (owner's list of 2026-11-04, second message; replaces the 14-subcategory list)
 --   3. Table category_migration_12_log: every change, so 12_rollback.sql can undo it exactly.
 --
 -- What it does NOT change
@@ -151,16 +152,11 @@ begin
       (null,             'attars',                     'Attars',                     2),
       (null,             'home-fragrance',             'Home Fragrance',             3),
       (null,             'body-care',                  'Body Care',                  4),
-      ('perfumes',       'arabic-perfumes',            'Arabic Perfumes',            1),
-      ('perfumes',       'designer-inspired-perfumes', 'Designer-Inspired Perfumes', 2),
-      ('perfumes',       'luxury-perfumes',            'Luxury Perfumes',            3),
-      ('attars',         'musk-attars',                'Musk Attars',                1),
-      ('attars',         'oud-attars',                 'Oud Attars',                 2),
-      ('attars',         'floral-attars',              'Floral Attars',              3),
-      ('attars',         'woody-attars',               'Woody Attars',               4),
+      ('attars',         'woody-attars',               'Woody Attars',               1),
+      ('attars',         'arabic-attars',              'Arabic Attars',              2),
+      ('attars',         'traditional-attars',         'Traditional Attars',         3),
       ('home-fragrance', 'bakhoor',                    'Bakhoor',                    1),
-      ('home-fragrance', 'incense-sticks',             'Incense Sticks',             2),
-      ('home-fragrance', 'room-fragrances',            'Room Fragrances',            3),
+      ('home-fragrance', 'room-fragrances',            'Room Fragrances',            2),
       ('body-care',      'body-lotions',               'Body Lotions',               1),
       ('body-care',      'body-mists',                 'Body Mists',                 2),
       ('body-care',      'body-oils',                  'Body Oils',                  3),
@@ -200,8 +196,8 @@ begin
    where parent_id is null and slug in ('perfumes', 'attars', 'home-fragrance', 'body-care');
   select count(*) into v_sub from public.categories c join public.categories p on p.id = c.parent_id
    where p.slug in ('perfumes', 'attars', 'home-fragrance', 'body-care');
-  if v_main <> 4 or v_sub <> 14 then
-    raise exception 'Expected 4 main categories and 14 subcategories, found % and % — rolling back', v_main, v_sub;
+  if v_main <> 4 or v_sub <> 9 then
+    raise exception 'Expected 4 main categories and 9 subcategories, found % and % — rolling back', v_main, v_sub;
   end if;
   if exists (select 1 from public.category_migration_12_log where action in ('moved', 'deactivated')) then
     raise exception 'This revision must not move products or deactivate categories — rolling back';
