@@ -11,7 +11,7 @@ Read-only check of Production, 2026-11-04:
 | Active categories: Perfumes, Attars, Fragrance Creams, Home Fragrance, Combo Packs | **No Body Care record** is visible. An *inactive* one would be hidden from public reads; Admin → Categories lists all of them. |
 | `categories.parent_id` does not exist | No subcategories can exist, so no filter pills or dropdowns appear. |
 | All 9 active products are in Attars (all named "… Perfume Spray") | Correct assignment is an admin decision; this migration moves nothing. |
-| The storefront never lists `fragrance-creams` or `combo-packs` as main categories | This is a deliberate rule (`NOT_MAIN_CATEGORY_SLUGS`, src/services/categories.js), not a product-count filter. That is why exactly three tabs show. |
+| The storefront lists every active main category (since 2026-11-04 no slug is excluded) | Before this migration the tabs are Perfumes, Attars, Fragrance Creams, Home Fragrance and Combo Packs. |
 
 ## What revision 2 does
 
@@ -36,8 +36,8 @@ Read-only check of Production, 2026-11-04:
 
 ## Decisions left to the owner
 
-1. **Fragrance Creams** (active, 0 products) is not in the new list. Earlier the owner placed creams under Body Care. Options: make it a Body Care subcategory, deactivate it, or keep it hidden as now.
-2. **Combo Packs** (active, 0 products) stays a main category in the database and is shown only as its own navigation link.
+1. **Fragrance Creams** (active, 0 products) is not in the new list and stays a main category, so it is shown as a tab. Options: make it a Body Care subcategory in Admin → Categories after the migration, or deactivate it.
+2. **Combo Packs** (active, 0 products) stays a main category, so it is shown as a tab. Its collection page points visitors to the homepage combo sets, which live in the combos table. Deactivate it in Admin → Categories to show only the separate Combo Packs link instead.
 3. Move the 9 Perfume Spray products to the right category or subcategory (Admin → Products) after the migration.
 
 ## Order

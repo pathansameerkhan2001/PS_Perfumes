@@ -6,7 +6,7 @@ import CategoryIcon from '../../pages/Collections/CategoryIcon';
 import RosePetals from '../common/RosePetals';
 import { getStorefrontCategoryTree } from '../../services/categories';
 import { getProducts } from '../../services/products';
-import { collectionPath } from '../../utils/useStorefrontCategories';
+import { collectionPath, hasComboCategory, COMBO_NAV_ITEM } from '../../utils/useStorefrontCategories';
 import '../../pages/Collections/CollectionsPage.css';
 import './ShopByCategory.css';
 
@@ -134,7 +134,8 @@ export default function ShopByCategory({ title = '', subtitle = '' }) {
             </div>
           </div>
 
-          {activeMain && activeMain.children.length > 0 && (
+          {/* Every main category gets the filter row: All, then its subcategories */}
+          {activeMain && (
             <div className="ps-cbc-filters" role="group" aria-label={`Filter ${activeMain.name}`}>
               <span className="ps-cbc-filter-label">
                 <Filter size={16} strokeWidth={1.5} aria-hidden="true" />
@@ -188,6 +189,10 @@ export default function ShopByCategory({ title = '', subtitle = '' }) {
                   <button type="button" className="ps-cbc-btn" onClick={() => setSubId('')}>
                     View all {activeMain.name}
                   </button>
+                ) : hasComboCategory([activeMain]) ? (
+                  <Link to={COMBO_NAV_ITEM.path} className="ps-cbc-btn">
+                    See our combo sets
+                  </Link>
                 ) : (
                   <Link to="/shop" className="ps-cbc-btn">
                     Explore the shop

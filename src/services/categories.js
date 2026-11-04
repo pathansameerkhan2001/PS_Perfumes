@@ -114,45 +114,49 @@ export async function getCategories(all = false) {
 /**
  * Main categories, each with its subcategories, in display order.
  *
- * Works before and after Migration 12: without categories.parent_id (hasTree = false) every
- * category is a main category with no subcategories, exactly as the storefront behaved before.
- * A subcategory whose main category is not in rows (inactive, so hidden from visitors) is dropped.
+ * Works before and after Migration 12 (revision 2): without categories.parent_id (hasTree = false)
+ * every category is a main category with no subcategories; with it, rows without a parent are
+ * main categories and the others are listed under their parent.
+ * - A subcategory whose main category is not in rows (inactive, so hidden from visitors) is dropped.
+ * - Duplicates are ignored: one main category per slug, one subcategory per slug within its main
+ *   (the first in display order wins), so a category never appears twice as a tab or pill.
+ * - activeOnly: also leaves out rows marked inactive (the storefront; the database already hides
+ *   them from visitors, this covers the local fallback data).
  */
-export function buildCategoryTree(rows) {
-  const list = (rows || []).filter((r) => r && r.id && r.slug);
+export function buildCategoryTree(rows, { activeOnly = false } = {}) {
+  const list = (rows || []).filter((r) => r && r.id && r.slug && (!activeOnly || r.is_active !== false));
   const hasTree = list.some((r) => Object.prototype.hasOwnProperty.call(r, 'parent_id'));
   const byOrder = (a, b) =>
     (a.display_order || 0) - (b.display_order || 0) || String(a.name || '').localeCompare(String(b.name || ''));
+  const slugKey = (r) => String(r.slug).trim().toLowerCase();
 
+  const seenMain = new Set();
   const mains = list
     .filter((r) => !hasTree || !r.parent_id)
     .sort(byOrder)
+    .filter((r) => !seenMain.has(slugKey(r)) && seenMain.add(slugKey(r)))
     .map((r) => ({ ...r, children: [] }));
   if (hasTree) {
-    const mainById = new Map(mains.map((m) => [m.id, m]));
+    const mainById = new Map(mains.map((m) => [m.id, { main: m, seen: new Set() }]));
     list
       .filter((r) => r.parent_id)
       .sort(byOrder)
-      .forEach((r) => mainById.get(r.parent_id)?.children.push(r));
+      .forEach((r) => {
+        const entry = mainById.get(r.parent_id);
+        if (!entry || entry.seen.has(slugKey(r))) return;
+        entry.seen.add(slugKey(r));
+        entry.main.children.push(r);
+      });
   }
   return { hasTree, mains };
 }
 
-/*
- * Categories the storefront never lists as one of its main shopping categories: combo sets have
- * their own link (the homepage combo section) and fragrance creams belong under Body Care
- * (Migration 12). Their products stay reachable through the shop and search. A subcategory with
- * one of these slugs is not affected.
+/**
+ * The storefront's active category tree (shares the cached categories request): every active
+ * main category configured in Admin → Categories, each with its active subcategories.
  */
-export const NOT_MAIN_CATEGORY_SLUGS = ['combo-packs', 'fragrance-creams'];
-
-/** The storefront's active category tree (shares the cached categories request). */
 export async function getStorefrontCategoryTree() {
-  const tree = buildCategoryTree(await getCategories(false));
-  return {
-    ...tree,
-    mains: tree.mains.filter((m) => !NOT_MAIN_CATEGORY_SLUGS.includes(String(m.slug).toLowerCase())),
-  };
+  return buildCategoryTree(await getCategories(false), { activeOnly: true });
 }
 
 export async function createCategory(cat) {

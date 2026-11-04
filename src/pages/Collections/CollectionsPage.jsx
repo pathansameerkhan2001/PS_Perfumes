@@ -4,7 +4,7 @@ import { Filter, RotateCcw } from 'lucide-react';
 import CollectionProductCard from '../../components/collection/CollectionProductCard';
 import { getStorefrontCategoryTree } from '../../services/categories';
 import { getProducts } from '../../services/products';
-import { collectionPath } from '../../utils/useStorefrontCategories';
+import { collectionPath, hasComboCategory, COMBO_NAV_ITEM } from '../../utils/useStorefrontCategories';
 import { useSeo } from '../../utils/useSeo';
 import CategoryIcon from './CategoryIcon';
 import './CollectionsPage.css';
@@ -152,7 +152,9 @@ export default function CollectionsPage() {
             </div>
           </nav>
 
-          {activeMain && activeMain.children.length > 0 && (
+          {/* Every main category gets the filter row: All, then its subcategories (none before
+              Migration 12, or when the category has none) */}
+          {activeMain && (
             <div className="ps-cbc-filters" role="group" aria-label={`Filter ${activeMain.name}`}>
               <span className="ps-cbc-filter-label">
                 <Filter size={16} strokeWidth={1.5} aria-hidden="true" />
@@ -165,7 +167,7 @@ export default function CollectionsPage() {
                   aria-pressed={!activeSub}
                   onClick={() => selectSub('')}
                 >
-                  All {activeMain.name}
+                  All
                 </button>
                 {activeMain.children.map((c) => (
                   <button
@@ -212,6 +214,11 @@ export default function CollectionsPage() {
                   <button type="button" className="ps-cbc-btn" onClick={() => selectSub('')}>
                     View all {activeMain.name}
                   </button>
+                ) : hasComboCategory([activeMain]) ? (
+                  // Combo sets live in their own table and are shown in the homepage combo section
+                  <Link to={COMBO_NAV_ITEM.path} className="ps-cbc-btn">
+                    See our combo sets
+                  </Link>
                 ) : (
                   <button type="button" className="ps-cbc-btn" onClick={() => navigate('/shop')}>
                     Explore the shop

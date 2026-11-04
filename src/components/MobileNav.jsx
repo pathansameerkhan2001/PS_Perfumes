@@ -22,7 +22,7 @@ import {
   Gift,
   Tag,
 } from 'lucide-react';
-import { useStorefrontCategories, COMBO_NAV_ITEM } from '../utils/useStorefrontCategories';
+import { useStorefrontCategories, withComboLink } from '../utils/useStorefrontCategories';
 import PSPerfumesLogo from './common/PSPerfumesLogo';
 import { useCart } from '../context/CartContext';
 import './MobileNav.css';
@@ -51,6 +51,7 @@ const FAMILY_ICONS = {
   attars: Droplets,
   'home-fragrance': Flame,
   'body-care': Flower2,
+  'combo-packs': Gift,
 };
 
 export default function MobileNav({
@@ -70,7 +71,7 @@ export default function MobileNav({
       icon: FAMILY_ICONS[c.slug] || Tag,
       children: c.children || [],
     })),
-    { ...COMBO_NAV_ITEM, icon: Gift },
+    ...withComboLink(categories).map((link) => ({ ...link, icon: Gift })),
     ...TRAILING_ITEMS,
   ];
 

@@ -12,8 +12,8 @@ import woodyArt from '../assets/categories/fragrance-woody.webp';
  * One shared source for the storefront's category links: header, mobile menu, footer and the
  * shop filter.
  *
- * - Active main categories from the database (categories table), in display_order, without the
- *   ones that are never main shopping categories (NOT_MAIN_CATEGORY_SLUGS: combo packs, creams).
+ * - Every active main category from the database (categories table), in display_order: whatever
+ *   is configured in Admin → Categories appears, nothing is excluded by name or slug.
  * - Each links to /collections/<slug> (all its products, its subcategories as filter pills) and
  *   carries its subcategories (children) for the header dropdown and the mobile menu. Before
  *   Migration 12 there is no categories.parent_id, so there are no subcategories.
@@ -38,8 +38,21 @@ const BUILT_IN_BY_SLUG = new Map(BUILT_IN_FAMILIES.map((f) => [f.slug, f]));
 // Artwork for the main categories of Migration 12 until an admin uploads an image
 const MAIN_CATEGORY_ART = { perfumes: perfumeArt, attars: attarArt, 'home-fragrance': bakhoorArt };
 
-/** Combo sets: their own collection (combos table, homepage combo section), never a main category. */
+/**
+ * Link to the combo sets (combos table, homepage combo section). Shown only when no active main
+ * category already offers combos, so "Combo Packs" never appears twice in a menu.
+ */
 export const COMBO_NAV_ITEM = { name: 'Combo Packs', path: '/#combo-pack' };
+
+/** True when an active main category is the combo collection (slug or name mentions combo). */
+export function hasComboCategory(categories) {
+  return (categories || []).some((c) => /combo/i.test(`${c.slug} ${c.name}`));
+}
+
+/** Extra menu links after the categories: the combo link, unless a category already covers it. */
+export function withComboLink(categories) {
+  return hasComboCategory(categories) ? [] : [COMBO_NAV_ITEM];
+}
 
 /** Storefront path of a main category once categories have subcategories. */
 export function collectionPath(mainSlug, subSlug) {

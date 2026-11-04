@@ -4,7 +4,7 @@ import { MapPin, Mail, Phone, ArrowUp, ChevronDown, MessageCircle } from 'lucide
 import PSPerfumesLogo from './common/PSPerfumesLogo';
 import { SITE_CONFIG } from '../config/siteConfig';
 import { getStorefrontSettings } from '../services/settings';
-import { useStorefrontCategories, COMBO_NAV_ITEM } from '../utils/useStorefrontCategories';
+import { useStorefrontCategories, withComboLink } from '../utils/useStorefrontCategories';
 import './Footer.css';
 
 const MOBILE_QUERY = '(max-width: 640px)';
@@ -144,9 +144,11 @@ export default function Footer() {
                   <Link to={c.path}>{c.name}</Link>
                 </li>
               ))}
-              <li>
-                <Link to={COMBO_NAV_ITEM.path}>{COMBO_NAV_ITEM.name}</Link>
-              </li>
+              {withComboLink(categories).map((link) => (
+                <li key={link.path}>
+                  <Link to={link.path}>{link.name}</Link>
+                </li>
+              ))}
             </ul>
           </FooterGroup>
 

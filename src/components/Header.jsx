@@ -4,7 +4,7 @@ import { Search, ShoppingBag, MapPin, User, Menu, Heart, ChevronDown } from 'luc
 import PSPerfumesLogo from './common/PSPerfumesLogo';
 const SearchModal = React.lazy(() => import('./SearchModal'));
 import { useCart } from '../context/CartContext';
-import { useStorefrontCategories, COMBO_NAV_ITEM } from '../utils/useStorefrontCategories';
+import { useStorefrontCategories, withComboLink } from '../utils/useStorefrontCategories';
 import { whenIdleAfterLoad } from '../utils/idlePrefetch';
 import './Header.css';
 
@@ -57,15 +57,15 @@ export default function Header() {
     navigate(path);
   };
 
-  // Main categories from the shared, data-driven source (database only), then the combo sets,
-  // which are their own collection and never one of the main categories
+  // Every active main category from the shared, data-driven source (database only), then the
+  // combo sets link unless a category already covers combos
   const categories = useStorefrontCategories();
   const inlineCategories = categories.slice(0, MAX_INLINE_CATEGORIES);
   const moreCategories = categories.slice(MAX_INLINE_CATEGORIES);
   const navItems = [
     ...FIXED_NAV_ITEMS,
     ...inlineCategories.map((c) => ({ name: c.name, path: c.path, children: c.children || [] })),
-    COMBO_NAV_ITEM,
+    ...withComboLink(categories),
   ];
   const isPathActive = (path) =>
     location.pathname === path || (path !== '/' && path !== '/about' && location.pathname.startsWith(`${path}/`));
