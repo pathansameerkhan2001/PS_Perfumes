@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { MapPin, ExternalLink, Copy, Check, X } from 'lucide-react';
+import { MapPin, ExternalLink, Copy, Check, X, Navigation } from 'lucide-react';
 import { SITE_CONFIG } from '../../config/siteConfig';
 import { getStorefrontSettings } from '../../services/settings';
 import './FloatingContactDock.css';
@@ -96,9 +96,14 @@ export default function FloatingContactDock() {
       : digits.length >= 10
       ? `https://wa.me/${digits}`
       : null;
-  const instagramUrl = config.instagramUrl || 'https://www.instagram.com/ps_perfumes_kadapa/';
-  const mapsUrl =
-    config.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`PS PERFUMES ${address}`)}`;
+  // Only details from Store Settings (or the site configuration): an icon whose detail is not
+  // set is left out rather than pointing somewhere invented
+  const instagramUrl = /^https?:\/\//.test(config.instagramUrl || '') ? config.instagramUrl : '';
+  const mapsUrl = /^https?:\/\//.test(config.googleMapsUrl || '') ? config.googleMapsUrl : '';
+  // Directions from the visitor's location to the stored address (Google Maps directions link)
+  const directionsUrl = address
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`PS PERFUMES, ${address}`)}`
+    : '';
 
   const copyAddress = async () => {
     try {
@@ -117,8 +122,8 @@ export default function FloatingContactDock() {
       icon: <WhatsAppIcon size={19} />,
       panel: (
         <>
-          <p className="ps-dock-panel-title">Chat with us on WhatsApp</p>
-          <p className="ps-dock-panel-text">Questions about a fragrance or an order? We reply on WhatsApp.</p>
+          <p className="ps-dock-panel-title">WhatsApp</p>
+          <p className="ps-dock-panel-text">Chat with PS PERFUMES on WhatsApp.</p>
           {config.phone && <p className="ps-dock-panel-meta">{config.phone}</p>}
           <a className="ps-dock-panel-action" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
             <WhatsAppIcon size={15} />
@@ -127,14 +132,14 @@ export default function FloatingContactDock() {
         </>
       ),
     },
-    {
+    instagramUrl && {
       id: 'instagram',
       label: 'Instagram',
       icon: <InstagramIcon size={19} />,
       panel: (
         <>
-          <p className="ps-dock-panel-title">PS PERFUMES on Instagram</p>
-          <p className="ps-dock-panel-text">New arrivals, reels and fragrance stories.</p>
+          <p className="ps-dock-panel-title">Instagram</p>
+          <p className="ps-dock-panel-text">The official PS PERFUMES profile.</p>
           <p className="ps-dock-panel-meta">{handleOf(instagramUrl)}</p>
           <a className="ps-dock-panel-action" href={instagramUrl} target="_blank" rel="noopener noreferrer">
             <InstagramIcon size={15} />
@@ -143,22 +148,32 @@ export default function FloatingContactDock() {
         </>
       ),
     },
-    {
+    (address || mapsUrl) && {
       id: 'location',
       label: 'Store location',
       icon: <MapPin size={19} strokeWidth={1.9} aria-hidden="true" />,
       panel: (
         <>
-          <p className="ps-dock-panel-title">Visit our store</p>
-          <p className="ps-dock-panel-text ps-dock-panel-address">PS PERFUMES, {address}</p>
-          <a className="ps-dock-panel-action" href={mapsUrl} target="_blank" rel="noopener noreferrer">
-            <ExternalLink size={15} aria-hidden="true" />
-            <span>Open in Google Maps</span>
-          </a>
-          <button type="button" className="ps-dock-panel-action is-secondary" onClick={copyAddress}>
-            {copied ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}
-            <span>{copied ? 'Address copied' : 'Copy address'}</span>
-          </button>
+          <p className="ps-dock-panel-title">Store location</p>
+          {address && <p className="ps-dock-panel-text ps-dock-panel-address">PS PERFUMES, {address}</p>}
+          {directionsUrl && (
+            <a className="ps-dock-panel-action" href={directionsUrl} target="_blank" rel="noopener noreferrer">
+              <Navigation size={15} aria-hidden="true" />
+              <span>Get directions</span>
+            </a>
+          )}
+          {mapsUrl && (
+            <a className="ps-dock-panel-action is-secondary" href={mapsUrl} target="_blank" rel="noopener noreferrer">
+              <ExternalLink size={15} aria-hidden="true" />
+              <span>Open in Google Maps</span>
+            </a>
+          )}
+          {address && (
+            <button type="button" className="ps-dock-panel-action is-secondary" onClick={copyAddress}>
+              {copied ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}
+              <span>{copied ? 'Address copied' : 'Copy address'}</span>
+            </button>
+          )}
         </>
       ),
     },
@@ -181,14 +196,21 @@ export default function FloatingContactDock() {
             >
               {item.icon}
             </button>
-            {isOpen && (
-              <div id={`ps-dock-panel-${item.id}`} className="ps-dock-panel" role="dialog" aria-label={item.label}>
-                <button type="button" className="ps-dock-panel-close" onClick={() => setOpen(null)} aria-label="Close">
-                  <X size={14} />
-                </button>
-                {item.panel}
-              </div>
-            )}
+            {/* Always in the page, so it animates both when opening and when closing; a closed
+                panel is invisible to pointers, the keyboard and screen readers */}
+            <div
+              id={`ps-dock-panel-${item.id}`}
+              className={`ps-dock-panel${isOpen ? ' is-open' : ''}`}
+              role="dialog"
+              aria-label={item.label}
+              aria-hidden={!isOpen}
+              inert={!isOpen}
+            >
+              <button type="button" className="ps-dock-panel-close" onClick={() => setOpen(null)} aria-label="Close">
+                <X size={14} />
+              </button>
+              {item.panel}
+            </div>
           </div>
         );
       })}

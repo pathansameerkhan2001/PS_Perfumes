@@ -73,18 +73,20 @@
   color: #292D27;
   box-shadow: 0 18px 40px rgba(41, 35, 29, 0.22);
   transform-origin: left bottom;
-  animation: ps-dock-panel-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Closed: invisible and out of the way; it fades and slides in/out (transform + opacity) */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(-8px) scale(0.96);
+  transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0.22s;
 }
 
-@keyframes ps-dock-panel-in {
-  from {
-    opacity: 0;
-    transform: translateX(-6px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+.ps-dock-panel.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+  transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0s;
 }
 
 .ps-dock-panel-close {
@@ -195,7 +197,8 @@
   .ps-dock-panel-action {
     transition: none;
   }
-  .ps-dock-panel {
-    animation: none;
+  .ps-dock-panel,
+  .ps-dock-panel.is-open {
+    transition: none;
   }
 }
