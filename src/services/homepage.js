@@ -58,7 +58,7 @@ export const INITIAL_SECTIONS = [
   {
     id: 'sec-fragrance-family',
     section_key: 'fragrance_categories',
-    title: 'Shop by Fragrance',
+    title: 'Shop by Category',
     subtitle: '',
     cta_text: 'VIEW ALL',
     cta_link: '/shop',

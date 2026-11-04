@@ -1,0 +1,47 @@
+/* ==========================================================================
+   Homepage Shop by Category. Tabs, pills, grid and states come from
+   pages/Collections/CollectionsPage.css (shared tokens on .ps-cbc-home).
+   ========================================================================== */
+
+.ps-cbc-home {
+  background: linear-gradient(180deg, var(--cbc-ivory) 0%, #fdfaf5 60%, var(--cbc-ivory) 100%);
+  color: var(--cbc-ink);
+  padding: clamp(36px, 5vw, 64px) 16px clamp(40px, 5vw, 72px);
+  border-bottom: 1px solid var(--cbc-gold-hair);
+}
+
+/* Tabs are buttons here (the selection is not in the URL) */
+.ps-cbc-home .ps-cbc-tab {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.ps-cbc-home .ps-cbc-state h3 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(22px, 2.6vw, 28px);
+  margin: 0 0 8px;
+}
+
+.ps-cbc-home-fade {
+  animation: ps-cbc-home-fade 0.35s ease both;
+}
+
+@keyframes ps-cbc-home-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-cbc-home-fade {
+    animation: none;
+  }
+}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import HeroCinematic from '../../components/home/HeroCinematic';
 import AnnouncementTicker from '../../components/home/AnnouncementTicker';
 import BenefitsBar from '../../components/home/BenefitsBar';
-import ShopByFragrance from '../../components/home/ShopByFragrance';
+import ShopByCategory from '../../components/home/ShopByCategory';
 import ProductGridSection from '../../components/ProductGridSection';
 import NewArrivalsSection from '../../components/home/NewArrivalsSection';
 import ComboPackSection from '../../components/ComboPackSection';
@@ -101,7 +101,7 @@ export default function HomePage() {
           </React.Fragment>
         );
       case 'fragrance_categories':
-        return <ShopByFragrance key={sec.id} title={sec.title} subtitle={sec.subtitle} />;
+        return <ShopByCategory key={sec.id} title={sec.title} subtitle={sec.subtitle} />;
       case 'bestsellers':
         return (
           <ProductGridSection
