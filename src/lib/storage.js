@@ -1,4 +1,4 @@
-import { supabase, STORAGE_BUCKET } from './supabase';
+import { supabase, STORAGE_BUCKET, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from './supabase';
 
 /**
  * Supabase Storage folders within the configured bucket (STORAGE_BUCKET, "Ps-perfumes-media").
@@ -22,15 +22,18 @@ const SUPPORTED_TYPES = {
   'image/png': 'png',
   'image/webp': 'webp',
   'video/mp4': 'mp4',
+  // Hero background music (the bucket must allow audio/mpeg: proposed migration 13)
+  'audio/mpeg': 'mp3',
 };
 // Non-standard MIME names some browsers/OSes report for the same formats
-const MIME_ALIASES = { 'image/jpg': 'image/jpeg', 'image/pjpeg': 'image/jpeg' };
+const MIME_ALIASES = { 'image/jpg': 'image/jpeg', 'image/pjpeg': 'image/jpeg', 'audio/mp3': 'audio/mpeg' };
 // Used only when the browser reports no MIME type at all
-const EXTENSION_TYPES = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', mp4: 'video/mp4' };
-const SUPPORTED_LABEL = 'JPEG, PNG or WebP images, or MP4 videos';
+const EXTENSION_TYPES = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', mp4: 'video/mp4', mp3: 'audio/mpeg' };
+const SUPPORTED_LABEL = 'JPEG, PNG or WebP images, MP4 videos or MP3 audio';
 
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
-const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
+const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024; // 50MB (the bucket limit)
+const MAX_AUDIO_SIZE_BYTES = 15 * 1024 * 1024; // 15MB
 
 // Every upload gets a unique, timestamped object name, so a replaced image always has a new URL
 // and browsers/CDN may keep each file for a year without ever showing a stale image
@@ -136,9 +139,11 @@ export function getStoragePublicUrl(path) {
  * @param {File|Blob} file - File object to upload
  * @param {string} folder - Destination folder (from STORAGE_FOLDERS)
  * @param {string} [customSlug] - Optional subpath / slug prefix
+ * @param {{ onProgress?: (fraction: number) => void }} [options] - onProgress (0…1) is reported for
+ *   videos and audio, which are sent in one request; images are optimized first and report none
  * @returns {Promise<{ url: string, path: string, error: string | null }>}
  */
-export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS, customSlug = '') {
+export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS, customSlug = '', options = {}) {
   if (!file) {
     return { url: '', path: '', error: 'No file provided for upload.' };
   }
@@ -162,8 +167,9 @@ export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS,
 
   // 3. Validate file size for that type
   const isVideo = contentType === 'video/mp4';
-  const maxSize = isVideo ? MAX_VIDEO_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES;
-  const maxLabel = isVideo ? '50MB' : '10MB';
+  const isAudio = contentType === 'audio/mpeg';
+  const maxSize = isVideo ? MAX_VIDEO_SIZE_BYTES : isAudio ? MAX_AUDIO_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES;
+  const maxLabel = isVideo ? '50MB' : isAudio ? '15MB' : '10MB';
 
   if (file.size && file.size > maxSize) {
     return {
@@ -204,7 +210,7 @@ export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS,
   let uploadType = contentType;
   let cardPath = '';
   try {
-    if (!isVideo) {
+    if (!isVideo && !isAudio) {
       // Loaded on demand: only the admin uploads, so the storefront never downloads it. If it
       // cannot be loaded, the original file is uploaded as before.
       const optimized = await import('./imageOptimize')
@@ -230,13 +236,16 @@ export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS,
       }
     }
 
-    const { data, error } = await supabase.storage
-      .from(STORAGE_BUCKET)
-      .upload(uploadPath, body, {
-        cacheControl: UPLOAD_CACHE_CONTROL,
-        upsert: false,
-        contentType: uploadType,
-      });
+    // Videos and audio with a progress callback go through the same Storage endpoint with XHR
+    // (the client library reports no progress); everything else uses the client library
+    const { data, error } =
+      typeof options.onProgress === 'function' && (isVideo || isAudio)
+        ? await uploadWithProgress(uploadPath, body, uploadType, session.access_token, options.onProgress)
+        : await supabase.storage.from(STORAGE_BUCKET).upload(uploadPath, body, {
+            cacheControl: UPLOAD_CACHE_CONTROL,
+            upsert: false,
+            contentType: uploadType,
+          });
 
     if (error && cardPath) {
       // Do not leave an orphaned card image behind
@@ -269,7 +278,7 @@ export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS,
       } else if (rawMsg.includes('Invalid key')) {
         userFriendlyMsg = `Invalid storage object key "${uploadPath}" (${rawMsg}).`;
       } else if (rawMsg.includes('mime type') || rawMsg.includes('not allowed')) {
-        userFriendlyMsg = `MIME type "${uploadType}" is rejected by bucket "${STORAGE_BUCKET}" (${rawMsg}). Allowed formats: WebP, JPEG, PNG, MP4.`;
+        userFriendlyMsg = `MIME type "${uploadType}" is rejected by bucket "${STORAGE_BUCKET}" (${rawMsg}). Allowed formats: WebP, JPEG, PNG, MP4${uploadType === 'audio/mpeg' ? ' (MP3 needs the audio/mpeg type added to the bucket: proposed migration 13)' : ''}.`;
       } else if (rawMsg.toLowerCase().includes('exceeded') || String(statusCode) === '413') {
         userFriendlyMsg = `File is larger than the bucket limit (${rawMsg}).`;
       }
@@ -295,6 +304,43 @@ export async function uploadStorageFile(file, folder = STORAGE_FOLDERS.PRODUCTS,
       error: err?.message || 'Unexpected Storage upload failure.',
     };
   }
+}
+
+/**
+ * Uploads one object to the bucket with XMLHttpRequest so the progress can be shown. Same
+ * endpoint, headers and rules as the client library's upload (INSERT only, no upsert).
+ * Resolves to { data: { path } } or { error: { message, statusCode } }, like the library.
+ */
+function uploadWithProgress(path, body, contentType, accessToken, onProgress) {
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    const encodedPath = path.split('/').map(encodeURIComponent).join('/');
+    xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/${encodeURIComponent(STORAGE_BUCKET)}/${encodedPath}`);
+    xhr.setRequestHeader('authorization', `Bearer ${accessToken}`);
+    xhr.setRequestHeader('apikey', SUPABASE_PUBLISHABLE_KEY);
+    xhr.setRequestHeader('x-upsert', 'false');
+    xhr.setRequestHeader('cache-control', `max-age=${UPLOAD_CACHE_CONTROL}`);
+    xhr.setRequestHeader('content-type', contentType);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(Math.min(1, e.loaded / e.total));
+    };
+    xhr.onload = () => {
+      let json = {};
+      try {
+        json = JSON.parse(xhr.responseText || '{}');
+      } catch {
+        // non-JSON error page
+      }
+      if (xhr.status >= 200 && xhr.status < 300) {
+        onProgress(1);
+        resolve({ data: { path }, error: null });
+      } else {
+        resolve({ data: null, error: { message: json.message || json.error || xhr.statusText || 'Upload failed', statusCode: json.statusCode || xhr.status } });
+      }
+    };
+    xhr.onerror = () => resolve({ data: null, error: { message: 'Network error during upload', statusCode: 0 } });
+    xhr.send(body);
+  });
 }
 
 /**

@@ -4,7 +4,7 @@ import { MapPin, Mail, Phone, ArrowUp, ChevronDown, MessageCircle } from 'lucide
 import PSPerfumesLogo from './common/PSPerfumesLogo';
 import { SITE_CONFIG } from '../config/siteConfig';
 import { getStorefrontSettings } from '../services/settings';
-import { useStorefrontCategories } from '../utils/useStorefrontCategories';
+import { useStorefrontCategories, COMBO_NAV_ITEM } from '../utils/useStorefrontCategories';
 import './Footer.css';
 
 const MOBILE_QUERY = '(max-width: 640px)';
@@ -108,7 +108,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="ps-footer-brand">
             <Link to="/" aria-label="PS PERFUMES home" className="ps-footer-logo">
-              <PSPerfumesLogo size="sm" variant="footer" />
+              <PSPerfumesLogo size="sm" variant="footer" tone="dark" />
             </Link>
             <p className="ps-footer-tagline">Attars, perfumes and bakhoor from Kadapa.</p>
             <div className="ps-footer-social">
@@ -144,6 +144,9 @@ export default function Footer() {
                   <Link to={c.path}>{c.name}</Link>
                 </li>
               ))}
+              <li>
+                <Link to={COMBO_NAV_ITEM.path}>{COMBO_NAV_ITEM.name}</Link>
+              </li>
             </ul>
           </FooterGroup>
 

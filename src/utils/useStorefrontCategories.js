@@ -10,19 +10,17 @@ import woodyArt from '../assets/categories/fragrance-woody.webp';
 
 /*
  * One shared source for the storefront's category links: header, mobile menu, footer and the
- * homepage family row.
+ * shop filter.
  *
- * - Active categories from the database (categories table), in display_order.
- * - The seven built-in fragrance families keep their artwork, accent colours (.ps-family-<slug>
- *   in index.css) and short routes (/attar … /woody).
- * - Any other category gets a neutral style and the /category/<slug> route.
+ * - Active main categories from the database (categories table), in display_order, without the
+ *   ones that are never main shopping categories (NOT_MAIN_CATEGORY_SLUGS: combo packs, creams).
+ * - Each links to /collections/<slug> (all its products, its subcategories as filter pills) and
+ *   carries its subcategories (children) for the header dropdown and the mobile menu. Before
+ *   Migration 12 there is no categories.parent_id, so there are no subcategories.
  * - Inactive categories are not listed (the database only returns active ones to visitors).
- * - After Migration 12 (categories.parent_id) only main categories are listed, each linking to
- *   /collections/<slug>, where its subcategories are offered as filters.
- * - If the database cannot be read, or has no categories yet, the seven built-in families
- *   are used so navigation never disappears.
- * - Each entry carries its subcategories (children) for the header and mobile menu.
- * One request per page load, shared by every component that uses the hook.
+ * - Nothing is invented: while loading, or if the database cannot be read, the list is empty.
+ * One request per page load, shared by every component that uses the hook; later pages get the
+ * resolved list on their first render.
  */
 
 export const BUILT_IN_FAMILIES = [
@@ -40,6 +38,9 @@ const BUILT_IN_BY_SLUG = new Map(BUILT_IN_FAMILIES.map((f) => [f.slug, f]));
 // Artwork for the main categories of Migration 12 until an admin uploads an image
 const MAIN_CATEGORY_ART = { perfumes: perfumeArt, attars: attarArt, 'home-fragrance': bakhoorArt };
 
+/** Combo sets: their own collection (combos table, homepage combo section), never a main category. */
+export const COMBO_NAV_ITEM = { name: 'Combo Packs', path: '/#combo-pack' };
+
 /** Storefront path of a main category once categories have subcategories. */
 export function collectionPath(mainSlug, subSlug) {
   const base = `/collections/${encodeURIComponent(String(mainSlug || '').toLowerCase())}`;
@@ -52,7 +53,7 @@ export function categoryPath(slug) {
   return BUILT_IN_BY_SLUG.has(clean) ? `/${clean}` : `/category/${encodeURIComponent(clean)}`;
 }
 
-function toEntry({ id, slug, name, imageUrl, children = [] }, hasTree = false) {
+function toEntry({ id, slug, name, imageUrl, children = [] }) {
   const clean = String(slug || '').toLowerCase().trim();
   const builtIn = BUILT_IN_BY_SLUG.get(clean);
   // An admin-uploaded image (a real URL) wins; '/assets/…' placeholders from the old demo data do not
@@ -62,44 +63,47 @@ function toEntry({ id, slug, name, imageUrl, children = [] }, hasTree = false) {
     id: id || null,
     slug: clean,
     name: name || builtIn?.name || clean,
-    path: hasTree ? collectionPath(clean) : categoryPath(clean),
+    // The collection page: all products of the category, its subcategories as filter pills
+    path: collectionPath(clean),
     image: adminImage || builtIn?.image || MAIN_CATEGORY_ART[clean] || '',
     isBuiltIn: Boolean(builtIn),
-    // Subcategories (after Migration 12), each linking to its filter on the collection page
-    children: hasTree
-      ? children.map((c) => ({ id: c.id, slug: c.slug, name: c.name, path: collectionPath(clean, c.slug) }))
-      : [],
+    // Subcategories (after Migration 12; none before), each linking to its filter on the collection page
+    children: children.map((c) => ({ id: c.id, slug: c.slug, name: c.name, path: collectionPath(clean, c.slug) })),
   };
 }
 
-const FALLBACK = BUILT_IN_FAMILIES.map((f) => toEntry({ slug: f.slug, name: f.name }));
+// No built-in category list: navigation shows only categories the database returns (an empty
+// list while loading or if the database cannot be read, never a second, invented structure)
+const EMPTY = [];
 
 let cachedPromise = null;
+let resolvedList = null;
 
 function loadStorefrontCategories() {
   if (!cachedPromise) {
     cachedPromise = getStorefrontCategoryTree()
-      .then(({ hasTree, mains }) => {
+      .then(({ mains }) => {
         const seen = new Set();
         const list = mains
           .filter((r) => r.is_active !== false)
-          .map((r) => toEntry({ id: r.id, slug: r.slug, name: r.name, imageUrl: r.image_url, children: r.children }, hasTree))
+          .map((r) => toEntry({ id: r.id, slug: r.slug, name: r.name, imageUrl: r.image_url, children: r.children }))
           .filter((c) => (seen.has(c.slug) ? false : seen.add(c.slug)));
-        return list.length > 0 ? list : FALLBACK;
+        resolvedList = list;
+        return list;
       })
       .catch((err) => {
-        console.warn('Could not load categories; using the built-in fragrance families.', err?.message || err);
+        console.warn('Could not load categories for navigation.', err?.message || err);
         // Allow a later page to try again
         cachedPromise = null;
-        return FALLBACK;
+        return EMPTY;
       });
   }
   return cachedPromise;
 }
 
-/** Returns the storefront categories (starts with the built-in seven, then the database list). */
+/** Returns the storefront's main categories (empty until the database has answered once). */
 export function useStorefrontCategories() {
-  const [categories, setCategories] = useState(FALLBACK);
+  const [categories, setCategories] = useState(() => resolvedList || EMPTY);
   useEffect(() => {
     let active = true;
     loadStorefrontCategories().then((list) => {

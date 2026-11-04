@@ -99,6 +99,11 @@ function formatHeroSlide(row) {
     button_text: buttonText,
     cta_link: buttonLink,
     button_link: buttonLink,
+    // Proposed migration 13 (absent before it): mobile film and background music
+    mobile_video_url: row.mobile_video_url || '',
+    mobile_video_path: row.mobile_video_path || '',
+    audio_url: row.audio_url || '',
+    audio_path: row.audio_path || '',
     display_order: Number(row.display_order) || 1,
     is_active: row.is_active !== false,
     created_at: row.created_at,
@@ -180,7 +185,33 @@ function toHeroRow(slideData) {
   if (slideData.mobile_image_path !== undefined) row.mobile_image_path = slideData.mobile_image_path || null;
   if (slideData.display_order !== undefined) row.display_order = Number(slideData.display_order) || 1;
   if (slideData.is_active !== undefined) row.is_active = Boolean(slideData.is_active);
+  // Only when the columns exist (proposed migration 13); callers pass them only then
+  for (const key of ['mobile_video_url', 'mobile_video_path', 'audio_url', 'audio_path']) {
+    if (slideData[key] !== undefined) row[key] = slideData[key] || null;
+  }
   return row;
+}
+
+let mediaColumnsPromise = null;
+/**
+ * True when hero_slides has the mobile-film and music columns (proposed migration 13).
+ * Checked once per page load with an empty select; a missing column answers 42703.
+ */
+export function heroMediaColumnsAvailable() {
+  if (!isSupabaseConfigured || !supabase) return Promise.resolve(true);
+  if (!mediaColumnsPromise) {
+    mediaColumnsPromise = supabase
+      .from('hero_slides')
+      .select('mobile_video_url, audio_url')
+      .limit(0)
+      .then(({ error }) => {
+        if (!error) return true;
+        if (error.code === '42703' || /column/i.test(error.message || '')) return false;
+        mediaColumnsPromise = null; // another error: ask again next time
+        throw dbError('Could not check the hero media columns', error);
+      });
+  }
+  return mediaColumnsPromise;
 }
 
 export async function createHeroSlide(slideData) {
@@ -245,12 +276,15 @@ export async function deleteHeroSlide(id) {
 
 /* ==========================================================================
    Homepage hero film (video-only hero) — managed in Admin → Hero Sections.
-   Existing hero_slides columns are reused (no schema change):
+   Existing hero_slides columns are reused:
      image_url / image_path               → the hero film (MP4)
      mobile_image_url / mobile_image_path → the poster image (shown while loading,
                                             for reduced motion, or if the film fails)
      title                                → admin label only (never shown on the site)
+     subtitle                             → admin note (the hero shows no text)
      is_active, display_order             → which record the homepage uses
+   Proposed migration 13 adds mobile_video_url / _path (lighter film for phones) and
+   audio_url / _path (optional MP3 background music, started only by the visitor).
    Heading, eyebrow, description and button columns are left untouched and never shown.
    ========================================================================== */
 
@@ -259,6 +293,11 @@ const stripQuery = (value) => String(value || '').split(/[?#]/)[0].toLowerCase()
 /** True for an MP4 file reference (public URL or Storage path). */
 export function isMp4Reference(value) {
   return stripQuery(value).endsWith('.mp4');
+}
+
+/** True for an MP3 file reference (public URL or Storage path). */
+export function isMp3Reference(value) {
+  return stripQuery(value).endsWith('.mp3');
 }
 
 /** True for a JPEG / PNG / WebP image reference (public URL or Storage path). */
@@ -287,10 +326,15 @@ export function pickHeroFilm(slides) {
   if (!chosen) return null;
   const film = resolveMedia(chosen.image_url || chosen.desktop_image || chosen.image_path);
   const posterRef = chosen.mobile_image_url || chosen.mobile_image || chosen.mobile_image_path;
+  const mobileRef = chosen.mobile_video_url || chosen.mobile_video_path;
+  const audioRef = chosen.audio_url || chosen.audio_path;
   return {
     id: chosen.id,
     videoUrl: film,
     posterUrl: isImageReference(posterRef) ? resolveMedia(posterRef) : '',
+    // Optional (proposed migration 13): a lighter film for phones and background music
+    mobileVideoUrl: isMp4Reference(mobileRef) ? resolveMedia(mobileRef) : '',
+    audioUrl: isMp3Reference(audioRef) ? resolveMedia(audioRef) : '',
   };
 }
 

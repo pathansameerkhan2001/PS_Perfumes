@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Mail, ExternalLink, Send, CheckCircle2, Clock, ShieldCheck } from 'lucide-react';
-import { submitEnquiry, isEnquiryStorageAvailable } from '../../services/enquiries';
+import { submitEnquiry, isEnquiryStorageAvailable, validateEnquiry } from '../../services/enquiries';
 import { SITE_CONFIG } from '../../config/siteConfig';
 import './ContactPage.css';
 import { useSeo } from '../../utils/useSeo';
@@ -46,8 +46,10 @@ export default function ContactPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.message) {
-      setErrorMsg('Please complete all required fields.');
+    // Same rules as the database, so the visitor sees what to fix before anything is sent
+    const problem = validateEnquiry(formData);
+    if (problem) {
+      setErrorMsg(problem);
       return;
     }
 

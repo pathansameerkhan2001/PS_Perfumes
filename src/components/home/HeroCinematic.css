@@ -247,3 +247,116 @@
     height: 48px;
   }
 }
+
+/* ==========================================================================
+   Background music control (bottom-left, opposite the film control): a small
+   gold pill; animated bars while music plays. Never covers the film's centre.
+   ========================================================================== */
+.ps-hero-music-toggle {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 14px 0 12px;
+  border: 1px solid rgba(198, 154, 67, 0.65);
+  border-radius: 999px;
+  background: rgba(8, 7, 6, 0.45);
+  color: #E3C58B;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+.ps-hero-music-toggle:hover:not(:disabled),
+.ps-hero-music-toggle:focus-visible {
+  background: rgba(198, 154, 67, 0.22);
+  border-color: #E3C58B;
+  color: #F8F4EC;
+}
+
+.ps-hero-music-toggle:focus-visible {
+  outline: 2px solid #E3C58B;
+  outline-offset: 3px;
+}
+
+.ps-hero-music-toggle.is-playing {
+  border-color: #C69A43;
+}
+
+.ps-hero-music-toggle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Three gold bars that rise and fall while music plays */
+.ps-hero-music-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  width: 15px;
+  height: 13px;
+}
+
+.ps-hero-music-bars span {
+  flex: 1;
+  height: 100%;
+  border-radius: 1px;
+  background: #E3C58B;
+  transform-origin: bottom;
+  animation: ps-hero-music-bar 1s ease-in-out infinite;
+}
+
+.ps-hero-music-bars span:nth-child(2) {
+  animation-delay: -0.35s;
+}
+
+.ps-hero-music-bars span:nth-child(3) {
+  animation-delay: -0.7s;
+}
+
+@keyframes ps-hero-music-bar {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .ps-hero-music-toggle {
+    left: 12px;
+    bottom: 12px;
+    min-height: 34px;
+    padding: 0 10px;
+  }
+  /* Phones: the icon says it; the label stays for screen readers */
+  .ps-hero-music-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-hero-music-bars span {
+    animation: none;
+    transform: scaleY(0.7);
+  }
+  .ps-hero-music-toggle {
+    transition: none;
+  }
+}

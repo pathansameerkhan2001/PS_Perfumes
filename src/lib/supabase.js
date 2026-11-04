@@ -37,6 +37,9 @@ if (import.meta.env.DEV) {
 }
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabasePublishableKey);
+// Project URL and publishable (public) key, for the Storage upload with progress (lib/storage.js)
+export const SUPABASE_URL = supabaseUrl;
+export const SUPABASE_PUBLISHABLE_KEY = supabasePublishableKey;
 // Bucket ids are case-sensitive: the project's bucket is exactly "Ps-perfumes-media".
 // VITE_SUPABASE_STORAGE_BUCKET overrides it; the default applies when the variable is not set.
 export const STORAGE_BUCKET = (import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'Ps-perfumes-media').trim();

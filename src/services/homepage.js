@@ -261,6 +261,70 @@ async function restoreMissingDefaultSectionsRecord() {
   return data.map(formatSection);
 }
 
+/**
+ * Saves the whole edited layout in one go (Admin → Homepage "Save All Layouts").
+ * - Built-in layout (the table is still empty): the rows are created from the edited sections,
+ *   so the first save already keeps the admin's titles, visibility and order. Refused if rows
+ *   appeared meanwhile (another admin saved first), so nothing is duplicated.
+ * - Stored layout: only rows whose title, subtitle, visibility or position changed are updated.
+ * sections: in display order; `saved` maps id → the last saved version (for change detection).
+ * Returns the sections as now stored, read back from the database.
+ */
+async function saveHomepageLayoutRecord(sections, saved = {}) {
+  const ordered = sections.map((s, i) => ({ ...s, display_order: i + 1 }));
+  const isBuiltIn = ordered.some((s) => !isValidUUID(s.id));
+
+  if (isBuiltIn) {
+    const { count, error: countErr } = await supabase
+      .from('homepage_sections')
+      .select('id', { count: 'exact', head: true });
+    if (countErr) throw dbError('Could not check homepage sections', countErr);
+    if (count && count > 0) {
+      throw new Error('Homepage sections were saved meanwhile (another tab or admin). Reload the page; your edits were not saved.');
+    }
+    const rows = ordered.map((s) => ({
+      section_key: s.section_key,
+      title: s.title || '',
+      subtitle: s.subtitle || '',
+      button_text: s.cta_text || null,
+      button_link: s.cta_link || null,
+      is_active: s.is_active !== false,
+      display_order: s.display_order,
+      settings: s.metadata || {},
+    }));
+    const { data, error } = await supabase.from('homepage_sections').insert(rows).select();
+    if (error) throw dbError('Homepage layout was not saved', error);
+    if ((data || []).length !== rows.length) throw new Error('Not all homepage sections were saved (permission denied?).');
+  } else {
+    const changed = ordered.filter((s) => {
+      const before = saved[s.id];
+      return (
+        !before ||
+        (before.title || '') !== (s.title || '') ||
+        (before.subtitle || '') !== (s.subtitle || '') ||
+        Boolean(before.is_active) !== Boolean(s.is_active) ||
+        Number(before.display_order) !== s.display_order
+      );
+    });
+    for (const s of changed) {
+      await updateHomepageSectionRecord(s.id, {
+        title: s.title || '',
+        subtitle: s.subtitle || '',
+        is_active: s.is_active !== false,
+        display_order: s.display_order,
+      });
+    }
+  }
+
+  // Read back, so the admin sees what the database really holds
+  const { data: fresh, error: readErr } = await supabase
+    .from('homepage_sections')
+    .select('*')
+    .order('display_order', { ascending: true });
+  if (readErr) throw dbError('Saved, but the layout could not be read back', readErr);
+  return (fresh || []).map(formatSection);
+}
+
 // Section writes clear this tab's cached homepage layout ("home:" keys, see pages/Home/HomePage.jsx)
 function clearingHomeCacheAfter(write) {
   return async (...args) => {
@@ -276,3 +340,4 @@ export const initializeHomepageSections = clearingHomeCacheAfter(initializeHomep
 export const updateHomepageSection = clearingHomeCacheAfter(updateHomepageSectionRecord);
 export const reorderSections = clearingHomeCacheAfter(reorderSectionsRecord);
 export const restoreMissingDefaultSections = clearingHomeCacheAfter(restoreMissingDefaultSectionsRecord);
+export const saveHomepageLayout = clearingHomeCacheAfter(saveHomepageLayoutRecord);

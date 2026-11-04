@@ -138,9 +138,21 @@ export function buildCategoryTree(rows) {
   return { hasTree, mains };
 }
 
+/*
+ * Categories the storefront never lists as one of its main shopping categories: combo sets have
+ * their own link (the homepage combo section) and fragrance creams belong under Body Care
+ * (Migration 12). Their products stay reachable through the shop and search. A subcategory with
+ * one of these slugs is not affected.
+ */
+export const NOT_MAIN_CATEGORY_SLUGS = ['combo-packs', 'fragrance-creams'];
+
 /** The storefront's active category tree (shares the cached categories request). */
 export async function getStorefrontCategoryTree() {
-  return buildCategoryTree(await getCategories(false));
+  const tree = buildCategoryTree(await getCategories(false));
+  return {
+    ...tree,
+    mains: tree.mains.filter((m) => !NOT_MAIN_CATEGORY_SLUGS.includes(String(m.slug).toLowerCase())),
+  };
 }
 
 export async function createCategory(cat) {

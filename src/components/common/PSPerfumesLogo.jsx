@@ -1,6 +1,20 @@
 import React from 'react';
 import './PSPerfumesLogo.css';
 
+// Gold of the monogram (5 stops), the rim (colour, opacity) and the soft shadow per background
+const TONES = {
+  light: {
+    mono: ['#D9B76E', '#C69A45', '#A97F35', '#C69A45', '#8A6326'],
+    rim: [['#D9B76E', 0.9], ['#C69A45', 0.65], ['#8A6326', 0.85]],
+    shadow: ['#6B4F1F', 0.18],
+  },
+  dark: {
+    mono: ['#F0D89A', '#E3C58B', '#C69A45', '#D8B76A', '#A88238'],
+    rim: [['#F0D89A', 0.85], ['#C69A45', 0.55], ['#9B7830', 0.75]],
+    shadow: ['#000000', 0.6],
+  },
+};
+
 /**
  * PSPerfumesLogo - Reusable Luxury Vector/SVG Brand Identity Component
  * Supports: header, footer, compact, mobile, desktop
@@ -11,7 +25,13 @@ export default function PSPerfumesLogo({
   variant = 'header', // 'header' | 'footer' | 'standalone'
   className = '',
   showTagline = false,
+  tone = 'light', // 'light': deep antique gold for ivory backgrounds · 'dark': bright gold for black
 }) {
+  const t = TONES[tone] || TONES.light;
+  // Gradient ids per tone: two logos of different tones on one page must not share an id
+  const mono = `psGoldMonogramGrad-${tone}`;
+  const rim = `psGoldRimGrad-${tone}`;
+  const glow = `psGoldGlow-${tone}`;
   return (
     <div
       className={`ps-brand-logo-root ps-logo-${size} ps-logo-${variant} ${className}`}
@@ -27,37 +47,35 @@ export default function PSPerfumesLogo({
       >
         <defs>
           {/* Antique gold gradient, deep enough to read on the ivory header, footer and admin */}
-          <linearGradient id="psGoldMonogramGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#D9B76E" />
-            <stop offset="25%" stopColor="#C69A45" />
-            <stop offset="60%" stopColor="#A97F35" />
-            <stop offset="85%" stopColor="#C69A45" />
-            <stop offset="100%" stopColor="#8A6326" />
+          <linearGradient id={mono} x1="0%" y1="0%" x2="100%" y2="100%">
+            {t.mono.map((c, i) => (
+              <stop key={i} offset={["0%", "25%", "60%", "85%", "100%"][i]} stopColor={c} />
+            ))}
           </linearGradient>
 
           {/* Hairline Rim Gradient */}
-          <linearGradient id="psGoldRimGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#D9B76E" stopOpacity="0.9" />
-            <stop offset="50%" stopColor="#C69A45" stopOpacity="0.65" />
-            <stop offset="100%" stopColor="#8A6326" stopOpacity="0.85" />
+          <linearGradient id={rim} x1="0%" y1="0%" x2="0%" y2="100%">
+            {t.rim.map(([c, o], i) => (
+              <stop key={i} offset={["0%", "50%", "100%"][i]} stopColor={c} stopOpacity={o} />
+            ))}
           </linearGradient>
 
           {/* Subtle Glow Filter */}
-          <filter id="psGoldGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor="#6B4F1F" floodOpacity="0.18" />
+          <filter id={glow} x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor={t.shadow[0]} floodOpacity={t.shadow[1]} />
           </filter>
         </defs>
 
         {/* ==========================================================
             1. LUXURY EMBLEM ORNAMENT & CIRCLE (Flacon Motif)
             ========================================================== */}
-        <g filter="url(#psGoldGlow)">
+        <g filter={`url(#${glow})`}>
           {/* Subtle Outer Thin Arch/Circle */}
           <circle
             cx="120"
             cy="46"
             r="38"
-            stroke="url(#psGoldRimGrad)"
+            stroke={`url(#${rim})`}
             strokeWidth="1.25"
             strokeDasharray="210 20"
             strokeLinecap="round"
@@ -65,18 +83,18 @@ export default function PSPerfumesLogo({
           />
 
           {/* Perfume Flacon Cap Ornament Top-Left on the Rim */}
-          <g transform="translate(93, 11) scale(0.7)" stroke="url(#psGoldMonogramGrad)" strokeWidth="1.2" fill="none">
+          <g transform="translate(93, 11) scale(0.7)" stroke={`url(#${mono})`} strokeWidth="1.2" fill="none">
             {/* Faceted Cap Diamond */}
-            <polygon points="12,2 20,2 24,9 8,9" fill="url(#psGoldMonogramGrad)" opacity="0.3" />
-            <polygon points="12,2 20,2 24,9 8,9" stroke="url(#psGoldMonogramGrad)" />
+            <polygon points="12,2 20,2 24,9 8,9" fill={`url(#${mono})`} opacity="0.3" />
+            <polygon points="12,2 20,2 24,9 8,9" stroke={`url(#${mono})`} />
             <line x1="8" y1="12" x2="24" y2="12" strokeWidth="1.5" />
-            <rect x="11" y="9" width="10" height="3" fill="url(#psGoldMonogramGrad)" />
+            <rect x="11" y="9" width="10" height="3" fill={`url(#${mono})`} />
           </g>
 
           {/* Inner Accent Ring Arc */}
           <path
             d="M 96 30 A 34 34 0 0 1 146 32"
-            stroke="url(#psGoldRimGrad)"
+            stroke={`url(#${rim})`}
             strokeWidth="0.75"
             strokeLinecap="round"
             opacity="0.5"
@@ -86,7 +104,7 @@ export default function PSPerfumesLogo({
               2. INTERLOCKING "PS" LUXURY MONOGRAM
               ========================================================== */}
           {/* Stylized Serif Letter 'P' */}
-          <g fill="url(#psGoldMonogramGrad)">
+          <g fill={`url(#${mono})`}>
             {/* P Main Stem with Serifs */}
             <path
               d="M 103 26 
@@ -116,7 +134,7 @@ export default function PSPerfumesLogo({
           </g>
 
           {/* Intertwined Calligraphic Letter 'S' */}
-          <g fill="url(#psGoldMonogramGrad)">
+          <g fill={`url(#${mono})`}>
             <path
               d="M 137 32
                  C 134 29 128 27.5 122.5 28.5
@@ -137,8 +155,8 @@ export default function PSPerfumesLogo({
           </g>
 
           {/* Intersecting Monogram Fine Accent Dot/Terminals */}
-          <circle cx="137.5" cy="32.5" r="1" fill="url(#psGoldMonogramGrad)" />
-          <circle cx="106.5" cy="61" r="1.2" fill="url(#psGoldMonogramGrad)" />
+          <circle cx="137.5" cy="32.5" r="1" fill={`url(#${mono})`} />
+          <circle cx="106.5" cy="61" r="1.2" fill={`url(#${mono})`} />
 
           {/* ==========================================================
               3. "PERFUMES" LUXURY SERIF TYPOGRAPHY
@@ -147,7 +165,7 @@ export default function PSPerfumesLogo({
             x="120"
             y="94"
             textAnchor="middle"
-            fill="url(#psGoldMonogramGrad)"
+            fill={`url(#${mono})`}
             fontFamily="'Times New Roman', Times, serif"
             fontSize="14.5"
             fontWeight="600"
@@ -166,32 +184,32 @@ export default function PSPerfumesLogo({
             y1="108"
             x2="106"
             y2="108"
-            stroke="url(#psGoldRimGrad)"
+            stroke={`url(#${rim})`}
             strokeWidth="0.85"
             strokeLinecap="round"
           />
           {/* Miniature Left Flourish Leaf */}
           <path
             d="M 103 108 C 105 106 109 106 111 108 C 109 110 105 110 103 108 Z"
-            fill="url(#psGoldMonogramGrad)"
+            fill={`url(#${mono})`}
             opacity="0.8"
           />
 
           {/* Center Miniature Perfume Flacon Icon */}
-          <g transform="translate(114, 101) scale(0.7)" stroke="url(#psGoldMonogramGrad)" strokeWidth="1" fill="none">
+          <g transform="translate(114, 101) scale(0.7)" stroke={`url(#${mono})`} strokeWidth="1" fill="none">
             {/* Bottle Body */}
-            <rect x="2" y="5" width="13" height="12" rx="1.5" stroke="url(#psGoldMonogramGrad)" />
+            <rect x="2" y="5" width="13" height="12" rx="1.5" stroke={`url(#${mono})`} />
             {/* Bottle Neck */}
             <line x1="6" y1="5" x2="6" y2="3" />
             <line x1="11" y1="5" x2="11" y2="3" />
             {/* Bottle Cap */}
-            <rect x="5" y="1" width="7" height="2.5" rx="0.5" fill="url(#psGoldMonogramGrad)" />
+            <rect x="5" y="1" width="7" height="2.5" rx="0.5" fill={`url(#${mono})`} />
           </g>
 
           {/* Miniature Right Flourish Leaf */}
           <path
             d="M 137 108 C 135 106 131 106 129 108 C 131 110 135 110 137 108 Z"
-            fill="url(#psGoldMonogramGrad)"
+            fill={`url(#${mono})`}
             opacity="0.8"
           />
           {/* Right Hairline */}
@@ -200,7 +218,7 @@ export default function PSPerfumesLogo({
             y1="108"
             x2="200"
             y2="108"
-            stroke="url(#psGoldRimGrad)"
+            stroke={`url(#${rim})`}
             strokeWidth="0.85"
             strokeLinecap="round"
           />

@@ -1,6 +1,6 @@
 /* ==========================================================================
    PS PERFUMES — Compact storefront footer
-   Soft champagne with a faint geometric pattern, dark text, gold accents. Four columns on desktop;
+   Black with a faint gold geometric pattern, ivory text, gold headings and accents. Four columns on desktop;
    on phones the link groups collapse and contact stays visible.
    ========================================================================== */
 
@@ -233,4 +233,60 @@
   .ps-public-footer {
     padding-bottom: 140px;
   }
+}
+
+/* --------------------------------------------------------------------------
+   Black and gold: the --lux-* palette redefined for the footer only, so the
+   page content above stays ivory
+   -------------------------------------------------------------------------- */
+.ps-public-footer {
+  --lux-champagne: #080706;
+  --lux-text: #F8F4EC;      /* links */
+  --lux-text-2: #E8DFD1;    /* body text */
+  --lux-gold: #8C692F;      /* borders */
+  --lux-gold-deep: #D4AD62; /* headings, icons */
+  --lux-green: #D4AD62;     /* hover */
+  --lux-border: #8C692F;
+  background-color: #080706;
+  border-top: 1px solid #8C692F;
+}
+
+/* Instagram and WhatsApp: gold-bordered pills with gold icons */
+.ps-footer-pill {
+  border-color: #8C692F;
+  color: #F8F4EC;
+}
+
+.ps-footer-pill svg {
+  color: #D4AD62;
+}
+
+/* Thin gold divider above the copyright, muted champagne copyright, gold back-to-top */
+.ps-footer-grid {
+  border-bottom-color: rgba(140, 105, 47, 0.7);
+}
+
+.ps-footer-copyright {
+  color: #B3A68F;
+}
+
+.ps-footer-top-btn {
+  color: #D4AD62;
+}
+
+@media (hover: hover) {
+  .ps-footer-pill:hover {
+    background-color: rgba(212, 173, 98, 0.12);
+    border-color: #D4AD62;
+    color: #D4AD62;
+  }
+  .ps-footer-top-btn:hover {
+    color: #E3C58B;
+  }
+}
+
+.ps-public-footer a:focus-visible,
+.ps-public-footer button:focus-visible,
+.ps-public-footer summary:focus-visible {
+  outline-color: #D4AD62;
 }

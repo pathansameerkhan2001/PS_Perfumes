@@ -530,29 +530,80 @@
 }
 
 /* --------------------------------------------------------------------------
-   Ivory & gold design system: top bar, gold hover indicators, deep green
-   active category, subcategory menus
+   Black and gold header (top bar, navigation bar, subcategory menus).
+   The header's rules use the --lux-* palette; it is redefined here for the
+   header only, so the page content below stays ivory.
    -------------------------------------------------------------------------- */
-.ps-top-bar {
-  background: linear-gradient(180deg, var(--lux-card) 0%, var(--lux-ivory) 100%);
+.ps-header-container {
+  --lux-ivory: #080706;
+  --lux-card: #080706;
+  --lux-champagne: #080706;
+  --lux-text: #F8F4EC;
+  --lux-text-2: #CFC5B5;
+  --lux-gold: #C69A45;
+  --lux-gold-deep: #E3C58B;   /* gold text and hover on black */
+  --lux-gold-light: #E3C58B;
+  --lux-green: #E3C58B;       /* active item: gold on black */
+  --lux-border: rgba(198, 154, 69, 0.28);
+  --lux-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+  background-color: #080706;
+  border-bottom: 1px solid #8C692F;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35);
 }
 
-.ps-icon-link,
-.ps-mobile-toggle-btn {
+.ps-header-container.is-scrolled {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+}
+
+.ps-top-bar {
+  background: #080706;
+  border-bottom: 1px solid rgba(198, 154, 69, 0.16);
+}
+
+/* Search, account, wishlist and bag: ivory, gold on hover; the menu button is gold */
+.ps-icon-link {
   color: var(--lux-text);
+}
+
+.ps-mobile-toggle-btn {
+  color: var(--lux-gold);
 }
 
 .ps-icon-link:hover,
 .ps-mobile-toggle-btn:hover {
-  color: var(--lux-gold-deep);
+  color: #E3C58B;
   opacity: 1;
 }
 
-.ps-nav-bar {
-  background: var(--lux-champagne);
+.ps-delivery-location-pill {
+  background: rgba(198, 154, 69, 0.06);
+  border-color: rgba(198, 154, 69, 0.45);
+  color: var(--lux-text-2);
 }
 
-/* Gold underline grows in on hover; the active category is deep green */
+.ps-nav-bar {
+  background: #080706;
+  border-top: 0;
+  border-bottom: 0;
+}
+
+.ps-nav-menu-link {
+  color: var(--lux-text);
+}
+
+.ps-nav-menu-link:hover {
+  color: #E3C58B;
+}
+
+/* Counts: gold with dark numerals */
+.ps-header-container .ps-cart-badge,
+.ps-header-container .ps-wishlist-badge {
+  background-color: #C69A45;
+  color: #080706;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+/* Gold underline grows in on hover; the active category is gold with a gold underline */
 .ps-nav-menu-link::after {
   content: '';
   position: absolute;
@@ -658,4 +709,25 @@
   .ps-nav-caret {
     display: none;
   }
+}
+
+/* Subcategory dropdown on black: lifted black panel, gold heading, ivory links, gold hairlines */
+.ps-header-container .ps-nav-sub-menu {
+  background: #0E0C09;
+  border-color: rgba(198, 154, 69, 0.35);
+}
+
+.ps-header-container .ps-nav-sub-menu li + li:not(:nth-child(2)) {
+  border-top: 1px solid rgba(198, 154, 69, 0.12);
+}
+
+.ps-header-container .ps-nav-sub-link.is-all {
+  color: #D4AD62;
+  border-bottom-color: rgba(198, 154, 69, 0.35);
+}
+
+.ps-header-container .ps-nav-sub-link:hover,
+.ps-header-container .ps-nav-sub-link:focus-visible {
+  color: #E3C58B;
+  background: rgba(198, 154, 69, 0.08);
 }

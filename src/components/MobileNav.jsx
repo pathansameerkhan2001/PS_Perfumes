@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import {
   X,
@@ -18,9 +18,11 @@ import {
   Heart,
   ShoppingBag,
   ChevronRight,
+  ChevronDown,
+  Gift,
   Tag,
 } from 'lucide-react';
-import { useStorefrontCategories } from '../utils/useStorefrontCategories';
+import { useStorefrontCategories, COMBO_NAV_ITEM } from '../utils/useStorefrontCategories';
 import PSPerfumesLogo from './common/PSPerfumesLogo';
 import { useCart } from '../context/CartContext';
 import './MobileNav.css';
@@ -68,8 +70,15 @@ export default function MobileNav({
       icon: FAMILY_ICONS[c.slug] || Tag,
       children: c.children || [],
     })),
+    { ...COMBO_NAV_ITEM, icon: Gift },
     ...TRAILING_ITEMS,
   ];
+
+  // The selected subcategory (/collections/<main>?sub=<slug>); the current category starts open
+  const activeSub = (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('sub') : '') || '';
+  const [expandedPath, setExpandedPath] = useState(() =>
+    categories.some((c) => c.path === activeLink && c.children?.length) ? activeLink : ''
+  );
 
   // Lock background scrolling across iOS and Android browsers without layout shifts
   useEffect(() => {
@@ -203,7 +212,7 @@ export default function MobileNav({
             aria-hidden="true"
           />
 
-          {/* Full-Height Black & Gold Drawer */}
+          {/* Full-height black and gold drawer */}
           <motion.aside
             ref={drawerRef}
             className="mobile-nav-drawer"
@@ -218,7 +227,7 @@ export default function MobileNav({
             {/* 1. Header Bar: Official Brand Logo & Clear Close (X) Button */}
             <div className="mobile-nav-header">
               <div className="mobile-nav-brand">
-                <PSPerfumesLogo size="sm" variant="header" />
+                <PSPerfumesLogo size="sm" variant="header" tone="dark" />
               </div>
               <button
                 type="button"
@@ -268,20 +277,45 @@ export default function MobileNav({
                           <ChevronRight size={15} className="mobile-nav-arrow" aria-hidden="true" />
                         </div>
                       </button>
-                      {/* Subcategories (from the database) as chips under their category */}
+                      {/* Subcategories (from the database): the chevron expands them under the
+                          category; the row itself opens the whole collection */}
                       {item.children?.length > 0 && (
-                        <div className="mobile-nav-subs" role="group" aria-label={item.name + ' subcategories'}>
-                          {item.children.map((c) => (
-                            <button
-                              key={c.slug}
-                              type="button"
-                              className="mobile-nav-sub-chip"
-                              onClick={() => handleItemClick({ path: c.path })}
-                            >
-                              {c.name}
-                            </button>
-                          ))}
-                        </div>
+                        <>
+                          <button
+                            type="button"
+                            className={`mobile-nav-expand-btn${expandedPath === item.path ? ' is-open' : ''}`}
+                            onClick={() => setExpandedPath((p) => (p === item.path ? '' : item.path))}
+                            aria-expanded={expandedPath === item.path}
+                            aria-controls={`mobile-subs-${item.path}`}
+                            aria-label={`${expandedPath === item.path ? 'Hide' : 'Show'} ${item.name} subcategories`}
+                          >
+                            <ChevronDown size={17} aria-hidden="true" />
+                          </button>
+                          {expandedPath === item.path && (
+                            <ul className="mobile-nav-subs" id={`mobile-subs-${item.path}`}>
+                              <li>
+                                <button type="button" className="mobile-nav-sub-link is-all" onClick={() => handleItemClick({ path: item.path })}>
+                                  All {item.name}
+                                </button>
+                              </li>
+                              {item.children.map((c) => {
+                                const isSubActive = activeLink === item.path && activeSub === String(c.slug).toLowerCase();
+                                return (
+                                  <li key={c.slug}>
+                                    <button
+                                      type="button"
+                                      className={`mobile-nav-sub-link${isSubActive ? ' is-active' : ''}`}
+                                      aria-current={isSubActive ? 'page' : undefined}
+                                      onClick={() => handleItemClick({ path: c.path })}
+                                    >
+                                      {c.name}
+                                    </button>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </>
                       )}
                     </div>
                   );

@@ -4,7 +4,7 @@ import { Search, ShoppingBag, MapPin, User, Menu, Heart, ChevronDown } from 'luc
 import PSPerfumesLogo from './common/PSPerfumesLogo';
 const SearchModal = React.lazy(() => import('./SearchModal'));
 import { useCart } from '../context/CartContext';
-import { useStorefrontCategories } from '../utils/useStorefrontCategories';
+import { useStorefrontCategories, COMBO_NAV_ITEM } from '../utils/useStorefrontCategories';
 import { whenIdleAfterLoad } from '../utils/idlePrefetch';
 import './Header.css';
 
@@ -38,7 +38,7 @@ export default function Header() {
   };
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const { itemCount, wishlist, setIsCartOpen, setSelectedCategory } = useCart();
+  const { itemCount, wishlist, setIsCartOpen } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -50,21 +50,22 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleNavClick = (path, name) => {
-    if (!['Home', 'About Us'].includes(name)) {
-      setSelectedCategory(name);
-    }
+  // Collection pages filter by their URL, so the shared category filter is not set here (it
+  // would also narrow the homepage product sections)
+  const handleNavClick = (path) => {
     setIsMoreOpen(false);
     navigate(path);
   };
 
-  // Category links from the shared, data-driven source (database categories, seven built-in fallback)
+  // Main categories from the shared, data-driven source (database only), then the combo sets,
+  // which are their own collection and never one of the main categories
   const categories = useStorefrontCategories();
   const inlineCategories = categories.slice(0, MAX_INLINE_CATEGORIES);
   const moreCategories = categories.slice(MAX_INLINE_CATEGORIES);
   const navItems = [
     ...FIXED_NAV_ITEMS,
     ...inlineCategories.map((c) => ({ name: c.name, path: c.path, children: c.children || [] })),
+    COMBO_NAV_ITEM,
   ];
   const isPathActive = (path) =>
     location.pathname === path || (path !== '/' && path !== '/about' && location.pathname.startsWith(`${path}/`));
@@ -118,7 +119,7 @@ export default function Header() {
                 className="ps-brand-anchor"
                 aria-label="PS PERFUMES Home"
               >
-                <PSPerfumesLogo size="md" variant="header" />
+                <PSPerfumesLogo size="md" variant="header" tone="dark" />
               </Link>
             </div>
 
@@ -291,20 +292,16 @@ export default function Header() {
             isOpen={isMobileMenuOpen}
             onClose={() => setIsMobileMenuOpen(false)}
             activeLink={location.pathname}
-            onSelectLink={(target, name) => {
+            onSelectLink={(target) => {
               setIsMobileMenuOpen(false);
-              if (name && !['Home', 'About Us', 'New Arrival', 'Offers', 'Track Order'].includes(name)) {
-                setSelectedCategory(name);
-              }
+              // Collection pages filter by their URL; the shared category filter is not set
+              // (it would also narrow the homepage product sections)
               if (target.startsWith('/')) {
                 navigate(target);
               } else if (target === 'Home') {
                 navigate('/');
               } else if (target === 'About Us') {
                 navigate('/about');
-              } else {
-                setSelectedCategory(target);
-                navigate(`/category/${target.toLowerCase()}`);
               }
             }}
             onOpenSearch={() => {

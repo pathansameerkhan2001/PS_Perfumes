@@ -15,6 +15,7 @@ import '../pages/AdminProductForm.css';
 import '../pages/AdminCombos.css';
 import '../components/AdminCard.css';
 import '../styles/adminShared.css';
+import '../styles/adminLuxe.css';
 import './AdminLayout.css';
 
 /**

@@ -53,6 +53,35 @@
   --ps-admin-font-sans: var(--font-sans, "Times New Roman", Times, serif);
 }
 
+/* Admin palette (owner's admin brief, 2026-11-04). Declared on the shell so every admin
+   variable below resolves to it; the storefront keeps its own values. */
+.ps-admin-shell {
+  --lux-ivory: #F8F5EC;
+  --lux-card: #FFFDF8;
+  --lux-champagne: #E9D8B8;
+  --lux-gold: #C69A43;
+  --lux-gold-light: #E3C58B;
+  --lux-gold-deep: #A87924;
+  --lux-green: #294532;
+  --lux-text: #292D27;
+  --lux-text-2: #6F6A5F;
+  --lux-border: #E6D9C2;
+  --lux-gold-gradient: linear-gradient(135deg, #EBD3A0 0%, #D6AF62 40%, #C69A43 70%, #A87924 100%);
+
+  --ps-admin-bg-sidebar: var(--lux-champagne);
+  --ps-admin-bg-header: var(--lux-card);
+  --ps-admin-bg-main: var(--lux-ivory);
+  --ps-admin-bg-card: var(--lux-card);
+  --ps-admin-text-primary: var(--lux-text);
+  --ps-admin-text-secondary: var(--lux-text-2);
+  --ps-admin-text-ivory: var(--lux-text);
+  --ps-admin-gold: var(--lux-gold);
+  --ps-admin-gold-light: var(--lux-gold-light);
+  --ps-admin-gold-dark: var(--lux-gold-deep);
+  --ps-admin-border-light: var(--lux-border);
+  --ps-admin-border-dark: var(--lux-border);
+}
+
 /* Reset / Base utility for admin scope */
 .ps-admin-shell {
   font-family: var(--ps-admin-font-sans);

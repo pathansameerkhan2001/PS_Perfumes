@@ -1,207 +1,392 @@
-import React, { useState, useEffect } from 'react';
-import { getEnquiries, updateEnquiryStatus } from '../../services/enquiries';
-import { Mail, Phone, Calendar, CheckCircle, Clock, Trash2, RefreshCw } from 'lucide-react';
-import './AdminProducts.css';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  Mail,
+  Phone,
+  RefreshCw,
+  Search,
+  X,
+  Inbox,
+  AlertCircle,
+  CheckCircle,
+  Database,
+  MailOpen,
+  CheckCheck,
+} from 'lucide-react';
+import { getEnquiriesPage, updateEnquiryStatus } from '../../services/enquiries';
 
+const PAGE_SIZE = 20;
+const TABS = [
+  { id: 'all', label: 'All Enquiries' },
+  { id: 'unread', label: 'Unread' },
+  { id: 'done', label: 'Read / Resolved' },
+];
+const STATUS_LABEL = { unread: 'Unread', read: 'Read', resolved: 'Resolved' };
+
+const formatDate = (value) => {
+  if (!value) return '';
+  try {
+    return new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+  } catch {
+    return String(value);
+  }
+};
+
+/*
+ * Admin → Enquiries: messages from the Contact page (contact_enquiries, proposed migration 13).
+ * Search, tabs and pages are answered by the database (one page at a time, with the count of
+ * each tab). When the table does not exist the page says so instead of showing an empty list;
+ * a connection or permission error is shown as an error, never as "no enquiries".
+ */
 export default function AdminEnquiries() {
-  const [enquiries, setEnquiries] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('all');
+  const [tab, setTab] = useState('all');
+  const [statusFilter, setStatusFilter] = useState(''); // '' | 'read' | 'resolved' (Read / Resolved tab)
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [result, setResult] = useState({ rows: [], total: 0, counts: { all: 0, unread: 0, done: 0 } });
+  // 'loading' | 'ready' | 'not-set-up' | 'error'
+  const [state, setState] = useState('loading');
   const [errorMsg, setErrorMsg] = useState('');
+  const [notice, setNotice] = useState(null);
+  const [selected, setSelected] = useState(null);
+  const [busyId, setBusyId] = useState(null);
+  const requestRef = useRef(0);
 
-  const loadData = async () => {
-    setLoading(true);
+  // Search is sent 350 ms after typing stops
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput.trim()), 350);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  // A new tab, filter or search starts on the first page
+  useEffect(() => {
+    setPage(1);
+  }, [tab, statusFilter, search]);
+
+  const load = useCallback(async () => {
+    const request = ++requestRef.current;
+    setState((s) => (s === 'ready' ? 'ready' : 'loading'));
     setErrorMsg('');
     try {
-      const data = await getEnquiries();
-      setEnquiries(data || []);
+      const data = await getEnquiriesPage({
+        tab,
+        status: tab === 'done' ? statusFilter : '',
+        search,
+        page,
+        pageSize: PAGE_SIZE,
+      });
+      if (request !== requestRef.current) return; // a newer request is on its way
+      setResult(data);
+      setState('ready');
     } catch (err) {
-      setErrorMsg(
-        /PGRST205|contact_enquiries/.test(err.message)
-          ? 'Contact-form storage is not set up: the contact_enquiries table does not exist. Apply supabase/migrations/20261020_contact_enquiries_optional.sql to enable it. Until then the website shows visitors the e-mail / Instagram / WhatsApp details instead of the form.'
-          : err.message
-      );
-    } finally {
-      setLoading(false);
+      if (request !== requestRef.current) return;
+      if (err.code === 'ENQUIRIES_NOT_SET_UP') {
+        setState('not-set-up');
+      } else {
+        setErrorMsg(err.message || 'Enquiries could not be loaded.');
+        setState('error');
+      }
     }
-  };
+  }, [tab, statusFilter, search, page]);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    load();
+  }, [load]);
 
-  const handleStatusChange = async (id, newStatus) => {
-    setErrorMsg('');
+  const setStatus = async (enquiry, status, { quiet = false } = {}) => {
+    if (enquiry.status === status) return;
+    setBusyId(enquiry.id);
+    if (!quiet) setNotice(null);
     try {
-      await updateEnquiryStatus(id, newStatus);
-      setEnquiries((prev) => prev.map((e) => (e.id === id ? { ...e, status: newStatus } : e)));
+      await updateEnquiryStatus(enquiry.id, status);
+      setSelected((cur) => (cur && cur.id === enquiry.id ? { ...cur, status } : cur));
+      if (!quiet) setNotice({ type: 'success', text: `Enquiry from ${enquiry.name} marked ${STATUS_LABEL[status].toLowerCase()}.` });
+      // Counts and the current tab may change: ask the database again
+      load();
     } catch (err) {
-      setErrorMsg(err.message);
+      setNotice({ type: 'error', text: err.message });
+    } finally {
+      setBusyId(null);
     }
   };
 
-  const filtered = enquiries.filter((e) => {
-    if (activeTab === 'unread') return e.status === 'unread';
-    if (activeTab === 'read') return e.status === 'read';
-    return true;
-  });
+  const openEnquiry = (enquiry) => {
+    setSelected(enquiry);
+    // Opening an unread enquiry marks it read
+    if (enquiry.status === 'unread') setStatus(enquiry, 'read', { quiet: true });
+  };
+
+  // Escape closes the details
+  useEffect(() => {
+    if (!selected) return undefined;
+    const onKey = (e) => e.key === 'Escape' && setSelected(null);
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [selected]);
+
+  const pageCount = Math.max(1, Math.ceil(result.total / PAGE_SIZE));
+  const countFor = { all: result.counts.all, unread: result.counts.unread, done: result.counts.done };
 
   return (
-    <div className="ps-admin-products-page">
-      <div className="ps-admin-products-header">
+    <div className="ps-lx-page">
+      <header className="ps-lx-header">
         <div>
-          <h1 className="ps-admin-page-title">Client Enquiries & Bespoke Requests</h1>
-          <p className="ps-admin-page-subtitle">Submissions received via the PS PERFUMES Atelier contact concierge</p>
+          <span className="ps-lx-eyebrow">Customers</span>
+          <h1 className="ps-lx-title">Enquiries</h1>
+          <p className="ps-lx-subtitle">Messages sent from the Contact page. Open one to read it in full and reply.</p>
         </div>
-        <button type="button" onClick={loadData} className="ps-admin-btn-secondary">
-          <RefreshCw size={16} />
-          <span>Refresh</span>
-        </button>
-      </div>
-
-      {errorMsg && <div className="ps-form-error-banner">{errorMsg}</div>}
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid rgba(200,164,93,0.15)', paddingBottom: '0.75rem', marginBottom: '1.5rem' }}>
-        <button
-          type="button"
-          onClick={() => setActiveTab('all')}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: activeTab === 'all' ? '#C8A45D' : '#8F8A80',
-            fontWeight: activeTab === 'all' ? '600' : '400',
-            cursor: 'pointer',
-            padding: '0.25rem 0.75rem',
-            borderBottom: activeTab === 'all' ? '2px solid #C8A45D' : 'none',
-          }}
-        >
-          All Enquiries ({enquiries.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('unread')}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: activeTab === 'unread' ? '#C8A45D' : '#8F8A80',
-            fontWeight: activeTab === 'unread' ? '600' : '400',
-            cursor: 'pointer',
-            padding: '0.25rem 0.75rem',
-            borderBottom: activeTab === 'unread' ? '2px solid #C8A45D' : 'none',
-          }}
-        >
-          Unread ({enquiries.filter((e) => e.status === 'unread').length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('read')}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: activeTab === 'read' ? '#C8A45D' : '#8F8A80',
-            fontWeight: activeTab === 'read' ? '600' : '400',
-            cursor: 'pointer',
-            padding: '0.25rem 0.75rem',
-            borderBottom: activeTab === 'read' ? '2px solid #C8A45D' : 'none',
-          }}
-        >
-          Resolved / Read ({enquiries.filter((e) => e.status === 'read').length})
-        </button>
-      </div>
-
-      {loading ? (
-        <div className="ps-admin-loading-view">
-          <div className="ps-admin-spinner" />
-          <p>Loading enquiries...</p>
+        <div className="ps-lx-actions">
+          <button type="button" className="ps-lx-btn ps-lx-btn--secondary" onClick={load} disabled={state === 'loading'}>
+            <RefreshCw size={15} className={state === 'loading' ? 'ps-lx-spin' : ''} aria-hidden="true" />
+            <span>Refresh</span>
+          </button>
         </div>
-      ) : filtered.length === 0 ? (
-        <div className="ps-admin-empty-state">
-          <p>No enquiries found in this category.</p>
+      </header>
+
+      {notice && (
+        <div className={`ps-lx-alert ps-lx-alert--${notice.type}`} role={notice.type === 'error' ? 'alert' : 'status'}>
+          {notice.type === 'error' ? <AlertCircle size={17} /> : <CheckCircle size={17} />}
+          <div>{notice.text}</div>
+        </div>
+      )}
+
+      {state === 'not-set-up' ? (
+        <div className="ps-lx-card">
+          <div className="ps-lx-empty">
+            <Database size={32} aria-hidden="true" />
+            <h3>Enquiry storage is not set up yet</h3>
+            <p style={{ maxWidth: 560 }}>
+              The database has no <code>contact_enquiries</code> table, so no messages can be stored or listed. The
+              Contact page meanwhile shows your e-mail, Instagram and WhatsApp details instead of the form. The table
+              is prepared in <code>supabase/new-project/proposed-13-admin-media-enquiries/</code> and is waiting for
+              your review.
+            </p>
+            <button type="button" className="ps-lx-btn ps-lx-btn--secondary" onClick={load}>
+              <RefreshCw size={15} aria-hidden="true" />
+              <span>Check again</span>
+            </button>
+          </div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: '1.25rem' }}>
-          {filtered.map((item) => (
-            <div
-              key={item.id}
-              style={{
-                backgroundColor: '#0D0D0D',
-                border: item.status === 'unread' ? '1px solid #C8A45D' : '1px solid rgba(200,164,93,0.15)',
-                padding: '1.5rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <h3 style={{ fontFamily: 'var(--font-serif)', color: '#F8F5EE', fontSize: '1.1rem', margin: 0 }}>
-                      {item.name}
-                    </h3>
-                    <span
-                      style={{
-                        fontSize: '0.75rem',
-                        padding: '2px 8px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        backgroundColor: item.status === 'unread' ? 'rgba(227,27,35,0.15)' : 'rgba(200,164,93,0.1)',
-                        color: item.status === 'unread' ? '#E31B23' : '#C8A45D',
-                        border: `1px solid ${item.status === 'unread' ? 'rgba(227,27,35,0.3)' : 'rgba(200,164,93,0.2)'}`,
-                      }}
-                    >
-                      {item.status}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.5rem', fontSize: '0.85rem', color: '#8F8A80', flexWrap: 'wrap' }}>
-                    <a href={`mailto:${item.email}`} style={{ color: '#C8A45D', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <Mail size={14} /> {item.email}
-                    </a>
-                    {item.phone && (
-                      <a href={`tel:${item.phone}`} style={{ color: '#8F8A80', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Phone size={14} /> {item.phone}
-                      </a>
-                    )}
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <Calendar size={14} /> {new Date(item.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </span>
-                  </div>
-                </div>
+        <>
+          <div className="ps-lx-tabs" role="tablist" aria-label="Enquiry status">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={tab === t.id}
+                className={`ps-lx-tab${tab === t.id ? ' is-active' : ''}`}
+                onClick={() => setTab(t.id)}
+              >
+                <span>{t.label}</span>
+                {state === 'ready' && <span className="ps-lx-count">{countFor[t.id]}</span>}
+              </button>
+            ))}
+          </div>
 
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  {item.status === 'unread' ? (
+          <div className="ps-lx-toolbar">
+            <label className="ps-lx-search">
+              <Search size={15} aria-hidden="true" />
+              <input
+                type="search"
+                className="ps-lx-input"
+                placeholder="Search name, e-mail, phone, subject or message"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                aria-label="Search enquiries"
+              />
+            </label>
+            {tab === 'done' && (
+              <select
+                className="ps-lx-select"
+                style={{ width: 'auto' }}
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                aria-label="Filter by status"
+              >
+                <option value="">Read and resolved</option>
+                <option value="read">Read only</option>
+                <option value="resolved">Resolved only</option>
+              </select>
+            )}
+          </div>
+
+          {state === 'loading' ? (
+            <div className="ps-lx-list" aria-busy="true">
+              {[1, 2, 3, 4].map((n) => (
+                <div key={n} className="ps-lx-skeleton" />
+              ))}
+            </div>
+          ) : state === 'error' ? (
+            <div className="ps-lx-card">
+              <div className="ps-lx-empty" role="alert">
+                <AlertCircle size={30} aria-hidden="true" />
+                <h3>Enquiries could not be loaded</h3>
+                <p>{errorMsg}</p>
+                <button type="button" className="ps-lx-btn" onClick={load}>
+                  <RefreshCw size={15} aria-hidden="true" />
+                  <span>Try again</span>
+                </button>
+              </div>
+            </div>
+          ) : result.rows.length === 0 ? (
+            <div className="ps-lx-card">
+              <div className="ps-lx-empty">
+                <Inbox size={32} aria-hidden="true" />
+                <h3>{search ? 'No enquiries match your search' : tab === 'unread' ? 'No unread enquiries' : 'No enquiries yet'}</h3>
+                <p>{search ? 'Try another name, e-mail or word.' : 'New messages from the Contact page appear here.'}</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <ul className="ps-lx-list" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                {result.rows.map((enq) => (
+                  <li key={enq.id} className="ps-lx-card ps-lx-row">
+                    <span className="ps-lx-order" aria-hidden="true" style={{ fontSize: 14 }}>
+                      {String(enq.name || '?').trim().charAt(0).toUpperCase()}
+                    </span>
                     <button
                       type="button"
-                      onClick={() => handleStatusChange(item.id, 'read')}
-                      className="ps-admin-btn-secondary"
-                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                      className="ps-lx-row-main"
+                      onClick={() => openEnquiry(enq)}
+                      style={{ background: 'none', border: 0, padding: 0, textAlign: 'left', cursor: 'pointer', color: 'inherit', font: 'inherit' }}
+                      aria-label={`Open enquiry from ${enq.name}`}
                     >
-                      <CheckCircle size={14} /> Mark as Read
+                      <div className="ps-lx-tags" style={{ marginTop: 0 }}>
+                        <strong style={{ fontWeight: enq.status === 'unread' ? 700 : 600 }}>{enq.name}</strong>
+                        <span className={`ps-lx-badge ps-lx-badge--${enq.status}`}>{STATUS_LABEL[enq.status] || enq.status}</span>
+                        <span className="ps-lx-muted">{formatDate(enq.created_at)}</span>
+                      </div>
+                      <div style={{ marginTop: 4, fontFamily: 'var(--font-serif)', fontSize: 15 }}>
+                        {enq.subject || 'No subject'}
+                      </div>
+                      <div className="ps-lx-muted" style={{ marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {enq.message}
+                      </div>
                     </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => handleStatusChange(item.id, 'unread')}
-                      className="ps-admin-btn-secondary"
-                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                    >
-                      <Clock size={14} /> Mark as Unread
-                    </button>
-                  )}
+                    <div className="ps-lx-row-actions">
+                      {enq.status !== 'resolved' && (
+                        <button
+                          type="button"
+                          className="ps-lx-btn ps-lx-btn--secondary ps-lx-btn--sm"
+                          onClick={() => setStatus(enq, 'resolved')}
+                          disabled={busyId === enq.id}
+                        >
+                          <CheckCheck size={14} aria-hidden="true" />
+                          <span>Resolve</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="ps-lx-btn ps-lx-btn--ghost ps-lx-btn--sm"
+                        onClick={() => setStatus(enq, enq.status === 'unread' ? 'read' : 'unread')}
+                        disabled={busyId === enq.id}
+                      >
+                        {enq.status === 'unread' ? <MailOpen size={14} aria-hidden="true" /> : <Mail size={14} aria-hidden="true" />}
+                        <span>{enq.status === 'unread' ? 'Mark read' : 'Mark unread'}</span>
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              {pageCount > 1 && (
+                <nav className="ps-lx-pagination" aria-label="Enquiry pages">
+                  <button type="button" className="ps-lx-btn ps-lx-btn--secondary ps-lx-btn--sm" onClick={() => setPage((p) => p - 1)} disabled={page <= 1}>
+                    Previous
+                  </button>
+                  <span>
+                    Page {page} of {pageCount} · {result.total} enquiries
+                  </span>
+                  <button type="button" className="ps-lx-btn ps-lx-btn--secondary ps-lx-btn--sm" onClick={() => setPage((p) => p + 1)} disabled={page >= pageCount}>
+                    Next
+                  </button>
+                </nav>
+              )}
+            </>
+          )}
+        </>
+      )}
+
+      {/* Full enquiry */}
+      {selected && (
+        <div className="ps-lx-overlay" onClick={() => setSelected(null)}>
+          <div
+            className="ps-lx-modal ps-lx-modal--narrow"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ps-enq-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="ps-lx-modal-head">
+              <div>
+                <span className={`ps-lx-badge ps-lx-badge--${selected.status}`}>{STATUS_LABEL[selected.status]}</span>
+                <h2 id="ps-enq-title" className="ps-lx-card-title" style={{ marginTop: 8 }}>
+                  {selected.subject || 'No subject'}
+                </h2>
+                <span className="ps-lx-muted">Received {formatDate(selected.created_at)}</span>
+              </div>
+              <button type="button" className="ps-lx-btn ps-lx-btn--ghost ps-lx-btn--icon" onClick={() => setSelected(null)} aria-label="Close">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="ps-lx-modal-body">
+              <div className="ps-lx-grid-2">
+                <div className="ps-lx-field">
+                  <span className="ps-lx-label">Name</span>
+                  <span>{selected.name}</span>
+                </div>
+                <div className="ps-lx-field">
+                  <span className="ps-lx-label">E-mail</span>
+                  <a href={`mailto:${selected.email}?subject=${encodeURIComponent(`Re: ${selected.subject || 'Your enquiry'}`)}`} style={{ color: 'var(--lux-green)', wordBreak: 'break-all' }}>
+                    {selected.email}
+                  </a>
+                </div>
+                {selected.phone && (
+                  <div className="ps-lx-field">
+                    <span className="ps-lx-label">Phone</span>
+                    <a href={`tel:${String(selected.phone).replace(/[^\d+]/g, '')}`} style={{ color: 'var(--lux-green)' }}>
+                      {selected.phone}
+                    </a>
+                  </div>
+                )}
+              </div>
+              <div className="ps-lx-field">
+                <span className="ps-lx-label">Message</span>
+                <div className="ps-lx-card ps-lx-card-pad" style={{ whiteSpace: 'pre-wrap', lineHeight: 1.65 }}>
+                  {selected.message}
                 </div>
               </div>
-
-              {item.subject && (
-                <div style={{ fontSize: '0.95rem', fontWeight: '600', color: '#F3E7C7' }}>
-                  Subject: {item.subject}
-                </div>
-              )}
-
-              <p style={{ margin: 0, color: '#D4CBBF', lineHeight: '1.6', fontSize: '0.9rem', backgroundColor: '#050505', padding: '1rem', borderLeft: '2px solid #C8A45D' }}>
-                {item.message}
-              </p>
             </div>
-          ))}
+            <div className="ps-lx-modal-foot">
+              <a className="ps-lx-btn ps-lx-btn--secondary" href={`mailto:${selected.email}?subject=${encodeURIComponent(`Re: ${selected.subject || 'Your enquiry'}`)}`}>
+                <Mail size={15} aria-hidden="true" />
+                <span>Reply by e-mail</span>
+              </a>
+              {selected.phone && (
+                <a className="ps-lx-btn ps-lx-btn--secondary" href={`tel:${String(selected.phone).replace(/[^\d+]/g, '')}`}>
+                  <Phone size={15} aria-hidden="true" />
+                  <span>Call</span>
+                </a>
+              )}
+              {selected.status !== 'unread' && (
+                <button type="button" className="ps-lx-btn ps-lx-btn--ghost" onClick={() => setStatus(selected, 'unread')} disabled={busyId === selected.id}>
+                  Mark unread
+                </button>
+              )}
+              {selected.status === 'resolved' ? (
+                <button type="button" className="ps-lx-btn ps-lx-btn--ghost" onClick={() => setStatus(selected, 'read')} disabled={busyId === selected.id}>
+                  Reopen
+                </button>
+              ) : (
+                <button type="button" className="ps-lx-btn" onClick={() => setStatus(selected, 'resolved')} disabled={busyId === selected.id}>
+                  <CheckCheck size={15} aria-hidden="true" />
+                  <span>Mark resolved</span>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
