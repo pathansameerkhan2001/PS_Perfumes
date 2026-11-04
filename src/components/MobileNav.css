@@ -380,38 +380,38 @@
   border: 1px solid var(--lux-card);
 }
 
-/* Black and gold drawer: the --lux-* palette redefined for the menu only */
+/* Ivory drawer (same palette as the header): the --lux-* values set for the menu only */
 .mobile-nav-drawer {
-  --lux-ivory: #080706;
-  --lux-card: #0E0C09;
-  --lux-champagne: #0B0A08;
-  --lux-text: #F8F4EC;
-  --lux-text-2: #CFC5B5;
+  --lux-ivory: #FBF8F1;
+  --lux-card: #FFFFFF;
+  --lux-champagne: #F6F0E4;
+  --lux-text: #2B2A27;
+  --lux-text-2: #6B6458;
   --lux-gold: #C69A45;
-  --lux-gold-deep: #E3C58B;
+  --lux-gold-deep: #99702E;
   --lux-gold-light: #E3C58B;
-  --lux-green: #E3C58B;
-  --lux-border: rgba(198, 154, 69, 0.16);
-  background: #080706;
-  border-right: 1px solid #8C692F;
-  box-shadow: 12px 0 45px rgba(0, 0, 0, 0.6);
+  --lux-green: #294532;
+  --lux-border: rgba(198, 154, 69, 0.22);
+  background: #FBF8F1;
+  border-right: 1px solid rgba(198, 154, 69, 0.55);
+  box-shadow: 12px 0 40px rgba(41, 35, 29, 0.18);
 }
 
 .mobile-nav-backdrop {
-  background-color: rgba(0, 0, 0, 0.72);
+  background-color: rgba(41, 35, 29, 0.42);
 }
 
 .mobile-nav-header {
-  background: #080706;
-  border-bottom: 1px solid rgba(198, 154, 69, 0.22);
+  background: #FFFDF8;
+  border-bottom: 1px solid rgba(198, 154, 69, 0.3);
 }
 
 .mobile-nav-brand-strip {
-  background: linear-gradient(90deg, #080706 0%, #15110b 50%, #080706 100%);
+  background: linear-gradient(90deg, #F6F0E4 0%, #FFFDF8 50%, #F6F0E4 100%);
 }
 
 .mobile-nav-close-btn {
-  color: #C69A45;
+  color: #2B2A27;
 }
 
 /* Expandable categories: the chevron sits where the row arrow is */
@@ -476,7 +476,7 @@
   padding: 8px 0;
   border: 0;
   background: none;
-  color: #F8F4EC;
+  color: #2B2A27;
   font-family: var(--font-serif);
   font-size: 14.5px;
   text-align: left;
@@ -485,7 +485,7 @@
 }
 
 .mobile-nav-sub-link.is-all {
-  color: #D4AD62;
+  color: #99702E;
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -495,7 +495,7 @@
 .mobile-nav-sub-link:hover,
 .mobile-nav-sub-link:focus-visible,
 .mobile-nav-sub-link.is-active {
-  color: #E3C58B;
+  color: #294532;
 }
 
 .mobile-nav-sub-link.is-active::before {
@@ -508,9 +508,9 @@
   background: #C69A45;
 }
 
-/* Active category: gold text and a gold rule */
+/* Active category: deep green text and a gold rule */
 .mobile-nav-link.is-active {
-  color: #E3C58B;
+  color: #294532;
   border-left-color: #C69A45;
 }
 

@@ -127,7 +127,7 @@
   .ps-pdetail-add-bag-btn, .ps-dest-shop-btn, .ps-contact-submit-btn, .ps-collection-load-more-btn,
   .ps-cart-empty-btn, .ps-cart-checkout-btn, .ps-wishlist-empty-btn, .ps-empty-btn, .ps-grid-reset-btn,
   .ps-cart-promo-btn, .ps-hero-cta-btn, .ps-ab-btn--primary, .ps-combopack-add-btn, .ps-newarr-viewall,
-  .ps-receipt-print, .ps-insta-cta, .ps-quickadd-submit-btn, .ps-promo-input-wrap button
+  .ps-receipt-print, .ps-insta-cta, .ps-quickadd-submit-btn, .ps-promo-input-wrap button, .ps-new-arrival-badge
 ) {
   border: 1px solid rgba(153, 112, 46, 0.45);
   border-radius: 10px;
@@ -149,8 +149,7 @@
 .ps-app-root.ps-app-root :is(
   .ps-wl-btn:not(.is-primary), .ps-ab-btn--secondary, .ps-cart-continue-btn, .ps-sidebar-reset-btn,
   .ps-sheet-reset-btn, .ps-drawer-reset-btn, .ps-pdp-back-catalog-btn, .ps-cart-clear-btn,
-  .ps-shop-mobile-filter-btn, .ps-pdp-buynow-btn, .ps-pdetail-buy-now-btn, .ps-reels-more-link,
-  .ps-new-arrival-badge
+  .ps-shop-mobile-filter-btn, .ps-pdp-buynow-btn, .ps-pdetail-buy-now-btn, .ps-reels-more-link
 ) {
   border: 1px solid var(--lux-gold);
   border-radius: 10px;
@@ -176,7 +175,7 @@
     .ps-pdetail-add-bag-btn, .ps-dest-shop-btn, .ps-contact-submit-btn, .ps-collection-load-more-btn,
     .ps-cart-empty-btn, .ps-cart-checkout-btn, .ps-wishlist-empty-btn, .ps-empty-btn, .ps-grid-reset-btn,
     .ps-cart-promo-btn, .ps-hero-cta-btn, .ps-ab-btn--primary, .ps-combopack-add-btn, .ps-newarr-viewall,
-    .ps-receipt-print, .ps-insta-cta, .ps-quickadd-submit-btn, .ps-promo-input-wrap button
+    .ps-receipt-print, .ps-insta-cta, .ps-quickadd-submit-btn, .ps-promo-input-wrap button, .ps-new-arrival-badge
   ):hover:not(:disabled):not([aria-disabled="true"]) {
     color: var(--lux-text);
     background-color: var(--lux-gold);
@@ -188,8 +187,7 @@
   .ps-app-root.ps-app-root :is(
     .ps-wl-btn:not(.is-primary), .ps-ab-btn--secondary, .ps-cart-continue-btn, .ps-sidebar-reset-btn,
     .ps-sheet-reset-btn, .ps-drawer-reset-btn, .ps-pdp-back-catalog-btn, .ps-cart-clear-btn,
-    .ps-shop-mobile-filter-btn, .ps-pdp-buynow-btn, .ps-pdetail-buy-now-btn, .ps-reels-more-link,
-    .ps-new-arrival-badge
+    .ps-shop-mobile-filter-btn, .ps-pdp-buynow-btn, .ps-pdetail-buy-now-btn, .ps-reels-more-link
   ):hover:not(:disabled) {
     color: var(--lux-text);
     background-color: var(--lux-card);

@@ -530,59 +530,58 @@
 }
 
 /* --------------------------------------------------------------------------
-   Black and gold header (top bar, navigation bar, subcategory menus).
-   The header's rules use the --lux-* palette; it is redefined here for the
-   header only, so the page content below stays ivory.
+   Ivory and champagne-gold header (top bar, navigation bar, subcategory menus).
+   The header's rules use the --lux-* palette; it is set here for the header
+   only: cream top bar, white navigation bar, charcoal text, gold accents,
+   deep green active item.
    -------------------------------------------------------------------------- */
 .ps-header-container {
-  --lux-ivory: #080706;
-  --lux-card: #080706;
-  --lux-champagne: #080706;
-  --lux-text: #F8F4EC;
-  --lux-text-2: #CFC5B5;
+  --lux-ivory: #FBF8F1;
+  --lux-card: #FFFFFF;
+  --lux-champagne: #FFFFFF;
+  --lux-text: #2B2A27;        /* charcoal */
+  --lux-text-2: #6B6458;
   --lux-gold: #C69A45;
-  --lux-gold-deep: #E3C58B;   /* gold text and hover on black */
+  --lux-gold-deep: #99702E;   /* gold text on light backgrounds */
   --lux-gold-light: #E3C58B;
-  --lux-green: #E3C58B;       /* active item: gold on black */
-  --lux-border: rgba(198, 154, 69, 0.28);
-  --lux-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
-  background-color: #080706;
-  border-bottom: 1px solid #8C692F;
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35);
+  --lux-green: #294532;       /* active item */
+  --lux-border: #E5D7C1;
+  --lux-shadow: 0 14px 34px rgba(41, 35, 29, 0.12);
+  background-color: #FBF8F1;
+  border-bottom: 1px solid rgba(198, 154, 69, 0.55);
+  box-shadow: 0 4px 18px rgba(41, 35, 29, 0.06);
 }
 
 .ps-header-container.is-scrolled {
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 6px 24px rgba(41, 35, 29, 0.1);
 }
 
 .ps-top-bar {
-  background: #080706;
-  border-bottom: 1px solid rgba(198, 154, 69, 0.16);
+  background: linear-gradient(180deg, #FFFDF8 0%, #FBF8F1 100%);
+  border-bottom: 1px solid rgba(198, 154, 69, 0.22);
 }
 
-/* Search, account, wishlist and bag: ivory, gold on hover; the menu button is gold */
-.ps-icon-link {
-  color: var(--lux-text);
-}
-
+/* Search, account, wishlist, bag and menu: charcoal, gold on hover */
+.ps-icon-link,
 .ps-mobile-toggle-btn {
-  color: var(--lux-gold);
+  color: var(--lux-text);
+  transition: color 0.2s ease, transform 0.2s ease;
 }
 
 .ps-icon-link:hover,
 .ps-mobile-toggle-btn:hover {
-  color: #E3C58B;
+  color: var(--lux-gold);
   opacity: 1;
 }
 
 .ps-delivery-location-pill {
-  background: rgba(198, 154, 69, 0.06);
+  background: rgba(198, 154, 69, 0.07);
   border-color: rgba(198, 154, 69, 0.45);
   color: var(--lux-text-2);
 }
 
 .ps-nav-bar {
-  background: #080706;
+  background: #FFFFFF;
   border-top: 0;
   border-bottom: 0;
 }
@@ -592,15 +591,15 @@
 }
 
 .ps-nav-menu-link:hover {
-  color: #E3C58B;
+  color: var(--lux-text);
 }
 
 /* Counts: gold with dark numerals */
 .ps-header-container .ps-cart-badge,
 .ps-header-container .ps-wishlist-badge {
   background-color: #C69A45;
-  color: #080706;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  color: #1E1B16;
+  box-shadow: 0 2px 6px rgba(198, 154, 69, 0.35);
 }
 
 /* Gold underline grows in on hover; the active category is gold with a gold underline */
@@ -711,23 +710,23 @@
   }
 }
 
-/* Subcategory dropdown on black: lifted black panel, gold heading, ivory links, gold hairlines */
+/* Subcategory dropdown: white panel, gold heading, charcoal links, gold hairlines */
 .ps-header-container .ps-nav-sub-menu {
-  background: #0E0C09;
-  border-color: rgba(198, 154, 69, 0.35);
+  background: #FFFFFF;
+  border-color: var(--lux-border);
 }
 
 .ps-header-container .ps-nav-sub-menu li + li:not(:nth-child(2)) {
-  border-top: 1px solid rgba(198, 154, 69, 0.12);
+  border-top: 1px solid rgba(198, 154, 69, 0.14);
 }
 
 .ps-header-container .ps-nav-sub-link.is-all {
-  color: #D4AD62;
+  color: var(--lux-gold-deep);
   border-bottom-color: rgba(198, 154, 69, 0.35);
 }
 
 .ps-header-container .ps-nav-sub-link:hover,
 .ps-header-container .ps-nav-sub-link:focus-visible {
-  color: #E3C58B;
+  color: var(--lux-green);
   background: rgba(198, 154, 69, 0.08);
 }

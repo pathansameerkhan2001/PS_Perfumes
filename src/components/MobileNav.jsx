@@ -227,7 +227,7 @@ export default function MobileNav({
             {/* 1. Header Bar: Official Brand Logo & Clear Close (X) Button */}
             <div className="mobile-nav-header">
               <div className="mobile-nav-brand">
-                <PSPerfumesLogo size="sm" variant="header" tone="dark" />
+                <PSPerfumesLogo size="sm" variant="header" />
               </div>
               <button
                 type="button"
