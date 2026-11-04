@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { MapPin, ExternalLink, Copy, Check, X, Navigation } from 'lucide-react';
+import { MapPin, MessageCircle, X } from 'lucide-react';
 import { SITE_CONFIG } from '../../config/siteConfig';
 import { getStorefrontSettings } from '../../services/settings';
 import './FloatingContactDock.css';
@@ -25,24 +25,21 @@ function InstagramIcon({ size = 18 }) {
   );
 }
 
-const handleOf = (url) => {
-  const m = String(url || '').match(/instagram\.com\/([^/?#]+)/i);
-  return m ? `@${m[1]}` : '@ps_perfumes_kadapa';
-};
+const isHttp = (url) => /^https?:\/\//.test(String(url || ''));
 
 /**
- * PS PERFUMES — floating contact dock (bottom-left, opposite the bag button).
- * Each icon opens a small panel with a label and its action: WhatsApp chat, the Instagram
- * profile, or the store address with Google Maps. One panel at a time; it closes on a tap or
- * click outside, on Escape and when the page changes. Details come from Admin → Store Settings,
- * with the site configuration as fallback.
+ * PS PERFUMES — floating contact button (bottom-left, opposite the bag button).
+ * One gold button; pressing it fans out WhatsApp, Instagram and Location above it, each opening
+ * its real destination from Admin → Store Settings (the site configuration is the fallback; an
+ * entry without a configured destination is left out). Pressing the button again, clicking or
+ * tapping outside, pressing Escape or changing page closes it.
  */
 export default function FloatingContactDock() {
   const [config, setConfig] = useState(SITE_CONFIG);
   const [address, setAddress] = useState(SITE_CONFIG.address || '');
-  const [open, setOpen] = useState(null); // 'whatsapp' | 'instagram' | 'location' | null
-  const [copied, setCopied] = useState(false);
+  const [open, setOpen] = useState(false);
   const dockRef = useRef(null);
+  const toggleRef = useRef(null);
   const { pathname } = useLocation();
 
   useEffect(() => {
@@ -57,7 +54,6 @@ export default function FloatingContactDock() {
           phone: live.phone || prev.phone,
           whatsappUrl: live.whatsapp_url || prev.whatsappUrl,
         }));
-        // Full address from the separate settings fields, without repeating a part
         const parts = [live.address, live.city, live.state, live.pincode].map((p) => String(p || '').trim()).filter(Boolean);
         const unique = parts.filter((p, i) => !parts.slice(0, i).some((q) => q.toLowerCase().includes(p.toLowerCase())));
         if (unique.length) setAddress(unique.join(', '));
@@ -70,13 +66,18 @@ export default function FloatingContactDock() {
     };
   }, []);
 
-  // Close on outside tap/click, on Escape and on page change
+  // Close on outside click/tap and on Escape (focus returns to the main button)
   useEffect(() => {
     if (!open) return undefined;
     const onPointer = (e) => {
-      if (dockRef.current && !dockRef.current.contains(e.target)) setOpen(null);
+      if (dockRef.current && !dockRef.current.contains(e.target)) setOpen(false);
     };
-    const onKey = (e) => e.key === 'Escape' && setOpen(null);
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        setOpen(false);
+        toggleRef.current?.focus();
+      }
+    };
     document.addEventListener('pointerdown', onPointer);
     document.addEventListener('keydown', onKey);
     return () => {
@@ -86,134 +87,88 @@ export default function FloatingContactDock() {
   }, [open]);
 
   useEffect(() => {
-    setOpen(null);
+    setOpen(false);
   }, [pathname]);
 
   const digits = String(config.phone || '').replace(/[^\d]/g, '');
-  const whatsappUrl =
-    config.whatsappUrl && /^https?:\/\//.test(config.whatsappUrl)
-      ? config.whatsappUrl
-      : digits.length >= 10
-      ? `https://wa.me/${digits}`
-      : null;
-  // Only details from Store Settings (or the site configuration): an icon whose detail is not
-  // set is left out rather than pointing somewhere invented
-  const instagramUrl = /^https?:\/\//.test(config.instagramUrl || '') ? config.instagramUrl : '';
-  const mapsUrl = /^https?:\/\//.test(config.googleMapsUrl || '') ? config.googleMapsUrl : '';
-  // Directions from the visitor's location to the stored address (Google Maps directions link)
-  const directionsUrl = address
-    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`PS PERFUMES, ${address}`)}`
+  const whatsappUrl = isHttp(config.whatsappUrl) ? config.whatsappUrl : digits.length >= 10 ? `https://wa.me/${digits}` : '';
+  const instagramUrl = isHttp(config.instagramUrl) ? config.instagramUrl : '';
+  // The saved Google Maps link; without one, Google Maps searched for the stored address
+  const mapsUrl = isHttp(config.googleMapsUrl)
+    ? config.googleMapsUrl
+    : address
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`PS PERFUMES, ${address}`)}`
     : '';
-
-  const copyAddress = async () => {
-    try {
-      await navigator.clipboard.writeText(`PS PERFUMES, ${address}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
-      // clipboard not available: the address stays visible to copy by hand
-    }
-  };
 
   const items = [
     whatsappUrl && {
       id: 'whatsapp',
+      href: whatsappUrl,
       label: 'WhatsApp',
+      detail: config.phone ? `Chat on WhatsApp, ${config.phone}` : 'Chat on WhatsApp',
       icon: <WhatsAppIcon size={19} />,
-      panel: (
-        <>
-          <p className="ps-dock-panel-title">WhatsApp</p>
-          <p className="ps-dock-panel-text">Chat with PS PERFUMES on WhatsApp.</p>
-          {config.phone && <p className="ps-dock-panel-meta">{config.phone}</p>}
-          <a className="ps-dock-panel-action" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-            <WhatsAppIcon size={15} />
-            <span>Open WhatsApp</span>
-          </a>
-        </>
-      ),
     },
     instagramUrl && {
       id: 'instagram',
+      href: instagramUrl,
       label: 'Instagram',
+      detail: 'Open the PS PERFUMES Instagram profile',
       icon: <InstagramIcon size={19} />,
-      panel: (
-        <>
-          <p className="ps-dock-panel-title">Instagram</p>
-          <p className="ps-dock-panel-text">The official PS PERFUMES profile.</p>
-          <p className="ps-dock-panel-meta">{handleOf(instagramUrl)}</p>
-          <a className="ps-dock-panel-action" href={instagramUrl} target="_blank" rel="noopener noreferrer">
-            <InstagramIcon size={15} />
-            <span>Open Instagram</span>
-          </a>
-        </>
-      ),
     },
-    (address || mapsUrl) && {
+    mapsUrl && {
       id: 'location',
-      label: 'Store location',
+      href: mapsUrl,
+      label: 'Location',
+      detail: address ? `Open ${address} in Google Maps` : 'Open the store in Google Maps',
       icon: <MapPin size={19} strokeWidth={1.9} aria-hidden="true" />,
-      panel: (
-        <>
-          <p className="ps-dock-panel-title">Store location</p>
-          {address && <p className="ps-dock-panel-text ps-dock-panel-address">PS PERFUMES, {address}</p>}
-          {directionsUrl && (
-            <a className="ps-dock-panel-action" href={directionsUrl} target="_blank" rel="noopener noreferrer">
-              <Navigation size={15} aria-hidden="true" />
-              <span>Get directions</span>
-            </a>
-          )}
-          {mapsUrl && (
-            <a className="ps-dock-panel-action is-secondary" href={mapsUrl} target="_blank" rel="noopener noreferrer">
-              <ExternalLink size={15} aria-hidden="true" />
-              <span>Open in Google Maps</span>
-            </a>
-          )}
-          {address && (
-            <button type="button" className="ps-dock-panel-action is-secondary" onClick={copyAddress}>
-              {copied ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}
-              <span>{copied ? 'Address copied' : 'Copy address'}</span>
-            </button>
-          )}
-        </>
-      ),
     },
   ].filter(Boolean);
 
+  if (items.length === 0) return null;
+
   return (
-    <aside className="ps-floating-contact-dock" aria-label="Contact PS PERFUMES" ref={dockRef}>
-      {items.map((item) => {
-        const isOpen = open === item.id;
-        return (
-          <div key={item.id} className={`ps-dock-item ps-dock-${item.id}${isOpen ? ' is-open' : ''}`}>
-            <button
-              type="button"
-              className="ps-contact-dock-btn"
-              aria-expanded={isOpen}
-              aria-controls={`ps-dock-panel-${item.id}`}
-              aria-label={item.label}
-              title={item.label}
-              onClick={() => setOpen(isOpen ? null : item.id)}
+    <div className={`ps-floating-contact-dock${open ? ' is-open' : ''}`} ref={dockRef}>
+      {/* The contact options: always in the page so they animate both ways; when closed they
+          cannot be focused, clicked or read (inert) */}
+      <ul id="ps-contact-options" className="ps-contact-options" aria-label="Contact PS PERFUMES" inert={!open}>
+        {items.map((item, index) => (
+          <li
+            key={item.id}
+            className={`ps-contact-option ps-contact-option--${item.id}`}
+            // Staggered: the option nearest the button appears first and leaves last
+            style={{ '--i': items.length - 1 - index }}
+          >
+            <a
+              href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ps-contact-option-link"
+              aria-label={`${item.detail} (opens in a new tab)`}
+              onClick={() => setOpen(false)}
             >
-              {item.icon}
-            </button>
-            {/* Always in the page, so it animates both when opening and when closing; a closed
-                panel is invisible to pointers, the keyboard and screen readers */}
-            <div
-              id={`ps-dock-panel-${item.id}`}
-              className={`ps-dock-panel${isOpen ? ' is-open' : ''}`}
-              role="dialog"
-              aria-label={item.label}
-              aria-hidden={!isOpen}
-              inert={!isOpen}
-            >
-              <button type="button" className="ps-dock-panel-close" onClick={() => setOpen(null)} aria-label="Close">
-                <X size={14} />
-              </button>
-              {item.panel}
-            </div>
-          </div>
-        );
-      })}
-    </aside>
+              <span className="ps-contact-option-icon">{item.icon}</span>
+              <span className="ps-contact-option-label">{item.label}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+
+      <button
+        ref={toggleRef}
+        type="button"
+        className="ps-contact-toggle"
+        aria-expanded={open}
+        aria-controls="ps-contact-options"
+        aria-label={open ? 'Close contact options' : 'Contact us: WhatsApp, Instagram and location'}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="ps-contact-toggle-icon is-chat" aria-hidden="true">
+          <MessageCircle size={22} strokeWidth={1.8} />
+        </span>
+        <span className="ps-contact-toggle-icon is-close" aria-hidden="true">
+          <X size={22} strokeWidth={1.9} />
+        </span>
+      </button>
+    </div>
   );
 }

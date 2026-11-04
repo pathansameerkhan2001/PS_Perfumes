@@ -1,6 +1,7 @@
 /* ==========================================================================
-   PS PERFUMES — floating contact dock (bottom-left, opposite the bag button).
-   Ivory buttons with gold rings; each opens a small panel beside it.
+   PS PERFUMES — floating contact button (bottom-left, opposite the bag button).
+   One gold button; its options (WhatsApp, Instagram, Location) fan out above it.
+   Motion is transform + opacity only, staggered, and off for reduced motion.
    ========================================================================== */
 
 .ps-floating-contact-dock {
@@ -11,194 +12,174 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
+  /* The closed options still take space: only the visible controls catch clicks, never the
+     empty area, so the page behind stays usable */
+  pointer-events: none;
 }
 
-.ps-dock-item {
+.ps-contact-toggle,
+.is-open .ps-contact-option {
+  pointer-events: auto;
+}
+
+/* Main button ------------------------------------------------------------- */
+.ps-contact-toggle {
   position: relative;
-}
-
-.ps-contact-dock-btn {
-  width: 46px;
-  height: 46px;
-  display: flex;
+  width: 54px;
+  height: 54px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid rgba(198, 154, 67, 0.55);
+  border: 1px solid rgba(168, 121, 36, 0.55);
   border-radius: 50%;
-  background: #FFFDF8;
-  color: #A87924;
+  background: linear-gradient(135deg, #EBD3A0 0%, #D6AF62 45%, #C69A43 100%);
+  color: #292D27;
   cursor: pointer;
-  box-shadow: 0 8px 22px rgba(41, 35, 29, 0.16);
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease,
-    background-color 0.25s ease, color 0.25s ease;
+  box-shadow: 0 10px 26px rgba(41, 35, 29, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Brand colour for WhatsApp; the others stay gold */
-.ps-dock-whatsapp .ps-contact-dock-btn {
-  color: #1FA855;
+.ps-contact-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(41, 35, 29, 0.26), 0 0 0 5px rgba(198, 154, 67, 0.16);
 }
 
-.ps-contact-dock-btn:hover,
-.ps-dock-item.is-open .ps-contact-dock-btn {
-  transform: translateY(-2px) scale(1.05);
-  border-color: #C69A43;
-  box-shadow: 0 12px 28px rgba(41, 35, 29, 0.2), 0 0 0 4px rgba(198, 154, 67, 0.14);
-}
-
-.ps-dock-item.is-open .ps-contact-dock-btn {
-  background: linear-gradient(135deg, #EBD3A0 0%, #D6AF62 45%, #C69A43 100%);
-  color: #1E1B16;
-}
-
-.ps-contact-dock-btn:focus-visible {
+.ps-contact-toggle:focus-visible,
+.ps-contact-option-link:focus-visible {
   outline: 2px solid #294532;
   outline-offset: 3px;
 }
 
-/* Panel: to the right of its button, bottom-aligned with it */
-.ps-dock-panel {
+/* Chat icon turns into a close icon */
+.ps-contact-toggle-icon {
   position: absolute;
-  left: calc(100% + 12px);
-  bottom: 0;
-  width: 260px;
-  max-width: calc(100vw - 96px);
-  padding: 16px 16px 14px;
-  border: 1px solid rgba(198, 154, 67, 0.45);
-  border-top: 2px solid #C69A43;
-  border-radius: 14px;
-  background: #FFFDF8;
-  color: #292D27;
-  box-shadow: 0 18px 40px rgba(41, 35, 29, 0.22);
-  transform-origin: left bottom;
-  /* Closed: invisible and out of the way; it fades and slides in/out (transform + opacity) */
+  display: inline-flex;
+  transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ps-contact-toggle-icon.is-close {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.6);
+}
+
+.is-open .ps-contact-toggle-icon.is-chat {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.6);
+}
+
+.is-open .ps-contact-toggle-icon.is-close {
+  opacity: 1;
+  transform: none;
+}
+
+/* Options ----------------------------------------------------------------- */
+.ps-contact-options {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ps-contact-option {
   opacity: 0;
   visibility: hidden;
-  pointer-events: none;
-  transform: translateX(-8px) scale(0.96);
-  transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0.22s;
+  transform: translateY(14px) scale(0.85);
+  transform-origin: left bottom;
+  /* Closing: all together, quickly; hidden once faded */
+  transition: opacity 0.18s ease, transform 0.22s ease, visibility 0s linear 0.22s;
 }
 
-.ps-dock-panel.is-open {
+.is-open .ps-contact-option {
   opacity: 1;
   visibility: visible;
-  pointer-events: auto;
   transform: none;
-  transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0s;
+  transition: opacity 0.22s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0s;
+  /* Opening: staggered, the option nearest the button first */
+  transition-delay: calc(var(--i, 0) * 45ms);
 }
 
-.ps-dock-panel-close {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 28px;
-  height: 28px;
+.ps-contact-option-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #292D27;
+}
+
+.ps-contact-option-icon {
+  width: 46px;
+  height: 46px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 0;
+  flex-shrink: 0;
+  border: 1px solid rgba(198, 154, 67, 0.55);
   border-radius: 50%;
-  background: transparent;
-  color: #6F6A5F;
-  cursor: pointer;
-}
-
-.ps-dock-panel-close:hover {
-  background: rgba(198, 154, 67, 0.12);
-  color: #292D27;
-}
-
-.ps-dock-panel-title {
-  margin: 0 28px 4px 0;
-  font-family: var(--font-serif);
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.ps-dock-panel-text {
-  margin: 0 0 8px;
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: #6F6A5F;
-}
-
-.ps-dock-panel-address {
-  color: #292D27;
-  font-size: 13px;
-}
-
-.ps-dock-panel-meta {
-  margin: 0 0 10px;
-  font-size: 13px;
-  font-weight: 600;
+  background: #FFFDF8;
   color: #A87924;
+  box-shadow: 0 8px 20px rgba(41, 35, 29, 0.16);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.ps-dock-panel-action {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  min-height: 40px;
-  margin-top: 6px;
-  padding: 0 14px;
-  border: 1px solid rgba(168, 121, 36, 0.5);
-  border-radius: 10px;
-  background: linear-gradient(135deg, #EBD3A0 0%, #D6AF62 45%, #C69A43 100%);
-  color: #1E1B16;
-  font-family: inherit;
-  font-size: 12.5px;
+.ps-contact-option--whatsapp .ps-contact-option-icon {
+  color: #1FA855;
+}
+
+/* Label chip beside each icon */
+.ps-contact-option-label {
+  padding: 6px 12px;
+  border: 1px solid rgba(198, 154, 67, 0.4);
+  border-radius: 999px;
+  background: #FFFDF8;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-decoration: none;
-  cursor: pointer;
-  transition: filter 0.2s ease, transform 0.2s ease;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  box-shadow: 0 6px 16px rgba(41, 35, 29, 0.12);
 }
 
-.ps-dock-panel-action:hover {
-  filter: brightness(1.05);
-  transform: translateY(-1px);
+.ps-contact-option-link:hover .ps-contact-option-icon,
+.ps-contact-option-link:focus-visible .ps-contact-option-icon {
+  transform: scale(1.06);
+  border-color: #C69A43;
+  box-shadow: 0 10px 24px rgba(41, 35, 29, 0.2), 0 0 0 4px rgba(198, 154, 67, 0.14);
 }
 
-.ps-dock-panel-action.is-secondary {
-  background: #FFFFFF;
-  border-color: rgba(198, 154, 67, 0.55);
+.ps-contact-option-link:hover .ps-contact-option-label {
+  border-color: #C69A43;
   color: #A87924;
-}
-
-.ps-dock-panel-action:focus-visible,
-.ps-dock-panel-close:focus-visible {
-  outline: 2px solid #294532;
-  outline-offset: 2px;
 }
 
 @media (max-width: 768px) {
   .ps-floating-contact-dock {
     bottom: 16px;
     left: 12px;
-    gap: 8px;
+    gap: 10px;
   }
-  .ps-contact-dock-btn {
-    width: 40px;
-    height: 40px;
+  .ps-contact-toggle {
+    width: 48px;
+    height: 48px;
   }
-  .ps-dock-panel {
-    left: calc(100% + 10px);
-    width: 240px;
-    max-width: calc(100vw - 74px);
+  .ps-contact-option-icon {
+    width: 42px;
+    height: 42px;
+  }
+  .ps-contact-option-label {
+    font-size: 11.5px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ps-contact-dock-btn,
-  .ps-dock-panel-action {
-    transition: none;
-  }
-  .ps-dock-panel,
-  .ps-dock-panel.is-open {
+  .ps-contact-toggle,
+  .ps-contact-toggle-icon,
+  .ps-contact-option,
+  .is-open .ps-contact-option,
+  .ps-contact-option-icon {
     transition: none;
   }
 }

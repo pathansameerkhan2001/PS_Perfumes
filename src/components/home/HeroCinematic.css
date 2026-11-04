@@ -14,7 +14,8 @@
      svh stays fixed while a mobile toolbar collapses; vh is the fallback. */
   height: calc(100vh - var(--ps-header-height, 160px));
   height: calc(100svh - var(--ps-header-height, 160px));
-  min-height: 480px;
+  /* Taller floor for short laptop screens (owner request: a larger, more striking hero) */
+  min-height: 560px;
   background-color: #050505;
   overflow: hidden;
   margin: 0;
@@ -24,40 +25,40 @@
 /* Portrait tablets */
 @media (max-width: 1024px) and (orientation: portrait) {
   .ps-hero-cinematic {
-    height: 64vh;
-    height: 64svh;
-    min-height: 440px;
-    max-height: 600px;
+    height: 72vh;
+    height: 72svh;
+    min-height: 480px;
+    max-height: 680px;
   }
 }
 
 /* Phones */
 @media (max-width: 768px) {
   .ps-hero-cinematic {
-    height: 56vh;
-    height: 56svh;
-    min-height: 400px;
-    max-height: 520px;
+    height: 64vh;
+    height: 64svh;
+    min-height: 440px;
+    max-height: 590px;
   }
 }
 
 /* Compact phones (430 / 390 px) */
 @media (max-width: 480px) {
   .ps-hero-cinematic {
-    height: 52vh;
-    height: 52svh;
-    min-height: 360px;
-    max-height: 460px;
+    height: 60vh;
+    height: 60svh;
+    min-height: 400px;
+    max-height: 530px;
   }
 }
 
 /* Small phones (≤ 375 px) */
 @media (max-width: 375px) {
   .ps-hero-cinematic {
-    height: 48vh;
-    height: 48svh;
-    min-height: 330px;
-    max-height: 420px;
+    height: 56vh;
+    height: 56svh;
+    min-height: 360px;
+    max-height: 480px;
   }
 }
 

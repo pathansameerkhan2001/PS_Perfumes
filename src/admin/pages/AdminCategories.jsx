@@ -134,6 +134,23 @@ export default function AdminCategories() {
     }
   };
 
+  // One click: show or hide a category on the storefront (hiding a main category also hides its
+  // subcategories there)
+  const [togglingId, setTogglingId] = useState(null);
+  const handleToggleActive = async (cat) => {
+    setTogglingId(cat.id);
+    setNotice(null);
+    try {
+      await updateCategory(cat.id, { is_active: !cat.is_active });
+      setNotice({ type: 'success', text: `"${cat.name}" is now ${cat.is_active ? 'hidden from' : 'shown on'} the storefront.` });
+      await loadData();
+    } catch (err) {
+      setNotice({ type: 'error', text: `Status not changed: ${err.message}` });
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this fragrance category?')) return;
     setNotice(null);
@@ -231,9 +248,17 @@ export default function AdminCategories() {
                   </td>
                   <td>{cat.display_order}</td>
                   <td>
-                    <span className={`ps-status-pill ${cat.is_active ? 'ps-status-delivered' : 'ps-status-cancelled'}`}>
-                      {cat.is_active ? 'Active' : 'Disabled'}
-                    </span>
+                    <button
+                      type="button"
+                      className={`ps-status-pill ${cat.is_active ? 'ps-status-delivered' : 'ps-status-cancelled'}`}
+                      onClick={() => handleToggleActive(cat)}
+                      disabled={togglingId === cat.id}
+                      title={cat.is_active ? 'Click to hide from the storefront' : 'Click to show on the storefront'}
+                      aria-label={`${cat.is_active ? 'Deactivate' : 'Activate'} ${cat.name}`}
+                      style={{ border: 0, cursor: 'pointer' }}
+                    >
+                      {togglingId === cat.id ? 'Saving…' : cat.is_active ? 'Active' : 'Disabled'}
+                    </button>
                   </td>
                   <td>
                     <div className="ps-table-actions">
