@@ -1,155 +1,197 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { MapPin, ExternalLink, Copy, Check, X } from 'lucide-react';
 import { SITE_CONFIG } from '../../config/siteConfig';
 import { getStorefrontSettings } from '../../services/settings';
 import './FloatingContactDock.css';
 
-function WhatsAppIcon({ size = 18, color = 'currentColor' }) {
+// Official WhatsApp glyph (Simple Icons)
+function WhatsAppIcon({ size = 18 }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill={color}
-      aria-hidden="true"
-      className="ps-contact-svg"
-    >
-      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.63C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2ZM12.04 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.16 12.04 20.16C10.67 20.16 9.32 19.8 8.14 19.11L7.56 18.77L4.44 19.59L5.27 16.55L4.9 15.95C4.15 14.73 3.8 13.33 3.8 11.91C3.8 7.37 7.5 3.67 12.04 3.67ZM8.84 7.35C8.65 7.35 8.35 7.42 8.1 7.69C7.85 7.96 7.15 8.62 7.15 9.97C7.15 11.32 8.13 12.62 8.27 12.81C8.41 13 10.2 15.76 12.94 16.94C13.59 17.22 14.1 17.38 14.5 17.51C15.15 17.72 15.75 17.69 16.22 17.62C16.74 17.54 17.82 16.96 18.05 16.32C18.28 15.68 18.28 15.13 18.21 15.02C18.14 14.91 17.95 14.84 17.66 14.7C17.37 14.56 15.95 13.86 15.69 13.76C15.43 13.67 15.24 13.62 15.05 13.91C14.86 14.2 14.32 14.84 14.15 15.03C13.99 15.22 13.82 15.25 13.53 15.1C13.24 14.96 12.31 14.65 11.21 13.67C10.35 12.91 9.77 11.97 9.61 11.68C9.44 11.39 9.59 11.23 9.74 11.09C9.87 10.96 10.03 10.75 10.18 10.58C10.32 10.41 10.37 10.29 10.47 10.1C10.56 9.9 10.52 9.73 10.44 9.59C10.37 9.44 9.83 8.12 9.61 7.58C9.39 7.05 9.17 7.12 9.01 7.12C8.86 7.11 8.69 7.11 8.52 7.11L8.84 7.35Z" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
     </svg>
   );
 }
 
-function InstagramIcon({ size = 18, color = 'currentColor' }) {
+// Instagram glyph (rounded square, lens, flash)
+function InstagramIcon({ size = 18 }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      className="ps-contact-svg"
-    >
-      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <rect width="20" height="20" x="2" y="2" rx="5.5" ry="5.5" />
+      <circle cx="12" cy="12" r="4.2" />
+      <circle cx="17.6" cy="6.4" r="0.9" fill="currentColor" stroke="none" />
     </svg>
   );
 }
 
-function GoogleMapsIcon({ size = 18, color = 'currentColor' }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      className="ps-contact-svg"
-    >
-      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
-      <circle cx="12" cy="9" r="2.5" />
-    </svg>
-  );
-}
+const handleOf = (url) => {
+  const m = String(url || '').match(/instagram\.com\/([^/?#]+)/i);
+  return m ? `@${m[1]}` : '@ps_perfumes_kadapa';
+};
 
 /**
- * PS PERFUMES — Luxury Floating Contact & Concierge Dock
- * Positioned unobtrusively on bottom-left, cleanly avoiding shopping bag on bottom-right.
- * Official brand icons for WhatsApp, Instagram, and Google Maps with verified destinations.
+ * PS PERFUMES — floating contact dock (bottom-left, opposite the bag button).
+ * Each icon opens a small panel with a label and its action: WhatsApp chat, the Instagram
+ * profile, or the store address with Google Maps. One panel at a time; it closes on a tap or
+ * click outside, on Escape and when the page changes. Details come from Admin → Store Settings,
+ * with the site configuration as fallback.
  */
 export default function FloatingContactDock() {
   const [config, setConfig] = useState(SITE_CONFIG);
+  const [address, setAddress] = useState(SITE_CONFIG.address || '');
+  const [open, setOpen] = useState(null); // 'whatsapp' | 'instagram' | 'location' | null
+  const [copied, setCopied] = useState(false);
+  const dockRef = useRef(null);
+  const { pathname } = useLocation();
 
   useEffect(() => {
     let mounted = true;
-    async function fetchLiveSettings() {
-      try {
-        const live = await getStorefrontSettings();
-        if (mounted && live) {
-          setConfig((prev) => ({
-            ...prev,
-            instagramUrl: live.instagram_url || prev.instagramUrl,
-            googleMapsUrl: live.google_maps_url || prev.googleMapsUrl,
-            phone: live.phone || prev.phone,
-            whatsappUrl: live.whatsapp_url || prev.whatsappUrl,
-          }));
-        }
-      } catch {}
-    }
-    fetchLiveSettings();
+    getStorefrontSettings()
+      .then((live) => {
+        if (!mounted || !live) return;
+        setConfig((prev) => ({
+          ...prev,
+          instagramUrl: live.instagram_url || prev.instagramUrl,
+          googleMapsUrl: live.google_maps_url || prev.googleMapsUrl,
+          phone: live.phone || prev.phone,
+          whatsappUrl: live.whatsapp_url || prev.whatsappUrl,
+        }));
+        // Full address from the separate settings fields, without repeating a part
+        const parts = [live.address, live.city, live.state, live.pincode].map((p) => String(p || '').trim()).filter(Boolean);
+        const unique = parts.filter((p, i) => !parts.slice(0, i).some((q) => q.toLowerCase().includes(p.toLowerCase())));
+        if (unique.length) setAddress(unique.join(', '));
+      })
+      .catch(() => {
+        // keep the built-in details
+      });
     return () => {
       mounted = false;
     };
   }, []);
 
-  // Compute and validate WhatsApp destination
-  const resolveWhatsAppUrl = () => {
-    if (config.whatsappUrl && config.whatsappUrl.startsWith('http')) {
-      return config.whatsappUrl;
+  // Close on outside tap/click, on Escape and on page change
+  useEffect(() => {
+    if (!open) return undefined;
+    const onPointer = (e) => {
+      if (dockRef.current && !dockRef.current.contains(e.target)) setOpen(null);
+    };
+    const onKey = (e) => e.key === 'Escape' && setOpen(null);
+    document.addEventListener('pointerdown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    setOpen(null);
+  }, [pathname]);
+
+  const digits = String(config.phone || '').replace(/[^\d]/g, '');
+  const whatsappUrl =
+    config.whatsappUrl && /^https?:\/\//.test(config.whatsappUrl)
+      ? config.whatsappUrl
+      : digits.length >= 10
+      ? `https://wa.me/${digits}`
+      : null;
+  const instagramUrl = config.instagramUrl || 'https://www.instagram.com/ps_perfumes_kadapa/';
+  const mapsUrl =
+    config.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`PS PERFUMES ${address}`)}`;
+
+  const copyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(`PS PERFUMES, ${address}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // clipboard not available: the address stays visible to copy by hand
     }
-    const cleanDigits = (config.phone || '').replace(/[^\d]/g, '');
-    if (cleanDigits.length >= 10) {
-      return `https://wa.me/${cleanDigits}`;
-    }
-    return null;
   };
 
-  const whatsappUrl = resolveWhatsAppUrl();
-  const instagramUrl = config.instagramUrl || 'https://www.instagram.com/ps_perfumes_kadapa/?hl=en';
-  const googleMapsUrl = config.googleMapsUrl || 'https://share.google/b0yildKJKTaGc365J';
+  const items = [
+    whatsappUrl && {
+      id: 'whatsapp',
+      label: 'WhatsApp',
+      icon: <WhatsAppIcon size={19} />,
+      panel: (
+        <>
+          <p className="ps-dock-panel-title">Chat with us on WhatsApp</p>
+          <p className="ps-dock-panel-text">Questions about a fragrance or an order? We reply on WhatsApp.</p>
+          {config.phone && <p className="ps-dock-panel-meta">{config.phone}</p>}
+          <a className="ps-dock-panel-action" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+            <WhatsAppIcon size={15} />
+            <span>Open WhatsApp</span>
+          </a>
+        </>
+      ),
+    },
+    {
+      id: 'instagram',
+      label: 'Instagram',
+      icon: <InstagramIcon size={19} />,
+      panel: (
+        <>
+          <p className="ps-dock-panel-title">PS PERFUMES on Instagram</p>
+          <p className="ps-dock-panel-text">New arrivals, reels and fragrance stories.</p>
+          <p className="ps-dock-panel-meta">{handleOf(instagramUrl)}</p>
+          <a className="ps-dock-panel-action" href={instagramUrl} target="_blank" rel="noopener noreferrer">
+            <InstagramIcon size={15} />
+            <span>Open Instagram</span>
+          </a>
+        </>
+      ),
+    },
+    {
+      id: 'location',
+      label: 'Store location',
+      icon: <MapPin size={19} strokeWidth={1.9} aria-hidden="true" />,
+      panel: (
+        <>
+          <p className="ps-dock-panel-title">Visit our store</p>
+          <p className="ps-dock-panel-text ps-dock-panel-address">PS PERFUMES, {address}</p>
+          <a className="ps-dock-panel-action" href={mapsUrl} target="_blank" rel="noopener noreferrer">
+            <ExternalLink size={15} aria-hidden="true" />
+            <span>Open in Google Maps</span>
+          </a>
+          <button type="button" className="ps-dock-panel-action is-secondary" onClick={copyAddress}>
+            {copied ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}
+            <span>{copied ? 'Address copied' : 'Copy address'}</span>
+          </button>
+        </>
+      ),
+    },
+  ].filter(Boolean);
 
   return (
-    <aside
-      className="ps-floating-contact-dock"
-      aria-label="Atelier Concierge and Social Channels"
-    >
-      {/* 1. WhatsApp Concierge */}
-      {whatsappUrl && (
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="ps-contact-dock-btn ps-contact-whatsapp"
-          aria-label="Chat on WhatsApp with PS PERFUMES Concierge"
-          title="WhatsApp Concierge (+91 94949 51600)"
-        >
-          <WhatsAppIcon size={17} color="#25D366" />
-          <span className="ps-contact-dock-tooltip">WhatsApp Concierge</span>
-        </a>
-      )}
-
-      {/* 2. Official Instagram */}
-      <a
-        href={instagramUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="ps-contact-dock-btn ps-contact-instagram"
-        aria-label="Official Instagram @ps_perfumes_kadapa"
-        title="Follow @ps_perfumes_kadapa on Instagram"
-      >
-        <InstagramIcon size={17} color="#C9A96E" />
-        <span className="ps-contact-dock-tooltip">@ps_perfumes_kadapa</span>
-      </a>
-
-      {/* 3. Google Maps Kadapa Location */}
-      <a
-        href={googleMapsUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="ps-contact-dock-btn ps-contact-maps"
-        aria-label="Locate PS PERFUMES Kadapa Boutique on Google Maps"
-        title="Visit Kadapa Boutique (Google Maps)"
-      >
-        <GoogleMapsIcon size={17} color="#C9A96E" />
-        <span className="ps-contact-dock-tooltip">Kadapa Boutique</span>
-      </a>
+    <aside className="ps-floating-contact-dock" aria-label="Contact PS PERFUMES" ref={dockRef}>
+      {items.map((item) => {
+        const isOpen = open === item.id;
+        return (
+          <div key={item.id} className={`ps-dock-item ps-dock-${item.id}${isOpen ? ' is-open' : ''}`}>
+            <button
+              type="button"
+              className="ps-contact-dock-btn"
+              aria-expanded={isOpen}
+              aria-controls={`ps-dock-panel-${item.id}`}
+              aria-label={item.label}
+              title={item.label}
+              onClick={() => setOpen(isOpen ? null : item.id)}
+            >
+              {item.icon}
+            </button>
+            {isOpen && (
+              <div id={`ps-dock-panel-${item.id}`} className="ps-dock-panel" role="dialog" aria-label={item.label}>
+                <button type="button" className="ps-dock-panel-close" onClick={() => setOpen(null)} aria-label="Close">
+                  <X size={14} />
+                </button>
+                {item.panel}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </aside>
   );
 }

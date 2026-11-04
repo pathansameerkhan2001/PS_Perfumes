@@ -1,111 +1,201 @@
 /* ==========================================================================
-   PS PERFUMES — LUXURY FLOATING CONTACT & CONCIERGE DOCK
-   Positioned on bottom-left, strictly opposite to floating bag (bottom-right).
+   PS PERFUMES — floating contact dock (bottom-left, opposite the bag button).
+   Ivory buttons with gold rings; each opens a small panel beside it.
    ========================================================================== */
 
 .ps-floating-contact-dock {
   position: fixed;
   bottom: 24px;
   left: 24px;
+  z-index: 9980;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
-  z-index: 9980;
-  pointer-events: auto;
+}
+
+.ps-dock-item {
+  position: relative;
 }
 
 .ps-contact-dock-btn {
-  position: relative;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--lux-card);
-  border: 1px solid rgba(201, 169, 110, 0.4);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  width: 46px;
+  height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--lux-text);
-  text-decoration: none;
+  padding: 0;
+  border: 1px solid rgba(198, 154, 67, 0.55);
+  border-radius: 50%;
+  background: #FFFDF8;
+  color: #A87924;
   cursor: pointer;
-  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  outline: none;
+  box-shadow: 0 8px 22px rgba(41, 35, 29, 0.16);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease,
+    background-color 0.25s ease, color 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Brand colour for WhatsApp; the others stay gold */
+.ps-dock-whatsapp .ps-contact-dock-btn {
+  color: #1FA855;
 }
 
 .ps-contact-dock-btn:hover,
-.ps-contact-dock-btn:focus-visible {
-  transform: translateY(-2px) scale(1.06);
-  border-color: #C9A96E;
-  background: var(--lux-card);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6), 0 0 16px rgba(201, 169, 110, 0.25);
+.ps-dock-item.is-open .ps-contact-dock-btn {
+  transform: translateY(-2px) scale(1.05);
+  border-color: #C69A43;
+  box-shadow: 0 12px 28px rgba(41, 35, 29, 0.2), 0 0 0 4px rgba(198, 154, 67, 0.14);
+}
+
+.ps-dock-item.is-open .ps-contact-dock-btn {
+  background: linear-gradient(135deg, #EBD3A0 0%, #D6AF62 45%, #C69A43 100%);
+  color: #1E1B16;
 }
 
 .ps-contact-dock-btn:focus-visible {
-  outline: 2px solid #C9A96E;
+  outline: 2px solid #294532;
   outline-offset: 3px;
 }
 
-/* Tooltip on hover/focus */
-.ps-contact-dock-tooltip {
+/* Panel: to the right of its button, bottom-aligned with it */
+.ps-dock-panel {
   position: absolute;
   left: calc(100% + 12px);
-  top: 50%;
-  transform: translateY(-50%) translateX(-6px);
-  background: var(--lux-card);
-  border: 1px solid rgba(201, 169, 110, 0.35);
-  color: var(--lux-text);
-  font-family: "Times New Roman", Times, serif;
-  font-size: 11px;
+  bottom: 0;
+  width: 260px;
+  max-width: calc(100vw - 96px);
+  padding: 16px 16px 14px;
+  border: 1px solid rgba(198, 154, 67, 0.45);
+  border-top: 2px solid #C69A43;
+  border-radius: 14px;
+  background: #FFFDF8;
+  color: #292D27;
+  box-shadow: 0 18px 40px rgba(41, 35, 29, 0.22);
+  transform-origin: left bottom;
+  animation: ps-dock-panel-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes ps-dock-panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.ps-dock-panel-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #6F6A5F;
+  cursor: pointer;
+}
+
+.ps-dock-panel-close:hover {
+  background: rgba(198, 154, 67, 0.12);
+  color: #292D27;
+}
+
+.ps-dock-panel-title {
+  margin: 0 28px 4px 0;
+  font-family: var(--font-serif);
+  font-size: 16px;
   font-weight: 600;
+}
+
+.ps-dock-panel-text {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #6F6A5F;
+}
+
+.ps-dock-panel-address {
+  color: #292D27;
+  font-size: 13px;
+}
+
+.ps-dock-panel-meta {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #A87924;
+}
+
+.ps-dock-panel-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 6px;
+  padding: 0 14px;
+  border: 1px solid rgba(168, 121, 36, 0.5);
+  border-radius: 10px;
+  background: linear-gradient(135deg, #EBD3A0 0%, #D6AF62 45%, #C69A43 100%);
+  color: #1E1B16;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
   letter-spacing: 0.04em;
-  white-space: nowrap;
-  padding: 5px 10px;
-  border-radius: 4px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  cursor: pointer;
+  transition: filter 0.2s ease, transform 0.2s ease;
 }
 
-.ps-contact-dock-btn:hover .ps-contact-dock-tooltip,
-.ps-contact-dock-btn:focus-visible .ps-contact-dock-tooltip {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(-50%) translateX(0);
+.ps-dock-panel-action:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
 }
 
-/* Subtle brand color accents on hover */
-.ps-contact-whatsapp:hover {
-  border-color: rgba(37, 211, 102, 0.5);
+.ps-dock-panel-action.is-secondary {
+  background: #FFFFFF;
+  border-color: rgba(198, 154, 67, 0.55);
+  color: #A87924;
 }
 
-.ps-contact-instagram:hover {
-  border-color: rgba(225, 48, 108, 0.5);
+.ps-dock-panel-action:focus-visible,
+.ps-dock-panel-close:focus-visible {
+  outline: 2px solid #294532;
+  outline-offset: 2px;
 }
 
-.ps-contact-maps:hover {
-  border-color: rgba(201, 169, 110, 0.8);
-}
-
-/* ==========================================================================
-   RESPONSIVE ADJUSTMENTS
-   ========================================================================== */
 @media (max-width: 768px) {
   .ps-floating-contact-dock {
     bottom: 16px;
     left: 12px;
-    gap: 6px;
+    gap: 8px;
   }
-
   .ps-contact-dock-btn {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
   }
+  .ps-dock-panel {
+    left: calc(100% + 10px);
+    width: 240px;
+    max-width: calc(100vw - 74px);
+  }
+}
 
-  /* Suppress tooltips on touch devices to avoid sticking */
-  .ps-contact-dock-tooltip {
-    display: none;
+@media (prefers-reduced-motion: reduce) {
+  .ps-contact-dock-btn,
+  .ps-dock-panel-action {
+    transition: none;
+  }
+  .ps-dock-panel {
+    animation: none;
   }
 }

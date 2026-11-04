@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { getReels } from '../../services/reels';
 import { SITE_CONFIG } from '../../config/siteConfig';
@@ -165,11 +164,6 @@ export default function InstagramReelsSection({ title = '', subtitle = '' }) {
                 </li>
               ))}
             </ul>
-            <div className="ps-reels-more">
-              <Link to="/instagram" className="ps-reels-more-link">
-                View all reels
-              </Link>
-            </div>
           </>
         )}
       </div>

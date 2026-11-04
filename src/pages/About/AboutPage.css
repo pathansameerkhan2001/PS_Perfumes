@@ -286,121 +286,6 @@
   font-size: 14.5px;
 }
 
-/* --- 5. Closing CTA --------------------------------------------------- */
-.ps-ab-cta {
-  text-align: center;
-}
-
-.ps-ab-families {
-  list-style: none;
-  margin: 0 auto clamp(40px, 5vw, 56px);
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: clamp(12px, 2vw, 28px);
-  max-width: 980px;
-}
-
-.ps-ab-family {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  text-decoration: none;
-  color: var(--ab-brown);
-  border-radius: 8px;
-  padding: 6px 0;
-}
-
-.ps-ab-family img {
-  width: 100%;
-  max-width: 112px;
-  aspect-ratio: 1 / 1;
-  border-radius: 50%;
-  object-fit: cover;
-  box-shadow: 0 0 0 1px var(--ab-gold-soft), 0 12px 24px -12px rgba(74, 53, 40, 0.45);
-  transition: transform 0.4s var(--ab-ease), box-shadow 0.4s var(--ab-ease);
-}
-
-.ps-ab-family span {
-  font-family: var(--ab-sans);
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .ps-ab-family:hover img {
-    transform: translateY(-4px);
-    box-shadow: 0 0 0 2px var(--family-accent, var(--ab-gold)), 0 16px 28px -12px rgba(74, 53, 40, 0.5);
-  }
-
-  .ps-ab-family:hover span {
-    color: var(--ab-burgundy);
-  }
-}
-
-.ps-ab-family:active img {
-  transform: scale(0.97);
-}
-
-.ps-ab-family:focus-visible {
-  outline: 2px solid var(--ab-burgundy);
-  outline-offset: 4px;
-}
-
-.ps-ab-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 14px;
-}
-
-.ps-ab-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 48px;
-  padding: 0 30px;
-  font-family: var(--ab-sans);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  text-decoration: none;
-  border-radius: 2px;
-  box-sizing: border-box;
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-
-.ps-ab-btn--primary {
-  background: var(--ab-brown);
-  color: var(--ab-ivory);
-  border: 1px solid var(--ab-brown);
-}
-
-.ps-ab-btn--primary:hover {
-  background: var(--ab-burgundy);
-  border-color: var(--ab-burgundy);
-}
-
-.ps-ab-btn--secondary {
-  background: transparent;
-  color: var(--ab-brown);
-  border: 1px solid var(--ab-gold);
-}
-
-.ps-ab-btn--secondary:hover {
-  border-color: var(--ab-brown);
-}
-
-.ps-ab-btn:focus-visible {
-  outline: 2px solid var(--ab-burgundy);
-  outline-offset: 3px;
-}
-
 /* --- Reveal on scroll (only after JS opts in; never for reduced motion) --- */
 .ps-ab-motion .ps-ab-reveal {
   opacity: 0;
@@ -414,21 +299,6 @@
 }
 
 /* --- Responsive ------------------------------------------------------- */
-/* Tablet/mobile: 4 + 3, with the second row centred */
-@media (max-width: 1024px) {
-  .ps-ab-families {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    max-width: 560px;
-    gap: 28px 16px;
-  }
-
-  .ps-ab-families > li {
-    flex: 0 0 calc((100% - 48px) / 4);
-  }
-}
-
 @media (max-width: 860px) {
   .ps-ab-split,
   .ps-ab-split--reverse {
@@ -463,25 +333,5 @@
   .ps-ab-hero-figure::after,
   .ps-ab-figure::after {
     inset: 8px;
-  }
-
-  .ps-ab-families {
-    gap: 18px 10px;
-  }
-
-  .ps-ab-families > li {
-    flex: 0 0 calc((100% - 30px) / 4);
-  }
-
-  .ps-ab-family span {
-    font-size: 10px;
-    letter-spacing: 0.14em;
-  }
-
-  .ps-ab-actions {
-    flex-direction: column;
-    align-items: stretch;
-    max-width: 340px;
-    margin: 0 auto;
   }
 }

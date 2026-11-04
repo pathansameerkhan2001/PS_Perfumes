@@ -22,7 +22,6 @@ const storefrontPages = {
   wishlist: () => import('./pages/Wishlist/WishlistPage'),
   contact: () => import('./pages/Contact/ContactPage'),
   search: () => import('./pages/Search/SearchPage'),
-  instagram: () => import('./pages/Instagram/InstagramPage'),
   trackOrder: () => import('./pages/TrackOrder/TrackOrderPage'),
 };
 const ShopPage = lazy(storefrontPages.shop);
@@ -33,7 +32,6 @@ const AboutPage = lazy(storefrontPages.about);
 const WishlistPage = lazy(storefrontPages.wishlist);
 const ContactPage = lazy(storefrontPages.contact);
 const SearchPage = lazy(storefrontPages.search);
-const InstagramPage = lazy(storefrontPages.instagram);
 const TrackOrderPage = lazy(storefrontPages.trackOrder);
 // Opened only from a private link, so it is not prefetched with the storefront pages
 const ReceiptPage = lazy(() => import('./pages/Receipt/ReceiptPage'));
@@ -130,7 +128,8 @@ export default function App() {
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/search" element={<SearchPage />} />
-          <Route path="/instagram" element={<InstagramPage />} />
+          {/* The standalone Instagram page was removed; old links go to the homepage reels */}
+          <Route path="/instagram" element={<Navigate to="/#instagram-reels" replace />} />
           <Route path="/offers" element={<ShopPage />} />
           <Route path="/track-order" element={<TrackOrderPage />} />
         </Route>

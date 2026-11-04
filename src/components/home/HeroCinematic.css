@@ -288,7 +288,7 @@
   outline-offset: 3px;
 }
 
-.ps-hero-music-toggle.is-playing {
+.ps-hero-music-toggle.is-on {
   border-color: #C69A43;
 }
 
@@ -383,5 +383,65 @@
   .ps-hero-poster-layer,
   .ps-hero-poster-layer.is-hidden {
     transition: none;
+  }
+}
+
+/* "Enable Sound": the browser is waiting for an interaction. Prominent gold pill with a soft
+   pulse ring; its label stays visible on phones too. */
+.ps-hero-music-toggle.is-blocked {
+  min-height: 44px;
+  padding: 0 20px 0 16px;
+  border-color: #E3C58B;
+  background: linear-gradient(135deg, #EBD3A0 0%, #D6AF62 45%, #C69A43 100%);
+  color: #1E1B16;
+  font-size: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.ps-hero-music-toggle.is-blocked:hover,
+.ps-hero-music-toggle.is-blocked:focus-visible {
+  background: linear-gradient(135deg, #F0DCAE 0%, #DDB86E 45%, #CDA24C 100%);
+  color: #1E1B16;
+}
+
+.ps-hero-music-toggle.is-blocked::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 1px solid rgba(227, 197, 139, 0.8);
+  animation: ps-hero-sound-pulse 2.2s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes ps-hero-sound-pulse {
+  0% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.18);
+  }
+}
+
+@media (max-width: 768px) {
+  .ps-hero-music-toggle.is-blocked {
+    min-height: 40px;
+    padding: 0 14px 0 12px;
+  }
+  .ps-hero-music-toggle.is-blocked .ps-hero-music-label {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-hero-music-toggle.is-blocked::after {
+    animation: none;
+    opacity: 0;
   }
 }

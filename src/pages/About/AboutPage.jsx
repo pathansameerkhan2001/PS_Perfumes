@@ -1,16 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { MapPin, ShieldCheck, Gem, Truck, ArrowRight } from 'lucide-react';
+import { MapPin, ShieldCheck, Gem, Truck } from 'lucide-react';
 import heroLineup from '../../assets/hero-slide2.webp';
 import agarwoodBottle from '../../assets/promo-banner.webp';
 import giftSet from '../../assets/combo-attar-set.webp';
-import attarArt from '../../assets/categories/fragrance-attar.webp';
-import perfumeArt from '../../assets/categories/fragrance-perfume.webp';
-import bakhoorArt from '../../assets/categories/fragrance-bakhoor.webp';
-import muskyArt from '../../assets/categories/fragrance-musky.webp';
-import oudArt from '../../assets/categories/fragrance-oud.webp';
-import floralArt from '../../assets/categories/fragrance-floral.webp';
-import woodyArt from '../../assets/categories/fragrance-woody.webp';
 import './AboutPage.css';
 import { useSeo } from '../../utils/useSeo';
 
@@ -24,16 +16,6 @@ import { useSeo } from '../../utils/useSeo';
  * Handcrafted / Pan-India dispatch" (homepage trust strip), bottle choices (product variants)
  * and Cash on Delivery (checkout). No history, certifications or ingredient claims are added.
  */
-
-const FAMILIES = [
-  { name: 'Attar', slug: 'attar', image: attarArt },
-  { name: 'Perfume', slug: 'perfume', image: perfumeArt },
-  { name: 'Bakhoor', slug: 'bakhoor', image: bakhoorArt },
-  { name: 'Musky', slug: 'musky', image: muskyArt },
-  { name: 'Oud', slug: 'oud', image: oudArt },
-  { name: 'Floral', slug: 'floral', image: floralArt },
-  { name: 'Woody', slug: 'woody', image: woodyArt },
-];
 
 const PROMISES = [
   {
@@ -200,34 +182,6 @@ export default function AboutPage() {
               <h3 className="ps-ab-trio-title">Bakhoor</h3>
               <p>Scented wood for filling the home with fragrance in the traditional way.</p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. Closing CTA — links to the existing collections */}
-      <section className="ps-ab-section ps-ab-section--white ps-ab-cta" aria-labelledby="ps-ab-cta">
-        <div className="ps-ab-container ps-ab-reveal">
-          <span className="ps-ab-eyebrow">The Collections</span>
-          <h2 id="ps-ab-cta" className="ps-ab-heading">Discover Your Fragrance</h2>
-          <span className="ps-ab-rule ps-ab-rule--center" aria-hidden="true" />
-          <ul className="ps-ab-families">
-            {FAMILIES.map((f) => (
-              <li key={f.slug}>
-                <Link to={`/${f.slug}`} className={`ps-ab-family ps-family-${f.slug}`}>
-                  <img src={f.image} alt="" width="240" height="240" loading="lazy" decoding="async" />
-                  <span>{f.name}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <div className="ps-ab-actions">
-            <Link to="/shop" className="ps-ab-btn ps-ab-btn--primary">
-              <span>Shop All Fragrances</span>
-              <ArrowRight size={15} aria-hidden="true" />
-            </Link>
-            <Link to="/contact" className="ps-ab-btn ps-ab-btn--secondary">
-              Contact Us
-            </Link>
           </div>
         </div>
       </section>

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Music, Pause, Play, VolumeX } from 'lucide-react';
+import { Music, Pause, Play, Volume2, VolumeX } from 'lucide-react';
 import { getStoragePublicUrl } from '../../lib/storage';
 import {
   getActiveHeroFilm,
@@ -18,8 +18,10 @@ const SETTING_TIMEOUT_MS = 1500;
 // The resolved setting is kept for this browser tab, so returning to the homepage starts the
 // film at once instead of waiting for the database; it is still re-checked every time
 const SETTING_CACHE_KEY = 'ps_hero_film_v2';
-// Background music volume (the visitor starts it; it never plays on its own)
+// Volume of the admin's background music (MP3)
 const MUSIC_VOLUME = 0.55;
+// The film's own soundtrack when it is the music (no admin MP3)
+const FILM_SOUND_VOLUME = 0.8;
 // The film is requested once the page has finished loading (or after this long at most), so it
 // never competes with the poster, scripts and above-the-fold images for bandwidth
 const FILM_DEFER_MAX_MS = 2500;
@@ -63,10 +65,13 @@ function writeCachedFilm(film) {
  *   start the film. A deliberate pause is never undone automatically.
  * - The film and poster come from Admin → Hero Sections (active record with the lowest display
  *   order that has an MP4); otherwise the built-in film and poster are used.
- * - The film itself is always muted. Optional background music (Admin → Hero Sections, MP3) is
- *   never started automatically: a small gold control (bottom-left) lets the visitor play, pause
- *   and resume it. Nothing is downloaded until they press it; it keeps playing while they
- *   scroll the homepage, pauses while the tab is hidden and stops when they leave the homepage.
+ * - Sound (owner request): the admin's MP3 when one is set, otherwise the film's own soundtrack;
+ *   never both. It starts with the film when the browser allows sound without a click; most
+ *   browsers do not, so the film then plays muted, a prominent gold "Enable Sound" control
+ *   appears (bottom-left) and the visitor's first tap or key press turns the sound on. The same
+ *   control then pauses and resumes the music, and a visitor who turned it off is never
+ *   overridden. With sound on, the film keeps playing while the visitor scrolls the homepage;
+ *   it pauses while the tab is hidden and stops when they leave the homepage.
  * - Phones play the lighter mobile film when one is set.
  */
 export default function HeroCinematic() {
@@ -166,6 +171,19 @@ export default function HeroCinematic() {
   // a refresh never shows a blank frame or a different picture in between; then it fades out
   const [filmStarted, setFilmStarted] = useState(false);
 
+  // Sound: the admin's MP3 when one is set (its own player; the film stays muted), otherwise the
+  // film's own soundtrack. Only one ever plays.
+  const audioUrl = source?.audioUrl || '';
+  const soundFromFilmRef = useRef(true);
+  soundFromFilmRef.current = !audioUrl;
+  // 'off' | 'pending' (trying to start with sound) | 'on' | 'blocked' (the browser wants an
+  // interaction first) | 'paused' (the visitor turned it off) | 'error'
+  const [sound, setSound] = useState('off');
+  // False once the visitor has turned the sound off: nothing turns it back on by itself
+  const soundWantedRef = useRef(true);
+  // Set when the visitor asks for sound before the film is attached (e.g. reduced motion)
+  const soundRequestedRef = useRef(false);
+
   const tryPlay = useCallback(() => {
     const video = videoRef.current;
     if (!video || !inViewRef.current || !wantsPlayRef.current) return;
@@ -174,10 +192,19 @@ export default function HeroCinematic() {
       attempt.catch((err) => {
         // AbortError: interrupted by a newer play()/pause()/load() — not a failure
         if (err?.name === 'AbortError') return;
+        // Autoplay with sound refused: play muted now and offer "Enable Sound"
+        if (err?.name === 'NotAllowedError' && !video.muted) {
+          video.muted = true;
+          setSound((s) => (s === 'pending' || s === 'on' ? 'blocked' : s));
+          tryPlay();
+          return;
+        }
         console.warn(`Hero film autoplay was refused (${err?.name || 'unknown'}): ${err?.message || ''}`);
         setStatus((s) => (s === 'error' ? s : 'blocked'));
       });
     }
+    // tryPlay calls itself only for the muted retry
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -187,7 +214,12 @@ export default function HeroCinematic() {
     // Mobile browsers only autoplay muted, inline video: set the DOM properties explicitly
     // (React does not reliably reflect the muted attribute)
     video.defaultMuted = true;
-    video.muted = true;
+    // With the film's own soundtrack, the first start is tried with sound (some browsers allow
+    // it); a refusal falls back to muted at once (tryPlay). Otherwise the film is always muted.
+    const trySound = soundFromFilmRef.current && soundWantedRef.current && (autoStart || soundRequestedRef.current);
+    video.muted = !trySound;
+    video.volume = FILM_SOUND_VOLUME;
+    if (trySound) setSound((s) => (s === 'off' ? 'pending' : s));
     video.playsInline = true;
     video.setAttribute('muted', '');
     video.setAttribute('playsinline', '');
@@ -198,6 +230,8 @@ export default function HeroCinematic() {
     const onPlaying = () => {
       setStatus('playing');
       setFilmStarted(true);
+      // Playing with sound: the soundtrack is on
+      if (soundFromFilmRef.current && !video.muted) setSound('on');
     };
     // Paused by the visitor or by scrolling out of view (a refused autoplay keeps 'blocked')
     const onPause = () => setStatus((s) => (s === 'error' || s === 'blocked' ? s : 'paused'));
@@ -221,8 +255,13 @@ export default function HeroCinematic() {
     const onGesture = () => {
       if (video.paused) tryPlay();
     };
+    // Another tab: the film (and its sound) pauses; back on this tab it continues
     const onVisibility = () => {
-      if (document.visibilityState === 'visible' && video.paused) tryPlay();
+      if (document.visibilityState === 'hidden') {
+        if (!video.paused) video.pause();
+      } else if (video.paused) {
+        tryPlay();
+      }
     };
 
     video.addEventListener('playing', onPlaying);
@@ -241,7 +280,9 @@ export default function HeroCinematic() {
           inViewRef.current = entry.isIntersecting;
           if (entry.isIntersecting) {
             if (video.paused) tryPlay();
-          } else if (!video.paused) {
+          } else if (!video.paused && video.muted) {
+            // A silent film pauses out of view; with its soundtrack on it keeps playing, so the
+            // music continues while the visitor scrolls the homepage
             video.pause();
           }
         },
@@ -282,26 +323,116 @@ export default function HeroCinematic() {
     }
   };
 
-  // Background music: created on the first press (no download before), never autoplayed
+  // ---------------------------------------------------------------------------
+  // Sound (one player at a time): the admin's MP3 in its own Audio element, or the film's own
+  // soundtrack (the video unmuted). Started with sound when the browser allows it; otherwise
+  // "Enable Sound" is offered and the visitor's first tap or key press turns it on.
+  // ---------------------------------------------------------------------------
   const audioRef = useRef(null);
-  const wantsMusicRef = useRef(false);
-  // 'off' (never started) → 'loading' → 'playing' | 'paused' | 'error'
-  const [music, setMusic] = useState('off');
-  const audioUrl = source?.audioUrl || '';
 
+  const getAudio = useCallback(() => {
+    if (audioRef.current) return audioRef.current;
+    const audio = new Audio();
+    audio.loop = true;
+    audio.preload = 'auto';
+    audio.volume = MUSIC_VOLUME;
+    audio.addEventListener('error', () => {
+      console.warn(`Hero music failed to load: ${audioUrl}`);
+      setSound('error');
+    });
+    audio.src = audioUrl;
+    audioRef.current = audio;
+    return audio;
+  }, [audioUrl]);
+
+  const playAudio = useCallback(() => {
+    const audio = getAudio();
+    audio
+      .play()
+      .then(() => setSound('on'))
+      .catch((err) => {
+        if (err?.name === 'AbortError') return;
+        // Sound needs an interaction first
+        setSound(err?.name === 'NotAllowedError' ? 'blocked' : 'error');
+      });
+  }, [getAudio]);
+
+  // Turns the sound on (button or first interaction: both count as the visitor's permission)
+  const enableSound = useCallback(() => {
+    soundWantedRef.current = true;
+    if (audioUrl) {
+      playAudio();
+      return;
+    }
+    const video = videoRef.current;
+    wantsPlayRef.current = true;
+    if (!videoUrl || !video) {
+      // Pressed before the film was attached: attach it now; it starts with sound
+      soundRequestedRef.current = true;
+      setPageLoaded(true);
+      setSound('pending');
+      return;
+    }
+    video.muted = false;
+    setSound('on');
+    if (video.paused) tryPlay();
+  }, [audioUrl, playAudio, videoUrl, tryPlay]);
+
+  const disableSound = useCallback(() => {
+    soundWantedRef.current = false;
+    if (audioUrl) audioRef.current?.pause();
+    else if (videoRef.current) videoRef.current.muted = true;
+    setSound('paused');
+  }, [audioUrl]);
+
+  // Admin music: tried with sound once the film is playing (never before)
+  const audioTriedRef = useRef(false);
+  useEffect(() => {
+    if (!audioUrl || !autoStart || status !== 'playing' || audioTriedRef.current) return;
+    audioTriedRef.current = true;
+    if (soundWantedRef.current) {
+      setSound('pending');
+      playAudio();
+    }
+  }, [audioUrl, autoStart, status, playAudio]);
+
+  // Sound refused by the browser: the visitor's first tap or key press anywhere turns it on.
+  // pointerup / keydown are the events browsers accept as permission (touch-start is not).
+  useEffect(() => {
+    if (sound !== 'blocked') return undefined;
+    const onFirstInteraction = (e) => {
+      if (!soundWantedRef.current) return;
+      // The sound button handles its own press
+      if (e.target?.closest?.('.ps-hero-music-toggle')) return;
+      enableSound();
+    };
+    window.addEventListener('pointerup', onFirstInteraction, { passive: true });
+    window.addEventListener('keydown', onFirstInteraction);
+    return () => {
+      window.removeEventListener('pointerup', onFirstInteraction);
+      window.removeEventListener('keydown', onFirstInteraction);
+    };
+  }, [sound, enableSound]);
+
+  // Admin music: pauses with the tab and stops when the visitor leaves the homepage
   useEffect(() => {
     if (!audioUrl) return undefined;
-    // Pause while the tab is hidden; resume when it is back, if the visitor had it on
+    // Remembers whether the music was playing when the tab was hidden, to resume only then
+    let resumeOnReturn = false;
     const onVisibility = () => {
       const audio = audioRef.current;
       if (!audio) return;
-      if (document.visibilityState === 'hidden') audio.pause();
-      else if (wantsMusicRef.current) audio.play().catch(() => {});
+      if (document.visibilityState === 'hidden') {
+        resumeOnReturn = !audio.paused;
+        audio.pause();
+      } else if (resumeOnReturn && soundWantedRef.current) {
+        resumeOnReturn = false;
+        audio.play().catch(() => {});
+      }
     };
     document.addEventListener('visibilitychange', onVisibility);
     return () => {
       document.removeEventListener('visibilitychange', onVisibility);
-      // Leaving the homepage stops the music and releases the file
       const audio = audioRef.current;
       if (audio) {
         audio.pause();
@@ -309,43 +440,16 @@ export default function HeroCinematic() {
         audio.load();
       }
       audioRef.current = null;
-      wantsMusicRef.current = false;
     };
   }, [audioUrl]);
 
-  const toggleMusic = () => {
-    if (!audioUrl) return;
-    let audio = audioRef.current;
-    if (!audio) {
-      audio = new Audio();
-      audio.loop = true;
-      audio.preload = 'auto';
-      audio.volume = MUSIC_VOLUME;
-      audio.addEventListener('playing', () => setMusic('playing'));
-      audio.addEventListener('pause', () => setMusic((m) => (m === 'error' ? m : 'paused')));
-      audio.addEventListener('error', () => {
-        console.warn(`Hero music failed to load: ${audioUrl}`);
-        wantsMusicRef.current = false;
-        setMusic('error');
-      });
-      audio.src = audioUrl;
-      audioRef.current = audio;
-    }
-    if (audio.paused) {
-      wantsMusicRef.current = true;
-      setMusic((m) => (m === 'off' ? 'loading' : m));
-      // Started by this click, so browsers allow sound
-      audio.play().catch((err) => {
-        if (err?.name === 'AbortError') return;
-        console.warn(`Hero music could not start (${err?.name || 'unknown'})`);
-        wantsMusicRef.current = false;
-        setMusic('error');
-      });
-    } else {
-      wantsMusicRef.current = false;
-      audio.pause();
-    }
+  const toggleSound = () => {
+    if (sound === 'on') disableSound();
+    else enableSound();
   };
+
+  // The sound control: with admin music, or with the built-in / admin film (its soundtrack)
+  const showSoundControl = Boolean(audioUrl) || status !== 'error';
 
   const isPlaying = status === 'playing';
   // No control while loading or when the file failed (there is nothing to play or pause)
@@ -401,29 +505,48 @@ export default function HeroCinematic() {
         <div className="ps-hero-top-blend" aria-hidden="true" />
         <div className="ps-hero-bottom-blend" aria-hidden="true" />
 
-        {/* Background music (only when one is set): play, pause and resume; never automatic */}
-        {audioUrl && (
+        {/* Sound: "Enable Sound" (prominent) while the browser waits for an interaction, then
+            Pause Music / Play Music. One control for the film's soundtrack or the admin MP3. */}
+        {showSoundControl && (
           <button
             type="button"
-            className={`ps-hero-music-toggle is-${music}`}
-            onClick={toggleMusic}
-            disabled={music === 'error'}
-            aria-pressed={music === 'playing'}
-            aria-label={music === 'playing' ? 'Pause music' : music === 'error' ? 'Music unavailable' : 'Play music'}
+            className={`ps-hero-music-toggle is-${sound}`}
+            onClick={toggleSound}
+            disabled={sound === 'error'}
+            aria-pressed={sound === 'on'}
+            aria-label={
+              sound === 'on'
+                ? 'Pause music'
+                : sound === 'blocked'
+                ? 'Enable sound'
+                : sound === 'error'
+                ? 'Music unavailable'
+                : 'Play music'
+            }
           >
-            {music === 'error' ? (
+            {sound === 'error' ? (
               <VolumeX size={15} aria-hidden="true" />
-            ) : music === 'playing' ? (
+            ) : sound === 'on' ? (
               <span className="ps-hero-music-bars" aria-hidden="true">
                 <span />
                 <span />
                 <span />
               </span>
+            ) : sound === 'blocked' ? (
+              <Volume2 size={17} aria-hidden="true" />
             ) : (
               <Music size={15} aria-hidden="true" />
             )}
             <span className="ps-hero-music-label">
-              {music === 'playing' ? 'Pause Music' : music === 'loading' ? 'Loading…' : music === 'error' ? 'Music unavailable' : 'Play Music'}
+              {sound === 'on'
+                ? 'Pause Music'
+                : sound === 'blocked'
+                ? 'Enable Sound'
+                : sound === 'pending'
+                ? 'Starting…'
+                : sound === 'error'
+                ? 'Music unavailable'
+                : 'Play Music'}
             </span>
           </button>
         )}
