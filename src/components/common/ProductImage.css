@@ -1,0 +1,28 @@
+/* Product photo inside a frame set by its parent (position: relative; overflow: hidden) */
+.ps-pimg {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Shown whole when its shape is far from the frame's; the backdrop fills the sides */
+.ps-pimg.is-contain {
+  object-fit: contain;
+}
+
+/* A blurred, slightly enlarged copy of the same photo behind a whole-image photo */
+.ps-pimg-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(18px) saturate(1.05) brightness(0.92);
+  transform: scale(1.15);
+  pointer-events: none;
+}

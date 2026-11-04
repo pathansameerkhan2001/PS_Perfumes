@@ -2,11 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/assets/ps-perfumes-logo.png" />
+    <!-- Brand icons (November 2026 logo; sources in docs/brand/) -->
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32-v2.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/assets/brand/favicon-48-v2.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/brand/apple-touch-icon-v2.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <title>PS PERFUMES | Attars, Perfumes & Luxury Fragrances from Kadapa</title>
     <meta name="description" content="Shop attars, perfumes, oud and bakhoor from PS PERFUMES, Kadapa. Glass and PVC bottle options, combo packs and cash on delivery across India." />
-    <meta name="theme-color" content="#11100F" />
+    <meta name="theme-color" content="#080706" />
     <link rel="canonical" href="https://psperfumes.com/" />
 
     <!-- Defaults for link previews (bots that do not run JavaScript); pages override these at runtime -->
@@ -15,14 +19,18 @@
     <meta property="og:title" content="PS PERFUMES | Attars, Perfumes & Luxury Fragrances from Kadapa" />
     <meta property="og:description" content="Shop attars, perfumes, oud and bakhoor from PS PERFUMES, Kadapa. Cash on delivery across India." />
     <meta property="og:url" content="https://psperfumes.com/" />
-    <meta property="og:image" content="https://psperfumes.com/assets/ps-perfumes-logo.png" />
+    <meta property="og:image" content="https://psperfumes.com/assets/brand/og-image-v2.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="PS PERFUMES logo" />
+    <meta name="twitter:image" content="https://psperfumes.com/assets/brand/og-image-v2.jpg" />
     <meta name="twitter:card" content="summary_large_image" />
 
     <!-- Typography: Times New Roman (system font), so no web fonts are downloaded -->
 
     <!-- Homepage LCP: the hero poster (public/assets, see src/services/hero.js) is preloaded only on
          "/", so it downloads alongside the scripts instead of after them. Same 768px breakpoint as
-         the hero. The header logo is an inline SVG, so no logo image is preloaded. -->
+         the hero. The header logo (a small WebP) is requested with high priority by the page itself. -->
     <script>
       if (location.pathname === '/') {
         [

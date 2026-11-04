@@ -6,6 +6,7 @@ import { defaultVariant, variantPrice, variantStock, variantComparePrice } from 
 import { cardImageUrl, fullImageFallback } from '../lib/storage';
 import { isComboRecord, toComboCartProduct } from '../services/combos';
 import WishlistHeart from './common/WishlistHeart';
+import ProductImage from './common/ProductImage';
 import AddToCartButton from './common/AddToCartButton';
 import './ProductCard.css';
 
@@ -58,15 +59,13 @@ function ProductCard({ product, priority = false, viewMode = 'grid', pending = f
       aria-label={`View ${product.name}`}
     >
       <div className="ps-pcard-media">
-        <img
+        <ProductImage
           src={imageSrc}
           alt={product.name}
           className="ps-pcard-img"
-          loading={priority ? 'eager' : 'lazy'}
-          fetchPriority={priority ? 'high' : undefined}
-          decoding="async"
-          width="400"
-          height="400"
+          priority={priority}
+          width={400}
+          height={500}
           onError={fullImageFallback(fullImageSrc)}
         />
         <WishlistHeart product={product} className="ps-pcard-heart" />

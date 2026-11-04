@@ -1,6 +1,6 @@
 /* ==========================================================================
-   PS PERFUMES — Luxury Vector Logo Stylesheet
-   Pure vector presentation, 100% transparent background, responsive scaling
+   PS PERFUMES — logo (image). The height is set per size; the width follows
+   from the artwork's own proportions, so the logo is never stretched or cropped.
    ========================================================================== */
 
 .ps-brand-logo-root {
@@ -8,54 +8,49 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: transparent !important;
-  background-color: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0;
-  margin: 0;
   line-height: 0;
   user-select: none;
-  cursor: pointer;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
 }
 
 .ps-brand-logo-root:hover {
-  opacity: 0.94;
+  opacity: 0.95;
   transform: scale(1.02);
 }
 
-.ps-logo-svg {
+.ps-logo-img {
   display: block;
-  overflow: visible;
-  height: auto;
-  background: transparent !important;
+  width: auto;
+  max-width: none;
+  height: var(--ps-logo-h, 88px);
+  object-fit: contain;
 }
 
-/* Sizing Options */
-.ps-logo-sm .ps-logo-svg {
-  width: 140px;
-  max-height: 52px;
+.ps-logo-sm {
+  --ps-logo-h: 60px;
 }
 
-.ps-logo-md .ps-logo-svg {
-  width: 185px;
-  max-height: 72px;
+.ps-logo-md {
+  --ps-logo-h: 88px;
 }
 
-.ps-logo-lg .ps-logo-svg {
-  width: 240px;
-  max-height: 96px;
+.ps-logo-lg {
+  --ps-logo-h: 128px;
 }
 
-/* Header Specific Tuning */
-.ps-logo-header {
-  vertical-align: middle;
+/* Header: as tall as the top bar allows, with breathing room */
+.ps-logo-header.ps-logo-md {
+  --ps-logo-h: min(92px, calc(var(--ps-header-topbar-height, 112px) - 16px));
 }
 
-/* Footer Specific Tuning */
-.ps-logo-footer {
+/* Footer: a little larger, it stands alone in its column */
+.ps-logo-footer.ps-logo-sm {
+  --ps-logo-h: 84px;
   margin-bottom: 8px;
+}
+
+.ps-logo-standalone.ps-logo-md {
+  --ps-logo-h: 112px;
 }
 
 .ps-logo-tagline-text {
@@ -63,22 +58,25 @@
   font-size: 9px;
   font-weight: 500;
   letter-spacing: 0.3em;
-  color: #C8A45D;
+  line-height: 1.4;
+  color: #C69A43;
   margin-top: 6px;
   text-transform: uppercase;
 }
 
-/* Mobile Responsiveness */
 @media (max-width: 768px) {
-  .ps-logo-md .ps-logo-svg {
-    width: 135px;
-    max-height: 50px;
+  .ps-logo-header.ps-logo-md {
+    --ps-logo-h: calc(var(--ps-header-topbar-height, 70px) - 12px);
+  }
+  .ps-logo-footer.ps-logo-sm {
+    --ps-logo-h: 72px;
   }
 }
 
-@media (max-width: 420px) {
-  .ps-logo-md .ps-logo-svg {
-    width: 120px;
-    max-height: 44px;
+@media (prefers-reduced-motion: reduce) {
+  .ps-brand-logo-root,
+  .ps-brand-logo-root:hover {
+    transition: none;
+    transform: none;
   }
 }

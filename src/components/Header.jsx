@@ -119,7 +119,7 @@ export default function Header() {
                 className="ps-brand-anchor"
                 aria-label="PS PERFUMES Home"
               >
-                <PSPerfumesLogo size="md" variant="header" />
+                <PSPerfumesLogo size="md" variant="header" priority />
               </Link>
             </div>
 

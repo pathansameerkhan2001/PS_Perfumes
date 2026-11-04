@@ -5,7 +5,8 @@ const SITE_NAME = 'PS PERFUMES';
 const DEFAULT_TITLE = 'PS PERFUMES | Attars, Perfumes & Luxury Fragrances from Kadapa';
 const DEFAULT_DESCRIPTION =
   'Shop attars, perfumes, oud and bakhoor from PS PERFUMES, Kadapa. Glass and PVC bottle options, combo packs and cash on delivery across India.';
-const DEFAULT_IMAGE = `${SITE_URL}/assets/ps-perfumes-logo.png`;
+// Link-preview image: the logo centred on the brand black, 1200x630
+const DEFAULT_IMAGE = `${SITE_URL}/assets/brand/og-image-v2.jpg`;
 
 function setMeta(attr, key, content) {
   let el = document.head.querySelector(`meta[${attr}="${key}"]`);
@@ -70,6 +71,11 @@ export function useSeo({ title, description, path, image, type = 'website', json
     setMeta('property', 'og:url', url);
     setMeta('property', 'og:type', type);
     setMeta('property', 'og:image', img);
+    // Size and description are known only for the default logo image (cleared for others)
+    const isDefaultImage = img === DEFAULT_IMAGE;
+    setMeta('property', 'og:image:width', isDefaultImage ? '1200' : '');
+    setMeta('property', 'og:image:height', isDefaultImage ? '630' : '');
+    setMeta('property', 'og:image:alt', isDefaultImage ? 'PS PERFUMES logo' : '');
     setMeta('name', 'twitter:card', 'summary_large_image');
     setMeta('name', 'twitter:title', fullTitle);
     setMeta('name', 'twitter:description', desc);

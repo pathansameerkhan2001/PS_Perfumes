@@ -31,8 +31,8 @@ export default function HomePage() {
       '@type': 'Store',
       name: 'PS PERFUMES',
       url: 'https://psperfumes.com/',
-      logo: 'https://psperfumes.com/assets/ps-perfumes-logo.png',
-      image: 'https://psperfumes.com/assets/ps-perfumes-logo.png',
+      logo: 'https://psperfumes.com/assets/brand/icon-512-v2.png',
+      image: 'https://psperfumes.com/assets/brand/og-image-v2.jpg',
       telephone: '+91-9494951600',
       email: 'brandnix.in@gmail.com',
       address: {

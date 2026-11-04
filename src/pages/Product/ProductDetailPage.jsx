@@ -18,6 +18,7 @@ import { useCart } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatCurrency';
 import { cardImageUrl, fullImageFallback } from '../../lib/storage';
 import ProductCard from '../../components/ProductCard';
+import ProductImage from '../../components/common/ProductImage';
 import WishlistHeart from '../../components/common/WishlistHeart';
 import AddToCartButton from '../../components/common/AddToCartButton';
 import GoldOrnament from '../../components/common/GoldOrnament';
@@ -413,14 +414,15 @@ export default function ProductDetailPage() {
 
               {/* Large Main Product Image Area */}
               <div className="ps-pdp-main-image-box">
-                <img
+                {/* Fills the 4:5 frame, or is shown whole over a blurred copy when its shape
+                    is far from the frame's (common/ProductImage) */}
+                <ProductImage
                   src={activeImage || gallery[0]}
                   alt={product.name}
                   className="ps-pdp-main-image"
-                  width="600"
-                  height="750"
-                  decoding="async"
-                  fetchPriority="high"
+                  width={600}
+                  height={750}
+                  priority
                 />
 
                 {/* Top-right gold wishlist heart (same control as the product cards) */}

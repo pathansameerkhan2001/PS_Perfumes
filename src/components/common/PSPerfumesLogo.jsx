@@ -1,233 +1,44 @@
 import React from 'react';
 import './PSPerfumesLogo.css';
 
-// Gold of the monogram (5 stops), the rim (colour, opacity) and the soft shadow per background
-const TONES = {
-  light: {
-    mono: ['#D9B76E', '#C69A45', '#A97F35', '#C69A45', '#8A6326'],
-    rim: [['#D9B76E', 0.9], ['#C69A45', 0.65], ['#8A6326', 0.85]],
-    shadow: ['#6B4F1F', 0.18],
-  },
-  dark: {
-    mono: ['#F0D89A', '#E3C58B', '#C69A45', '#D8B76A', '#A88238'],
-    rim: [['#F0D89A', 0.85], ['#C69A45', 0.55], ['#9B7830', 0.75]],
-    shadow: ['#000000', 0.6],
-  },
-};
-
-/**
- * PSPerfumesLogo - Reusable Luxury Vector/SVG Brand Identity Component
- * Supports: header, footer, compact, mobile, desktop
- * Pure vector typography, champagne/gold gradients, 100% transparent background.
+/*
+ * The official PS PERFUMES logo (owner artwork, November 2026; master in docs/brand/).
+ * Two versions made from it without changing the design (public/assets/brand/):
+ * - light (default): the arch badge, its black interior kept and the outside transparent. For
+ *   ivory, white and champagne backgrounds (header, mobile menu, admin).
+ * - dark: transparent gold, the black background removed. For black backgrounds (footer).
+ * Both keep the artwork's proportions (width : height = 948 : 1086); size sets the height.
  */
+const SOURCES = {
+  light: '/assets/brand/ps-logo-arch-v2.webp',
+  dark: '/assets/brand/ps-logo-gold-v2.webp',
+};
+// Intrinsic size of the files (prevents layout shift while the image loads)
+const WIDTH = 419;
+const HEIGHT = 480;
+
 export default function PSPerfumesLogo({
   size = 'md', // 'sm' | 'md' | 'lg'
   variant = 'header', // 'header' | 'footer' | 'standalone'
+  tone = 'light', // 'light' background → arch badge · 'dark' background → transparent gold
   className = '',
   showTagline = false,
-  tone = 'light', // 'light': deep antique gold for ivory backgrounds · 'dark': bright gold for black
+  priority = false,
 }) {
-  const t = TONES[tone] || TONES.light;
-  // Gradient ids per tone: two logos of different tones on one page must not share an id
-  const mono = `psGoldMonogramGrad-${tone}`;
-  const rim = `psGoldRimGrad-${tone}`;
-  const glow = `psGoldGlow-${tone}`;
   return (
-    <div
-      className={`ps-brand-logo-root ps-logo-${size} ps-logo-${variant} ${className}`}
-      aria-label="PS PERFUMES Haute Parfumerie"
-    >
-      <svg
-        className="ps-logo-svg"
-        viewBox="0 0 240 120"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        role="img"
-        aria-hidden="true"
-      >
-        <defs>
-          {/* Antique gold gradient, deep enough to read on the ivory header, footer and admin */}
-          <linearGradient id={mono} x1="0%" y1="0%" x2="100%" y2="100%">
-            {t.mono.map((c, i) => (
-              <stop key={i} offset={["0%", "25%", "60%", "85%", "100%"][i]} stopColor={c} />
-            ))}
-          </linearGradient>
-
-          {/* Hairline Rim Gradient */}
-          <linearGradient id={rim} x1="0%" y1="0%" x2="0%" y2="100%">
-            {t.rim.map(([c, o], i) => (
-              <stop key={i} offset={["0%", "50%", "100%"][i]} stopColor={c} stopOpacity={o} />
-            ))}
-          </linearGradient>
-
-          {/* Subtle Glow Filter */}
-          <filter id={glow} x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor={t.shadow[0]} floodOpacity={t.shadow[1]} />
-          </filter>
-        </defs>
-
-        {/* ==========================================================
-            1. LUXURY EMBLEM ORNAMENT & CIRCLE (Flacon Motif)
-            ========================================================== */}
-        <g filter={`url(#${glow})`}>
-          {/* Subtle Outer Thin Arch/Circle */}
-          <circle
-            cx="120"
-            cy="46"
-            r="38"
-            stroke={`url(#${rim})`}
-            strokeWidth="1.25"
-            strokeDasharray="210 20"
-            strokeLinecap="round"
-            opacity="0.85"
-          />
-
-          {/* Perfume Flacon Cap Ornament Top-Left on the Rim */}
-          <g transform="translate(93, 11) scale(0.7)" stroke={`url(#${mono})`} strokeWidth="1.2" fill="none">
-            {/* Faceted Cap Diamond */}
-            <polygon points="12,2 20,2 24,9 8,9" fill={`url(#${mono})`} opacity="0.3" />
-            <polygon points="12,2 20,2 24,9 8,9" stroke={`url(#${mono})`} />
-            <line x1="8" y1="12" x2="24" y2="12" strokeWidth="1.5" />
-            <rect x="11" y="9" width="10" height="3" fill={`url(#${mono})`} />
-          </g>
-
-          {/* Inner Accent Ring Arc */}
-          <path
-            d="M 96 30 A 34 34 0 0 1 146 32"
-            stroke={`url(#${rim})`}
-            strokeWidth="0.75"
-            strokeLinecap="round"
-            opacity="0.5"
-          />
-
-          {/* ==========================================================
-              2. INTERLOCKING "PS" LUXURY MONOGRAM
-              ========================================================== */}
-          {/* Stylized Serif Letter 'P' */}
-          <g fill={`url(#${mono})`}>
-            {/* P Main Stem with Serifs */}
-            <path
-              d="M 103 26 
-                 L 115 26 
-                 L 115 29 
-                 L 110.5 29 
-                 L 110.5 63 
-                 L 115 63 
-                 L 115 66 
-                 L 103 66 
-                 L 103 63 
-                 L 107.5 63 
-                 L 107.5 29 
-                 L 103 29 
-                 Z"
-            />
-            {/* P Curved Bowl */}
-            <path
-              d="M 110.5 27 
-                 C 118 26.5 129 27.5 129 39 
-                 C 129 49.5 119 50.5 110.5 50.5 
-                 L 110.5 47.5 
-                 C 116.5 47.5 124.5 46.5 124.5 39 
-                 C 124.5 30.5 116.5 29.5 110.5 29.5 
-                 Z"
-            />
-          </g>
-
-          {/* Intertwined Calligraphic Letter 'S' */}
-          <g fill={`url(#${mono})`}>
-            <path
-              d="M 137 32
-                 C 134 29 128 27.5 122.5 28.5
-                 C 117.5 29.5 115 32.5 115 36
-                 C 115 42 124 44 129 47
-                 C 135 50.5 137.5 54.5 137 60
-                 C 136 65.5 130 68 122 68
-                 C 115 68 109 64.5 107 60.5
-                 L 110 59
-                 C 111.5 62 116 65.5 122 65.5
-                 C 127 65.5 133 63.5 133.5 59.5
-                 C 134 55 130 52 125 49
-                 C 119.5 45.5 111.5 43 112 36
-                 C 112.5 30 117.5 26.5 124 26.5
-                 C 129 26.5 134 28.5 136.5 31
-                 Z"
-            />
-          </g>
-
-          {/* Intersecting Monogram Fine Accent Dot/Terminals */}
-          <circle cx="137.5" cy="32.5" r="1" fill={`url(#${mono})`} />
-          <circle cx="106.5" cy="61" r="1.2" fill={`url(#${mono})`} />
-
-          {/* ==========================================================
-              3. "PERFUMES" LUXURY SERIF TYPOGRAPHY
-              ========================================================== */}
-          <text
-            x="120"
-            y="94"
-            textAnchor="middle"
-            fill={`url(#${mono})`}
-            fontFamily="'Times New Roman', Times, serif"
-            fontSize="14.5"
-            fontWeight="600"
-            letterSpacing="0.34em"
-            className="ps-logo-text-perfumes"
-          >
-            PERFUMES
-          </text>
-
-          {/* ==========================================================
-              4. DELICATE HORIZONTAL FLACON HAIRLINE ORNAMENT
-              ========================================================== */}
-          {/* Left Hairline */}
-          <line
-            x1="40"
-            y1="108"
-            x2="106"
-            y2="108"
-            stroke={`url(#${rim})`}
-            strokeWidth="0.85"
-            strokeLinecap="round"
-          />
-          {/* Miniature Left Flourish Leaf */}
-          <path
-            d="M 103 108 C 105 106 109 106 111 108 C 109 110 105 110 103 108 Z"
-            fill={`url(#${mono})`}
-            opacity="0.8"
-          />
-
-          {/* Center Miniature Perfume Flacon Icon */}
-          <g transform="translate(114, 101) scale(0.7)" stroke={`url(#${mono})`} strokeWidth="1" fill="none">
-            {/* Bottle Body */}
-            <rect x="2" y="5" width="13" height="12" rx="1.5" stroke={`url(#${mono})`} />
-            {/* Bottle Neck */}
-            <line x1="6" y1="5" x2="6" y2="3" />
-            <line x1="11" y1="5" x2="11" y2="3" />
-            {/* Bottle Cap */}
-            <rect x="5" y="1" width="7" height="2.5" rx="0.5" fill={`url(#${mono})`} />
-          </g>
-
-          {/* Miniature Right Flourish Leaf */}
-          <path
-            d="M 137 108 C 135 106 131 106 129 108 C 131 110 135 110 137 108 Z"
-            fill={`url(#${mono})`}
-            opacity="0.8"
-          />
-          {/* Right Hairline */}
-          <line
-            x1="134"
-            y1="108"
-            x2="200"
-            y2="108"
-            stroke={`url(#${rim})`}
-            strokeWidth="0.85"
-            strokeLinecap="round"
-          />
-        </g>
-      </svg>
-
-      {showTagline && (
-        <span className="ps-logo-tagline-text">HAUTE PARFUMERIE</span>
-      )}
-    </div>
+    <span className={`ps-brand-logo-root ps-logo-${size} ps-logo-${variant} ${className}`}>
+      <img
+        className="ps-logo-img"
+        src={SOURCES[tone] || SOURCES.light}
+        alt="PS PERFUMES"
+        width={WIDTH}
+        height={HEIGHT}
+        decoding="async"
+        loading={priority ? 'eager' : 'lazy'}
+        fetchPriority={priority ? 'high' : undefined}
+        draggable="false"
+      />
+      {showTagline && <span className="ps-logo-tagline-text">HAUTE PARFUMERIE</span>}
+    </span>
   );
 }

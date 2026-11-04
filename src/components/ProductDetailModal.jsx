@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
 import { isComboRecord, toComboCartProduct } from '../services/combos';
+import ProductImage from './common/ProductImage';
 import './ProductDetailModal.css';
 
 const bottleLabel = (b) => {
@@ -180,13 +181,13 @@ export default function ProductDetailModal() {
           {/* Left Column: Product Imagery */}
           <div className="ps-pdetail-visual">
             <div className="ps-pdetail-main-img-box">
-              <img
+              <ProductImage
                 src={activeImage || mainImage}
                 alt={product.name}
                 className="ps-pdetail-main-img"
-                width="500"
-                height="500"
-                decoding="async"
+                width={400}
+                height={500}
+                priority
               />
               {product.badge && <span className="ps-pdetail-badge">{product.badge}</span>}
             </div>
