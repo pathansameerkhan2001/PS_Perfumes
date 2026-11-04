@@ -63,7 +63,7 @@
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
-  background-color: #0c0b0a;
+  background-color: var(--lux-champagne);
   overflow: hidden;
 }
 
@@ -84,8 +84,8 @@
   position: absolute;
   top: 12px;
   left: 12px;
-  background-color: rgba(0, 0, 0, 0.88);
-  color: #ffffff;
+  background-color: rgba(41, 35, 29, 0.42);
+  color: var(--lux-text);
   font-family: "Times New Roman", Times, serif;
   font-size: 11px;
   font-weight: 800;
@@ -259,8 +259,8 @@
 }
 
 .ps-combopack-add-btn:hover {
-  background-color: #000000;
-  color: #ffffff;
+  background-color: var(--lux-champagne);
+  color: var(--lux-text);
 }
 
 .ps-combopack-add-btn.is-added {
@@ -355,9 +355,9 @@
 /* Out of stock / currently unavailable combo: clearly not purchasable */
 .ps-combopack-add-btn:disabled,
 .ps-combopack-add-btn:disabled:hover {
-  background: #2A2724;
+  background: var(--lux-champagne);
   border-color: #3A3631;
-  color: #A39C91;
+  color: var(--lux-text);
   cursor: not-allowed;
   transform: none;
   box-shadow: none;

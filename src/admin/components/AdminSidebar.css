@@ -1,7 +1,7 @@
 .ps-admin-sidebar {
   width: var(--ps-admin-sidebar-width, 200px);
-  background-color: var(--ps-admin-bg-sidebar, #11100F);
-  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  background-color: var(--ps-admin-bg-sidebar, var(--lux-champagne));
+  border-right: 1px solid rgba(198, 154, 69, 0.12);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -27,7 +27,7 @@
 .ps-admin-sidebar-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(17, 16, 15, 0.65);
+  background: rgba(41, 35, 29, 0.42);
   backdrop-filter: blur(4px);
   z-index: 95;
 }
@@ -39,9 +39,9 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid rgba(198, 154, 69, 0.12);
   position: relative;
-  background: #11100F;
+  background: var(--lux-champagne);
 }
 
 .ps-admin-logo-link {
@@ -61,7 +61,7 @@
   font-size: 8.5px;
   font-weight: 600;
   letter-spacing: 0.24em;
-  color: var(--ps-admin-gold, #C9A96E);
+  color: var(--ps-admin-gold, var(--lux-gold-deep));
   margin-top: 6px;
   text-transform: uppercase;
   opacity: 0.85;
@@ -74,7 +74,7 @@
   right: 12px;
   background: none;
   border: none;
-  color: #9C9488;
+  color: var(--lux-text-2);
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
@@ -94,7 +94,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+  scrollbar-color: rgba(198, 154, 69, 0.12) transparent;
 }
 
 .ps-admin-sidebar-nav-scroll::-webkit-scrollbar {
@@ -102,6 +102,6 @@
 }
 
 .ps-admin-sidebar-nav-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(198, 154, 69, 0.12);
   border-radius: 4px;
 }

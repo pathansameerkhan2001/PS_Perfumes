@@ -1,39 +1,64 @@
 /* ==========================================================================
-   PS PERFUMES — Storefront Product Card
-   Image, name, price and ADD TO CART only.
+   PS PERFUMES — Storefront Product Card (every product grid)
+   Ivory frame, champagne gold hairline, square image with wishlist heart,
+   serif name, bottle & size, price, gold Add to Cart. Grid and list views.
    ========================================================================== */
 
 .ps-pcard {
-  background-color: #ffffff;
-  border: 1px solid #ebe6df;
-  border-radius: 10px;
-  overflow: hidden;
-  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: hidden;
+  background: var(--lux-card);
+  border: 1px solid rgba(198, 154, 69, 0.26);
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(30, 26, 22, 0.04);
   cursor: pointer;
-  position: relative;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+  /* backwards, not both: once finished it must not hold transform (the hover lift uses it) */
+  animation: ps-pcard-in 0.5s ease backwards;
 }
 
-.ps-pcard:hover {
-  border-color: rgba(186, 143, 76, 0.5);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.07);
+@keyframes ps-pcard-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ps-pcard:hover {
+    border-color: rgba(198, 154, 69, 0.7);
+    box-shadow: 0 14px 32px rgba(30, 26, 22, 0.09), 0 0 0 1px rgba(198, 154, 69, 0.18);
+    transform: translateY(-2px);
+  }
+  .ps-pcard:hover .ps-pcard-img {
+    transform: scale(1.06);
+  }
+  .ps-pcard:hover .ps-pcard-title {
+    color: var(--lux-green);
+  }
 }
 
 .ps-pcard:focus-visible {
-  outline: 2px solid #c8a45d;
+  outline: 2px solid var(--lux-green);
   outline-offset: 3px;
 }
 
-/* Image: about 12% shorter than the former 4:5 frame; the whole image stays visible */
+/* Image: one square frame everywhere, the whole bottle visible on warm ivory */
 .ps-pcard-media {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1.1;
-  background-color: #f6f2ea;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
+  background: radial-gradient(circle at 50% 42%, #fffaf1 0%, #f6efe3 70%, #f1e8d9 100%);
+  border-bottom: 1px solid rgba(198, 154, 69, 0.16);
 }
 
 .ps-pcard-img {
@@ -41,30 +66,45 @@
   height: 100%;
   object-fit: contain;
   display: block;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.ps-pcard-heart {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
 }
 
 .ps-pcard-details {
-  padding: 14px 14px 16px;
   display: flex;
   flex-direction: column;
   flex: 1;
+  padding: 14px 14px 16px;
 }
 
 .ps-pcard-title {
-  font-family: inherit;
+  margin: 0;
+  font-family: var(--font-serif, 'Times New Roman', Times, serif);
   font-size: 18px;
-  font-weight: 700;
-  color: #171513;
-  margin: 0 0 8px;
+  font-weight: 600;
   line-height: 1.25;
+  color: var(--lux-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   transition: color 0.2s ease;
 }
 
-.ps-pcard:hover .ps-pcard-title {
-  color: #ba8f4c;
+.ps-pcard-variant {
+  margin: 4px 0 10px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: #8a7350;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ps-pcard-pricing-row {
@@ -76,60 +116,53 @@
 }
 
 .ps-pcard-price {
-  font-family: inherit;
   font-size: 19px;
   font-weight: 700;
-  color: #111111;
   line-height: 1.1;
+  color: #141210;
 }
 
 .ps-pcard-price.is-muted {
   font-size: 14px;
   font-weight: 400;
-  color: #6b645b;
+  color: var(--lux-text-2);
 }
 
 .ps-pcard-orig-price {
-  font-family: inherit;
   font-size: 13px;
-  color: #9ca3af;
+  color: #9a9186;
   text-decoration: line-through;
 }
 
-.ps-pcard-add-btn {
-  width: 100%;
-  height: 42px;
-  border-radius: 8px;
-  border: none;
-  background-color: #ba8f4c;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
+/* List view (category pages) */
+.ps-pcard.is-list {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.ps-pcard.is-list .ps-pcard-media {
+  width: 220px;
+  flex-shrink: 0;
+  border-bottom: 0;
+  border-right: 1px solid rgba(198, 154, 69, 0.16);
+}
+
+.ps-pcard.is-list .ps-pcard-details {
+  padding: 22px 24px;
   justify-content: center;
-  gap: 8px;
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 2px 8px rgba(186, 143, 76, 0.2);
 }
 
-.ps-pcard-add-btn:hover {
-  background-color: #a87d3a;
-  box-shadow: 0 4px 14px rgba(186, 143, 76, 0.35);
+.ps-pcard.is-list .ps-pcard-title {
+  font-size: 22px;
+  white-space: normal;
 }
 
-.ps-pcard-add-btn.is-success {
-  background-color: #108474;
+.ps-pcard.is-list .ps-pcard-pricing-row {
+  margin-top: 6px;
 }
 
-.ps-pcard-add-btn.is-soldout {
-  background: #f1eee9;
-  color: #6b645b;
-  box-shadow: none;
+.ps-pcard.is-list .ps-atc {
+  max-width: 260px;
 }
 
 /* Tablet */
@@ -143,13 +176,24 @@
 }
 
 /* Mobile: two columns */
-@media (max-width: 768px) {
+@media (max-width: 720px) {
+  .ps-pcard {
+    border-radius: 12px;
+  }
+  .ps-pcard-heart {
+    top: 8px;
+    right: 8px;
+  }
   .ps-pcard-details {
     padding: 10px 10px 12px;
   }
   .ps-pcard-title {
     font-size: 15px;
-    margin-bottom: 6px;
+  }
+  .ps-pcard-variant {
+    margin: 3px 0 8px;
+    font-size: 11px;
+    letter-spacing: 0.03em;
   }
   .ps-pcard-pricing-row {
     margin-bottom: 10px;
@@ -161,11 +205,14 @@
   .ps-pcard-orig-price {
     font-size: 12px;
   }
-  .ps-pcard-add-btn {
-    height: 40px;
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    gap: 6px;
+  .ps-pcard.is-list .ps-pcard-media {
+    width: 120px;
+  }
+  .ps-pcard.is-list .ps-pcard-details {
+    padding: 12px 14px;
+  }
+  .ps-pcard.is-list .ps-pcard-title {
+    font-size: 16px;
   }
 }
 
@@ -173,7 +220,16 @@
   .ps-pcard-title {
     font-size: 14px;
   }
-  .ps-pcard-add-btn {
-    font-size: 10.5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-pcard,
+  .ps-pcard-img {
+    animation: none;
+    transition: none;
+  }
+  .ps-pcard:hover,
+  .ps-pcard:hover .ps-pcard-img {
+    transform: none;
   }
 }

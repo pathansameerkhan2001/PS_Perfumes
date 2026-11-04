@@ -62,7 +62,12 @@ export default function MobileNav({
   const categories = useStorefrontCategories();
   const NAVIGATION_ITEMS = [
     ...LEADING_ITEMS,
-    ...categories.map((c) => ({ name: c.name, path: c.path, icon: FAMILY_ICONS[c.slug] || Tag })),
+    ...categories.map((c) => ({
+      name: c.name,
+      path: c.path,
+      icon: FAMILY_ICONS[c.slug] || Tag,
+      children: c.children || [],
+    })),
     ...TRAILING_ITEMS,
   ];
 
@@ -263,6 +268,21 @@ export default function MobileNav({
                           <ChevronRight size={15} className="mobile-nav-arrow" aria-hidden="true" />
                         </div>
                       </button>
+                      {/* Subcategories (from the database) as chips under their category */}
+                      {item.children?.length > 0 && (
+                        <div className="mobile-nav-subs" role="group" aria-label={item.name + ' subcategories'}>
+                          {item.children.map((c) => (
+                            <button
+                              key={c.slug}
+                              type="button"
+                              className="mobile-nav-sub-chip"
+                              onClick={() => handleItemClick({ path: c.path })}
+                            >
+                              {c.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

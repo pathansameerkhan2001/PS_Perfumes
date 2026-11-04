@@ -191,8 +191,8 @@
 
 @media (hover: hover) {
   .ps-reviews-nav-btn:hover {
-    background-color: #171411;
-    color: #E5C77A;
+    background-color: var(--lux-champagne);
+    color: var(--lux-text);
   }
 }
 

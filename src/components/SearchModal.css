@@ -5,7 +5,7 @@
 .search-modal-backdrop {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.75);
+  background-color: rgba(41, 35, 29, 0.42);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   z-index: 2500;
@@ -30,7 +30,7 @@
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  background-color: #000000;
+  background-color: var(--lux-champagne);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -54,7 +54,7 @@
   width: 100%;
   background: none;
   border: none;
-  color: #ffffff;
+  color: var(--lux-text);
   font-family: "Times New Roman", Times, serif;
   font-size: 15px;
   outline: none;
@@ -73,7 +73,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: var(--lux-text);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -153,7 +153,7 @@
   height: 48px;
   border-radius: 6px;
   overflow: hidden;
-  background-color: #0d0c0a;
+  background-color: var(--lux-champagne);
   flex-shrink: 0;
 }
 

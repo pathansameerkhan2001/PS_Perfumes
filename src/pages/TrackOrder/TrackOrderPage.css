@@ -3,15 +3,15 @@
    ========================================================================== */
 
 .ps-track-page {
-  background-color: #0d0c0a;
+  background-color: var(--lux-ivory);
   min-height: 80vh;
-  color: #f7f4ed;
+  color: var(--lux-text);
   padding-bottom: 80px;
 }
 
 /* Hero Banner */
 .ps-track-hero-banner {
-  background: radial-gradient(ellipse at center, #1c1811 0%, #080705 100%);
+  background: radial-gradient(ellipse at center, var(--lux-champagne) 0%, var(--lux-ivory) 100%);
   border-bottom: 1px solid rgba(200, 164, 93, 0.18);
   padding: 60px 24px;
   text-align: center;
@@ -24,7 +24,7 @@
 
 .ps-track-tag {
   display: inline-block;
-  color: #c8a45d;
+  color: var(--lux-gold-deep);
   font-size: 11px;
   letter-spacing: 0.18em;
   font-weight: 600;
@@ -35,14 +35,14 @@
 .ps-track-title {
   font-family: "Times New Roman", Times, serif;
   font-size: 36px;
-  color: #ffffff;
+  color: var(--lux-text);
   margin: 0 0 14px;
   letter-spacing: 0.05em;
   font-weight: 500;
 }
 
 .ps-track-sub {
-  color: #a8a29e;
+  color: var(--lux-text-2);
   font-size: 15px;
   line-height: 1.6;
   margin: 0;
@@ -57,11 +57,11 @@
 
 /* Search Card */
 .ps-track-search-card {
-  background: #151310;
+  background: var(--lux-card);
   border: 1px solid rgba(200, 164, 93, 0.25);
   border-radius: 12px;
   padding: 28px 32px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 12px 40px rgba(41,35,29,0.10);
   margin-bottom: 32px;
 }
 
@@ -86,17 +86,17 @@
 .ps-track-search-icon {
   position: absolute;
   left: 16px;
-  color: #c8a45d;
+  color: var(--lux-gold-deep);
   pointer-events: none;
 }
 
 .ps-track-input {
   width: 100%;
-  background: #080706;
+  background: var(--lux-champagne);
   border: 1px solid rgba(200, 164, 93, 0.3);
   border-radius: 8px;
   padding: 14px 16px 14px 44px;
-  color: #ffffff;
+  color: var(--lux-text);
   font-size: 15px;
   outline: none;
   transition: all 0.2s ease;
@@ -141,13 +141,13 @@
 }
 
 .ps-sample-label {
-  color: #78716c;
+  color: #8b8173;
 }
 
 .ps-sample-chip {
   background: rgba(200, 164, 93, 0.1);
   border: 1px solid rgba(200, 164, 93, 0.25);
-  color: #c8a45d;
+  color: var(--lux-gold-deep);
   font-size: 11px;
   padding: 3px 10px;
   border-radius: 9999px;
@@ -162,7 +162,7 @@
 
 /* Empty / Not Found */
 .ps-track-empty-state {
-  background: #151310;
+  background: var(--lux-card);
   border: 1px dashed rgba(200, 164, 93, 0.25);
   border-radius: 12px;
   padding: 48px 24px;
@@ -171,13 +171,13 @@
 }
 
 .ps-track-empty-state .ps-empty-title {
-  color: #ffffff;
+  color: var(--lux-text);
   font-size: 20px;
   margin: 16px 0 8px;
 }
 
 .ps-track-empty-state .ps-empty-desc {
-  color: #a8a29e;
+  color: var(--lux-text-2);
   font-size: 14px;
   max-width: 480px;
   margin: 0 auto 20px;
@@ -185,18 +185,18 @@
 }
 
 .ps-track-concierge-callout {
-  color: #78716c;
+  color: #8b8173;
   font-size: 13px;
 }
 
 .ps-concierge-link {
-  color: #c8a45d;
+  color: var(--lux-gold-deep);
   text-decoration: underline;
 }
 
 /* Meta Card */
 .ps-track-meta-card {
-  background: #151310;
+  background: var(--lux-card);
   border: 1px solid rgba(200, 164, 93, 0.2);
   border-radius: 12px;
   padding: 24px 28px;
@@ -215,7 +215,7 @@
 }
 
 .ps-meta-eyebrow {
-  color: #78716c;
+  color: #8b8173;
   font-size: 11px;
   letter-spacing: 0.12em;
   display: block;
@@ -224,13 +224,13 @@
 .ps-meta-order-num {
   font-family: "Times New Roman", Times, serif;
   font-size: 24px;
-  color: #ffffff;
+  color: var(--lux-text);
   margin: 4px 0;
   letter-spacing: 0.05em;
 }
 
 .ps-meta-date {
-  color: #a8a29e;
+  color: var(--lux-text-2);
   font-size: 13px;
 }
 
@@ -254,7 +254,7 @@
 .ps-status-processing,
 .ps-status-pending {
   background: rgba(200, 164, 93, 0.15);
-  color: #e5c77a;
+  color: var(--lux-gold-deep);
   border: 1px solid rgba(200, 164, 93, 0.4);
 }
 .ps-status-processing .ps-status-dot,
@@ -264,7 +264,7 @@
 
 .ps-status-confirmed {
   background: rgba(59, 130, 246, 0.15);
-  color: #93c5fd;
+  color: #2f5f9e;
   border: 1px solid rgba(59, 130, 246, 0.4);
 }
 .ps-status-confirmed .ps-status-dot {
@@ -274,7 +274,7 @@
 .ps-status-shipped,
 .ps-status-out_for_delivery {
   background: rgba(168, 85, 247, 0.15);
-  color: #d8b4fe;
+  color: #6f4a99;
   border: 1px solid rgba(168, 85, 247, 0.4);
 }
 .ps-status-shipped .ps-status-dot {
@@ -283,7 +283,7 @@
 
 .ps-status-delivered {
   background: rgba(34, 197, 94, 0.15);
-  color: #86efac;
+  color: #2f7a4a;
   border: 1px solid rgba(34, 197, 94, 0.4);
 }
 .ps-status-delivered .ps-status-dot {
@@ -292,7 +292,7 @@
 
 /* Stepper Timeline */
 .ps-track-timeline-card {
-  background: #151310;
+  background: var(--lux-card);
   border: 1px solid rgba(200, 164, 93, 0.2);
   border-radius: 12px;
   padding: 28px;
@@ -302,7 +302,7 @@
 .ps-timeline-title {
   font-family: "Times New Roman", Times, serif;
   font-size: 17px;
-  color: #c8a45d;
+  color: var(--lux-gold-deep);
   margin: 0 0 24px;
   letter-spacing: 0.05em;
 }
@@ -341,9 +341,9 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #201d18;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #78716c;
+  background: var(--lux-champagne);
+  border: 1px solid var(--lux-border);
+  color: #8b8173;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -360,7 +360,7 @@
 
 .ps-timeline-step.is-current .ps-timeline-step-icon-wrap {
   border-color: #c8a45d;
-  color: #c8a45d;
+  color: var(--lux-gold-deep);
   background: rgba(200, 164, 93, 0.15);
   box-shadow: 0 0 12px rgba(200, 164, 93, 0.3);
 }
@@ -368,14 +368,14 @@
 .ps-step-label {
   display: block;
   font-size: 13px;
-  color: #ffffff;
+  color: var(--lux-text);
   margin-bottom: 4px;
 }
 
 .ps-step-desc {
   display: block;
   font-size: 11px;
-  color: #78716c;
+  color: #8b8173;
   line-height: 1.4;
 }
 
@@ -394,7 +394,7 @@
 
 .ps-track-items-card,
 .ps-track-dest-card {
-  background: #151310;
+  background: var(--lux-card);
   border: 1px solid rgba(200, 164, 93, 0.2);
   border-radius: 12px;
   padding: 24px 28px;
@@ -403,7 +403,7 @@
 .ps-card-heading {
   font-family: "Times New Roman", Times, serif;
   font-size: 16px;
-  color: #c8a45d;
+  color: var(--lux-gold-deep);
   margin: 0 0 18px;
   letter-spacing: 0.05em;
   border-bottom: 1px solid rgba(200, 164, 93, 0.15);
@@ -428,7 +428,7 @@
   width: 56px;
   height: 56px;
   border-radius: 6px;
-  background: #080706;
+  background: var(--lux-champagne);
   border: 1px solid rgba(200, 164, 93, 0.15);
   overflow: hidden;
   flex-shrink: 0;
@@ -446,32 +446,32 @@
 
 .ps-track-item-name {
   font-size: 14px;
-  color: #ffffff;
+  color: var(--lux-text);
   margin: 0 0 4px;
   font-weight: 600;
 }
 
 .ps-track-item-spec {
   font-size: 12px;
-  color: #78716c;
+  color: #8b8173;
   display: block;
 }
 
 .ps-track-item-price {
   font-size: 13px;
-  color: #c8a45d;
+  color: var(--lux-gold-deep);
   font-weight: 600;
 }
 
 /* Financial Summary */
 .ps-track-financial-summary {
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--lux-border);
   padding-top: 14px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   font-size: 13px;
-  color: #a8a29e;
+  color: var(--lux-text-2);
 }
 
 .ps-fin-row {
@@ -480,13 +480,13 @@
 }
 
 .ps-discount {
-  color: #22c55e;
+  color: #2f7a4a;
 }
 
 .ps-total {
   font-size: 15px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--lux-text);
   border-top: 1px solid rgba(200, 164, 93, 0.2);
   padding-top: 8px;
   margin-top: 4px;
@@ -508,13 +508,13 @@
 }
 
 .ps-dest-address {
-  color: #a8a29e;
+  color: var(--lux-text-2);
   margin: 4px 0 0;
   line-height: 1.5;
 }
 
 .ps-dest-payment {
-  color: #a8a29e;
+  color: var(--lux-text-2);
   margin: 4px 0 0;
 }
 
@@ -527,12 +527,12 @@
 
 .ps-pay-paid {
   background: rgba(34, 197, 94, 0.15);
-  color: #4ade80;
+  color: #2f7a4a;
 }
 
 .ps-pay-pending {
   background: rgba(200, 164, 93, 0.15);
-  color: #e5c77a;
+  color: var(--lux-gold-deep);
 }
 
 .ps-dest-trust-note {
@@ -541,7 +541,7 @@
   border-radius: 8px;
   padding: 12px 14px;
   font-size: 12px;
-  color: #a8a29e;
+  color: var(--lux-text-2);
   line-height: 1.5;
   margin-bottom: 20px;
 }
@@ -555,7 +555,7 @@
   padding: 12px 16px;
   background: transparent;
   border: 1px solid #c8a45d;
-  color: #c8a45d;
+  color: var(--lux-gold-deep);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.1em;

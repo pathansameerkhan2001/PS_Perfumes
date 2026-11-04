@@ -14,9 +14,13 @@ import {
   Upload,
 } from 'lucide-react';
 import { getProducts, deleteProduct, createProduct, updateProduct } from '../../services/products';
+import { getCategories, buildCategoryTree } from '../../services/categories';
 import { formatINR } from '../../utils/formatCurrency';
 import './AdminProducts.css';
 import { cardImageUrl, fullImageFallback } from '../../lib/storage';
+
+// Rows per table page: the table stays light however large the catalogue grows
+const PAGE_SIZE = 25;
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -51,6 +55,24 @@ export default function AdminProducts() {
   useEffect(() => {
     fetchList();
   }, []);
+
+  // Category filter options come from the database (main categories with their subcategories)
+  const [categoryTree, setCategoryTree] = useState({ hasTree: false, mains: [] });
+  useEffect(() => {
+    let active = true;
+    getCategories(true)
+      .then((rows) => active && setCategoryTree(buildCategoryTree(rows)))
+      .catch((err) => console.error('Could not load categories for the filter:', err));
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const [page, setPage] = useState(1);
+  // A new search or filter starts again on the first page
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, categoryFilter, bottleFilter, statusFilter, bestsellerFilter, featuredFilter]);
 
   useEffect(() => {
     const q = searchParams.get('search');
@@ -199,8 +221,12 @@ export default function AdminProducts() {
   };
 
   // Filter
+  // A main category matches its own products and those of its subcategories
+  const filterMain = categoryTree.mains.find((m) => m.id === categoryFilter);
+  const categoryIds =
+    categoryFilter === 'ALL' ? null : new Set(filterMain ? [filterMain.id, ...filterMain.children.map((c) => c.id)] : [categoryFilter]);
   const filtered = products.filter((p) => {
-    if (categoryFilter !== 'ALL' && p.category?.toLowerCase() !== categoryFilter.toLowerCase()) {
+    if (categoryIds && !categoryIds.has(p.category_id)) {
       return false;
     }
     if (statusFilter !== 'ALL' && p.status !== statusFilter) {
@@ -224,6 +250,11 @@ export default function AdminProducts() {
     }
     return true;
   });
+
+  // Current page of the filtered list (a filter that shrinks the list never leaves an empty page)
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pageRows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <div className="ps-admin-products-page">
@@ -292,8 +323,15 @@ export default function AdminProducts() {
             className="ps-admin-filter-select"
           >
             <option value="ALL">All Categories</option>
-            {['Perfume', 'Attar', 'Bakhoor', 'Musky', 'Oud', 'Floral', 'Woody'].map((c) => (
-              <option key={c} value={c}>{c}</option>
+            {categoryTree.mains.map((m) => (
+              <React.Fragment key={m.id}>
+                <option value={m.id}>{m.children.length > 0 ? `${m.name} (all)` : m.name}</option>
+                {m.children.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {'   '}↳ {c.name}
+                  </option>
+                ))}
+              </React.Fragment>
             ))}
           </select>
 
@@ -362,7 +400,7 @@ export default function AdminProducts() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((prod) => (
+              {pageRows.map((prod) => (
                 <tr key={prod.id}>
                   <td>
                     <img
@@ -475,6 +513,19 @@ export default function AdminProducts() {
               ))}
             </tbody>
           </table>
+          {pageCount > 1 && (
+            <nav className="ps-admin-pagination" aria-label="Product pages">
+              <button type="button" className="ps-admin-page-btn" onClick={() => setPage(currentPage - 1)} disabled={currentPage <= 1}>
+                Previous
+              </button>
+              <span>
+                Page {currentPage} of {pageCount} · {filtered.length} products
+              </span>
+              <button type="button" className="ps-admin-page-btn" onClick={() => setPage(currentPage + 1)} disabled={currentPage >= pageCount}>
+                Next
+              </button>
+            </nav>
+          )}
         </div>
       )}
 

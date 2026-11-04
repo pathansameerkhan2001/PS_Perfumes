@@ -30,7 +30,9 @@ export const TYPE_LABEL = { attar: 'Attar', spray: 'Spray' };
 export const DEFAULT_SUFFIXES = { attar: 'Attar', spray: 'Perfume Spray' };
 const BOTTLES = { attar: ['Glass Bottle'], spray: ['Glass Bottle', 'PVC Bottle'] };
 const REQUIRED_SIZES = { attar: [3, 6, 12], spray: [30, 50, 100] };
-const DEFAULT_CATEGORY_SLUG = { attar: 'attar', spray: 'perfume' };
+// Category used when the sheet has no category column: the Migration 12 main category first,
+// then the retired fragrance family for a database that has not been migrated yet
+const DEFAULT_CATEGORY_SLUGS = { attar: ['attars', 'attar'], spray: ['perfumes', 'perfume'] };
 
 // Source notes containing these words describe an uncertain record: blocked until confirmed
 const REVIEW_NOTE = /unclear|verify|not specified|not visible|not shown|unlabel|unidentified|x mark|mark beside|spelling|fragment|unknown/i;
@@ -294,9 +296,16 @@ export function buildImportPlan({ rows, headerRow, mapping, suffixes, categories
     if (ep.slug) existingBySlug.set(String(ep.slug).toLowerCase(), ep);
     if (ep.name) existingByName.set(slugify(ep.name), ep);
   }
+  const matches = (c, v) => c.slug?.toLowerCase() === v || c.name?.toLowerCase() === v;
+  // "Oud Attars", "oud-attars" or "Attars > Oud Attars" (also / or ›): a subcategory is looked up
+  // under the main category named before the separator
   const findCategory = (value) => {
-    const v = cleanText(value).toLowerCase();
-    return (categories || []).find((c) => c.slug?.toLowerCase() === v || c.name?.toLowerCase() === v) || null;
+    const parts = cleanText(value).toLowerCase().split(/\s*[>/›]\s*/).filter(Boolean);
+    if (parts.length === 2) {
+      const main = (categories || []).find((c) => !c.parent_id && matches(c, parts[0]));
+      return main ? (categories || []).find((c) => c.parent_id === main.id && matches(c, parts[1])) || null : null;
+    }
+    return (categories || []).find((c) => matches(c, parts[0] || '')) || null;
   };
 
   const products = [...groups.values()].map((g) => {
@@ -320,7 +329,8 @@ export function buildImportPlan({ rows, headerRow, mapping, suffixes, categories
       addIssue(p, 'error', 'The source has no real product name. Type the correct name in the Name field to import it.');
     }
 
-    // Category: mapped column if present, otherwise Attar → "attar", Spray → "perfume"
+    // Category: mapped column if present, otherwise Attar → Attars, Spray → Perfumes (or the
+    // retired attar / perfume families before Migration 12)
     const values = [...g.categoryValues];
     if (values.length > 1) {
       addIssue(p, 'error', `Rows disagree on the category (${values.join(', ')}).`);
@@ -329,9 +339,9 @@ export function buildImportPlan({ rows, headerRow, mapping, suffixes, categories
       if (cat) p.category = cat;
       else addIssue(p, 'error', `Category "${values[0]}" does not exist. Create it under Admin → Categories first.`);
     } else if (g.type) {
-      const cat = findCategory(DEFAULT_CATEGORY_SLUG[g.type]);
+      const cat = DEFAULT_CATEGORY_SLUGS[g.type].map(findCategory).find(Boolean);
       if (cat) p.category = cat;
-      else addIssue(p, 'error', `Category "${DEFAULT_CATEGORY_SLUG[g.type]}" does not exist. Create it under Admin → Categories first.`);
+      else addIssue(p, 'error', `Category "${DEFAULT_CATEGORY_SLUGS[g.type][0]}" does not exist. Create it under Admin → Categories first.`);
     }
     if (p.category && p.category.is_active === false) {
       addIssue(p, 'warning', `Category "${p.category.name}" is hidden on the storefront.`);

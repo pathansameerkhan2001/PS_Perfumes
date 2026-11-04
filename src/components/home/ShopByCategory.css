@@ -45,3 +45,14 @@
     animation: none;
   }
 }
+
+/* Petals stay within the heading, never over the products */
+.ps-cbc-home-header {
+  position: relative;
+  padding: 8px 0;
+}
+
+.ps-cbc-home-header > :not(.ps-petals) {
+  position: relative;
+  z-index: 1;
+}

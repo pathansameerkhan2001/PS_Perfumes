@@ -3,41 +3,54 @@
    ========================================================================== */
 
 :root {
-  /* Primary Specification Color System */
-  --color-primary: #050505;
-  --color-secondary: #0D0D0D;
-  --color-gold: #C8A45D;
-  --color-gold-bright: #E5C77A;
-  --color-champagne: #F3E7C7;
-  --color-ivory: #F8F5EE;
+  /* Luxury ivory & gold palette (the storefront and admin design system) */
+  --lux-ivory: #F8F4EC;          /* primary background */
+  --lux-champagne: #F2E8D8;      /* secondary background */
+  --lux-card: #FFFDF8;           /* cards, panels */
+  --lux-gold: #C69A45;           /* primary gold */
+  --lux-gold-light: #E3C58B;
+  --lux-gold-deep: #99702E;      /* antique gold: gold text on ivory */
+  --lux-text: #29231D;
+  --lux-text-2: #756B5E;
+  --lux-green: #294532;          /* active category */
+  --lux-border: #E5D7C1;
+  --lux-gold-gradient: linear-gradient(135deg, #EBD3A0 0%, #D6B06A 40%, #C69A45 70%, #B08636 100%);
+  --lux-shadow: 0 10px 28px rgba(41, 35, 29, 0.08);
+  --lux-shadow-gold: 0 10px 26px rgba(198, 154, 69, 0.22);
+
+  /* Earlier (dark-theme) token names, now mapped onto the ivory palette, so every page
+     that uses them follows the design system: backgrounds ivory, "ivory" text dark */
+  --color-primary: var(--lux-ivory);
+  --color-secondary: var(--lux-card);
+  --color-gold: var(--lux-gold);
+  --color-gold-bright: var(--lux-gold-deep);
+  --color-champagne: var(--lux-text);
+  --color-ivory: var(--lux-text);
   --color-white: #FFFFFF;
-  --color-muted: #8F8A80;
-  --color-border: rgba(200, 164, 93, 0.25);
-  --color-red-cta: #E31B23;
+  --color-muted: var(--lux-text-2);
+  --color-border: var(--lux-border);
+  --color-red-cta: #B5452F;
 
-  /* Obsidian and Luxury Dark Palette */
-  --bg-primary: #050505;
-  --bg-secondary: #0D0D0D;
-  --bg-header-top: #050505;
-  --bg-header-bottom: #0D0D0D;
-  --bg-surface: #0f0f0f;
-  --bg-drawer: #070707;
+  --bg-primary: var(--lux-ivory);
+  --bg-secondary: var(--lux-champagne);
+  --bg-header-top: var(--lux-ivory);
+  --bg-header-bottom: var(--lux-card);
+  --bg-surface: var(--lux-card);
+  --bg-drawer: var(--lux-ivory);
 
-  /* Authentic Metallic Gold Tones */
-  --gold-metallic: #C8A45D;
-  --gold-primary: #C8A45D;
-  --gold-bright: #E5C77A;
-  --gold-muted: #8F8A80;
-  --gold-dark: #665438;
-  --gold-hairline: rgba(200, 164, 93, 0.25);
-  --gold-hairline-subtle: rgba(200, 164, 93, 0.12);
-  --gold-glow: rgba(200, 164, 93, 0.2);
+  --gold-metallic: var(--lux-gold);
+  --gold-primary: var(--lux-gold);
+  --gold-bright: var(--lux-gold-light);
+  --gold-muted: var(--lux-text-2);
+  --gold-dark: var(--lux-gold-deep);
+  --gold-hairline: rgba(198, 154, 69, 0.28);
+  --gold-hairline-subtle: rgba(198, 154, 69, 0.14);
+  --gold-glow: rgba(198, 154, 69, 0.2);
 
-  /* Typography Colors */
-  --text-ivory: #F8F5EE;
-  --text-cream: #F3E7C7;
-  --text-sand: #C8A45D;
-  --text-muted: #8F8A80;
+  --text-ivory: var(--lux-text);
+  --text-cream: var(--lux-text-2);
+  --text-sand: var(--lux-gold-deep);
+  --text-muted: var(--lux-text-2);
 
   /* Font Families */
   --font-serif: "Times New Roman", Times, serif;
@@ -92,8 +105,8 @@ html {
 }
 
 html, body {
-  background-color: #ffffff;
-  color: #111111;
+  background-color: var(--lux-ivory);
+  color: var(--lux-text);
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.6;
@@ -113,22 +126,21 @@ html, body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #050505;
+  background: var(--lux-champagne);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #221e18;
+  background: var(--lux-gold-light);
   border-radius: 3px;
-  border: 1px solid rgba(212, 175, 55, 0.12);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--gold-muted);
+  background: var(--lux-gold);
 }
 
 /* Focus Outline */
-button:focus-visible, a:focus-visible, input:focus-visible {
-  outline: 1px solid var(--gold-primary);
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--lux-green);
   outline-offset: 3px;
 }
 

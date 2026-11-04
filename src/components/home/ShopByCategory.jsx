@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Filter, RotateCcw } from 'lucide-react';
 import CollectionProductCard from '../collection/CollectionProductCard';
 import CategoryIcon from '../../pages/Collections/CategoryIcon';
+import RosePetals from '../common/RosePetals';
 import { getStorefrontCategoryTree } from '../../services/categories';
 import { getProducts } from '../../services/products';
 import { collectionPath } from '../../utils/useStorefrontCategories';
@@ -86,8 +87,9 @@ export default function ShopByCategory({ title = '', subtitle = '' }) {
   const selectionName = activeSub ? activeSub.name : activeMain?.name;
 
   return (
-    <section className="ps-cbc-home" id="shop-by-category" aria-labelledby="ps-cbc-home-title">
-      <header className="ps-cbc-header">
+    <section className="ps-cbc-home ps-arabesque" id="shop-by-category" aria-labelledby="ps-cbc-home-title">
+      <header className="ps-cbc-header ps-cbc-home-header">
+        <RosePetals />
         <div className="ps-cbc-eyebrow">
           <span className="ps-cbc-eyebrow-line" aria-hidden="true" />
           <span>Our Collections</span>

@@ -112,7 +112,7 @@
   aspect-ratio: 16 / 7;
   overflow: hidden;
   border-radius: 2px;
-  background: #1A1410;
+  background: var(--lux-champagne);
   box-shadow: 0 30px 60px -30px rgba(74, 53, 40, 0.45);
   animation: psAbRise 1s var(--ab-ease) 0.25s both;
 }
@@ -174,7 +174,7 @@
   margin: 0;
   overflow: hidden;
   border-radius: 2px;
-  background: #1A1410;
+  background: var(--lux-champagne);
   box-shadow: 0 30px 60px -32px rgba(74, 53, 40, 0.5);
 }
 

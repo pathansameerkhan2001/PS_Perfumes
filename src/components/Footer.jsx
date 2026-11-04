@@ -102,7 +102,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="ps-public-footer" aria-label="PS PERFUMES footer">
+    <footer className="ps-public-footer ps-arabesque" aria-label="PS PERFUMES footer">
       <div className="ps-footer-inner">
         <div className="ps-footer-grid">
           {/* Brand */}

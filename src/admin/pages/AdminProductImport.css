@@ -37,8 +37,8 @@
 
 .ps-imp-steps li.is-current {
   border-color: var(--ps-admin-gold, #C9A96E);
-  background: #11100F;
-  color: var(--ps-admin-gold, #C9A96E);
+  background: var(--lux-champagne);
+  color: var(--lux-green);
 }
 
 .ps-imp-steps li.is-current span {

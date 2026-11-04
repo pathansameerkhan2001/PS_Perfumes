@@ -10,7 +10,7 @@
 
 .ps-contact-hero-banner {
   padding: 60px 0 46px;
-  background: linear-gradient(180deg, #0d0d0d 0%, #050505 100%);
+  background: linear-gradient(180deg, var(--lux-champagne) 0%, var(--lux-ivory) 100%);
   border-bottom: 1px solid var(--color-border);
   text-align: center;
 }
@@ -147,7 +147,7 @@
 .ps-contact-card-text p {
   font-size: 13px;
   line-height: 1.5;
-  color: #c9c1b2;
+  color: var(--lux-text-2);
 }
 
 .ps-contact-card-text span {
@@ -229,7 +229,7 @@
 
 .ps-form-group input,
 .ps-form-group textarea {
-  background: #050505;
+  background: var(--lux-card);
   border: 1px solid var(--color-border);
   color: var(--color-ivory);
   font-family: var(--font-sans);
@@ -269,7 +269,7 @@
 
 .ps-contact-success-state p {
   font-size: 14px;
-  color: #c9c1b2;
+  color: var(--lux-text-2);
   margin-bottom: 24px;
   line-height: 1.6;
 }

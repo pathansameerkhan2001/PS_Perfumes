@@ -4,7 +4,7 @@
 
 .ps-app-root {
   min-height: 100vh;
-  background-color: #ffffff;
+  background-color: var(--lux-ivory);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -34,6 +34,6 @@
 /* Page canvas underneath the header (fallback / preview) */
 .ps-main-preview {
   flex: 1;
-  background-color: #ffffff;
+  background-color: var(--lux-ivory);
   min-height: 80vh;
 }

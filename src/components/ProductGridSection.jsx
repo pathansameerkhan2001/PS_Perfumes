@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ProductCard from './ProductCard';
+import GoldOrnament from './common/GoldOrnament';
 import { useCart } from '../context/CartContext';
 import './ProductCard.css';
 
@@ -56,7 +57,7 @@ export default function ProductGridSection({
           {tag && <span className="ps-bestsellers-tag">{tag}</span>}
           <h2 className="ps-bestsellers-heading">{title}</h2>
           {subtitle && <p className="ps-section-subtitle">{subtitle}</p>}
-          <div className="ps-bestsellers-divider" />
+          <GoldOrnament />
         </div>
 
         {/* Filter Tabs if enabled */}

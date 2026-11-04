@@ -114,9 +114,9 @@
 
 @media (hover: hover) {
   .ps-newarr-viewall:hover {
-    background-color: #171411;
+    background-color: var(--lux-champagne);
     border-color: #171411;
-    color: #E5C77A;
+    color: var(--lux-text);
   }
 }
 

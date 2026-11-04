@@ -22,7 +22,7 @@
   gap: 10px;
   padding: 8px 10px;
   border-radius: 7px;
-  color: #9E9487;
+  color: var(--lux-text-2);
   text-decoration: none;
   font-family: var(--ps-admin-font-sans, "Times New Roman", Times, serif);
   font-size: 12px;
@@ -34,18 +34,18 @@
 }
 
 .ps-admin-nav-link:hover {
-  color: #FFFFFF;
-  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--lux-text);
+  background-color: rgba(198, 154, 69, 0.12);
 }
 
 .ps-nav-icon {
   flex-shrink: 0;
-  color: #8C8479;
+  color: var(--lux-text-2);
   transition: color 0.18s ease;
 }
 
 .ps-admin-nav-link:hover .ps-nav-icon {
-  color: var(--ps-admin-gold, #C9A96E);
+  color: var(--ps-admin-gold, var(--lux-gold-deep));
 }
 
 .ps-nav-label {
@@ -56,22 +56,23 @@
 }
 
 /* Active State: Restrained Gold Accent + Warm Charcoal Card Highlight */
+/* Active page: ivory card, deep green text, gold hairline (as the storefront active category) */
 .ps-admin-nav-link.is-active {
-  background: #1C1A16;
-  color: #FFFAF0;
-  font-weight: 550;
-  border: 1px solid rgba(201, 169, 110, 0.32);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  background: var(--lux-card);
+  color: var(--lux-green);
+  font-weight: 600;
+  border: 1px solid rgba(198, 154, 69, 0.45);
+  box-shadow: 0 2px 8px rgba(41, 35, 29, 0.06);
 }
 
 .ps-admin-nav-link.is-active .ps-nav-icon {
-  color: var(--ps-admin-gold, #C9A96E);
+  color: var(--ps-admin-gold, var(--lux-gold-deep));
 }
 
 /* Subtle separator before Live Website */
 .ps-admin-nav-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(198, 154, 69, 0.12);
   margin: 12px 6px;
 }
 
@@ -82,27 +83,27 @@
 }
 
 .ps-admin-live-link {
-  color: #D4AF37;
+  color: var(--lux-green);
   background: rgba(201, 169, 110, 0.06);
   border: 1px solid rgba(201, 169, 110, 0.2);
   margin-top: 2px;
 }
 
 .ps-admin-live-link:hover {
-  color: #FFFFFF;
+  color: var(--lux-text);
   background: rgba(201, 169, 110, 0.14);
   border-color: rgba(201, 169, 110, 0.45);
   box-shadow: 0 2px 8px rgba(201, 169, 110, 0.15);
 }
 
 .ps-admin-live-link .ps-live-globe-icon {
-  color: var(--ps-admin-gold, #C9A96E);
+  color: var(--ps-admin-gold, var(--lux-gold-deep));
 }
 
 .ps-live-external-icon {
   margin-left: auto;
   opacity: 0.7;
-  color: var(--ps-admin-gold, #C9A96E);
+  color: var(--ps-admin-gold, var(--lux-gold-deep));
   transition: opacity 0.18s ease, transform 0.18s ease;
 }
 

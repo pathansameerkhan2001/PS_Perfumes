@@ -5,7 +5,7 @@
 .ps-wishlist-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.65);
+  background-color: rgba(41, 35, 29, 0.42);
   backdrop-filter: blur(4px);
   z-index: 9999;
   display: flex;
@@ -30,8 +30,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #0c0b0a;
-  color: #ffffff;
+  background-color: var(--lux-champagne);
+  color: var(--lux-text);
 }
 
 .ps-wishlist-title-wrap {
@@ -45,7 +45,7 @@
   font-size: 14.5px;
   font-weight: 700;
   letter-spacing: 0.12em;
-  color: #ffffff;
+  color: var(--lux-text);
   margin: 0;
 }
 
@@ -67,7 +67,7 @@
 }
 
 .ps-wishlist-close:hover {
-  color: #ffffff;
+  color: var(--lux-text);
 }
 
 .ps-wishlist-body {
@@ -102,8 +102,8 @@
 }
 
 .ps-wishlist-empty-btn {
-  background-color: #000000;
-  color: #ffffff;
+  background-color: var(--lux-champagne);
+  color: var(--lux-text);
   border: none;
   padding: 12px 24px;
   font-size: 12px;
@@ -137,7 +137,7 @@
   height: 70px;
   border-radius: 4px;
   overflow: hidden;
-  background-color: #0c0b0a;
+  background-color: var(--lux-champagne);
   flex-shrink: 0;
 }
 
@@ -175,26 +175,13 @@
   margin-bottom: 10px;
 }
 
-.ps-wishlist-add-btn {
+/* The shared gold button (common/AddToCartButton), sized for the drawer */
+.ps-wishlist-add-btn.ps-atc {
   align-self: flex-start;
-  background-color: #000000;
-  color: #ffffff;
-  border: none;
-  border-radius: 3px;
-  padding: 6px 14px;
+  width: auto;
+  height: 34px;
+  padding: 0 16px;
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.ps-wishlist-add-btn:hover {
-  background-color: #c5a059;
-  color: #000000;
 }
 
 .ps-wishlist-remove-btn {

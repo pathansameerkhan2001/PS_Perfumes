@@ -20,13 +20,13 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #0B0A09;
+  background: var(--lux-card);
   border: 1px solid rgba(201, 169, 110, 0.4);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #F7F4EE;
+  color: var(--lux-text);
   text-decoration: none;
   cursor: pointer;
   transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
@@ -37,7 +37,7 @@
 .ps-contact-dock-btn:focus-visible {
   transform: translateY(-2px) scale(1.06);
   border-color: #C9A96E;
-  background: #141311;
+  background: var(--lux-card);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6), 0 0 16px rgba(201, 169, 110, 0.25);
 }
 
@@ -52,9 +52,9 @@
   left: calc(100% + 12px);
   top: 50%;
   transform: translateY(-50%) translateX(-6px);
-  background: #0B0A09;
+  background: var(--lux-card);
   border: 1px solid rgba(201, 169, 110, 0.35);
-  color: #F7F4EE;
+  color: var(--lux-text);
   font-family: "Times New Roman", Times, serif;
   font-size: 11px;
   font-weight: 600;

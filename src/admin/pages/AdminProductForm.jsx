@@ -11,7 +11,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { getProductById, createProduct, updateProduct } from '../../services/products';
-import { getCategories } from '../../services/categories';
+import { getCategories, buildCategoryTree } from '../../services/categories';
 import { uploadImage } from '../../lib/storage';
 import './AdminProductForm.css';
 
@@ -281,8 +281,18 @@ export default function AdminProductForm() {
     }));
   };
 
-  const handleCategoryChange = (e) => {
-    const chosen = categories.find((c) => c.id === e.target.value);
+  // Main categories with their subcategories (Migration 12); before it every category is a main
+  // category and a single list is shown
+  const categoryTree = buildCategoryTree(categories);
+  const selectedCategory = categories.find((c) => c.id === form.category_id) || null;
+  const selectedMainId = selectedCategory ? selectedCategory.parent_id || selectedCategory.id : '';
+  const selectedMain = categoryTree.mains.find((m) => m.id === selectedMainId) || null;
+
+  const handleCategoryChange = (e) => applyCategory(e.target.value);
+
+  // category_id is the subcategory when one is chosen, otherwise the main category
+  const applyCategory = (categoryId) => {
+    const chosen = categories.find((c) => c.id === categoryId);
     const newCat = chosen ? chosen.name : '';
     const allowed = sizeOptions(newCat);
     setForm((prev) => ({ ...prev, category_id: chosen ? chosen.id : '', category: newCat }));
@@ -962,10 +972,10 @@ export default function AdminProductForm() {
 
               <div className="ps-form-row">
                 <div className="ps-form-group">
-                  <label htmlFor="pf-category">Category</label>
+                  <label htmlFor="pf-category">{categoryTree.hasTree ? 'Main Category' : 'Category'}</label>
                   <select
                     id="pf-category"
-                    value={form.category_id}
+                    value={categoryTree.hasTree ? selectedMainId : form.category_id}
                     onChange={handleCategoryChange}
                     disabled={categoriesStatus !== 'ready'}
                     aria-describedby="pf-category-help"
@@ -976,12 +986,29 @@ export default function AdminProductForm() {
                     {categoriesStatus === 'ready' && !categories.some((c) => c.id === form.category_id) && (
                       <option value="">— Choose a category —</option>
                     )}
-                    {categories.map((c) => (
+                    {(categoryTree.hasTree ? categoryTree.mains : categories).map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}{c.is_active === false ? ' (hidden on storefront)' : ''}
                       </option>
                     ))}
                   </select>
+                  {categoryTree.hasTree && selectedMain && selectedMain.children.length > 0 && (
+                    <>
+                      <label htmlFor="pf-subcategory" style={{ marginTop: 12 }}>Subcategory</label>
+                      <select
+                        id="pf-subcategory"
+                        value={selectedCategory?.parent_id ? form.category_id : ''}
+                        onChange={(e) => applyCategory(e.target.value || selectedMain.id)}
+                      >
+                        <option value="">— None (only {selectedMain.name}) —</option>
+                        {selectedMain.children.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}{c.is_active === false ? ' (hidden on storefront)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </>
+                  )}
                   {categoriesStatus === 'empty' && (
                     <p id="pf-category-help" className="ps-form-hint" role="status" style={{ color: '#9A3412', marginTop: 6 }}>
                       No categories exist in the database yet.{' '}

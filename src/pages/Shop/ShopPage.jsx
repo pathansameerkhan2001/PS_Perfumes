@@ -6,18 +6,7 @@ import { getProducts } from '../../services/products';
 import { formatINR } from '../../utils/formatCurrency';
 import './ShopPage.css';
 import { useSeo } from '../../utils/useSeo';
-
-const CATEGORIES = [
-  'ALL',
-  'Attar',
-  'Perfume',
-  'Bakhoor',
-  'Musky',
-  'Oud',
-  'Floral',
-  'Woody',
-  'Combo Pack',
-];
+import { useStorefrontCategories } from '../../utils/useStorefrontCategories';
 
 const GENDERS = ['ALL', 'Unisex', 'Men', 'Women'];
 
@@ -39,6 +28,9 @@ export default function ShopPage() {
   });
   const [searchParams, setSearchParams] = useSearchParams();
   const { slug } = useParams();
+  // Filter options: the storefront's main categories from the database (shared request)
+  const storefrontCategories = useStorefrontCategories();
+  const CATEGORIES = ['ALL', ...storefrontCategories.map((c) => c.name)];
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -93,11 +85,16 @@ export default function ShopPage() {
 
     // Category
     if (selectedCategory && selectedCategory !== 'ALL') {
+      const wanted = selectedCategory.toLowerCase();
+      // A main category covers its subcategories; matched by id when the database answered
+      const entry = storefrontCategories.find((c) => c.name.toLowerCase() === wanted || c.slug === wanted);
+      const ids = entry?.id ? new Set([entry.id, ...entry.children.map((c) => c.id)]) : null;
       result = result.filter(
         (p) =>
-          p.category?.toLowerCase() === selectedCategory.toLowerCase() ||
-          p.subcategory?.toLowerCase() === selectedCategory.toLowerCase() ||
-          p.subcategories?.some((s) => s.toLowerCase() === selectedCategory.toLowerCase())
+          (ids && ids.has(p.category_id)) ||
+          p.category?.toLowerCase() === wanted ||
+          p.subcategory?.toLowerCase() === wanted ||
+          p.subcategories?.some((s) => s.toLowerCase() === wanted)
       );
     }
 
@@ -156,6 +153,7 @@ export default function ShopPage() {
     return result;
   }, [
     products,
+    storefrontCategories,
     selectedCategory,
     selectedGender,
     maxPrice,
@@ -251,7 +249,7 @@ export default function ShopPage() {
 
             {/* Category Filter */}
             <div className="ps-filter-block">
-              <h3 className="ps-filter-heading">Fragrance Family</h3>
+              <h3 className="ps-filter-heading">Category</h3>
               <div className="ps-filter-options">
                 {CATEGORIES.map((cat) => (
                   <button
@@ -392,7 +390,7 @@ export default function ShopPage() {
             <div className="ps-mobile-filter-sheet-body">
               {/* Category */}
               <div className="ps-filter-block">
-                <h3 className="ps-filter-heading">Fragrance Family</h3>
+                <h3 className="ps-filter-heading">Category</h3>
                 <div className="ps-filter-options">
                   {CATEGORIES.map((cat) => (
                     <button

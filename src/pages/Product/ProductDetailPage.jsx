@@ -2,11 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
-  Heart,
   Star,
-  ShoppingBag,
   Zap,
-  Check,
   Truck,
   ShieldCheck,
   Award,
@@ -21,6 +18,9 @@ import { useCart } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatCurrency';
 import { cardImageUrl, fullImageFallback } from '../../lib/storage';
 import ProductCard from '../../components/ProductCard';
+import WishlistHeart from '../../components/common/WishlistHeart';
+import AddToCartButton from '../../components/common/AddToCartButton';
+import GoldOrnament from '../../components/common/GoldOrnament';
 import { useSeo, SITE_URL } from '../../utils/useSeo';
 import './ProductDetailPage.css';
 
@@ -32,7 +32,7 @@ import './ProductDetailPage.css';
 export default function ProductDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { addToCart, toggleWishlist, isInWishlist } = useCart();
+  const { addToCart } = useCart();
 
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
@@ -42,7 +42,6 @@ export default function ProductDetailPage() {
   const [selectedBottleType, setSelectedBottleType] = useState('Glass Bottle');
   const [selectedSize, setSelectedSize] = useState('50 ml');
   const [quantity, setQuantity] = useState(1);
-  const [isAddedAnim, setIsAddedAnim] = useState(false);
 
   // Accordion open/close state (all start closed or toggleable)
   const [openAccordions, setOpenAccordions] = useState({
@@ -246,7 +245,6 @@ export default function ProductDetailPage() {
   const currentStock = currentVariant ? Number(currentVariant.stock_quantity ?? currentVariant.stock ?? 0) : 0;
   const isOutOfStock = variantUnavailable || !currentVariant || currentStock <= 0;
 
-  const isWishlisted = isInWishlist(product.id);
 
   // Gallery array
   const rawGallery = [
@@ -319,10 +317,8 @@ export default function ProductDetailPage() {
 
   // Add to cart handler — only the real selected variant (isOutOfStock covers "no variant")
   const handleAddToCart = () => {
-    if (isOutOfStock || !currentVariant) return;
-    addToCart(product, quantity, currentVariant);
-    setIsAddedAnim(true);
-    setTimeout(() => setIsAddedAnim(false), 2000);
+    if (isOutOfStock || !currentVariant) return false;
+    return addToCart(product, quantity, currentVariant);
   };
 
   // Express Buy Now handler
@@ -427,21 +423,8 @@ export default function ProductDetailPage() {
                   fetchPriority="high"
                 />
 
-                {/* Circular Top-Right Wishlist Button */}
-                <button
-                  type="button"
-                  className={`ps-pdp-wishlist-circle ${isWishlisted ? 'is-active' : ''}`}
-                  onClick={() => toggleWishlist(product)}
-                  aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                  title={isWishlisted ? 'Saved in Wishlist' : 'Add to Wishlist'}
-                >
-                  <Heart
-                    size={18}
-                    fill={isWishlisted ? '#E31B23' : 'none'}
-                    color={isWishlisted ? '#E31B23' : '#171411'}
-                    strokeWidth={1.8}
-                  />
-                </button>
+                {/* Top-right gold wishlist heart (same control as the product cards) */}
+                <WishlistHeart product={product} size={19} className="ps-pdp-wishlist-circle" />
               </div>
             </div>
           </div>
@@ -664,26 +647,15 @@ export default function ProductDetailPage() {
                 </button>
               </div>
 
-              {/* Primary Champagne-Gold ADD TO CART Button */}
-              <button
-                type="button"
-                className={`ps-pdp-add-btn ${isAddedAnim ? 'is-success' : ''}`}
-                onClick={handleAddToCart}
+              {/* Primary gold Add to Cart (shared button: added / unavailable states) */}
+              <AddToCartButton
+                size="lg"
+                className="ps-pdp-add-btn"
+                onAdd={handleAddToCart}
                 disabled={isOutOfStock}
-                aria-label={`Add ${product.name} to cart`}
-              >
-                {isAddedAnim ? (
-                  <>
-                    <Check size={18} strokeWidth={2.4} />
-                    <span>ADDED TO BAG</span>
-                  </>
-                ) : (
-                  <>
-                    <ShoppingBag size={18} strokeWidth={1.8} />
-                    <span>ADD TO CART</span>
-                  </>
-                )}
-              </button>
+                disabledLabel={variantUnavailable ? 'Unavailable' : 'Out of stock'}
+                ariaLabel={`Add ${product.name} to cart`}
+              />
 
               {/* Secondary Outlined Champagne-Gold BUY NOW Button */}
               <button
@@ -946,11 +918,11 @@ export default function ProductDetailPage() {
             4. CURATED COMPANIONS (Styled in matching Warm Ivory Luxury Theme)
             ============================================================== */}
         {related.length > 0 && (
-          <div className="ps-pdp-related-container">
+          <div className="ps-pdp-related-container ps-arabesque">
             <div className="ps-pdp-related-header">
               <span className="ps-pdp-related-eyebrow">CURATED COMPANIONS</span>
               <h2 className="ps-pdp-related-title">You May Also Admire</h2>
-              <div className="ps-pdp-gold-hairline" />
+              <GoldOrnament />
             </div>
             <div className="ps-bestsellers-grid">
               {related.map((prod) => (

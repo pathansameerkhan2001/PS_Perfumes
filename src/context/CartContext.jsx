@@ -53,11 +53,14 @@ export function CartProvider({ children }) {
     }
   });
 
-  // Wishlist state persisted in localStorage
+  // Wishlist state persisted in localStorage (guest wishlist; there is no customer login).
+  // One entry per product id, even if an older saved list holds duplicates.
   const [wishlist, setWishlist] = useState(() => {
     try {
-      const saved = localStorage.getItem('ps_wishlist');
-      return saved ? JSON.parse(saved) : [];
+      const saved = JSON.parse(localStorage.getItem('ps_wishlist') || '[]');
+      if (!Array.isArray(saved)) return [];
+      const seen = new Set();
+      return saved.filter((p) => p && p.id && !seen.has(p.id) && seen.add(p.id));
     } catch {
       return [];
     }
@@ -179,9 +182,10 @@ export function CartProvider({ children }) {
    *  addToCart(product, quantity, selectedVariant)
    *  addToCart(product, quantity, sizeString)
    *  addToCart(product, quantity)
+   * Returns true when the bag was updated, false when nothing was added (the toast says why).
    */
   const addToCart = (product, quantity = 1, variantOrSize = null, bottleTypeArg = null) => {
-    if (!product) return;
+    if (!product) return false;
     // A combo record (quick view, wishlist) becomes the same bag line as from the combo section
     if (isComboRecord(product)) {
       const combo = toComboCartProduct(product);
@@ -209,14 +213,14 @@ export function CartProvider({ children }) {
       // Unavailable combos (inactive, unavailable products, no stock) cannot be added
       if (product.is_purchasable === false) {
         showToast(`"${product.name}" is currently unavailable.`);
-        return;
+        return false;
       }
       // Combo stock, when known, limits the quantity in the bag like a variant's stock
       if (product.stock_quantity !== undefined && product.stock_quantity !== null) {
         availableStock = Number(product.stock_quantity) || 0;
         if (availableStock <= 0) {
           showToast(`"${product.name}" is out of stock.`);
-          return;
+          return false;
         }
       }
     } else {
@@ -255,13 +259,13 @@ export function CartProvider({ children }) {
             ? `"${product.name}" is currently unavailable.`
             : `Please choose an available option for "${product.name}".`
         );
-        return;
+        return false;
       }
 
       availableStock = stockOf(selectedVariant);
       if (availableStock <= 0) {
         showToast(`"${product.name}" (${selectedVariant.size_ml}) is out of stock.`);
-        return;
+        return false;
       }
 
       bottleType = normalizeBottleType(selectedVariant.bottle_type);
@@ -274,7 +278,7 @@ export function CartProvider({ children }) {
     // Never add an item without a real price
     if (!(unitPrice > 0)) {
       showToast(`"${product.name}" is currently unavailable.`);
-      return;
+      return false;
     }
 
     const cartItemId = `${product.id}_${bottleType}_${sizeMl}`;
@@ -287,7 +291,7 @@ export function CartProvider({ children }) {
       const canAdd = availableStock - inBag;
       if (canAdd <= 0) {
         showToast(`Only ${availableStock} of "${product.name}" (${sizeMl}) available — already in your bag.`);
-        return;
+        return false;
       }
       if (quantity > canAdd) {
         quantity = canAdd;
@@ -332,6 +336,7 @@ export function CartProvider({ children }) {
         : `Added "${product.name}" (${bottleType} • ${sizeMl}) to your bag`
     );
     setIsCartOpen(true);
+    return true;
   };
 
   /**
@@ -392,17 +397,23 @@ export function CartProvider({ children }) {
     setAppliedCoupon(null);
   };
 
+  // The toast is shown outside the state updater (StrictMode runs updaters twice); the updater
+  // itself re-checks, so a double tap can never save the same product twice
   const toggleWishlist = (product) => {
-    setWishlist((prev) => {
-      const exists = prev.some((p) => p.id === product.id);
-      if (exists) {
-        showToast(`Removed "${product.name}" from wishlist`);
-        return prev.filter((p) => p.id !== product.id);
-      } else {
-        showToast(`Saved "${product.name}" to wishlist`);
-        return [...prev, product];
-      }
-    });
+    if (!product?.id) return;
+    const saved = wishlist.some((p) => p.id === product.id);
+    setWishlist((prev) =>
+      saved
+        ? prev.filter((p) => p.id !== product.id)
+        : prev.some((p) => p.id === product.id)
+        ? prev
+        : [...prev, product]
+    );
+    showToast(saved ? `Removed "${product.name}" from wishlist` : `Saved "${product.name}" to wishlist`);
+  };
+
+  const removeFromWishlist = (productId) => {
+    setWishlist((prev) => prev.filter((p) => p.id !== productId));
   };
 
   const isInWishlist = (productId) => {
@@ -474,6 +485,7 @@ export function CartProvider({ children }) {
         total,
         wishlist,
         toggleWishlist,
+        removeFromWishlist,
         isInWishlist,
         isCartOpen,
         setIsCartOpen,

@@ -1,13 +1,13 @@
 /* ==========================================================================
    PS PERFUMES — Compact storefront footer
-   Deep black, ivory text, champagne-gold accents. Four columns on desktop;
+   Soft champagne with a faint geometric pattern, dark text, gold accents. Four columns on desktop;
    on phones the link groups collapse and contact stays visible.
    ========================================================================== */
 
 .ps-public-footer {
-  background-color: #0A0908;
-  color: #E8E2D5;
-  border-top: 1px solid rgba(201, 169, 110, 0.22);
+  border-top: 2px solid var(--lux-gold-light);
+  background-color: var(--lux-champagne);
+  color: var(--lux-text);
   font-family: var(--font-sans, "Times New Roman", Times, serif);
   -webkit-font-smoothing: antialiased;
 }
@@ -23,7 +23,7 @@
   grid-template-columns: 1.3fr 0.8fr 1fr 1.2fr;
   gap: 32px;
   padding-bottom: 28px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--lux-border);
 }
 
 /* Brand */
@@ -36,7 +36,7 @@
   margin: 12px 0 16px;
   font-size: 13px;
   line-height: 1.6;
-  color: rgba(232, 226, 213, 0.7);
+  color: var(--lux-text-2);
   max-width: 280px;
 }
 
@@ -52,9 +52,9 @@
   gap: 7px;
   min-height: 40px;
   padding: 0 14px;
-  border: 1px solid rgba(201, 169, 110, 0.4);
+  border: 1px solid var(--lux-gold);
   border-radius: 999px;
-  color: #E5C77A;
+  color: var(--lux-green);
   font-size: 12px;
   letter-spacing: 0.04em;
   text-decoration: none;
@@ -69,7 +69,7 @@
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #C9A96E;
+  color: var(--lux-gold-deep);
 }
 
 .ps-footer-links,
@@ -89,7 +89,7 @@
 .ps-footer-links a,
 .ps-footer-contact-list a,
 .ps-footer-contact-list span {
-  color: rgba(232, 226, 213, 0.82);
+  color: var(--lux-text);
   font-size: 13px;
   line-height: 1.5;
   text-decoration: none;
@@ -104,7 +104,7 @@
 }
 
 .ps-footer-contact-list svg {
-  color: #C9A96E;
+  color: var(--lux-gold-deep);
   margin-top: 2px;
 }
 
@@ -120,7 +120,7 @@
 .ps-footer-copyright {
   margin: 0;
   font-size: 11.5px;
-  color: rgba(232, 226, 213, 0.55);
+  color: var(--lux-text-2);
 }
 
 .ps-footer-top-btn {
@@ -131,7 +131,7 @@
   padding: 0 10px;
   background: none;
   border: none;
-  color: rgba(232, 226, 213, 0.7);
+  color: var(--lux-text-2);
   font-size: 11.5px;
   letter-spacing: 0.06em;
   cursor: pointer;
@@ -141,7 +141,7 @@
 .ps-public-footer a:focus-visible,
 .ps-public-footer button:focus-visible,
 .ps-public-footer summary:focus-visible {
-  outline: 2px solid #E5C77A;
+  outline: 2px solid var(--lux-green);
   outline-offset: 3px;
   border-radius: 4px;
 }
@@ -150,11 +150,11 @@
   .ps-footer-links a:hover,
   .ps-footer-contact-list a:hover,
   .ps-footer-top-btn:hover {
-    color: #E5C77A;
+    color: var(--lux-green);
   }
   .ps-footer-pill:hover {
-    background-color: #C9A96E;
-    color: #0A0908;
+    background-color: var(--lux-gold);
+    color: var(--lux-text);
   }
 }
 
@@ -183,7 +183,7 @@
     margin: 8px 0 12px;
   }
   .ps-footer-collapsible {
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid var(--lux-border);
   }
   .ps-footer-collapsible > summary {
     list-style: none;
@@ -211,7 +211,7 @@
     padding: 4px 0;
   }
   .ps-footer-contact {
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid var(--lux-border);
     padding-top: 14px;
   }
   .ps-footer-bottom {

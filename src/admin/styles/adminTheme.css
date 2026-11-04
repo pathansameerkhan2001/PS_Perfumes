@@ -1,26 +1,27 @@
 /* ==========================================================================
    PS PERFUMES — Luxury Admin Design System
-   Source of Truth: Approved Reference Design (Dark Sidebar + Warm Ivory Main)
+   Ivory workspaces, a champagne sidebar and gold accents (the storefront palette, index.css --lux-*)
    ========================================================================== */
 
 :root {
   /* Palette: Backgrounds */
-  --ps-admin-bg-sidebar: #11100F;
-  --ps-admin-bg-header: #FFFEFA;
-  --ps-admin-bg-main: #F7F4EE;
-  --ps-admin-bg-card: #FFFEFA;
+  --ps-admin-bg-sidebar: var(--lux-champagne, #F2E8D8);
+  --ps-admin-bg-header: var(--lux-card, #FFFDF8);
+  --ps-admin-bg-main: var(--lux-ivory, #F8F4EC);
+  --ps-admin-bg-card: var(--lux-card, #FFFDF8);
   --ps-admin-bg-card-subtle: #FAF7F2;
 
   /* Palette: Primary & Secondary Text */
-  --ps-admin-text-primary: #1A1714;
-  --ps-admin-text-secondary: #746B61;
+  --ps-admin-text-primary: var(--lux-text, #29231D);
+  --ps-admin-text-secondary: var(--lux-text-2, #756B5E);
   --ps-admin-text-muted: #9E9487;
-  --ps-admin-text-ivory: #FFFAF0;
+  /* Text on the sidebar (champagne now, so dark) */
+  --ps-admin-text-ivory: var(--lux-text, #29231D);
 
   /* Palette: Champagne Gold Accents */
-  --ps-admin-gold: #C9A96E;
-  --ps-admin-gold-light: #E8D7B8;
-  --ps-admin-gold-dark: #8C7343;
+  --ps-admin-gold: var(--lux-gold, #C69A45);
+  --ps-admin-gold-light: var(--lux-gold-light, #E3C58B);
+  --ps-admin-gold-dark: var(--lux-gold-deep, #99702E);
   --ps-admin-gold-hover: #D4B67E;
   --ps-admin-gold-active-bg: rgba(201, 169, 110, 0.14);
   --ps-admin-gold-active-border: rgba(201, 169, 110, 0.35);
@@ -35,8 +36,8 @@
 
   /* Borders & Dividers */
   --ps-admin-border-subtle: #ECE7DF;
-  --ps-admin-border-light: #E5E0D8;
-  --ps-admin-border-dark: rgba(255, 255, 255, 0.08);
+  --ps-admin-border-light: var(--lux-border, #E5D7C1);
+  --ps-admin-border-dark: var(--lux-border, #E5D7C1);
 
   /* Shadows */
   --ps-admin-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.03);
@@ -87,4 +88,43 @@
   border-radius: 8px;
   margin-bottom: 16px;
   font-size: 12.5px;
+}
+
+/* ==========================================================================
+   Primary admin actions: the storefront's gold button language (gradient, dark text,
+   shine on hover, muted when disabled). Scoped to the admin shell.
+   ========================================================================== */
+.ps-admin-shell :is(.ps-btn-gold-primary, .ps-admin-btn.is-primary, .ps-builder-btn-save, .ps-reel-btn-save) {
+  color: var(--lux-text, #29231D);
+  border: 1px solid rgba(153, 112, 46, 0.45);
+  border-radius: 10px;
+  background-color: var(--lux-gold, #C69A45);
+  background-image: linear-gradient(110deg, transparent 35%, rgba(255, 250, 235, 0.55) 50%, transparent 65%),
+    var(--lux-gold-gradient);
+  background-size: 250% 100%, 100% 100%;
+  background-position: 150% 0, 0 0;
+  background-repeat: no-repeat;
+  box-shadow: 0 3px 10px rgba(198, 154, 69, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: background-position 0.8s ease, box-shadow 0.2s ease;
+}
+
+.ps-admin-shell :is(.ps-btn-gold-primary, .ps-admin-btn.is-primary, .ps-builder-btn-save, .ps-reel-btn-save):hover:not(:disabled) {
+  color: var(--lux-text, #29231D);
+  background-color: var(--lux-gold, #C69A45);
+  background-position: -50% 0, 0 0;
+  box-shadow: 0 6px 16px rgba(198, 154, 69, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.ps-admin-shell :is(.ps-btn-gold-primary, .ps-admin-btn.is-primary, .ps-builder-btn-save, .ps-reel-btn-save):disabled {
+  color: #8a8174;
+  background: #EFE8DC;
+  border-color: var(--lux-border, #E5D7C1);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-admin-shell :is(.ps-btn-gold-primary, .ps-admin-btn.is-primary, .ps-builder-btn-save, .ps-reel-btn-save) {
+    transition: none;
+  }
 }

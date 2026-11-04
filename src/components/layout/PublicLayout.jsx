@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import Header from '../Header';
@@ -8,6 +8,7 @@ import FloatingContactDock from '../common/FloatingContactDock';
 import Toast from '../Toast';
 import ScrollToTop from '../common/ScrollToTop';
 import ErrorBoundary from '../common/ErrorBoundary';
+import './StorefrontTheme.css';
 
 // Lazy-loaded drawers and interactive dialogs
 const ProductDetailModal = React.lazy(() => import('../ProductDetailModal'));
@@ -22,6 +23,21 @@ export default function PublicLayout() {
   // The floating buttons would cover the checkout form and its Place Order button
   const isCheckout = pathname.replace(/\/+$/, '') === '/checkout';
 
+  // Soft fade between pages (Web Animations API: no remount, no library); skipped on first
+  // load and when the visitor prefers reduced motion
+  const mainRef = useRef(null);
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    const el = mainRef.current;
+    if (!el?.animate || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    // Opacity only: a transform on <main> would re-anchor fixed elements inside the pages
+    el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 280, easing: 'ease-out' });
+  }, [pathname]);
+
   return (
     <div className="ps-app-root">
       <ScrollToTop />
@@ -29,7 +45,7 @@ export default function PublicLayout() {
       <Header />
 
       {/* Main Content Viewport */}
-      <main className="ps-main-content">
+      <main className="ps-main-content" ref={mainRef}>
         {/* Pages other than the homepage and cart load on first visit (see App.jsx); the
             placeholder keeps the footer from jumping up meanwhile */}
         <ErrorBoundary resetKey={pathname}>

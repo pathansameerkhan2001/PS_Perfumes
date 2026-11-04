@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, ShoppingBag, MapPin, User, Menu } from 'lucide-react';
+import { Search, ShoppingBag, MapPin, User, Menu, Heart, ChevronDown } from 'lucide-react';
 import PSPerfumesLogo from './common/PSPerfumesLogo';
 const SearchModal = React.lazy(() => import('./SearchModal'));
 import { useCart } from '../context/CartContext';
@@ -38,7 +38,7 @@ export default function Header() {
   };
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const { itemCount, setIsCartOpen, setSelectedCategory } = useCart();
+  const { itemCount, wishlist, setIsCartOpen, setSelectedCategory } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -62,7 +62,10 @@ export default function Header() {
   const categories = useStorefrontCategories();
   const inlineCategories = categories.slice(0, MAX_INLINE_CATEGORIES);
   const moreCategories = categories.slice(MAX_INLINE_CATEGORIES);
-  const navItems = [...FIXED_NAV_ITEMS, ...inlineCategories.map((c) => ({ name: c.name, path: c.path }))];
+  const navItems = [
+    ...FIXED_NAV_ITEMS,
+    ...inlineCategories.map((c) => ({ name: c.name, path: c.path, children: c.children || [] })),
+  ];
   const isPathActive = (path) =>
     location.pathname === path || (path !== '/' && path !== '/about' && location.pathname.startsWith(`${path}/`));
 
@@ -91,7 +94,7 @@ export default function Header() {
         id="ps-fixed-header"
       >
         {/* ==========================================================
-            LEVEL 1 — LUXURY BLACK TOP BAR
+            LEVEL 1 — IVORY TOP BAR
             ========================================================== */}
         <div className="ps-top-bar">
           <div className="ps-top-bar-inner">
@@ -105,7 +108,7 @@ export default function Header() {
               aria-haspopup="dialog"
               aria-label="Open Navigation Menu"
             >
-              <Menu size={24} color="#ffffff" />
+              <Menu size={24} />
             </button>
 
             {/* Center: Vector SVG PS PERFUMES Logo (Zero Rectangular Box) */}
@@ -128,7 +131,7 @@ export default function Header() {
                 onClick={() => setIsSearchOpen(true)}
                 aria-label="Search Fragrances"
               >
-                <Search size={21} color="#ffffff" strokeWidth={1.8} />
+                <Search size={21} strokeWidth={1.8} />
               </button>
 
               {/* Delivery Location Indicator */}
@@ -147,7 +150,22 @@ export default function Header() {
                 aria-label="Account / Admin Portal"
                 title="Account / Admin Portal"
               >
-                <User size={21} color="#ffffff" strokeWidth={1.8} />
+                <User size={21} strokeWidth={1.8} />
+              </Link>
+
+              {/* Wishlist: saved products and their count */}
+              <Link
+                to="/wishlist"
+                className="ps-icon-link ps-cart-btn ps-wishlist-link"
+                aria-label={`Wishlist (${wishlist.length} saved)`}
+                title="Wishlist"
+              >
+                <Heart size={21} strokeWidth={1.8} />
+                {wishlist.length > 0 && (
+                  <span className="ps-cart-badge ps-wishlist-badge" key={wishlist.length}>
+                    {wishlist.length}
+                  </span>
+                )}
               </Link>
 
               {/* Shopping Bag Button */}
@@ -157,7 +175,7 @@ export default function Header() {
                 aria-label={`Shopping Bag (${itemCount} items)`}
                 onClick={() => setIsCartOpen(true)}
               >
-                <ShoppingBag size={21} color="#ffffff" strokeWidth={1.8} />
+                <ShoppingBag size={21} strokeWidth={1.8} />
                 {itemCount > 0 && (
                   <span className="ps-cart-badge">{itemCount}</span>
                 )}
@@ -167,7 +185,7 @@ export default function Header() {
         </div>
 
         {/* ==========================================================
-            LEVEL 2 — WHITE NAVIGATION BAR
+            LEVEL 2 — CHAMPAGNE NAVIGATION BAR
             ========================================================== */}
         <nav className="ps-nav-bar" aria-label="Main Navigation">
           <div className="ps-nav-bar-inner">
@@ -177,8 +195,9 @@ export default function Header() {
                 const isActive =
                   isPathActive(item.path) ||
                   (item.path !== '/' && item.path !== '/about' && location.pathname === `/category${item.path}`);
+                const hasChildren = item.children?.length > 0;
                 return (
-                  <li key={item.path} className="ps-nav-menu-item">
+                  <li key={item.path} className={`ps-nav-menu-item${hasChildren ? ' has-children' : ''}`}>
                     <button
                       type="button"
                       className={`ps-nav-menu-link ${isActive ? 'is-active' : ''}`}
@@ -186,7 +205,25 @@ export default function Header() {
                       aria-current={isActive ? 'page' : undefined}
                     >
                       <span className="ps-nav-text">{item.name}</span>
+                      {hasChildren && <ChevronDown size={13} className="ps-nav-caret" aria-hidden="true" />}
                     </button>
+                    {/* Subcategories from the database: open on hover or keyboard focus (CSS only) */}
+                    {hasChildren && (
+                      <ul className="ps-nav-sub-menu" aria-label={`${item.name} subcategories`}>
+                        <li>
+                          <Link to={item.path} className="ps-nav-sub-link is-all">
+                            All {item.name}
+                          </Link>
+                        </li>
+                        {item.children.map((c) => (
+                          <li key={c.slug}>
+                            <Link to={c.path} className="ps-nav-sub-link">
+                              {c.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </li>
                 );
               })}

@@ -112,11 +112,13 @@ export default function ComboPackSection({ title = 'Combo Collections', subtitle
                     className="ps-combopack-wishlist-btn"
                     onClick={(e) => handleWishlist(e, combo)}
                     aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                    aria-pressed={isWishlisted}
                   >
+                    {/* Gold like every other wishlist heart: outlined, filled when saved */}
                     <Heart
                       size={16}
-                      fill={isWishlisted ? '#eb1c24' : 'none'}
-                      color={isWishlisted ? '#eb1c24' : '#111111'}
+                      fill={isWishlisted ? '#b8924a' : 'none'}
+                      color="#b8924a"
                     />
                   </button>
                 </div>

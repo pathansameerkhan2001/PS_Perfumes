@@ -665,7 +665,7 @@
 }
 
 .ps-quick-btn:hover .ps-quick-btn-icon {
-  background: #1C1A16;
+  background: var(--lux-champagne);
   border-color: #1C1A16;
 }
 

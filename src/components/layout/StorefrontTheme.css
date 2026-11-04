@@ -1,0 +1,289 @@
+/* ==========================================================================
+   PS PERFUMES — storefront luxury details (loaded by PublicLayout only, so the
+   admin panel is untouched): gold ornament, Arabic geometric pattern, rose
+   petals. All motion is transform/opacity and stops for reduced motion.
+   ========================================================================== */
+
+/* Gold ornamental separator ------------------------------------------------ */
+.ps-ornament {
+  display: flex;
+  justify-content: center;
+  color: var(--lux-gold);
+  margin: 12px auto 0;
+  line-height: 0;
+}
+
+.ps-ornament svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Arabic geometric pattern: eight-point stars, very faint, behind content ---- */
+.ps-arabesque {
+  position: relative;
+  isolation: isolate;
+}
+
+.ps-arabesque::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.08;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23a8823f' stroke-width='0.9'%3E%3Crect x='21' y='21' width='22' height='22'/%3E%3Crect x='21' y='21' width='22' height='22' transform='rotate(45 32 32)'/%3E%3Cpath d='M0 32h9M55 32h9M32 0v9M32 55v9'/%3E%3Ccircle cx='0' cy='0' r='4'/%3E%3Ccircle cx='64' cy='0' r='4'/%3E%3Ccircle cx='0' cy='64' r='4'/%3E%3Ccircle cx='64' cy='64' r='4'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 64px 64px;
+  /* Strongest at the top, fading out so it never sits behind product cards */
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.5) 22%, transparent 48%);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.5) 22%, transparent 48%);
+}
+
+/* Rose petals ------------------------------------------------------------- */
+.ps-petals {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Each lane is as tall as the section, so translateY(100%) means "to the bottom" */
+.ps-petal-lane {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 16px;
+  animation-name: ps-petal-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-fill-mode: backwards;
+  will-change: transform;
+}
+
+.ps-petal {
+  display: block;
+  width: 13px;
+  height: 11px;
+  border-radius: 150% 0 150% 0;
+  background: linear-gradient(135deg, #f2c9c2 0%, #d9928b 60%, #c47a73 100%);
+  opacity: 0.55;
+  transform: scale(var(--petal-scale, 1));
+  animation: ps-petal-sway 4.5s ease-in-out infinite alternate;
+}
+
+@keyframes ps-petal-fall {
+  from {
+    transform: translate3d(0, -8%, 0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(-24px, 100%, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes ps-petal-sway {
+  from {
+    transform: translateX(-6px) rotate(-25deg) scale(var(--petal-scale, 1));
+  }
+  to {
+    transform: translateX(8px) rotate(35deg) scale(var(--petal-scale, 1));
+  }
+}
+
+/* Fewer petals on phones */
+@media (max-width: 720px) {
+  .ps-petal-lane:nth-child(n + 4) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-petals {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   One button language for the whole storefront.
+   The component stylesheets keep each button's size and layout; its colours,
+   border, radius, shine and states are decided here. The doubled root class
+   (.ps-app-root.ps-app-root) outranks the components' own rules without
+   !important. The Add to Cart button (common/AddToCartButton) follows the
+   same language in its own file.
+   ========================================================================== */
+
+/* Primary: champagne-to-antique gold, dark brown text, light shine on hover */
+.ps-app-root.ps-app-root :is(
+  .ps-btn-gold-primary, .ps-cbc-btn, .ps-wl-btn.is-primary, .ps-success-home-btn, .ps-view-all-btn,
+  .ps-track-submit-btn, .ps-summary-checkout-btn, .ps-sheet-apply-btn, .ps-drawer-apply-btn,
+  .ps-reels-follow-btn, .ps-reel-modal-buy-btn, .ps-reel-bag-btn, .ps-promo-cta-btn, .ps-place-order-btn,
+  .ps-pdetail-add-bag-btn, .ps-dest-shop-btn, .ps-contact-submit-btn, .ps-collection-load-more-btn,
+  .ps-cart-empty-btn, .ps-cart-checkout-btn, .ps-wishlist-empty-btn, .ps-empty-btn, .ps-grid-reset-btn,
+  .ps-cart-promo-btn, .ps-hero-cta-btn, .ps-ab-btn--primary, .ps-combopack-add-btn, .ps-newarr-viewall,
+  .ps-receipt-print, .ps-insta-cta, .ps-quickadd-submit-btn, .ps-promo-input-wrap button
+) {
+  border: 1px solid rgba(153, 112, 46, 0.45);
+  border-radius: 10px;
+  min-height: 40px;
+  color: var(--lux-text);
+  font-weight: 700;
+  text-decoration: none;
+  background-color: var(--lux-gold);
+  background-image: linear-gradient(110deg, transparent 35%, rgba(255, 250, 235, 0.55) 50%, transparent 65%),
+    var(--lux-gold-gradient);
+  background-size: 250% 100%, 100% 100%;
+  background-position: 150% 0, 0 0;
+  background-repeat: no-repeat;
+  box-shadow: 0 3px 12px rgba(198, 154, 69, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: background-position 0.8s ease, box-shadow 0.25s ease, transform 0.2s ease, color 0.2s ease;
+}
+
+/* Secondary: ivory with a gold border; fills with gold on hover */
+.ps-app-root.ps-app-root :is(
+  .ps-wl-btn:not(.is-primary), .ps-ab-btn--secondary, .ps-cart-continue-btn, .ps-sidebar-reset-btn,
+  .ps-sheet-reset-btn, .ps-drawer-reset-btn, .ps-pdp-back-catalog-btn, .ps-cart-clear-btn,
+  .ps-shop-mobile-filter-btn, .ps-pdp-buynow-btn, .ps-pdetail-buy-now-btn, .ps-reels-more-link,
+  .ps-new-arrival-badge
+) {
+  border: 1px solid var(--lux-gold);
+  border-radius: 10px;
+  color: var(--lux-gold-deep);
+  font-weight: 700;
+  text-decoration: none;
+  background-color: var(--lux-card);
+  background-image: linear-gradient(110deg, transparent 35%, rgba(255, 250, 235, 0.55) 50%, transparent 65%),
+    var(--lux-gold-gradient);
+  background-size: 250% 100%, 0% 100%;
+  background-position: 150% 0, 0 0;
+  background-repeat: no-repeat;
+  box-shadow: none;
+  transition: background-size 0.35s ease, background-position 0.8s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+/* Hover (pointer devices): the shine sweeps across; secondaries fill with gold */
+@media (hover: hover) and (pointer: fine) {
+  .ps-app-root.ps-app-root :is(
+    .ps-btn-gold-primary, .ps-cbc-btn, .ps-wl-btn.is-primary, .ps-success-home-btn, .ps-view-all-btn,
+    .ps-track-submit-btn, .ps-summary-checkout-btn, .ps-sheet-apply-btn, .ps-drawer-apply-btn,
+    .ps-reels-follow-btn, .ps-reel-modal-buy-btn, .ps-reel-bag-btn, .ps-promo-cta-btn, .ps-place-order-btn,
+    .ps-pdetail-add-bag-btn, .ps-dest-shop-btn, .ps-contact-submit-btn, .ps-collection-load-more-btn,
+    .ps-cart-empty-btn, .ps-cart-checkout-btn, .ps-wishlist-empty-btn, .ps-empty-btn, .ps-grid-reset-btn,
+    .ps-cart-promo-btn, .ps-hero-cta-btn, .ps-ab-btn--primary, .ps-combopack-add-btn, .ps-newarr-viewall,
+    .ps-receipt-print, .ps-insta-cta, .ps-quickadd-submit-btn, .ps-promo-input-wrap button
+  ):hover:not(:disabled):not([aria-disabled="true"]) {
+    color: var(--lux-text);
+    background-color: var(--lux-gold);
+    background-position: -50% 0, 0 0;
+    box-shadow: var(--lux-shadow-gold), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    transform: translateY(-1px);
+  }
+
+  .ps-app-root.ps-app-root :is(
+    .ps-wl-btn:not(.is-primary), .ps-ab-btn--secondary, .ps-cart-continue-btn, .ps-sidebar-reset-btn,
+    .ps-sheet-reset-btn, .ps-drawer-reset-btn, .ps-pdp-back-catalog-btn, .ps-cart-clear-btn,
+    .ps-shop-mobile-filter-btn, .ps-pdp-buynow-btn, .ps-pdetail-buy-now-btn, .ps-reels-more-link,
+    .ps-new-arrival-badge
+  ):hover:not(:disabled) {
+    color: var(--lux-text);
+    background-color: var(--lux-card);
+    background-size: 250% 100%, 100% 100%;
+    background-position: -50% 0, 0 0;
+    transform: translateY(-1px);
+  }
+}
+
+/* Disabled and loading (aria-busy) states */
+.ps-app-root.ps-app-root :is(
+  .ps-btn-gold-primary, .ps-cbc-btn, .ps-view-all-btn, .ps-track-submit-btn, .ps-summary-checkout-btn,
+  .ps-sheet-apply-btn, .ps-drawer-apply-btn, .ps-place-order-btn, .ps-pdetail-add-bag-btn,
+  .ps-contact-submit-btn, .ps-collection-load-more-btn, .ps-cart-checkout-btn, .ps-cart-promo-btn,
+  .ps-combopack-add-btn, .ps-quickadd-submit-btn, .ps-pdp-buynow-btn, .ps-pdetail-buy-now-btn,
+  .ps-promo-input-wrap button
+):is(:disabled, [aria-disabled="true"]) {
+  color: #8a8174;
+  background: #EFE8DC;
+  border-color: var(--lux-border);
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+}
+
+.ps-app-root.ps-app-root :is(.ps-btn-gold-primary, .ps-place-order-btn, .ps-cbc-btn)[aria-busy="true"] {
+  cursor: progress;
+  opacity: 0.8;
+}
+
+/* Round icon controls (carousel arrows): gold ring, gold fill on hover */
+.ps-app-root.ps-app-root :is(.ps-reviews-nav-btn, .ps-reels-arrow-btn, .ps-carousel-nav-btn, .ps-slider-arrow) {
+  border: 1px solid var(--lux-gold);
+  background: var(--lux-card);
+  color: var(--lux-gold-deep);
+  box-shadow: 0 4px 12px rgba(198, 154, 69, 0.14);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ps-app-root.ps-app-root :is(.ps-reviews-nav-btn, .ps-reels-arrow-btn, .ps-carousel-nav-btn, .ps-slider-arrow):hover:not(:disabled) {
+    background: var(--lux-gold-gradient);
+    color: var(--lux-text);
+  }
+}
+
+/* Selectors and filters (pills, chips, size and view toggles): ivory with a gold hairline;
+   the chosen one is deep botanical green */
+.ps-app-root.ps-app-root :is(
+  .ps-filter-chip, .ps-filter-pill, .ps-size-pill, .ps-scent-pill, .ps-sample-chip, .ps-insta-pill,
+  .ps-quickadd-pill, .ps-view-btn, .ps-toolbar-filter-btn, .ps-catalog-tab-btn
+) {
+  border: 1px solid var(--lux-border);
+  background: var(--lux-card);
+  color: var(--lux-text);
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.ps-app-root.ps-app-root :is(
+  .ps-filter-chip, .ps-filter-pill, .ps-size-pill, .ps-scent-pill, .ps-sample-chip, .ps-insta-pill,
+  .ps-quickadd-pill, .ps-view-btn, .ps-toolbar-filter-btn, .ps-catalog-tab-btn
+):hover {
+  border-color: var(--lux-gold);
+  color: var(--lux-green);
+}
+
+.ps-app-root.ps-app-root :is(
+  .ps-filter-chip, .ps-filter-pill, .ps-size-pill, .ps-scent-pill, .ps-sample-chip, .ps-insta-pill,
+  .ps-quickadd-pill, .ps-view-btn, .ps-toolbar-filter-btn, .ps-catalog-tab-btn
+):is(.is-active, .active, [aria-pressed="true"]) {
+  border-color: var(--lux-green);
+  background: var(--lux-green);
+  color: var(--lux-ivory);
+}
+
+/* Quantity steppers */
+.ps-app-root.ps-app-root :is(.ps-qty-btn, .ps-cart-qty-btn, .ps-pdp-qty-btn, .ps-quickadd-qty-btn) {
+  color: var(--lux-text);
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.ps-app-root.ps-app-root :is(.ps-qty-btn, .ps-cart-qty-btn, .ps-pdp-qty-btn, .ps-quickadd-qty-btn):hover:not(:disabled) {
+  color: var(--lux-gold-deep);
+  background: rgba(198, 154, 69, 0.1);
+}
+
+/* Inputs: a gold focus ring */
+.ps-app-root.ps-app-root :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus-visible {
+  outline: none;
+  border-color: var(--lux-gold);
+  box-shadow: 0 0 0 3px rgba(198, 154, 69, 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-app-root.ps-app-root :is(button, a) {
+    transition: none;
+  }
+}

@@ -26,25 +26,25 @@ export default function PSPerfumesLogo({
         aria-hidden="true"
       >
         <defs>
-          {/* Metallic Champagne & Luxury Gold Gradient */}
+          {/* Antique gold gradient, deep enough to read on the ivory header, footer and admin */}
           <linearGradient id="psGoldMonogramGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#F0D89A" />
-            <stop offset="25%" stopColor="#E5C77A" />
-            <stop offset="60%" stopColor="#C9A45C" />
-            <stop offset="85%" stopColor="#D8B76A" />
-            <stop offset="100%" stopColor="#A88238" />
+            <stop offset="0%" stopColor="#D9B76E" />
+            <stop offset="25%" stopColor="#C69A45" />
+            <stop offset="60%" stopColor="#A97F35" />
+            <stop offset="85%" stopColor="#C69A45" />
+            <stop offset="100%" stopColor="#8A6326" />
           </linearGradient>
 
           {/* Hairline Rim Gradient */}
           <linearGradient id="psGoldRimGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#F0D89A" stopOpacity="0.85" />
-            <stop offset="50%" stopColor="#C9A45C" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#9B7830" stopOpacity="0.75" />
+            <stop offset="0%" stopColor="#D9B76E" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#C69A45" stopOpacity="0.65" />
+            <stop offset="100%" stopColor="#8A6326" stopOpacity="0.85" />
           </linearGradient>
 
           {/* Subtle Glow Filter */}
           <filter id="psGoldGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor="#000000" floodOpacity="0.6" />
+            <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor="#6B4F1F" floodOpacity="0.18" />
           </filter>
         </defs>
 

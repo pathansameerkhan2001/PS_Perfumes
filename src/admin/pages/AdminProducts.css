@@ -462,3 +462,36 @@
     width: 100%;
   }
 }
+
+/* Table pagination */
+.ps-admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px 12px 6px;
+  font-size: 12.5px;
+  color: var(--lux-text-2, #756B5E);
+}
+
+.ps-admin-page-btn {
+  min-height: 36px;
+  padding: 6px 16px;
+  border: 1px solid var(--lux-gold, #C69A45);
+  border-radius: 10px;
+  background: var(--lux-card, #FFFDF8);
+  color: var(--lux-gold-deep, #99702E);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.ps-admin-page-btn:hover:not(:disabled) {
+  background: var(--lux-gold-gradient);
+  color: var(--lux-text, #29231D);
+}
+
+.ps-admin-page-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

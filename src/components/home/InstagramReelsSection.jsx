@@ -38,10 +38,10 @@ function safeInstagramUrl(value) {
  * listed by the database for visitors. Thumbnails only: no video is downloaded or played here;
  * a card opens the reel on Instagram in a new tab.
  */
-export default function InstagramReelsSection({
-  title = 'Follow Our Fragrance Journey',
-  subtitle = 'Discover our fragrances, stories, and moments.',
-}) {
+const DEFAULT_TITLE = 'Follow Our Fragrance Journey';
+const DEFAULT_SUBTITLE = 'Discover our fragrances, stories, and moments.';
+
+export default function InstagramReelsSection({ title = '', subtitle = '' }) {
   const [reels, setReels] = useState([]);
   const [loading, setLoading] = useState(true);
   const trackRef = useRef(null);
@@ -71,18 +71,21 @@ export default function InstagramReelsSection({
   const isEmpty = !loading && reels.length === 0;
 
   return (
-    <section className="ps-reels-section" id="instagram-reels" aria-labelledby="ps-reels-title">
+    <section className="ps-reels-section ps-arabesque" id="instagram-reels" aria-labelledby="ps-reels-title">
       <div className="ps-reels-container">
         <header className="ps-reels-header">
           <div className="ps-reels-header-left">
             <span className="ps-reels-eyebrow">
-              <InstagramIcon size={13} />
+              <span className="ps-reels-insta-badge" aria-hidden="true">
+                <InstagramIcon size={15} />
+              </span>
               <span>@ps_perfumes_kadapa</span>
             </span>
             <h2 id="ps-reels-title" className="ps-reels-title">
-              {title || 'Follow Our Fragrance Journey'}
+              {title || DEFAULT_TITLE}
             </h2>
-            {subtitle && <p className="ps-reels-sub">{subtitle}</p>}
+            {/* An empty subtitle saved in the admin falls back to the default line */}
+            <p className="ps-reels-sub">{subtitle || DEFAULT_SUBTITLE}</p>
           </div>
 
           <div className="ps-reels-header-right">
@@ -151,7 +154,7 @@ export default function InstagramReelsSection({
                       />
                       <span className="ps-reel-vignette" aria-hidden="true" />
                       <span className="ps-reel-play" aria-hidden="true">
-                        <Play size={14} fill="currentColor" />
+                        <Play size={16} fill="currentColor" />
                       </span>
                       <span className="ps-reel-insta" aria-hidden="true">
                         <InstagramIcon size={13} />

@@ -6,15 +6,15 @@
 /* Tokens shared with the homepage section (components/home/ShopByCategory) */
 .ps-cbc-page,
 .ps-cbc-home {
-  --cbc-ivory: #fbf6ee;
+  --cbc-ivory: var(--lux-ivory);
   --cbc-cream: #f4ece0;
-  --cbc-green: #1f4a34;
-  --cbc-green-deep: #173a28;
-  --cbc-gold: #b8924a;
-  --cbc-gold-line: rgba(184, 146, 74, 0.38);
-  --cbc-gold-hair: rgba(184, 146, 74, 0.18);
-  --cbc-ink: #1e1a16;
-  --cbc-muted: #6c6358;
+  --cbc-green: var(--lux-green);
+  --cbc-green-deep: #1f3626;
+  --cbc-gold: var(--lux-gold);
+  --cbc-gold-line: rgba(198, 154, 69, 0.38);
+  --cbc-gold-hair: rgba(198, 154, 69, 0.18);
+  --cbc-ink: var(--lux-text);
+  --cbc-muted: var(--lux-text-2);
   --cbc-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
@@ -190,7 +190,7 @@
   padding: 10px 26px;
   border: 1px solid var(--cbc-gold-line);
   border-radius: 999px;
-  background: #fffdf9;
+  background: var(--lux-card);
   font-family: var(--font-serif);
   font-size: 16px;
   color: var(--cbc-ink);
@@ -254,7 +254,7 @@
   text-align: center;
   border: 1px solid var(--cbc-gold-hair);
   border-radius: 18px;
-  background: #fffdf9;
+  background: var(--lux-card);
 }
 
 .ps-cbc-state h2 {

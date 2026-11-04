@@ -157,6 +157,8 @@ export async function createCategory(cat) {
         display_order: Number(cat.display_order) || 1,
         is_active: cat.is_active !== undefined ? Boolean(cat.is_active) : true,
       };
+      // Only sent when the database has subcategories (Migration 12): '' or null = main category
+      if (cat.parent_id !== undefined) payload.parent_id = isValidUUID(cat.parent_id) ? cat.parent_id : null;
 
       const { data, error } = await supabase.from('categories').insert([payload]).select().single();
       if (!error && data) {
@@ -208,6 +210,8 @@ export async function updateCategory(id, updates) {
       if (updates.image_path !== undefined) payload.image_path = updates.image_path || null;
       if (updates.display_order !== undefined) payload.display_order = Number(updates.display_order) || 1;
       if (updates.is_active !== undefined) payload.is_active = Boolean(updates.is_active);
+      // Only sent when the database has subcategories (Migration 12); its trigger keeps two levels
+      if (updates.parent_id !== undefined) payload.parent_id = isValidUUID(updates.parent_id) ? updates.parent_id : null;
       payload.updated_at = new Date().toISOString();
 
       const { data, error } = await supabase.from('categories').update(payload).eq('id', id).select();
@@ -248,6 +252,19 @@ export async function deleteCategory(id) {
         return {
           success: false,
           error: `Cannot delete: ${count} product(s) are currently assigned to this category. Please reassign them to another category first.`,
+        };
+      }
+
+      // A main category with subcategories cannot be deleted (parent_id is ON DELETE RESTRICT);
+      // before Migration 12 the column does not exist and this check is skipped
+      const { count: subCount, error: subErr } = await supabase
+        .from('categories')
+        .select('id', { count: 'exact', head: true })
+        .eq('parent_id', id);
+      if (!subErr && subCount > 0) {
+        return {
+          success: false,
+          error: `Cannot delete: this category has ${subCount} subcategor${subCount === 1 ? 'y' : 'ies'}. Delete or move them first.`,
         };
       }
 

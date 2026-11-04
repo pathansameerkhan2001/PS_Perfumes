@@ -6,7 +6,7 @@
   position: fixed;
   bottom: 28px;
   right: 28px;
-  background-color: #0c0b0a;
+  background-color: var(--lux-champagne);
   border: 1px solid #c5a059;
   border-radius: 4px;
   padding: 12px 18px;
@@ -24,7 +24,7 @@
 .ps-toast-text {
   font-size: 13px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--lux-text);
   letter-spacing: 0.02em;
 }
 

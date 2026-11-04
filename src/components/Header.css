@@ -1,7 +1,7 @@
 /* ==========================================================================
    PS PERFUMES — EXACT REFERENCE HEADER STYLESHEET
-   Section 1: Black Top Bar with Prominent Logo
-   Section 2: White Navigation Bar
+   Section 1: Ivory Top Bar with Prominent Logo
+   Section 2: Champagne Navigation Bar (categories + subcategory menus)
    Sticky behavior & Smooth State Transitions
    ========================================================================== */
 
@@ -17,8 +17,8 @@
   z-index: 1000;
   margin: 0;
   padding: 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.16);
-  background-color: #000000;
+  box-shadow: 0 4px 20px rgba(41,35,29,0.06);
+  background-color: var(--lux-ivory);
 }
 
 /* Dedicated Spacer taking exact header height to preserve document flow */
@@ -37,10 +37,10 @@
    -------------------------------------------------------------------------- */
 .ps-top-bar {
   width: 100%;
-  background-color: #000000;
+  background-color: var(--lux-ivory);
   margin: 0;
   padding: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--lux-border);
 }
 
 .ps-top-bar-inner {
@@ -61,7 +61,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: rgba(200, 164, 93, 0.08);
+  background: rgba(198,154,69,0.10);
   border: 1px solid rgba(200, 164, 93, 0.25);
   border-radius: 9999px;
   color: var(--color-champagne);
@@ -73,7 +73,7 @@
 }
 
 .ps-delivery-location-pill:hover {
-  background: rgba(200, 164, 93, 0.16);
+  background: var(--lux-border);
   border-color: var(--color-gold);
 }
 
@@ -86,7 +86,7 @@
 }
 
 .ps-header-container.is-scrolled {
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 8px 30px rgba(41,35,29,0.10);
 }
 
 /* Mobile Hamburger Toggle (hidden on desktop) */
@@ -96,7 +96,7 @@
   border: none;
   cursor: pointer;
   padding: 10px;
-  color: #ffffff;
+  color: var(--lux-text);
   line-height: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
   -webkit-tap-highlight-color: transparent;
@@ -147,7 +147,7 @@
   align-items: center;
   justify-content: center;
   padding: 8px;
-  color: #ffffff;
+  color: var(--lux-text);
   position: relative;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
@@ -175,8 +175,8 @@
   position: absolute;
   top: 1px;
   right: 1px;
-  background-color: #eb1c24;
-  color: #ffffff;
+  background-color: var(--lux-green);
+  color: var(--lux-ivory);
   font-family: "Times New Roman", Times, serif;
   font-size: 10px;
   font-weight: 800;
@@ -187,8 +187,31 @@
   align-items: center;
   justify-content: center;
   padding: 0 4px;
-  box-shadow: 0 2px 5px rgba(235, 28, 36, 0.6);
+  box-shadow: 0 2px 5px rgba(41, 69, 50, 0.35);
   line-height: 1;
+}
+
+/* Wishlist count: champagne gold, pops when the count changes (keyed in Header.jsx) */
+.ps-wishlist-badge {
+  background-color: #c9a45c;
+  color: #141210;
+  box-shadow: 0 2px 5px rgba(201, 164, 92, 0.55);
+  animation: ps-badge-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes ps-badge-pop {
+  from {
+    transform: scale(0.5);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-wishlist-badge {
+    animation: none;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -196,11 +219,11 @@
    -------------------------------------------------------------------------- */
 .ps-nav-bar {
   width: 100%;
-  background-color: #080808;
+  background-color: var(--lux-card);
   margin: 0;
   padding: 0;
-  border-top: 1px solid rgba(200, 164, 93, 0.08);
-  border-bottom: 1px solid rgba(200, 164, 93, 0.16);
+  border-top: 1px solid rgba(198,154,69,0.10);
+  border-bottom: 1px solid var(--lux-border);
 }
 
 .ps-nav-bar-inner {
@@ -235,7 +258,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: #F3E7C7;
+  color: var(--lux-text);
   font-family: "Times New Roman", Times, serif;
   font-size: 13px;
   font-weight: 500;
@@ -252,11 +275,11 @@
 }
 
 .ps-nav-menu-link:hover {
-  color: #E5C77A;
+  color: var(--lux-gold-deep);
 }
 
 .ps-nav-menu-link.is-active {
-  color: #FFFFFF;
+  color: var(--lux-text);
   font-weight: 600;
 }
 
@@ -267,7 +290,7 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: #C8A45D;
+  background-color: var(--lux-gold);
   border-radius: 1px;
   box-shadow: 0 0 10px rgba(200, 164, 93, 0.5);
 }
@@ -287,7 +310,7 @@
   align-items: center;
   gap: 6px;
   background: rgba(200, 164, 93, 0.12);
-  color: #E5C77A;
+  color: var(--lux-gold-deep);
   border: 1px solid rgba(200, 164, 93, 0.42);
   font-family: "Times New Roman", Times, serif;
   font-size: 10.5px;
@@ -297,15 +320,15 @@
   text-decoration: none;
   padding: 6px 16px;
   border-radius: 9999px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 10px rgba(41,35,29,0.06);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
 }
 
 .ps-new-arrival-badge:hover {
-  background: rgba(200, 164, 93, 0.24);
-  color: #FFFFFF;
-  border-color: #E5C77A;
+  background: rgba(198,154,69,0.16);
+  color: var(--lux-text);
+  border-color: var(--lux-gold);
   box-shadow: 0 4px 16px rgba(200, 164, 93, 0.3);
   transform: translateY(-1px);
 }
@@ -475,10 +498,10 @@
   margin: 0;
   padding: 8px 0;
   list-style: none;
-  background: #0D0D0D;
+  background: var(--lux-card);
   border: 1px solid rgba(200, 164, 93, 0.3);
   border-radius: 6px;
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 16px 32px rgba(41,35,29,0.10);
 }
 
 .ps-nav-more-link {
@@ -488,7 +511,7 @@
   text-align: left;
   background: transparent;
   border: none;
-  color: #F3E7C7;
+  color: var(--lux-text);
   font-family: "Times New Roman", Times, serif;
   font-size: 12.5px;
   font-weight: 500;
@@ -501,7 +524,138 @@
 .ps-nav-more-link:hover,
 .ps-nav-more-link:focus-visible,
 .ps-nav-more-link.is-active {
-  color: #E5C77A;
-  background: rgba(200, 164, 93, 0.08);
+  color: var(--lux-gold-deep);
+  background: rgba(198,154,69,0.10);
   outline: none;
+}
+
+/* --------------------------------------------------------------------------
+   Ivory & gold design system: top bar, gold hover indicators, deep green
+   active category, subcategory menus
+   -------------------------------------------------------------------------- */
+.ps-top-bar {
+  background: linear-gradient(180deg, var(--lux-card) 0%, var(--lux-ivory) 100%);
+}
+
+.ps-icon-link,
+.ps-mobile-toggle-btn {
+  color: var(--lux-text);
+}
+
+.ps-icon-link:hover,
+.ps-mobile-toggle-btn:hover {
+  color: var(--lux-gold-deep);
+  opacity: 1;
+}
+
+.ps-nav-bar {
+  background: var(--lux-champagne);
+}
+
+/* Gold underline grows in on hover; the active category is deep green */
+.ps-nav-menu-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--lux-gold);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.3s var(--transition-smooth);
+}
+
+.ps-nav-menu-link:hover::after,
+.ps-nav-menu-item:focus-within > .ps-nav-menu-link::after {
+  transform: scaleX(1);
+}
+
+.ps-nav-menu-link.is-active {
+  color: var(--lux-green);
+}
+
+.ps-nav-menu-link.is-active::after {
+  transform: scaleX(1);
+  box-shadow: none;
+}
+
+.ps-nav-caret {
+  color: var(--lux-gold);
+  transition: transform 0.25s ease;
+}
+
+.ps-nav-menu-item.has-children {
+  position: relative;
+}
+
+.ps-nav-sub-menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  z-index: 60;
+  min-width: 230px;
+  margin: 0;
+  padding: 10px 0;
+  list-style: none;
+  background: var(--lux-card);
+  border: 1px solid var(--lux-border);
+  border-top: 2px solid var(--lux-gold);
+  border-radius: 0 0 12px 12px;
+  box-shadow: var(--lux-shadow);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, 6px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+}
+
+.ps-nav-menu-item.has-children:hover > .ps-nav-sub-menu,
+.ps-nav-menu-item.has-children:focus-within > .ps-nav-sub-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.ps-nav-menu-item.has-children:hover .ps-nav-caret,
+.ps-nav-menu-item.has-children:focus-within .ps-nav-caret {
+  transform: rotate(180deg);
+}
+
+.ps-nav-sub-link {
+  display: block;
+  padding: 9px 22px;
+  font-family: var(--font-serif);
+  font-size: 14px;
+  color: var(--lux-text);
+  white-space: nowrap;
+  transition: color 0.2s ease, background-color 0.2s ease, padding-left 0.2s ease;
+}
+
+.ps-nav-sub-link.is-all {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lux-gold-deep);
+  border-bottom: 1px solid var(--lux-border);
+  margin-bottom: 4px;
+}
+
+.ps-nav-sub-link:hover,
+.ps-nav-sub-link:focus-visible {
+  color: var(--lux-green);
+  background: rgba(198, 154, 69, 0.08);
+  padding-left: 26px;
+  outline: none;
+}
+
+/* Tablet: the nav row scrolls sideways, so a dropdown would be clipped; category pages
+   offer the same subcategories as filter pills */
+@media (max-width: 1024px) {
+  .ps-nav-sub-menu,
+  .ps-nav-caret {
+    display: none;
+  }
 }

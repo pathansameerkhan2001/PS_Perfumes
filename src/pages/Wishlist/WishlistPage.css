@@ -1,0 +1,191 @@
+/* ==========================================================================
+   Wishlist page: ivory, botanical green, champagne gold
+   ========================================================================== */
+
+.ps-wl-page {
+  background: linear-gradient(180deg, var(--lux-ivory) 0%, #fdfaf5 50%, var(--lux-ivory) 100%);
+  color: var(--lux-text);
+  min-height: 70vh;
+  padding-bottom: clamp(48px, 6vw, 88px);
+}
+
+.ps-wl-hero {
+  overflow: hidden;
+  padding: clamp(40px, 6vw, 72px) 16px clamp(28px, 4vw, 44px);
+  text-align: center;
+  border-bottom: 1px solid rgba(198, 154, 69, 0.18);
+}
+
+.ps-wl-hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.ps-wl-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--lux-gold-deep);
+}
+
+.ps-wl-title {
+  margin: 12px 0 8px;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(36px, 5.4vw, 56px);
+  line-height: 1.1;
+}
+
+.ps-wl-sub {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(15px, 1.6vw, 18px);
+  color: var(--lux-text-2);
+}
+
+.ps-wl-container {
+  max-width: 1340px;
+  margin: 0 auto;
+  padding: clamp(28px, 4vw, 48px) 16px 0;
+}
+
+.ps-wl-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(16px, 1.8vw, 28px);
+}
+
+.ps-wl-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ps-wl-item > .ps-pcard {
+  flex: 1;
+}
+
+.ps-wl-remove {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--lux-text-2);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.ps-wl-remove:hover {
+  color: var(--lux-green);
+  background: rgba(198, 154, 69, 0.1);
+}
+
+.ps-wl-remove:focus-visible,
+.ps-wl-btn:focus-visible {
+  outline: 2px solid var(--lux-green);
+  outline-offset: 2px;
+}
+
+/* Empty state ------------------------------------------------------------- */
+.ps-wl-empty {
+  max-width: 560px;
+  margin: clamp(8px, 2vw, 24px) auto 0;
+  padding: clamp(36px, 5vw, 56px) 24px;
+  text-align: center;
+  background: var(--lux-card);
+  border: 1px solid rgba(198, 154, 69, 0.3);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(30, 26, 22, 0.05);
+}
+
+.ps-wl-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(198, 154, 69, 0.45);
+  border-radius: 50%;
+  color: var(--lux-gold);
+  background: radial-gradient(circle, #fffaf1 0%, #f4ece0 100%);
+}
+
+.ps-wl-empty h2 {
+  margin: 0 0 8px;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(24px, 3vw, 30px);
+}
+
+.ps-wl-empty p {
+  margin: 0 auto 24px;
+  max-width: 400px;
+  color: var(--lux-text-2);
+  line-height: 1.6;
+}
+
+.ps-wl-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.ps-wl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 10px 26px;
+  border: 1px solid rgba(198, 154, 69, 0.55);
+  border-radius: 999px;
+  color: var(--lux-text);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.ps-wl-btn:hover {
+  background: rgba(198, 154, 69, 0.12);
+}
+
+.ps-wl-btn.is-primary {
+  background: var(--lux-green);
+  border-color: var(--lux-green);
+  color: var(--lux-ivory);
+}
+
+.ps-wl-btn.is-primary:hover {
+  background: #1f3626;
+}
+
+@media (max-width: 1024px) {
+  .ps-wl-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .ps-wl-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}

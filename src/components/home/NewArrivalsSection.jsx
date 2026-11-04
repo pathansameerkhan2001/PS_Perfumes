@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import ProductCard from '../ProductCard';
+import GoldOrnament from '../common/GoldOrnament';
 import '../ProductCard.css';
 import './NewArrivalsSection.css';
 
@@ -36,7 +37,7 @@ export default function NewArrivalsSection({
             {title || 'Discover Our New Arrivals'}
           </h2>
           {subtitle && <p className="ps-newarr-subtitle">{subtitle}</p>}
-          <span className="ps-newarr-rule" aria-hidden="true" />
+          <GoldOrnament />
         </header>
 
         <div className="ps-newarr-track" role="list">

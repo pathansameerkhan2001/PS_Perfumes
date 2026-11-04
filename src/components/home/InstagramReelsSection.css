@@ -1,19 +1,22 @@
 /* ==========================================================================
    PS PERFUMES — Follow Our Fragrance Journey (Instagram reels, homepage)
-   Black section, 9:16 portrait thumbnails, rounded corners, restrained gold.
+   Ivory section with a faint geometric pattern, 9:16 reel cards with gold
+   hairlines and soft shadows, gold Instagram icon, play buttons and arrows.
    The row scrolls inside the section only; the page never scrolls sideways.
    ========================================================================== */
 
 .ps-reels-section {
   width: 100%;
   padding: 72px 0 64px;
-  background-color: #0B0A09;
-  border-top: 1px solid rgba(200, 164, 93, 0.14);
-  border-bottom: 1px solid rgba(200, 164, 93, 0.14);
+  background: linear-gradient(180deg, var(--lux-champagne) 0%, var(--lux-ivory) 55%);
+  border-top: 1px solid var(--lux-border);
+  border-bottom: 1px solid var(--lux-border);
   overflow: hidden; /* contains the scroll track */
 }
 
 .ps-reels-container {
+  position: relative;
+  z-index: 1;
   max-width: var(--container-max-width, 1440px);
   margin: 0 auto;
   padding: 0 48px;
@@ -36,13 +39,26 @@
 .ps-reels-eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 10px;
   font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  color: var(--color-gold, #C8A45D);
-  margin-bottom: 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--lux-gold-deep);
+  margin-bottom: 12px;
+}
+
+/* Gold Instagram icon in a fine gold ring */
+.ps-reels-insta-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--lux-gold);
+  background: var(--lux-card);
+  color: var(--lux-gold);
 }
 
 .ps-reels-title {
@@ -50,15 +66,16 @@
   font-size: 40px;
   font-weight: 500;
   line-height: 1.12;
-  color: var(--color-ivory, #F8F5EE);
+  color: var(--lux-text);
   margin: 0;
 }
 
 .ps-reels-sub {
-  font-family: var(--font-sans);
-  font-size: 14px;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
   line-height: 1.6;
-  color: rgba(248, 245, 238, 0.62);
+  color: var(--lux-text-2);
   margin: 10px 0 0;
 }
 
@@ -68,22 +85,14 @@
   gap: 14px;
 }
 
+/* Gold button language: see StorefrontTheme.css (.ps-reels-follow-btn is a primary) */
 .ps-reels-follow-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-height: 44px;
-  padding: 0 20px;
-  border: 1px solid rgba(200, 164, 93, 0.5);
-  border-radius: 999px;
-  color: var(--color-gold-bright, #E5C77A);
-  font-family: var(--font-serif);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  padding: 0 22px;
   text-decoration: none;
-  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 .ps-reels-carousel-arrows {
@@ -95,14 +104,15 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  border: 1px solid rgba(200, 164, 93, 0.3);
-  background: transparent;
-  color: var(--color-ivory, #F8F5EE);
+  border: 1px solid var(--lux-gold);
+  background: var(--lux-card);
+  color: var(--lux-gold-deep);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease;
+  box-shadow: 0 4px 12px rgba(198, 154, 69, 0.14);
+  transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
 }
 
 .ps-reels-follow-btn:focus-visible,
@@ -110,7 +120,7 @@
 .ps-reel-card:focus-visible,
 .ps-reels-more-link:focus-visible,
 .ps-reels-empty a:focus-visible {
-  outline: 2px solid var(--color-gold-bright, #E5C77A);
+  outline: 2px solid var(--lux-green);
   outline-offset: 3px;
 }
 
@@ -144,8 +154,9 @@
   display: block;
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(200, 164, 93, 0.22);
-  background: #050505;
+  border: 1px solid var(--lux-border);
+  background: var(--lux-card);
+  box-shadow: 0 8px 22px rgba(41, 35, 29, 0.08);
   text-decoration: none;
   transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
 }
@@ -156,7 +167,7 @@
   width: 100%;
   aspect-ratio: 9 / 16;
   overflow: hidden;
-  background: #111;
+  background: var(--lux-champagne);
 }
 
 .ps-reel-thumbnail {
@@ -170,29 +181,32 @@
 .ps-reel-thumbnail.is-fallback {
   object-fit: contain;
   padding: 28%;
-  background: #0D0D0D;
+  background: var(--lux-champagne);
 }
 
 .ps-reel-vignette {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.78) 100%);
+  background: linear-gradient(180deg, rgba(20, 16, 12, 0) 50%, rgba(20, 16, 12, 0.72) 100%);
   pointer-events: none;
 }
 
 .ps-reel-play {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 30px;
-  height: 30px;
+  top: 50%;
+  left: 50%;
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #F8F5EE;
-  background: rgba(5, 5, 5, 0.45);
-  border: 1px solid rgba(248, 245, 238, 0.35);
+  color: var(--lux-text);
+  background: var(--lux-gold-gradient);
+  border: 1px solid rgba(255, 253, 248, 0.7);
+  box-shadow: 0 6px 18px rgba(41, 35, 29, 0.25);
+  transition: transform 0.3s ease;
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   padding-left: 2px;
@@ -202,7 +216,7 @@
   position: absolute;
   top: 12px;
   left: 12px;
-  color: rgba(248, 245, 238, 0.85);
+  color: var(--lux-gold-light);
   display: inline-flex;
 }
 
@@ -227,8 +241,8 @@
 .ps-reel-skeleton {
   aspect-ratio: 9 / 16;
   border-radius: 14px;
-  border: 1px solid rgba(200, 164, 93, 0.1);
-  background: linear-gradient(90deg, #141312 25%, #1D1B19 50%, #141312 75%);
+  border: 1px solid var(--lux-border);
+  background: linear-gradient(90deg, var(--lux-champagne) 25%, var(--lux-card) 50%, var(--lux-champagne) 75%);
   background-size: 200% 100%;
   animation: psReelPulse 1.6s ease-in-out infinite;
 }
@@ -241,15 +255,15 @@
 .ps-reels-empty {
   font-family: var(--font-sans);
   font-size: 14px;
-  color: rgba(248, 245, 238, 0.7);
+  color: var(--lux-text-2);
   padding: 28px 0 8px;
   margin: 0;
-  border-top: 1px solid rgba(200, 164, 93, 0.14);
+  border-top: 1px solid var(--lux-border);
 }
 
 .ps-reels-empty a,
 .ps-reels-more-link {
-  color: var(--color-gold-bright, #E5C77A);
+  color: var(--lux-gold-deep);
   text-underline-offset: 3px;
 }
 
@@ -268,18 +282,18 @@
 
 /* Hover effects only for devices that can hover (no sticky hover on touch) */
 @media (hover: hover) {
-  .ps-reels-follow-btn:hover {
-    background-color: var(--color-gold, #C8A45D);
-    color: #050505;
-  }
   .ps-reels-arrow-btn:hover {
-    border-color: var(--color-gold, #C8A45D);
-    color: var(--color-gold-bright, #E5C77A);
+    background: var(--lux-gold-gradient);
+    color: var(--lux-text);
+    transform: translateY(-1px);
   }
   .ps-reel-card:hover {
     transform: translateY(-4px);
-    border-color: rgba(200, 164, 93, 0.6);
-    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5);
+    border-color: var(--lux-gold);
+    box-shadow: var(--lux-shadow-gold);
+  }
+  .ps-reel-card:hover .ps-reel-play {
+    transform: scale(1.08);
   }
   .ps-reel-card:hover .ps-reel-thumbnail {
     transform: scale(1.04);

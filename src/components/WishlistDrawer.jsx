@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
-import { X, Heart, Trash2, ShoppingBag } from 'lucide-react';
+import { X, Heart, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
+import AddToCartButton from './common/AddToCartButton';
 import './WishlistDrawer.css';
 
 export default function WishlistDrawer() {
@@ -70,17 +71,18 @@ export default function WishlistDrawer() {
                     <span className="ps-wishlist-item-type">{product.type || product.category}</span>
                     <h4 className="ps-wishlist-item-name">{product.name}</h4>
                     <span className="ps-wishlist-item-price">{formatINR(product.price)}</span>
-                    <button
-                      type="button"
+                    <AddToCartButton
                       className="ps-wishlist-add-btn"
-                      onClick={() => {
-                        addToCart(product, 1);
-                        setIsWishlistOpen(false);
+                      label="Add to Bag"
+                      addedLabel="Added"
+                      ariaLabel={`Add ${product.name} to bag`}
+                      onAdd={() => {
+                        // Closes only when something was added; otherwise the toast explains why
+                        const added = addToCart(product, 1);
+                        if (added) setIsWishlistOpen(false);
+                        return added;
                       }}
-                    >
-                      <ShoppingBag size={14} />
-                      <span>ADD TO BAG</span>
-                    </button>
+                    />
                   </div>
                   <button
                     type="button"

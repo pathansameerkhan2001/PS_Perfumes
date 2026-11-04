@@ -21,6 +21,7 @@ import woodyArt from '../assets/categories/fragrance-woody.webp';
  *   /collections/<slug>, where its subcategories are offered as filters.
  * - If the database cannot be read, or has no categories yet, the seven built-in families
  *   are used so navigation never disappears.
+ * - Each entry carries its subcategories (children) for the header and mobile menu.
  * One request per page load, shared by every component that uses the hook.
  */
 
@@ -51,17 +52,23 @@ export function categoryPath(slug) {
   return BUILT_IN_BY_SLUG.has(clean) ? `/${clean}` : `/category/${encodeURIComponent(clean)}`;
 }
 
-function toEntry({ slug, name, imageUrl }, hasTree = false) {
+function toEntry({ id, slug, name, imageUrl, children = [] }, hasTree = false) {
   const clean = String(slug || '').toLowerCase().trim();
   const builtIn = BUILT_IN_BY_SLUG.get(clean);
   // An admin-uploaded image (a real URL) wins; '/assets/…' placeholders from the old demo data do not
   const adminImage = imageUrl && /^https?:\/\//i.test(imageUrl) ? imageUrl : '';
   return {
+    // Database id (absent for the built-in fallback list)
+    id: id || null,
     slug: clean,
     name: name || builtIn?.name || clean,
     path: hasTree ? collectionPath(clean) : categoryPath(clean),
     image: adminImage || builtIn?.image || MAIN_CATEGORY_ART[clean] || '',
     isBuiltIn: Boolean(builtIn),
+    // Subcategories (after Migration 12), each linking to its filter on the collection page
+    children: hasTree
+      ? children.map((c) => ({ id: c.id, slug: c.slug, name: c.name, path: collectionPath(clean, c.slug) }))
+      : [],
   };
 }
 
@@ -76,7 +83,7 @@ function loadStorefrontCategories() {
         const seen = new Set();
         const list = mains
           .filter((r) => r.is_active !== false)
-          .map((r) => toEntry({ slug: r.slug, name: r.name, imageUrl: r.image_url }, hasTree))
+          .map((r) => toEntry({ id: r.id, slug: r.slug, name: r.name, imageUrl: r.image_url, children: r.children }, hasTree))
           .filter((c) => (seen.has(c.slug) ? false : seen.add(c.slug)));
         return list.length > 0 ? list : FALLBACK;
       })

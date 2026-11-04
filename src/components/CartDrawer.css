@@ -5,7 +5,7 @@
 .ps-cart-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.65);
+  background-color: rgba(41, 35, 29, 0.42);
   backdrop-filter: blur(4px);
   z-index: 9999;
   display: flex;
@@ -37,8 +37,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #0c0b0a;
-  color: #ffffff;
+  background-color: var(--lux-champagne);
+  color: var(--lux-text);
 }
 
 .ps-cart-title-wrap {
@@ -52,7 +52,7 @@
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.12em;
-  color: #ffffff;
+  color: var(--lux-text);
   margin: 0;
 }
 
@@ -78,7 +78,7 @@
 }
 
 .ps-cart-close:hover {
-  color: #ffffff;
+  color: var(--lux-text);
 }
 
 /* Free Shipping Bar */
@@ -158,8 +158,8 @@
 }
 
 .ps-cart-empty-btn {
-  background-color: #000000;
-  color: #ffffff;
+  background-color: var(--lux-champagne);
+  color: var(--lux-text);
   border: none;
   padding: 12px 24px;
   font-size: 12px;
@@ -193,7 +193,7 @@
   width: 72px;
   height: 72px;
   border-radius: 4px;
-  background-color: #0c0b0a;
+  background-color: var(--lux-champagne);
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -336,8 +336,8 @@
 }
 
 .ps-cart-promo-btn {
-  background-color: #0c0b0a;
-  color: #ffffff;
+  background-color: var(--lux-champagne);
+  color: var(--lux-text);
   border: none;
   border-radius: 3px;
   padding: 0 16px;
@@ -417,8 +417,8 @@
 .ps-cart-checkout-btn {
   width: 100%;
   height: 48px;
-  background-color: #000000;
-  color: #ffffff;
+  background-color: var(--lux-champagne);
+  color: var(--lux-text);
   border: none;
   border-radius: 3px;
   font-size: 12.5px;

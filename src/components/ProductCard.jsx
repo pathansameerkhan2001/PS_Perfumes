@@ -1,59 +1,59 @@
-import React, { useState } from 'react';
-import { ShoppingBag, Check } from 'lucide-react';
+import React, { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
 import { defaultVariant, variantPrice, variantStock, variantComparePrice } from '../utils/productVariants';
 import { cardImageUrl, fullImageFallback } from '../lib/storage';
+import { isComboRecord, toComboCartProduct } from '../services/combos';
+import WishlistHeart from './common/WishlistHeart';
+import AddToCartButton from './common/AddToCartButton';
 import './ProductCard.css';
 
+const sizeLabel = (s) => {
+  const v = String(s || '').trim();
+  return !v || /ml|set/i.test(v) ? v : `${v} ml`;
+};
+
 /**
- * PS PERFUMES — storefront product card: image, name, price and a single ADD TO CART.
- * The price shown is the default variant's price (lowest-priced in stock), and ADD TO CART adds
- * exactly that variant; the bag confirms the bottle and size. Other bottles and sizes are chosen
- * on the product page.
+ * PS PERFUMES — the storefront product card, used by every product grid (homepage sections,
+ * shop, collections, search, related products, wishlist).
+ *
+ * Image with a wishlist heart, name, the bottle and size of the variant shown, price and the
+ * gold Add to Cart. The price belongs to the default variant (lowest-priced in stock) and Add to
+ * Cart adds exactly that variant; other bottles and sizes are chosen on the product page.
+ * A saved combo set (wishlist) is shown and added as the set.
+ *
+ * pending: the product's data is still being confirmed (wishlist refresh), so Add to Cart waits.
  */
-export default function ProductCard({ product, priority = false }) {
-  const { addToCart } = useCart();
-  const [isAddedAnim, setIsAddedAnim] = useState(false);
+function ProductCard({ product, priority = false, viewMode = 'grid', pending = false }) {
+  const { addToCart, setSelectedProduct } = useCart();
   const navigate = useNavigate();
 
-  const fullImageSrc = product.main_image || product.image || '/assets/ps-perfumes-logo.webp';
+  const combo = isComboRecord(product) ? toComboCartProduct(product) : null;
+  const fullImageSrc = product.main_image || product.image || product.image_url || '/assets/ps-perfumes-logo.webp';
   // Card-size version when the image was uploaded optimized (see lib/storage.js)
   const imageSrc = cardImageUrl(fullImageSrc);
   const slug = product.slug || product.id;
 
-  const variant = defaultVariant(product);
+  const variant = combo ? combo.variant : defaultVariant(product);
   const price = variant ? variantPrice(variant) : 0;
-  const comparePrice = variant ? variantComparePrice(variant) : 0;
-  const isUnavailable = !variant;
-  const isSoldOut = Boolean(variant) && variantStock(variant) <= 0;
+  const comparePrice = combo ? Number(combo.product.compare_at_price) || 0 : variant ? variantComparePrice(variant) : 0;
+  const isUnavailable = combo ? !combo.product.is_purchasable || !(price > 0) : !variant;
+  const isSoldOut = !isUnavailable && (combo ? combo.product.stock_quantity <= 0 : variantStock(variant) <= 0);
+  const detail = combo ? 'Combo set' : variant ? `${variant.bottle_type || 'Glass Bottle'} · ${sizeLabel(variant.size_ml)}` : '';
 
-  const handleCardClick = () => {
-    navigate(`/product/${slug}`);
-  };
-
-  const handleAddToCart = (e) => {
-    e.stopPropagation();
-    // Nothing purchasable: the product page explains availability (never add an invented variant)
-    if (isUnavailable || isSoldOut) {
-      handleCardClick();
-      return;
-    }
-    addToCart(product, 1, variant);
-    setIsAddedAnim(true);
-    setTimeout(() => setIsAddedAnim(false), 1800);
-  };
+  // Combos have no product page: their quick view opens instead
+  const openProduct = () => (combo ? setSelectedProduct(product) : navigate(`/product/${slug}`));
 
   return (
     <article
-      className="ps-pcard"
-      onClick={handleCardClick}
-      role="button"
+      className={`ps-pcard${viewMode === 'list' ? ' is-list' : ''}`}
+      onClick={openProduct}
+      role="link"
       tabIndex={0}
       onKeyDown={(e) => {
-        // Only when the card itself has focus: Enter on the button must not also navigate
-        if (e.key === 'Enter' && e.target === e.currentTarget) handleCardClick();
+        // Only when the card itself has focus: Enter on a button must not also navigate
+        if (e.key === 'Enter' && e.target === e.currentTarget) openProduct();
       }}
       aria-label={`View ${product.name}`}
     >
@@ -66,15 +66,17 @@ export default function ProductCard({ product, priority = false }) {
           fetchPriority={priority ? 'high' : undefined}
           decoding="async"
           width="400"
-          height="440"
+          height="400"
           onError={fullImageFallback(fullImageSrc)}
         />
+        <WishlistHeart product={product} className="ps-pcard-heart" />
       </div>
 
       <div className="ps-pcard-details">
         <h3 className="ps-pcard-title" title={product.name}>
           {product.name}
         </h3>
+        <p className="ps-pcard-variant">{detail || ' '}</p>
 
         <div className="ps-pcard-pricing-row">
           {isUnavailable ? (
@@ -82,40 +84,29 @@ export default function ProductCard({ product, priority = false }) {
           ) : (
             <>
               <span className="ps-pcard-price">{formatINR(price)}</span>
-              {comparePrice > 0 && <span className="ps-pcard-orig-price">{formatINR(comparePrice)}</span>}
+              {comparePrice > price && <span className="ps-pcard-orig-price">{formatINR(comparePrice)}</span>}
             </>
           )}
         </div>
 
-        <button
-          type="button"
-          className={`ps-pcard-add-btn ${isAddedAnim ? 'is-success' : ''} ${isSoldOut || isUnavailable ? 'is-soldout' : ''}`}
-          onClick={handleAddToCart}
-          aria-label={
+        <AddToCartButton
+          onAdd={() => (combo ? addToCart(product, 1) : addToCart(product, 1, variant))}
+          loading={pending}
+          disabled={isUnavailable || isSoldOut}
+          disabledLabel={isSoldOut ? 'Sold out' : 'Unavailable'}
+          addedLabel="Added"
+          ariaLabel={
             isUnavailable
-              ? `${product.name} is unavailable — view details`
+              ? `${product.name} is unavailable`
               : isSoldOut
-              ? `${product.name} is sold out — view details`
-              : `Add ${product.name} (${variant.bottle_type}, ${variant.size_ml}) to cart`
+              ? `${product.name} is sold out`
+              : `Add ${product.name} (${detail}) to cart`
           }
-        >
-          {isSoldOut ? (
-            <span>SOLD OUT</span>
-          ) : isUnavailable ? (
-            <span>VIEW DETAILS</span>
-          ) : isAddedAnim ? (
-            <>
-              <Check size={16} strokeWidth={2.4} />
-              <span>ADDED</span>
-            </>
-          ) : (
-            <>
-              <ShoppingBag size={15} strokeWidth={1.8} />
-              <span>ADD TO CART</span>
-            </>
-          )}
-        </button>
+        />
       </div>
     </article>
   );
 }
+
+// Grids re-render with their parent; a card only needs to when its own product changes
+export default memo(ProductCard);

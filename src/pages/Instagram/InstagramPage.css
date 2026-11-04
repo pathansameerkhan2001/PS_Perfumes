@@ -12,7 +12,7 @@
 
 .ps-insta-hero {
   padding: 60px 0 48px;
-  background: linear-gradient(180deg, #0d0d0d 0%, #050505 100%);
+  background: linear-gradient(180deg, var(--lux-champagne) 0%, var(--lux-ivory) 100%);
   border-bottom: 1px solid var(--color-border);
   text-align: center;
 }
@@ -162,7 +162,7 @@
   height: 52px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid var(--lux-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -190,7 +190,7 @@
   gap: 6px;
   padding: 4px 10px;
   background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--lux-border);
   border-radius: 9999px;
   color: #fff;
   font-family: var(--font-sans);
@@ -221,7 +221,7 @@
 .ps-insta-card-skeleton {
   aspect-ratio: 9 / 16;
   border-radius: 6px;
-  background: #111;
+  background: var(--lux-champagne);
 }
 
 .ps-insta-empty {
