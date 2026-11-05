@@ -13,20 +13,58 @@ import './HeroCinematic.css';
 const HERO_VIDEO_PATH = 'hero/ps-perfumes-hero-desktop.mp4';
 // One reload attempt if the file fails to load (e.g. a dropped connection)
 const LOAD_RETRY_DELAY_MS = 4000;
-// How long to wait for the admin hero setting before using the built-in film
-const SETTING_TIMEOUT_MS = 1500;
+// How long to wait for the admin hero setting before using the built-in film. Generous, so a slow
+// first answer does not swap the owner's film and music for the built-in film for the whole
+// visit; the poster is shown meanwhile, and later visits in the tab use the cached answer
+const SETTING_TIMEOUT_MS = 5000;
 // The resolved setting is kept for this browser tab, so returning to the homepage starts the
 // film at once instead of waiting for the database; it is still re-checked every time
 const SETTING_CACHE_KEY = 'ps_hero_film_v2';
-// Volume of the admin's background music (MP3)
-const MUSIC_VOLUME = 0.55;
-// The film's own soundtrack when it is the music (no admin MP3)
-const FILM_SOUND_VOLUME = 0.8;
+// Starting volume of the sound (admin MP3 or the film's soundtrack); the visitor's own choice on
+// the volume slider is remembered in this browser
+const DEFAULT_VOLUME = 0.6;
+const VOLUME_KEY = 'ps_hero_volume';
 // The film is requested once the page has finished loading (or after this long at most), so it
 // never competes with the poster, scripts and above-the-fold images for bandwidth
-const FILM_DEFER_MAX_MS = 2500;
-// Network classes on which a multi-megabyte film is not started on its own
-const SLOW_NETWORKS = new Set(['slow-2g', '2g', '3g']);
+const FILM_DEFER_MAX_MS = 1200;
+// Network classes on which a multi-megabyte film is not started on its own ('3g' is not one:
+// Chrome reports it for many ordinary mobile connections)
+const SLOW_NETWORKS = new Set(['slow-2g', '2g']);
+// Events browsers accept as the visitor's permission to start sound (pointerup for Chrome,
+// touchend / click for iOS Safari)
+const ACTIVATION_EVENTS = ['pointerup', 'touchend', 'click', 'keydown'];
+// Events that retry a film whose autoplay was refused
+const RETRY_EVENTS = ['pointerdown', 'touchend', 'click', 'keydown'];
+
+function readVolume() {
+  try {
+    const raw = localStorage.getItem(VOLUME_KEY);
+    const v = Number(raw);
+    return raw !== null && v >= 0 && v <= 1 ? v : DEFAULT_VOLUME;
+  } catch {
+    return DEFAULT_VOLUME;
+  }
+}
+
+function writeVolume(v) {
+  try {
+    localStorage.setItem(VOLUME_KEY, String(v));
+  } catch {
+    // storage blocked: the volume simply resets next visit
+  }
+}
+
+// iOS ignores volume set by a page (it always reads 1): the slider is hidden there and the
+// device's volume buttons apply
+const volumeAdjustable = (() => {
+  try {
+    const probe = document.createElement('audio');
+    probe.volume = 0.5;
+    return Math.abs(probe.volume - 0.5) < 0.01;
+  } catch {
+    return false;
+  }
+})();
 
 function readCachedFilm() {
   try {
@@ -56,11 +94,12 @@ function writeCachedFilm(film) {
  *   the tab becomes visible again. If the file fails to load, it is retried once; otherwise
  *   the poster remains, so the hero is never blank.
  * - The film pauses while scrolled out of view (saves battery and CPU) and resumes on return.
- * - Visitors who ask for reduced motion (prefers-reduced-motion: reduce), use Data Saver or are on
- *   a 2G/3G-class connection see the poster and a clear play control; the film is not downloaded
- *   until they press it.
- * - Otherwise the film is requested only after the page has loaded (poster first), so it does not
- *   delay the first render or the rest of the page.
+ * - Autoplay (owner request, 2026-11-05) applies to every visitor, including those who ask for
+ *   reduced motion (the pause control is always there). Only visitors with Data Saver on or a
+ *   2G-class connection see the poster and a clear play control; the film is not downloaded until
+ *   they press it.
+ * - The film is requested once the page has loaded, or after FILM_DEFER_MAX_MS at most (poster
+ *   first), so it does not delay the first render or the rest of the page.
  * - A small, discreet pause/resume control (bottom-right corner, icon only) lets anyone stop or
  *   start the film. A deliberate pause is never undone automatically.
  * - The film and poster come from Admin → Hero Sections (active record with the lowest display
@@ -69,9 +108,10 @@ function writeCachedFilm(film) {
  *   never both. It starts with the film when the browser allows sound without a click; most
  *   browsers do not, so the film then plays muted, a prominent gold "Enable Sound" control
  *   appears (bottom-left) and the visitor's first tap or key press turns the sound on. The same
- *   control then pauses and resumes the music, and a visitor who turned it off is never
- *   overridden. With sound on, the film keeps playing while the visitor scrolls the homepage;
- *   it pauses while the tab is hidden and stops when they leave the homepage.
+ *   control then turns the sound off and on, with a volume slider beside it (not on iOS, which
+ *   only honours the device's volume buttons); a visitor who turned it off is never overridden.
+ *   With sound on, the film keeps playing while the visitor scrolls the homepage; it pauses
+ *   while the tab is hidden and stops when they leave the homepage.
  * - Phones play the lighter mobile film when one is set.
  */
 export default function HeroCinematic() {
@@ -84,14 +124,12 @@ export default function HeroCinematic() {
   // preload in index.html)
   const isNarrow = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 768px)').matches;
   const defaultPoster = isNarrow ? posterMobile : posterDesktop;
-  const prefersReducedMotion =
-    typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   // Data Saver / "Lite mode" or a 2G/3G-class connection: do not start a multi-megabyte film on
   // its own; the poster and the play control stay, and the visitor can start it with one tap
   const connection = typeof navigator !== 'undefined' ? navigator.connection : undefined;
   const saveData = connection?.saveData === true;
   const slowNetwork = SLOW_NETWORKS.has(connection?.effectiveType);
-  const autoStart = !prefersReducedMotion && !saveData && !slowNetwork;
+  const autoStart = !saveData && !slowNetwork;
 
   // True once the page has finished loading (immediately when returning to the homepage)
   const [pageLoaded, setPageLoaded] = useState(
@@ -181,8 +219,12 @@ export default function HeroCinematic() {
   const [sound, setSound] = useState('off');
   // False once the visitor has turned the sound off: nothing turns it back on by itself
   const soundWantedRef = useRef(true);
-  // Set when the visitor asks for sound before the film is attached (e.g. reduced motion)
+  // Set when the visitor asks for sound before the film is attached (e.g. Data Saver)
   const soundRequestedRef = useRef(false);
+  // Sound volume (0–1), shared by the MP3 and the film's soundtrack
+  const [volume, setVolume] = useState(readVolume);
+  const volumeRef = useRef(volume);
+  volumeRef.current = volume;
 
   const tryPlay = useCallback(() => {
     const video = videoRef.current;
@@ -218,7 +260,7 @@ export default function HeroCinematic() {
     // it); a refusal falls back to muted at once (tryPlay). Otherwise the film is always muted.
     const trySound = soundFromFilmRef.current && soundWantedRef.current && (autoStart || soundRequestedRef.current);
     video.muted = !trySound;
-    video.volume = FILM_SOUND_VOLUME;
+    video.volume = volumeRef.current;
     if (trySound) setSound((s) => (s === 'off' ? 'pending' : s));
     video.playsInline = true;
     video.setAttribute('muted', '');
@@ -268,9 +310,10 @@ export default function HeroCinematic() {
     video.addEventListener('pause', onPause);
     video.addEventListener('canplay', onCanPlay);
     video.addEventListener('error', onError);
-    window.addEventListener('pointerdown', onGesture, { passive: true });
-    window.addEventListener('keydown', onGesture);
+    RETRY_EVENTS.forEach((type) => window.addEventListener(type, onGesture, { passive: true }));
     document.addEventListener('visibilitychange', onVisibility);
+    // The autoplay attribute may already have started the film before these listeners existed
+    if (!video.paused && video.readyState >= 3) onPlaying();
 
     // Pause while the hero is out of view; resume when it returns
     let observer = null;
@@ -299,8 +342,7 @@ export default function HeroCinematic() {
       video.removeEventListener('pause', onPause);
       video.removeEventListener('canplay', onCanPlay);
       video.removeEventListener('error', onError);
-      window.removeEventListener('pointerdown', onGesture);
-      window.removeEventListener('keydown', onGesture);
+      RETRY_EVENTS.forEach((type) => window.removeEventListener(type, onGesture));
       document.removeEventListener('visibilitychange', onVisibility);
       observer?.disconnect();
     };
@@ -335,7 +377,7 @@ export default function HeroCinematic() {
     const audio = new Audio();
     audio.loop = true;
     audio.preload = 'auto';
-    audio.volume = MUSIC_VOLUME;
+    audio.volume = volumeRef.current;
     audio.addEventListener('error', () => {
       console.warn(`Hero music failed to load: ${audioUrl}`);
       setSound('error');
@@ -397,22 +439,29 @@ export default function HeroCinematic() {
   }, [audioUrl, autoStart, status, playAudio]);
 
   // Sound refused by the browser: the visitor's first tap or key press anywhere turns it on.
-  // pointerup / keydown are the events browsers accept as permission (touch-start is not).
+  // See ACTIVATION_EVENTS (touchstart is not accepted by any browser).
   useEffect(() => {
     if (sound !== 'blocked') return undefined;
     const onFirstInteraction = (e) => {
       if (!soundWantedRef.current) return;
-      // The sound button handles its own press
-      if (e.target?.closest?.('.ps-hero-music-toggle')) return;
+      // The hero's own controls handle their own press (the film control must not turn sound on)
+      if (e.target?.closest?.('.ps-hero-sound-controls, .ps-hero-playback-toggle')) return;
       enableSound();
     };
-    window.addEventListener('pointerup', onFirstInteraction, { passive: true });
-    window.addEventListener('keydown', onFirstInteraction);
+    ACTIVATION_EVENTS.forEach((type) => window.addEventListener(type, onFirstInteraction, { passive: true }));
     return () => {
-      window.removeEventListener('pointerup', onFirstInteraction);
-      window.removeEventListener('keydown', onFirstInteraction);
+      ACTIVATION_EVENTS.forEach((type) => window.removeEventListener(type, onFirstInteraction));
     };
   }, [sound, enableSound]);
+
+  // Volume slider: applied to whichever player carries the sound, and remembered
+  const changeVolume = (value) => {
+    const v = Math.min(1, Math.max(0, Number(value) || 0));
+    setVolume(v);
+    writeVolume(v);
+    if (audioRef.current) audioRef.current.volume = v;
+    if (videoRef.current) videoRef.current.volume = v;
+  };
 
   // Admin music: pauses with the tab and stops when the visitor leaves the homepage
   useEffect(() => {
@@ -430,9 +479,13 @@ export default function HeroCinematic() {
         audio.play().catch(() => {});
       }
     };
+    // Leaving the site (or a page kept in the back/forward cache): the music stops
+    const onPageHide = () => audioRef.current?.pause();
     document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', onPageHide);
     return () => {
       document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', onPageHide);
       const audio = audioRef.current;
       if (audio) {
         audio.pause();
@@ -506,49 +559,60 @@ export default function HeroCinematic() {
         <div className="ps-hero-bottom-blend" aria-hidden="true" />
 
         {/* Sound: "Enable Sound" (prominent) while the browser waits for an interaction, then
-            Pause Music / Play Music. One control for the film's soundtrack or the admin MP3. */}
+            Sound Off / Enable Sound, plus the volume slider. One control for the film's soundtrack
+            or the admin MP3. */}
         {showSoundControl && (
-          <button
-            type="button"
-            className={`ps-hero-music-toggle is-${sound}`}
-            onClick={toggleSound}
-            disabled={sound === 'error'}
-            aria-pressed={sound === 'on'}
-            aria-label={
-              sound === 'on'
-                ? 'Pause music'
-                : sound === 'blocked'
-                ? 'Enable sound'
-                : sound === 'error'
-                ? 'Music unavailable'
-                : 'Play music'
-            }
-          >
-            {sound === 'error' ? (
-              <VolumeX size={15} aria-hidden="true" />
-            ) : sound === 'on' ? (
-              <span className="ps-hero-music-bars" aria-hidden="true">
-                <span />
-                <span />
-                <span />
+          <div className="ps-hero-sound-controls">
+            <button
+              type="button"
+              className={`ps-hero-music-toggle is-${sound}`}
+              onClick={toggleSound}
+              disabled={sound === 'error'}
+              aria-label={
+                sound === 'on'
+                  ? 'Turn sound off'
+                  : sound === 'error'
+                  ? 'Sound unavailable'
+                  : 'Turn sound on'
+              }
+            >
+              {sound === 'error' ? (
+                <VolumeX size={15} aria-hidden="true" />
+              ) : sound === 'on' ? (
+                <span className="ps-hero-music-bars" aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                </span>
+              ) : sound === 'blocked' ? (
+                <Volume2 size={17} aria-hidden="true" />
+              ) : (
+                <Music size={15} aria-hidden="true" />
+              )}
+              <span className="ps-hero-music-label">
+                {sound === 'on'
+                  ? 'Sound Off'
+                  : sound === 'pending'
+                  ? 'Starting…'
+                  : sound === 'error'
+                  ? 'Sound unavailable'
+                  : 'Enable Sound'}
               </span>
-            ) : sound === 'blocked' ? (
-              <Volume2 size={17} aria-hidden="true" />
-            ) : (
-              <Music size={15} aria-hidden="true" />
+            </button>
+            {sound === 'on' && volumeAdjustable && (
+              <input
+                type="range"
+                className="ps-hero-volume"
+                min="0"
+                max="1"
+                step="0.05"
+                value={volume}
+                onChange={(e) => changeVolume(e.target.value)}
+                aria-label="Sound volume"
+                aria-valuetext={`${Math.round(volume * 100)}%`}
+              />
             )}
-            <span className="ps-hero-music-label">
-              {sound === 'on'
-                ? 'Pause Music'
-                : sound === 'blocked'
-                ? 'Enable Sound'
-                : sound === 'pending'
-                ? 'Starting…'
-                : sound === 'error'
-                ? 'Music unavailable'
-                : 'Play Music'}
-            </span>
-          </button>
+          </div>
         )}
 
         {/* Discreet pause/resume control (icon only, no text over the film) */}

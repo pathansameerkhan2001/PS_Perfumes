@@ -19,6 +19,15 @@ select w.slug,
   left join public.categories p on p.id = c.parent_id
  order by w.ord;
 
+-- 1b. Same NAME under a different slug (step 14 matches by slug, so these would NOT be adopted and
+--     the result would show two "Musky" etc.). Expect no rows; otherwise review before step 14.
+select c.name, c.slug, c.is_active, p.slug as current_parent,
+       (select count(*) from public.products x where x.category_id = c.id) as products
+  from public.categories c
+  left join public.categories p on p.id = c.parent_id
+ where lower(trim(c.name)) in ('musky', 'oud', 'floral', 'woody')
+   and lower(c.slug) not in ('musky', 'oud', 'floral', 'woody');
+
 -- 2. The whole tree: main categories and their subcategories, with product counts
 select coalesce(p.name, c.name) as main_category,
        case when c.parent_id is null then '' else c.name end as subcategory,

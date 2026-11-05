@@ -253,11 +253,19 @@
    Background music control (bottom-left, opposite the film control): a small
    gold pill; animated bars while music plays. Never covers the film's centre.
    ========================================================================== */
-.ps-hero-music-toggle {
+/* Sound toggle and volume slider, side by side in the bottom-left corner */
+.ps-hero-sound-controls {
   position: absolute;
   left: 20px;
   bottom: 20px;
   z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ps-hero-music-toggle {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -334,10 +342,36 @@
   }
 }
 
+/* Volume: a slim gold slider on a dark glass pill */
+.ps-hero-volume {
+  width: 96px;
+  height: 28px;
+  margin: 0;
+  padding: 0 10px;
+  border: 1px solid rgba(198, 154, 67, 0.5);
+  border-radius: 999px;
+  background: rgba(8, 7, 6, 0.45);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  accent-color: #C69A43;
+  cursor: pointer;
+}
+
+.ps-hero-volume:focus-visible {
+  outline: 2px solid #E3C58B;
+  outline-offset: 3px;
+}
+
 @media (max-width: 768px) {
-  .ps-hero-music-toggle {
+  .ps-hero-sound-controls {
     left: 12px;
     bottom: 12px;
+    gap: 8px;
+  }
+  .ps-hero-volume {
+    width: 80px;
+  }
+  .ps-hero-music-toggle {
     min-height: 34px;
     padding: 0 10px;
   }

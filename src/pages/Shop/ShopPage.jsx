@@ -39,9 +39,12 @@ export default function ShopPage() {
   const categoryParam = categoryFromSlug || searchParams.get('category') || 'ALL';
   const filterParam = searchParams.get('filter') || '';
   const genderParam = searchParams.get('gender') || 'ALL';
+  const subParam = (searchParams.get('sub') || '').toLowerCase();
   const isOffersRoute = location.pathname === '/offers' || filterParam === 'offers';
 
   const [selectedCategory, setSelectedCategory] = useState(categoryParam);
+  // Subcategory slug within the selected main category ('' = all of it)
+  const [selectedSub, setSelectedSub] = useState(subParam);
   const [selectedGender, setSelectedGender] = useState(genderParam);
   const [sortOption, setSortOption] = useState('featured');
   const [maxPrice, setMaxPrice] = useState(4000);
@@ -55,11 +58,26 @@ export default function ShopPage() {
 
   useEffect(() => {
     if (categoryParam) setSelectedCategory(categoryParam);
+    setSelectedSub(subParam);
     if (genderParam) setSelectedGender(genderParam);
     if (filterParam === 'new_arrival') setOnlyNewArrivals(true);
     if (filterParam === 'bestseller') setOnlyBestsellers(true);
     if (location.pathname === '/offers' || filterParam === 'offers') setOnlyOffers(true);
-  }, [categoryParam, genderParam, filterParam, location.pathname]);
+  }, [categoryParam, subParam, genderParam, filterParam, location.pathname]);
+
+  // The selected main category's entry (with its subcategories) and the selected subcategory
+  const selectedEntry =
+    selectedCategory && selectedCategory !== 'ALL'
+      ? storefrontCategories.find((c) => c.name.toLowerCase() === selectedCategory.toLowerCase() || c.slug === selectedCategory.toLowerCase())
+      : null;
+  const subOptions = selectedEntry?.children || [];
+  const activeSub = subOptions.find((c) => c.slug.toLowerCase() === selectedSub) || null;
+
+  // Choosing another main category clears the subcategory
+  const selectCategory = (cat) => {
+    setSelectedCategory(cat);
+    setSelectedSub('');
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -86,16 +104,21 @@ export default function ShopPage() {
     // Category
     if (selectedCategory && selectedCategory !== 'ALL') {
       const wanted = selectedCategory.toLowerCase();
-      // A main category covers its subcategories; matched by id when the database answered
-      const entry = storefrontCategories.find((c) => c.name.toLowerCase() === wanted || c.slug === wanted);
-      const ids = entry?.id ? new Set([entry.id, ...entry.children.map((c) => c.id)]) : null;
-      result = result.filter(
-        (p) =>
-          (ids && ids.has(p.category_id)) ||
-          p.category?.toLowerCase() === wanted ||
-          p.subcategory?.toLowerCase() === wanted ||
-          p.subcategories?.some((s) => s.toLowerCase() === wanted)
-      );
+      if (activeSub?.id) {
+        // A subcategory: only the products assigned to it
+        result = result.filter((p) => p.category_id === activeSub.id);
+      } else {
+        // A main category covers its subcategories; matched by id when the database answered
+        const entry = selectedEntry;
+        const ids = entry?.id ? new Set([entry.id, ...entry.children.map((c) => c.id)]) : null;
+        result = result.filter(
+          (p) =>
+            (ids && ids.has(p.category_id)) ||
+            p.category?.toLowerCase() === wanted ||
+            p.subcategory?.toLowerCase() === wanted ||
+            p.subcategories?.some((s) => s.toLowerCase() === wanted)
+        );
+      }
     }
 
     // Gender
@@ -153,7 +176,8 @@ export default function ShopPage() {
     return result;
   }, [
     products,
-    storefrontCategories,
+    selectedEntry,
+    activeSub,
     selectedCategory,
     selectedGender,
     maxPrice,
@@ -165,7 +189,7 @@ export default function ShopPage() {
   ]);
 
   const resetFilters = () => {
-    setSelectedCategory('ALL');
+    selectCategory('ALL');
     setSelectedGender('ALL');
     setMaxPrice(4000);
     setOnlyInStock(false);
@@ -175,6 +199,35 @@ export default function ShopPage() {
     setSortOption('featured');
     setSearchParams({});
   };
+
+  // Subcategory pills for the selected main category (only when it has subcategories)
+  const renderSubFilter = () =>
+    subOptions.length > 0 ? (
+      <div className="ps-filter-block">
+        <h3 className="ps-filter-heading">{selectedEntry.name} Type</h3>
+        <div className="ps-filter-options">
+          <button
+            type="button"
+            className={`ps-filter-pill ${!activeSub ? 'is-active' : ''}`}
+            aria-pressed={!activeSub}
+            onClick={() => setSelectedSub('')}
+          >
+            <span>All {selectedEntry.name}</span>
+          </button>
+          {subOptions.map((sub) => (
+            <button
+              key={sub.id || sub.slug}
+              type="button"
+              className={`ps-filter-pill ${activeSub?.slug === sub.slug ? 'is-active' : ''}`}
+              aria-pressed={activeSub?.slug === sub.slug}
+              onClick={() => setSelectedSub(sub.slug.toLowerCase())}
+            >
+              <span>{sub.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    ) : null;
 
   return (
     <div className="ps-shop-page">
@@ -256,13 +309,14 @@ export default function ShopPage() {
                     key={cat}
                     type="button"
                     className={`ps-filter-pill ${selectedCategory === cat ? 'is-active' : ''}`}
-                    onClick={() => setSelectedCategory(cat)}
+                    onClick={() => selectCategory(cat)}
                   >
                     <span>{cat}</span>
                   </button>
                 ))}
               </div>
             </div>
+            {renderSubFilter()}
 
             {/* Gender Filter */}
             <div className="ps-filter-block">
@@ -397,13 +451,14 @@ export default function ShopPage() {
                       key={cat}
                       type="button"
                       className={`ps-filter-pill ${selectedCategory === cat ? 'is-active' : ''}`}
-                      onClick={() => setSelectedCategory(cat)}
+                      onClick={() => selectCategory(cat)}
                     >
                       <span>{cat}</span>
                     </button>
                   ))}
                 </div>
               </div>
+              {renderSubFilter()}
 
               {/* Price */}
               <div className="ps-filter-block">

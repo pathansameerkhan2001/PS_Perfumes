@@ -111,6 +111,36 @@ export async function getCategories(all = false) {
   return all ? list : list.filter((c) => c.is_active);
 }
 
+/** URL slug from a category name or a typed slug: lowercase letters, numbers and single hyphens. */
+export function slugifyCategory(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+let hierarchyPromise = null;
+
+/**
+ * True when the database has categories.parent_id (Migration 12), i.e. subcategories can be
+ * saved. Checked with the column itself, so an empty table still allows subcategories; a missing
+ * column (42703) answers false. Any other error is treated as available (the save reports it).
+ */
+export function categoryHierarchyAvailable() {
+  if (!isSupabaseConfigured || !supabase) return Promise.resolve(true);
+  if (!hierarchyPromise) {
+    hierarchyPromise = supabase
+      .from('categories')
+      .select('parent_id')
+      .limit(1)
+      .then(({ error }) => !(error && (error.code === '42703' || /parent_id/i.test(error.message || ''))))
+      .catch(() => true);
+  }
+  return hierarchyPromise;
+}
+
 /**
  * Main categories, each with its subcategories, in display order.
  *
@@ -232,6 +262,9 @@ export async function updateCategory(id, updates) {
 
       const { data, error } = await supabase.from('categories').update(payload).eq('id', id).select();
       if (error) {
+        if (error.code === '23505') {
+          throw new Error(`Another category already uses the slug "${payload.slug}". Choose a different slug.`);
+        }
         throw new Error(error.message);
       }
       if (!data || data.length === 0) {

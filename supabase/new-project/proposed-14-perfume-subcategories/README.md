@@ -2,18 +2,21 @@
 
 **Status: NOT APPLIED and not yet run against a test database.**
 
-## Current Production state (read-only check, 2026-11-04)
+## Current Production state (read-only public check, 2026-11-05)
 
-Step 12 revision 2 **is applied**: `categories.parent_id` exists and every active category is linked.
+Step 12 revision 2 **is applied**: `categories.parent_id` exists. The owner has since reorganised
+the tree in the admin; active categories now:
 
 | Main category | Subcategories (active) |
 |---|---|
-| Perfumes | none |
-| Attars | Woody Attars, Arabic Attars, Traditional Attars |
-| Fragrance Creams | none |
-| Home Fragrance | Bakhoor, Room Fragrances |
-| Body Care | Body Lotions, Body Mists, Body Oils, Personal Care |
+| Perfumes | **none** |
+| Attars | Arabic Attars (`arabicattars`), Oud Attars (`oud-attars`), Musk Attars (`muskattars`) |
+| Home Fragrance | Bakhoor, Incence Sticks (`incence`) |
+| Fragrance Essentials | Solid Perfumes, Body Mists, Car Hanging Perfumes |
 | Combo Packs | none |
+
+(Body Care and the earlier Attars/Home Fragrance subcategories are not visible publicly, so they are
+inactive or deleted. Step 14 does not touch them.)
 
 - No **active** category has the slug `musky`, `oud`, `floral` or `woody`.
 - The retired fragrance families used these slugs and may still exist as **inactive** rows. Public reads cannot show inactive rows, so `14_verify_readonly.sql` checks for them.
@@ -41,6 +44,6 @@ Rollback: `14_rollback.sql` restores adopted rows and deletes created ones. It r
 
 ## Without SQL
 
-In Admin → Categories → **Add category**, set *Main Category* to "Subcategory of Perfumes" for each of the four.
+In Admin → Categories, click **+ Sub** on the Perfumes row (or **Add Subcategory** and choose Perfumes) for each of the four.
 
-This works only if no row with that slug exists already; slugs are unique. If an inactive retired family holds the slug, the admin's *Add* is refused. Edit that row instead: set its main category to Perfumes and tick *Active*.
+Slugs are unique. If a row (for example an inactive retired family) already holds the slug, the admin says so before saving and offers **Edit “Musky” instead**: set its main category to Perfumes and tick *Active*. This gives the same result as step 14's adoption.
