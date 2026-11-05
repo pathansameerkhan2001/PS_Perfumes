@@ -23,6 +23,19 @@ export default function PublicLayout() {
   // The floating buttons would cover the checkout form and its Place Order button
   const isCheckout = pathname.replace(/\/+$/, '') === '/checkout';
 
+  // Decorative animations (Atmosphere, ornaments, shimmers) pause while the tab is hidden:
+  // CSS keys off html[data-page-hidden]
+  useEffect(() => {
+    const root = document.documentElement;
+    const sync = () => root.toggleAttribute('data-page-hidden', document.visibilityState === 'hidden');
+    sync();
+    document.addEventListener('visibilitychange', sync);
+    return () => {
+      document.removeEventListener('visibilitychange', sync);
+      root.removeAttribute('data-page-hidden');
+    };
+  }, []);
+
   // Soft fade between pages (Web Animations API: no remount, no library); skipped on first
   // load and when the visitor prefers reduced motion
   const mainRef = useRef(null);

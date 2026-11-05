@@ -90,6 +90,53 @@
   box-shadow: 0 4px 14px rgba(31, 74, 52, 0.28);
 }
 
+/* Added: the button settles with a soft pulse, the tick pops and the label rises in */
+.ps-atc.is-added {
+  animation: ps-atc-confirm 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ps-atc.is-added svg {
+  animation: ps-atc-tick 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ps-atc.is-added > span:not(.ps-atc-sr) {
+  animation: ps-atc-label 0.4s ease 0.05s backwards;
+}
+
+@keyframes ps-atc-confirm {
+  0% {
+    transform: scale(0.97);
+  }
+  45% {
+    transform: scale(1.025);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes ps-atc-tick {
+  from {
+    opacity: 0;
+    transform: scale(0.3) rotate(-25deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ps-atc-label {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .ps-atc.is-disabled {
   background: #f1ece3;
   border-color: #e3d9c8;
@@ -149,7 +196,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ps-atc,
-  .ps-atc::after {
+  .ps-atc::after,
+  .ps-atc.is-added svg,
+  .ps-atc.is-added > span {
     transition: none !important;
     animation: none !important;
   }

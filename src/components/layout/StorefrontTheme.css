@@ -110,6 +110,122 @@
   }
 }
 
+/* Arabic pattern, centred variant: strongest behind a heading, fading to every edge */
+.ps-arabesque--center::before {
+  opacity: 0.07;
+  -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 45%, #000 0%, rgba(0, 0, 0, 0.45) 45%, transparent 75%);
+  mask-image: radial-gradient(ellipse 60% 70% at 50% 45%, #000 0%, rgba(0, 0, 0, 0.45) 45%, transparent 75%);
+}
+
+/* Scroll reveal (common/Reveal) --------------------------------------------- */
+.ps-reveal {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s),
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s);
+}
+
+/* Revealed: no transform is left behind (it would re-anchor fixed dialogs inside) */
+.ps-reveal.is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce), print {
+  .ps-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Gold ornament: hairlines draw in when revealed; the star turns and glows slowly ------ */
+.ps-ornament-line {
+  stroke-dasharray: 64;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.25s;
+}
+
+.ps-reveal:not(.is-revealed) .ps-ornament-line {
+  stroke-dashoffset: 64;
+}
+
+.ps-ornament-star {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ps-ornament-turn 9s ease-in-out infinite;
+}
+
+.ps-ornament-core {
+  animation: ps-ornament-glow 4.5s ease-in-out infinite;
+}
+
+@keyframes ps-ornament-turn {
+  0%,
+  60% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(90deg);
+  }
+}
+
+@keyframes ps-ornament-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Gold eyebrow lines: a soft glint travels along them now and then */
+.ps-cbc-eyebrow-line {
+  position: relative;
+  overflow: hidden;
+}
+
+.ps-cbc-eyebrow-line::after {
+  content: '';
+  position: absolute;
+  inset: -1px auto -1px 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, #fff6dc, transparent);
+  transform: translateX(-120%);
+  animation: ps-line-glint 6s ease-in-out 1.5s infinite;
+}
+
+@keyframes ps-line-glint {
+  0%,
+  70% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+/* Decorative loops stop while the tab is hidden */
+html[data-page-hidden] :is(.ps-ornament-star, .ps-ornament-core),
+html[data-page-hidden] .ps-cbc-eyebrow-line::after,
+html[data-page-hidden] .ps-atc--lg::after {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-ornament-line,
+  .ps-ornament-star,
+  .ps-ornament-core,
+  .ps-cbc-eyebrow-line::after {
+    transition: none;
+    animation: none;
+  }
+  .ps-reveal:not(.is-revealed) .ps-ornament-line {
+    stroke-dashoffset: 0;
+  }
+}
+
 /* ==========================================================================
    One button language for the whole storefront.
    The component stylesheets keep each button's size and layout; its colours,
@@ -283,5 +399,25 @@
 @media (prefers-reduced-motion: reduce) {
   .ps-app-root.ps-app-root :is(button, a) {
     transition: none;
+  }
+}
+
+/* ==========================================================================
+   Reduced motion, storefront-wide: a safety net under the per-component rules.
+   Animations and transitions finish at once (end states still apply, so
+   nothing stays hidden); smooth scrolling becomes instant. Loading spinners
+   keep turning so "loading" stays readable. The hero film does not autoplay
+   (HeroCinematic) and Atmosphere renders nothing.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .ps-app-root *:not([class*="spinner"]),
+  .ps-app-root *::before,
+  .ps-app-root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
   }
 }

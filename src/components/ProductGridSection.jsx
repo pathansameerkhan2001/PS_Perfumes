@@ -50,7 +50,7 @@ export default function ProductGridSection({
   const displayList = limit ? filteredProducts.slice(0, limit) : filteredProducts;
 
   return (
-    <section id={id} className="ps-bestsellers-section" aria-label={title}>
+    <section id={id} className="ps-bestsellers-section ps-arabesque" aria-label={title}>
       <div className="ps-bestsellers-container">
         {/* Section Header */}
         <div className="ps-bestsellers-header">

@@ -432,3 +432,85 @@
     margin-right: 0;
   }
 }
+
+/* ==========================================================================
+   Motion (shared by /collections and the homepage section): underline that
+   grows from the centre, gold icon lift, pills that cascade in when the
+   category changes, products that fade in. Transform and opacity only.
+   ========================================================================== */
+.ps-cbc-header .ps-ornament {
+  margin-top: 16px;
+}
+
+.ps-cbc-tab::after {
+  transform-origin: center;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ps-cbc-tab svg {
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s ease, filter 0.3s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  /* A hint of the underline on hover; the active tab keeps the full line */
+  .ps-cbc-tab:not(.is-active):hover::after {
+    transform: scaleX(0.35);
+  }
+  .ps-cbc-tab:hover svg {
+    transform: translateY(-2px) rotate(-4deg);
+    color: #b48632;
+    filter: drop-shadow(0 3px 6px rgba(198, 154, 69, 0.35));
+  }
+}
+
+.ps-cbc-tab.is-active svg {
+  color: var(--cbc-green);
+}
+
+/* Pills: each cascades in (the row is re-created when the main category changes) */
+.ps-cbc-pill {
+  animation: ps-cbc-pill-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 45ms);
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.ps-cbc-pill.is-active {
+  box-shadow: 0 4px 12px rgba(41, 69, 50, 0.18);
+}
+
+@keyframes ps-cbc-pill-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Products: the new selection fades in */
+.ps-cbc-grid--fade {
+  animation: ps-cbc-grid-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes ps-cbc-grid-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-cbc-pill,
+  .ps-cbc-grid--fade {
+    animation: none;
+  }
+  .ps-cbc-tab svg {
+    transition: none;
+  }
+}

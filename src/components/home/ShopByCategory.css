@@ -52,7 +52,7 @@
   padding: 8px 0;
 }
 
-.ps-cbc-home-header > :not(.ps-petals) {
+.ps-cbc-home-header > :not(.ps-atmos) {
   position: relative;
   z-index: 1;
 }

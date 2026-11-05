@@ -39,6 +39,8 @@ export default function WishlistHeart({ product, size = 18, className = '' }) {
         className={popKey > 0 && saved ? 'ps-heart-icon is-pop' : 'ps-heart-icon'}
         aria-hidden="true"
       />
+      {/* Gold ring and sparkles when saved (restarts on every save) */}
+      {popKey > 0 && saved && <span key={`burst-${popKey}`} className="ps-heart-burst" aria-hidden="true" />}
     </button>
   );
 }

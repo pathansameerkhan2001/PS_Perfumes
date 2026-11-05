@@ -1,5 +1,6 @@
 /* Wishlist heart: outlined champagne gold, filled when saved */
 .ps-heart {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -62,6 +63,53 @@
   }
 }
 
+/* Saved: a gold ring expands and six sparkles spread out, then both fade */
+.ps-heart-burst {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 1.5px solid var(--lux-gold);
+  pointer-events: none;
+  animation: ps-heart-ring 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.ps-heart-burst::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 3px;
+  margin: -1.5px 0 0 -1.5px;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: 0 -22px 0 #c69a45, 19px -11px 0 #e3c58b, 19px 11px 0 #c69a45, 0 22px 0 #e3c58b, -19px 11px 0 #c69a45,
+    -19px -11px 0 #e3c58b;
+  animation: ps-heart-sparks 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes ps-heart-ring {
+  from {
+    opacity: 0.9;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.55);
+  }
+}
+
+@keyframes ps-heart-sparks {
+  from {
+    opacity: 1;
+    transform: scale(0.45);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.15);
+  }
+}
+
 @media (max-width: 720px) {
   .ps-heart {
     width: 34px;
@@ -76,5 +124,8 @@
   }
   .ps-heart-icon.is-pop {
     animation: none;
+  }
+  .ps-heart-burst {
+    display: none;
   }
 }

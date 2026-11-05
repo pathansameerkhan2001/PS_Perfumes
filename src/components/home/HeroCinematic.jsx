@@ -6,6 +6,7 @@ import {
   BUILT_IN_HERO_POSTER_DESKTOP as posterDesktop,
   BUILT_IN_HERO_POSTER_MOBILE as posterMobile,
 } from '../../services/hero';
+import Atmosphere from '../common/Atmosphere';
 import './HeroCinematic.css';
 
 // Built-in film (Supabase Storage, configured bucket "Ps-perfumes-media"), used when no active
@@ -94,10 +95,9 @@ function writeCachedFilm(film) {
  *   the tab becomes visible again. If the file fails to load, it is retried once; otherwise
  *   the poster remains, so the hero is never blank.
  * - The film pauses while scrolled out of view (saves battery and CPU) and resumes on return.
- * - Autoplay (owner request, 2026-11-05) applies to every visitor, including those who ask for
- *   reduced motion (the pause control is always there). Only visitors with Data Saver on or a
- *   2G-class connection see the poster and a clear play control; the film is not downloaded until
- *   they press it.
+ * - Autoplay is skipped for visitors who ask for reduced motion (prefers-reduced-motion:
+ *   reduce), use Data Saver or are on a 2G-class connection: they see the poster with a clear
+ *   play control and the sound control, and the film is not downloaded until they press play.
  * - The film is requested once the page has loaded, or after FILM_DEFER_MAX_MS at most (poster
  *   first), so it does not delay the first render or the rest of the page.
  * - A small, discreet pause/resume control (bottom-right corner, icon only) lets anyone stop or
@@ -129,7 +129,9 @@ export default function HeroCinematic() {
   const connection = typeof navigator !== 'undefined' ? navigator.connection : undefined;
   const saveData = connection?.saveData === true;
   const slowNetwork = SLOW_NETWORKS.has(connection?.effectiveType);
-  const autoStart = !saveData && !slowNetwork;
+  const prefersReducedMotion =
+    typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const autoStart = !prefersReducedMotion && !saveData && !slowNetwork;
 
   // True once the page has finished loading (immediately when returning to the homepage)
   const [pageLoaded, setPageLoaded] = useState(
@@ -552,6 +554,10 @@ export default function HeroCinematic() {
           decoding="async"
           fetchPriority="high"
         />
+
+        {/* Arabian atmosphere over the film: incense smoke and slow gold particles (CSS only,
+            nothing to download, so the film starts exactly as before) */}
+        <Atmosphere smoke particles tone="dark" className="ps-hero-atmos" />
 
         {/* Subtle cinematic depth (no text or controls) */}
         <div className="ps-hero-delicate-vignette" aria-hidden="true" />

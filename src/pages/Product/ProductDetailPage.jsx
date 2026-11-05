@@ -22,6 +22,7 @@ import ProductImage from '../../components/common/ProductImage';
 import WishlistHeart from '../../components/common/WishlistHeart';
 import AddToCartButton from '../../components/common/AddToCartButton';
 import GoldOrnament from '../../components/common/GoldOrnament';
+import Reveal from '../../components/common/Reveal';
 import { useSeo, SITE_URL } from '../../utils/useSeo';
 import './ProductDetailPage.css';
 
@@ -76,7 +77,8 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     let mounted = true;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
 
     async function loadData() {
       setLoading(true);
@@ -920,7 +922,7 @@ export default function ProductDetailPage() {
             4. CURATED COMPANIONS (Styled in matching Warm Ivory Luxury Theme)
             ============================================================== */}
         {related.length > 0 && (
-          <div className="ps-pdp-related-container ps-arabesque">
+          <Reveal className="ps-pdp-related-container ps-arabesque">
             <div className="ps-pdp-related-header">
               <span className="ps-pdp-related-eyebrow">CURATED COMPANIONS</span>
               <h2 className="ps-pdp-related-title">You May Also Admire</h2>
@@ -931,7 +933,7 @@ export default function ProductDetailPage() {
                 <ProductCard key={prod.id} product={prod} />
               ))}
             </div>
-          </div>
+          </Reveal>
         )}
       </section>
     </div>

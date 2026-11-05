@@ -335,3 +335,15 @@
     inset: 8px;
   }
 }
+
+/* Hero atmosphere (common/Atmosphere): smoke and particles stay behind the text and photo */
+.ps-ab-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.ps-ab-hero > :not(.ps-atmos) {
+  position: relative;
+  z-index: 1;
+}

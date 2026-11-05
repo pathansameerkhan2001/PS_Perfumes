@@ -7,6 +7,8 @@ import { getProducts } from '../../services/products';
 import { collectionPath, hasComboCategory, COMBO_NAV_ITEM } from '../../utils/useStorefrontCategories';
 import { useSeo } from '../../utils/useSeo';
 import CategoryIcon from './CategoryIcon';
+import Reveal from '../../components/common/Reveal';
+import GoldOrnament from '../../components/common/GoldOrnament';
 import './CollectionsPage.css';
 
 const PAGE_SIZE = 12;
@@ -108,7 +110,7 @@ export default function CollectionsPage() {
 
   return (
     <div className="ps-cbc-page">
-      <header className="ps-cbc-header">
+      <Reveal as="header" className="ps-cbc-header ps-arabesque ps-arabesque--center">
         <div className="ps-cbc-eyebrow">
           <span className="ps-cbc-eyebrow-line" aria-hidden="true" />
           <span>Our Collections</span>
@@ -118,7 +120,8 @@ export default function CollectionsPage() {
         <p className="ps-cbc-subtitle">
           Discover our curated range of perfumes, attars, home fragrances and body care
         </p>
-      </header>
+        <GoldOrnament />
+      </Reveal>
 
       {treeFailed ? (
         <div className="ps-cbc-state" role="alert">
@@ -131,7 +134,7 @@ export default function CollectionsPage() {
         </div>
       ) : (
         <>
-          <nav className="ps-cbc-tabs" aria-label="Categories">
+          <Reveal as="nav" className="ps-cbc-tabs" aria-label="Categories" delay={0.15}>
             <div className="ps-cbc-tabs-track">
               {!tree
                 ? [1, 2, 3, 4].map((n) => <span key={n} className="ps-cbc-tab-skeleton" />)
@@ -150,7 +153,7 @@ export default function CollectionsPage() {
                     );
                   })}
             </div>
-          </nav>
+          </Reveal>
 
           {/* Every main category gets the filter row: All, then its subcategories (none before
               Migration 12, or when the category has none) */}
@@ -160,7 +163,7 @@ export default function CollectionsPage() {
                 <Filter size={16} strokeWidth={1.5} aria-hidden="true" />
                 Filter:
               </span>
-              <div className="ps-cbc-pills">
+              <div className="ps-cbc-pills" key={activeMain.id}>
                 <button
                   type="button"
                   className={`ps-cbc-pill${!activeSub ? ' is-active' : ''}`}
@@ -169,10 +172,11 @@ export default function CollectionsPage() {
                 >
                   All
                 </button>
-                {activeMain.children.map((c) => (
+                {activeMain.children.map((c, i) => (
                   <button
                     key={c.id}
                     type="button"
+                    style={{ '--i': i + 1 }}
                     className={`ps-cbc-pill${activeSub?.id === c.id ? ' is-active' : ''}`}
                     aria-pressed={activeSub?.id === c.id}
                     onClick={() => selectSub(c.slug)}
@@ -230,7 +234,8 @@ export default function CollectionsPage() {
                 <p className="ps-cbc-count" aria-live="polite">
                   {products.length} {products.length === 1 ? 'product' : 'products'}
                 </p>
-                <div className="ps-cbc-grid">
+                {/* Keyed by the selection, so changing category or filter fades the new set in */}
+                <div className="ps-cbc-grid ps-cbc-grid--fade" key={`${scopeKey}|${subSlug}`}>
                   {visibleProducts.map((prod, index) => (
                     <CollectionProductCard key={prod.id} product={prod} priority={index < 4} />
                   ))}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import HeroCinematic from '../../components/home/HeroCinematic';
+import Reveal from '../../components/common/Reveal';
 import AnnouncementTicker from '../../components/home/AnnouncementTicker';
 import BenefitsBar from '../../components/home/BenefitsBar';
 import ShopByCategory from '../../components/home/ShopByCategory';
@@ -164,7 +165,20 @@ export default function HomePage() {
   return (
     <div className="ps-home-page">
       <HeroCinematic />
-      {visibleSections.map(renderSection)}
+      {/* Each section fades and rises in as it scrolls into view (common/Reveal) */}
+      {(() => {
+        // Keyed by the section type (and its occurrence), not its id: when the saved layout
+        // replaces the built-in one (new ids), sections already shown are not hidden and revealed
+        // a second time
+        const seen = {};
+        return visibleSections.map((sec) => {
+          const section = renderSection(sec);
+          if (!section) return null;
+          const type = sec.section_key || sec.id;
+          seen[type] = (seen[type] || 0) + 1;
+          return <Reveal key={`${type}-${seen[type]}`}>{section}</Reveal>;
+        });
+      })()}
     </div>
   );
 }

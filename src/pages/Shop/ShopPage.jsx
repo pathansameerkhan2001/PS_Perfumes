@@ -7,6 +7,7 @@ import { formatINR } from '../../utils/formatCurrency';
 import './ShopPage.css';
 import { useSeo } from '../../utils/useSeo';
 import { useStorefrontCategories } from '../../utils/useStorefrontCategories';
+import Reveal from '../../components/common/Reveal';
 
 const GENDERS = ['ALL', 'Unisex', 'Men', 'Women'];
 
@@ -232,8 +233,8 @@ export default function ShopPage() {
   return (
     <div className="ps-shop-page">
       {/* Header Banner */}
-      <div className="ps-shop-hero-banner">
-        <div className="ps-shop-hero-inner">
+      <div className="ps-shop-hero-banner ps-arabesque ps-arabesque--center">
+        <Reveal className="ps-shop-hero-inner">
           <span className="ps-shop-tag">
             {onlyOffers ? 'SPECIAL ATELIER PRIVILEGE' : 'HAUTE PARFUMERIE COLLECTION'}
           </span>
@@ -245,7 +246,7 @@ export default function ShopPage() {
               ? 'Discover our exclusive combo collections, gift sets, and artisanal extraits with boutique privileges.'
               : 'Artisanal attars, pure extraits de parfum, and precious agarwood distillations.'}
           </p>
-        </div>
+        </Reveal>
       </div>
 
       <div className="ps-shop-container">

@@ -72,12 +72,9 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.ps-combopack-card:hover .ps-combopack-img {
-  transform: scale(1.05);
-}
+/* No zoom on hover: it would crop the bottles, caps and labels */
 
 /* Discount Badge matching reference */
 .ps-combopack-discount-badge {

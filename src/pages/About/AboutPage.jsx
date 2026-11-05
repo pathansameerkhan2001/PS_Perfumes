@@ -5,6 +5,7 @@ import agarwoodBottle from '../../assets/promo-banner.webp';
 import giftSet from '../../assets/combo-attar-set.webp';
 import './AboutPage.css';
 import { useSeo } from '../../utils/useSeo';
+import Atmosphere from '../../components/common/Atmosphere';
 
 /*
  * About Us — light editorial theme (ivory #F8F3E9, white, champagne gold #D6B56D,
@@ -71,6 +72,8 @@ export default function AboutPage() {
     <div className="ps-ab-page" ref={pageRef}>
       {/* 1. Hero */}
       <section className="ps-ab-hero" aria-labelledby="ps-ab-title">
+        {/* Incense smoke and gold particles behind the story (decorative, CSS only) */}
+        <Atmosphere smoke particles />
         <div className="ps-ab-container ps-ab-hero-text">
           <span className="ps-ab-eyebrow">About PS PERFUMES</span>
           <h1 id="ps-ab-title" className="ps-ab-display">The Art of Fragrance</h1>

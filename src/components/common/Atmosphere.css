@@ -1,0 +1,124 @@
+/* ==========================================================================
+   Atmosphere (common/Atmosphere): gold particles and incense smoke. Rose petals
+   use .ps-petals in StorefrontTheme.css. Transform and opacity only; every
+   layer is a few small elements, paused off-screen and in hidden tabs.
+   ========================================================================== */
+
+.ps-atmos {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  contain: strict;
+}
+
+.ps-atmos-smoke,
+.ps-atmos-particles {
+  position: absolute;
+  inset: 0;
+}
+
+/* Paused while scrolled away or while the tab is hidden */
+.ps-atmos.is-offscreen *,
+html[data-page-hidden] .ps-atmos * {
+  animation-play-state: paused !important;
+}
+
+/* Gold particles ----------------------------------------------------------- */
+/* Each lane is as tall as the section, so translateY(-45%) rises nearly half of it */
+.ps-mote-lane {
+  position: absolute;
+  top: 0;
+  width: 6px;
+  height: 100%;
+  animation-name: ps-mote-rise;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-fill-mode: backwards;
+  will-change: transform, opacity;
+}
+
+.ps-mote {
+  position: absolute;
+  left: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff3d6 0%, #e3c58b 45%, rgba(198, 154, 69, 0) 75%);
+  box-shadow: 0 0 6px rgba(227, 197, 139, 0.55);
+}
+
+.ps-atmos--light .ps-mote {
+  background: radial-gradient(circle, #e9d3a4 0%, #c69a43 55%, rgba(198, 154, 67, 0) 80%);
+  box-shadow: 0 0 5px rgba(198, 154, 67, 0.35);
+}
+
+@keyframes ps-mote-rise {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(10px, -22%, 0);
+  }
+  80% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate3d(-6px, -45%, 0);
+    opacity: 0;
+  }
+}
+
+/* Incense smoke ------------------------------------------------------------ */
+/* Pre-softened radial gradients (no blur filter): cheap on phones */
+.ps-wisp {
+  position: absolute;
+  bottom: -18%;
+  width: clamp(220px, 32vw, 420px);
+  aspect-ratio: 3 / 4;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 60%, rgba(255, 249, 236, 0.2) 0%, rgba(255, 249, 236, 0.08) 38%, rgba(255, 249, 236, 0) 70%);
+  animation-name: ps-wisp-rise;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-fill-mode: backwards;
+  will-change: transform, opacity;
+}
+
+.ps-atmos--light .ps-wisp {
+  background: radial-gradient(ellipse at 50% 60%, rgba(198, 154, 67, 0.1) 0%, rgba(233, 216, 184, 0.08) 40%, rgba(233, 216, 184, 0) 70%);
+}
+
+@keyframes ps-wisp-rise {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.8) rotate(0deg);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.9;
+  }
+  60% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate3d(40px, -55%, 0) scale(1.35) rotate(8deg);
+    opacity: 0;
+  }
+}
+
+/* Phones: fewer elements */
+@media (max-width: 720px) {
+  .ps-mote-lane:nth-child(n + 7),
+  .ps-wisp:nth-child(n + 3) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-atmos {
+    display: none;
+  }
+}

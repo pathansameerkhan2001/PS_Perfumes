@@ -139,6 +139,12 @@
   -webkit-appearance: none !important;
 }
 
+/* Smoke and gold particles (common/Atmosphere): above the film and poster, below the
+   blends and controls */
+.ps-atmos.ps-hero-atmos {
+  z-index: 2;
+}
+
 /* Subtle cinematic depth: soft edges, gentle blend into the header and the section below */
 .ps-hero-delicate-vignette {
   position: absolute;

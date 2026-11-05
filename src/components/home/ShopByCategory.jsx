@@ -4,6 +4,7 @@ import { ArrowRight, Filter, RotateCcw } from 'lucide-react';
 import CollectionProductCard from '../collection/CollectionProductCard';
 import CategoryIcon from '../../pages/Collections/CategoryIcon';
 import RosePetals from '../common/RosePetals';
+import GoldOrnament from '../common/GoldOrnament';
 import { getStorefrontCategoryTree } from '../../services/categories';
 import { getProducts } from '../../services/products';
 import { collectionPath, hasComboCategory, COMBO_NAV_ITEM } from '../../utils/useStorefrontCategories';
@@ -99,6 +100,7 @@ export default function ShopByCategory({ title = '', subtitle = '' }) {
           {heading}
         </h2>
         <p className="ps-cbc-subtitle">{subtitle || DEFAULT_SUBTITLE}</p>
+        <GoldOrnament />
       </header>
 
       {treeFailed ? (
@@ -141,7 +143,7 @@ export default function ShopByCategory({ title = '', subtitle = '' }) {
                 <Filter size={16} strokeWidth={1.5} aria-hidden="true" />
                 Filter:
               </span>
-              <div className="ps-cbc-pills">
+              <div className="ps-cbc-pills" key={activeMain.id}>
                 <button
                   type="button"
                   className={`ps-cbc-pill${!activeSub ? ' is-active' : ''}`}
@@ -150,10 +152,11 @@ export default function ShopByCategory({ title = '', subtitle = '' }) {
                 >
                   All
                 </button>
-                {activeMain.children.map((c) => (
+                {activeMain.children.map((c, i) => (
                   <button
                     key={c.id}
                     type="button"
+                    style={{ '--i': i + 1 }}
                     className={`ps-cbc-pill${activeSub?.id === c.id ? ' is-active' : ''}`}
                     aria-pressed={activeSub?.id === c.id}
                     onClick={() => setSubId(c.id)}

@@ -38,8 +38,9 @@
     box-shadow: 0 14px 32px rgba(30, 26, 22, 0.09), 0 0 0 1px rgba(198, 154, 69, 0.18);
     transform: translateY(-2px);
   }
-  .ps-pcard:hover .ps-pcard-img {
-    transform: scale(1.06);
+  /* No zoom on the photo (it would crop bottles, caps and labels): a gold frame instead */
+  .ps-pcard:hover .ps-pcard-media::after {
+    opacity: 1;
   }
   .ps-pcard:hover .ps-pcard-title {
     color: var(--lux-green);
@@ -60,11 +61,6 @@
   overflow: hidden;
   background: radial-gradient(circle at 50% 42%, #fffaf1 0%, #f6efe3 70%, #f1e8d9 100%);
   border-bottom: 1px solid rgba(198, 154, 69, 0.16);
-}
-
-.ps-pcard-img {
-  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
 }
 
 .ps-pcard-heart {
@@ -228,5 +224,25 @@
   .ps-pcard:hover,
   .ps-pcard:hover .ps-pcard-img {
     transform: none;
+  }
+}
+
+/* Fine gold inner frame on the photo, shown on hover (opacity only) */
+.ps-pcard-media::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  z-index: 1;
+  border: 1px solid rgba(198, 154, 69, 0.55);
+  border-radius: 4px;
+  box-shadow: inset 0 0 18px rgba(198, 154, 69, 0.12);
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-pcard-media::after {
+    transition: none;
   }
 }

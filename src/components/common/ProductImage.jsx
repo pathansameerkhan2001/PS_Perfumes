@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './ProductImage.css';
 
 // How far an image's proportions may differ from its frame before it is shown whole instead of
@@ -29,9 +29,13 @@ export default function ProductImage({
   onError,
 }) {
   const [fit, setFit] = useState('cover');
+  // The photo fades in once loaded (and once its fit is known, so it never jumps from filling
+  // the frame to being shown whole)
+  const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef(null);
 
-  const handleLoad = useCallback((e) => {
-    const img = e.currentTarget;
+  const measure = useCallback((img) => {
+    setLoaded(true);
     const frame = img.parentElement;
     if (!img.naturalWidth || !img.naturalHeight || !frame?.clientHeight) return;
     const imageRatio = img.naturalWidth / img.naturalHeight;
@@ -39,6 +43,15 @@ export default function ProductImage({
     const relative = imageRatio / frameRatio;
     setFit(relative < TALLER_LIMIT || relative > WIDER_LIMIT ? 'contain' : 'cover');
   }, []);
+
+  const handleLoad = useCallback((e) => measure(e.currentTarget), [measure]);
+
+  // A photo already in the browser cache may finish before React listens for "load"
+  useEffect(() => {
+    const img = imgRef.current;
+    if (img?.complete && img.naturalWidth) measure(img);
+    else setLoaded(false);
+  }, [src, measure]);
 
   return (
     <>
@@ -48,7 +61,8 @@ export default function ProductImage({
       <img
         src={src}
         alt={alt}
-        className={`ps-pimg is-${fit} ${className}`}
+        ref={imgRef}
+        className={`ps-pimg is-${fit}${priority ? ' is-priority' : loaded ? ' is-loaded' : ''} ${className}`}
         loading={priority ? 'eager' : 'lazy'}
         fetchPriority={priority ? 'high' : undefined}
         decoding="async"

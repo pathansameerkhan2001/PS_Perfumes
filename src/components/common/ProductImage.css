@@ -26,3 +26,29 @@
   transform: scale(1.15);
   pointer-events: none;
 }
+
+/* Fade in once loaded (an animation, not a transition: cards set their own transition on the
+   photo for the hover zoom) */
+/* Above-the-fold photos (priority) show at once */
+.ps-pimg:not(.is-loaded):not(.is-priority) {
+  opacity: 0;
+}
+
+.ps-pimg.is-loaded {
+  animation: ps-pimg-in 0.6s ease;
+}
+
+@keyframes ps-pimg-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-pimg.is-loaded {
+    animation: none;
+  }
+}
