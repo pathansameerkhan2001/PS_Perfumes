@@ -9,13 +9,38 @@ import promoBannerMobile from '../assets/promo-banner-mobile.webp';
 
 const LOCAL_HERO_KEY = 'ps_db_hero_slides';
 
-// Built-in hero posters (WebP, public/assets): the first frame of the built-in film, so the
-// poster and the start of the film are the same picture. index.html preloads them on the
-// homepage; bump the "-v2" suffix when replacing an image (or the film).
-export const BUILT_IN_HERO_POSTER_DESKTOP = '/assets/hero-poster-desktop-v2.webp';
-export const BUILT_IN_HERO_POSTER_MOBILE = '/assets/hero-poster-mobile-v2.webp';
+// Default hero film (Supabase Storage path): the film currently chosen in Admin → Hero Sections.
+// It is used only when the hero setting cannot be read (or takes too long), so a slow database
+// answer never swaps the owner's film for a different one. The older built-in film
+// (hero/ps-perfumes-hero-desktop.mp4) stays in Storage untouched.
+export const BUILT_IN_HERO_FILM_PATH = 'hero/hero-film-1793775944815.mp4';
+
+// Built-in hero posters (WebP, public/assets): the real first frame of the default film above,
+// so the poster and the start of the film are the same picture. index.html preloads them on
+// the homepage; bump the "-v3" suffix when replacing an image (or the film).
+export const BUILT_IN_HERO_POSTER_DESKTOP = '/assets/hero-poster-desktop-v3.webp';
+export const BUILT_IN_HERO_POSTER_MOBILE = '/assets/hero-poster-mobile-v3.webp';
 const heroLuxuryDesktop = BUILT_IN_HERO_POSTER_DESKTOP;
 const heroLuxuryMobile = BUILT_IN_HERO_POSTER_MOBILE;
+
+// First-frame posters bundled with the site for known films (keyed by Storage path). A film
+// without an admin poster and without an entry here shows the dark-gold backdrop until its
+// first frame is on screen, never another film's poster.
+const KNOWN_FILM_POSTERS = {
+  [BUILT_IN_HERO_FILM_PATH]: { desktop: BUILT_IN_HERO_POSTER_DESKTOP, mobile: BUILT_IN_HERO_POSTER_MOBILE },
+  'hero/ps-perfumes-hero-desktop.mp4': {
+    desktop: '/assets/hero-poster-desktop-v2.webp',
+    mobile: '/assets/hero-poster-mobile-v2.webp',
+  },
+};
+
+/** The bundled first-frame poster for a film URL or Storage path, or '' when none is known. */
+export function knownPosterForFilm(urlOrPath, narrow = false) {
+  const clean = String(urlOrPath || '').split(/[?#]/)[0];
+  const key = Object.keys(KNOWN_FILM_POSTERS).find((path) => clean === path || clean.endsWith(`/${path}`));
+  if (!key) return '';
+  return narrow ? KNOWN_FILM_POSTERS[key].mobile : KNOWN_FILM_POSTERS[key].desktop;
+}
 
 export const INITIAL_HERO_SLIDES = [
   {

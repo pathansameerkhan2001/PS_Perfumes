@@ -38,3 +38,13 @@
     opacity: 1;
   }
 }
+
+/* Phones: full-width above the home indicator, clear of the contact toggle (bottom-left) */
+@media (max-width: 768px) {
+  .ps-toast-banner {
+    left: calc(78px + env(safe-area-inset-left, 0px));
+    right: calc(14px + env(safe-area-inset-right, 0px));
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    border-radius: 10px;
+  }
+}

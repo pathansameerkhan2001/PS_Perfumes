@@ -3,7 +3,6 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import Header from '../Header';
 import Footer from '../Footer';
-import FloatingCartButton from '../FloatingCartButton';
 import FloatingContactDock from '../common/FloatingContactDock';
 import Toast from '../Toast';
 import ScrollToTop from '../common/ScrollToTop';
@@ -20,7 +19,7 @@ const WishlistDrawer = React.lazy(() => import('../WishlistDrawer'));
 export default function PublicLayout() {
   const { pathname } = useLocation();
   const { isCartOpen, setIsCartOpen } = useCart();
-  // The floating buttons would cover the checkout form and its Place Order button
+  // The floating contact toggle would cover the checkout form and its Place Order button
   const isCheckout = pathname.replace(/\/+$/, '') === '/checkout';
 
   // Decorative animations (Atmosphere, ornaments, shimmers) pause while the tab is hidden:
@@ -71,11 +70,9 @@ export default function PublicLayout() {
       {/* Luxury Brand Footer */}
       <Footer />
 
-      {/* Luxury Floating Social & Contact Concierge (Bottom-Left) */}
+      {/* The only floating control: the contact toggle (bottom-left). The bag lives in the
+          header (with its count); there is no second, competing floating cart button. */}
       {!isCheckout && <FloatingContactDock />}
-
-      {/* Quick Action Floating Cart Pill (Bottom-Right) */}
-      {!isCheckout && <FloatingCartButton />}
 
       {/* Drawers & Dialogs */}
       {/* A failing drawer closes on its own; the page behind it keeps working */}

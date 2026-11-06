@@ -40,6 +40,7 @@ export default function ProductDetailPage() {
   const [related, setRelated] = useState([]);
   const [productReviews, setProductReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isBuying, setIsBuying] = useState(false);
   const [activeImage, setActiveImage] = useState('');
   const [selectedBottleType, setSelectedBottleType] = useState('Glass Bottle');
   const [selectedSize, setSelectedSize] = useState('50 ml');
@@ -324,9 +325,11 @@ export default function ProductDetailPage() {
     return addToCart(product, quantity, currentVariant);
   };
 
-  // Express Buy Now handler
+  // Express Buy Now handler (unchanged logic; the button only shows a brief "pressed/loading"
+  // state while the checkout page opens, and ignores a double tap)
   const handleBuyNow = () => {
-    if (isOutOfStock || !currentVariant) return;
+    if (isOutOfStock || !currentVariant || isBuying) return;
+    setIsBuying(true);
     addToCart(product, quantity, currentVariant);
     navigate('/checkout');
   };
@@ -664,13 +667,18 @@ export default function ProductDetailPage() {
               {/* Secondary Outlined Champagne-Gold BUY NOW Button */}
               <button
                 type="button"
-                className="ps-pdp-buynow-btn"
+                className={`ps-pdp-buynow-btn${isBuying ? ' is-loading' : ''}`}
                 onClick={handleBuyNow}
                 disabled={isOutOfStock}
+                aria-busy={isBuying || undefined}
                 aria-label={`Express buy ${product.name} now`}
               >
-                <Zap size={16} strokeWidth={2} />
-                <span>BUY NOW</span>
+                {isBuying ? (
+                  <span className="ps-pdp-btn-spinner" aria-hidden="true" />
+                ) : (
+                  <Zap size={18} strokeWidth={1.8} aria-hidden="true" />
+                )}
+                <span>Buy Now</span>
               </button>
             </div>
 

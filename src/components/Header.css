@@ -792,3 +792,180 @@
     animation: none;
   }
 }
+
+/* ==========================================================================
+   Header icons — one refined language (November 2026 polish)
+   - Same 22px artwork and 1.6 stroke for menu, search, account, wishlist, bag.
+   - 44px circular touch targets, champagne on black, gold on hover/press.
+   - Phones: menu + search on the left, wishlist + bag on the right, so the
+     logo is truly centred and nothing overlaps on 320px screens.
+   ========================================================================== */
+.ps-top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  z-index: 3;
+}
+
+/* The left-hand search button exists for phones only */
+.ps-search-btn--mobile {
+  display: none;
+}
+
+.ps-header-container .ps-header-icon-btn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  /* display comes from each button's own rules (desktop-only / phone-only buttons) */
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #E9D8B8;
+  line-height: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.18s ease;
+}
+
+.ps-header-container .ps-header-icon-btn svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* The menu icon carries the gold accent on black */
+.ps-header-container .ps-mobile-toggle-btn.ps-header-icon-btn {
+  color: #C69A43;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ps-header-container .ps-header-icon-btn:hover {
+    color: #C69A43;
+    background: rgba(198, 154, 67, 0.12);
+    opacity: 1;
+    transform: none;
+  }
+  .ps-header-container .ps-mobile-toggle-btn.ps-header-icon-btn:hover {
+    color: #E9D8B8;
+  }
+}
+
+/* Tap feedback: a soft gold halo and a slight press */
+.ps-header-container .ps-header-icon-btn:active {
+  background: rgba(198, 154, 67, 0.2);
+  transform: scale(0.92);
+}
+
+.ps-header-container .ps-header-icon-btn:focus-visible {
+  outline: 2px solid #C69A43;
+  outline-offset: 1px;
+}
+
+/* Counts: a small gold medallion ringed in black so it reads cleanly over the icon */
+.ps-header-container .ps-header-icon-btn .ps-cart-badge {
+  top: 3px;
+  right: 1px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border: 1.5px solid #080706;
+  background: linear-gradient(135deg, #E9D8B8 0%, #C69A43 100%);
+  color: #080706;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* Bag bump when an item is added (the floating bag button is gone; the header bag answers) */
+.ps-bag-btn.is-bumped {
+  animation: ps-header-bag-bump 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ps-bag-btn.is-bumped .ps-cart-badge {
+  animation: ps-badge-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 0 3px rgba(198, 154, 67, 0.45);
+}
+
+@keyframes ps-header-bag-bump {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.14) translateY(-2px);
+  }
+  65% {
+    transform: scale(0.96);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-header-container .ps-header-icon-btn {
+    transition: none;
+  }
+  .ps-bag-btn.is-bumped,
+  .ps-bag-btn.is-bumped .ps-cart-badge {
+    animation: none;
+  }
+}
+
+/* Desktop: comfortable spacing between the right-hand utilities */
+@media (min-width: 769px) {
+  .ps-top-bar-right {
+    gap: 6px;
+  }
+  .ps-delivery-location-pill {
+    margin: 0 8px;
+  }
+}
+
+/* Phones: balanced 2 + 2 icon groups around the centred logo */
+@media (max-width: 768px) {
+  .ps-top-bar-inner {
+    padding: 0 max(6px, env(safe-area-inset-left, 0px)) 0 max(6px, env(safe-area-inset-right, 0px));
+  }
+  .ps-search-btn--mobile {
+    display: inline-flex;
+  }
+  .ps-search-btn--desktop {
+    display: none !important;
+  }
+  .ps-top-bar-left,
+  .ps-top-bar-right {
+    gap: 2px;
+  }
+  /* The logo stays clear of both groups */
+  .ps-top-bar-center {
+    max-width: calc(100% - 200px);
+  }
+  .ps-logo-header.ps-logo-md {
+    --ps-logo-h: calc(var(--ps-header-topbar-height, 66px) - 14px);
+  }
+}
+
+/* Very narrow phones (≤ 340px): slightly tighter targets, still ≥ 42px */
+@media (max-width: 340px) {
+  .ps-header-container .ps-header-icon-btn {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+  }
+  .ps-top-bar-inner {
+    padding: 0 4px;
+  }
+  .ps-top-bar-left,
+  .ps-top-bar-right {
+    gap: 0;
+  }
+}

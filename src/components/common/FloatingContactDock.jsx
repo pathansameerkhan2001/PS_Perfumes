@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { MapPin, MessageCircle, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { SITE_CONFIG } from '../../config/siteConfig';
 import { getStorefrontSettings } from '../../services/settings';
 import './FloatingContactDock.css';
@@ -14,13 +14,35 @@ function WhatsAppIcon({ size = 18 }) {
   );
 }
 
-// Instagram glyph (rounded square, lens, flash)
+// Instagram glyph (rounded square, lens, flash), fine line to match the gold outlines
 function InstagramIcon({ size = 18 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      <rect width="20" height="20" x="2" y="2" rx="5.5" ry="5.5" />
-      <circle cx="12" cy="12" r="4.2" />
-      <circle cx="17.6" cy="6.4" r="0.9" fill="currentColor" stroke="none" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <rect width="18.5" height="18.5" x="2.75" y="2.75" rx="5.25" ry="5.25" />
+      <circle cx="12" cy="12" r="4.1" />
+      <circle cx="17.3" cy="6.7" r="0.95" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+// Location pin with an inner ring, same fine line
+function LocationIcon({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <path d="M12 21.25s-6.75-5.6-6.75-11.1a6.75 6.75 0 0 1 13.5 0c0 5.5-6.75 11.1-6.75 11.1Z" />
+      <circle cx="12" cy="10.1" r="2.45" />
+    </svg>
+  );
+}
+
+// Toggle artwork: a speech bubble with three gold dots (concierge)
+function ConciergeIcon({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <path d="M20.25 11.6c0 4.3-3.7 7.65-8.25 7.65-1.2 0-2.35-.23-3.38-.66L4 19.9l1.2-3.55A7.3 7.3 0 0 1 3.75 11.6C3.75 7.3 7.45 3.95 12 3.95s8.25 3.35 8.25 7.65Z" />
+      <circle cx="8.4" cy="11.6" r="0.95" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="11.6" r="0.95" fill="currentColor" stroke="none" />
+      <circle cx="15.6" cy="11.6" r="0.95" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -28,8 +50,9 @@ function InstagramIcon({ size = 18 }) {
 const isHttp = (url) => /^https?:\/\//.test(String(url || ''));
 
 /**
- * PS PERFUMES — floating contact button (bottom-left, opposite the bag button).
- * One gold button; pressing it fans out WhatsApp, Instagram and Location above it, each opening
+ * PS PERFUMES — floating contact toggle (bottom-left; the only floating control).
+ * One gold button; pressing it expands a dark glass bar from left to right with three circular
+ * icons (WhatsApp, Instagram, Location), each opening
  * its real destination from Admin → Store Settings (the site configuration is the fallback; an
  * entry without a configured destination is left out). Pressing the button again, clicking or
  * tapping outside, pressing Escape or changing page closes it.
@@ -106,7 +129,7 @@ export default function FloatingContactDock() {
       href: whatsappUrl,
       label: 'WhatsApp',
       detail: config.phone ? `Chat on WhatsApp, ${config.phone}` : 'Chat on WhatsApp',
-      icon: <WhatsAppIcon size={19} />,
+      icon: <WhatsAppIcon size={18} />,
     },
     instagramUrl && {
       id: 'instagram',
@@ -120,7 +143,7 @@ export default function FloatingContactDock() {
       href: mapsUrl,
       label: 'Location',
       detail: address ? `Open ${address} in Google Maps` : 'Open the store in Google Maps',
-      icon: <MapPin size={19} strokeWidth={1.9} aria-hidden="true" />,
+      icon: <LocationIcon size={19} />,
     },
   ].filter(Boolean);
 
@@ -128,31 +151,7 @@ export default function FloatingContactDock() {
 
   return (
     <div className={`ps-floating-contact-dock${open ? ' is-open' : ''}`} ref={dockRef}>
-      {/* The contact options: always in the page so they animate both ways; when closed they
-          cannot be focused, clicked or read (inert) */}
-      <ul id="ps-contact-options" className="ps-contact-options" aria-label="Contact PS PERFUMES" inert={!open}>
-        {items.map((item, index) => (
-          <li
-            key={item.id}
-            className={`ps-contact-option ps-contact-option--${item.id}`}
-            // Staggered: the option nearest the button appears first and leaves last
-            style={{ '--i': items.length - 1 - index }}
-          >
-            <a
-              href={item.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ps-contact-option-link"
-              aria-label={`${item.detail} (opens in a new tab)`}
-              onClick={() => setOpen(false)}
-            >
-              <span className="ps-contact-option-icon">{item.icon}</span>
-              <span className="ps-contact-option-label">{item.label}</span>
-            </a>
-          </li>
-        ))}
-      </ul>
-
+      {/* One gold toggle; when open, the options slide out to its right (left to right) */}
       <button
         ref={toggleRef}
         type="button"
@@ -163,12 +162,40 @@ export default function FloatingContactDock() {
         onClick={() => setOpen((o) => !o)}
       >
         <span className="ps-contact-toggle-icon is-chat" aria-hidden="true">
-          <MessageCircle size={22} strokeWidth={1.8} />
+          <ConciergeIcon size={22} />
         </span>
         <span className="ps-contact-toggle-icon is-close" aria-hidden="true">
-          <X size={22} strokeWidth={1.9} />
+          <X size={20} strokeWidth={1.7} />
         </span>
       </button>
+
+      {/* The contact options: always in the page so they animate both ways; when closed they
+          cannot be focused, clicked or read (inert) */}
+      <ul id="ps-contact-options" className="ps-contact-options" aria-label="Contact PS PERFUMES" inert={!open}>
+        {items.map((item, index) => (
+          <li
+            key={item.id}
+            className={`ps-contact-option ps-contact-option--${item.id}`}
+            // Staggered: the option nearest the toggle appears first and leaves last
+            style={{ '--i': index, '--n': items.length - 1 - index }}
+          >
+            <a
+              href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ps-contact-option-link"
+              aria-label={`${item.detail} (opens in a new tab)`}
+              title={item.label}
+              onClick={() => setOpen(false)}
+            >
+              <span className="ps-contact-option-icon">{item.icon}</span>
+              <span className="ps-contact-option-label" aria-hidden="true">
+                {item.label}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

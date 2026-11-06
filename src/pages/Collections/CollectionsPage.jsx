@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Filter, RotateCcw } from 'lucide-react';
 import CollectionProductCard from '../../components/collection/CollectionProductCard';
 import { getStorefrontCategoryTree } from '../../services/categories';
 import { getProducts } from '../../services/products';
 import { collectionPath, hasComboCategory, COMBO_NAV_ITEM } from '../../utils/useStorefrontCategories';
+import { useCenterActiveTab } from '../../utils/useCenterActiveTab';
 import { useSeo } from '../../utils/useSeo';
 import CategoryIcon from './CategoryIcon';
 import Reveal from '../../components/common/Reveal';
@@ -56,6 +57,12 @@ export default function CollectionsPage() {
     : mains[0] || null;
   const subSlug = (searchParams.get('sub') || '').toLowerCase();
   const activeSub = activeMain?.children.find((c) => c.slug.toLowerCase() === subSlug) || null;
+
+  // Phones: the selected category (and filter pill) scrolls into the middle of its row
+  const tabsTrackRef = useRef(null);
+  const pillsTrackRef = useRef(null);
+  useCenterActiveTab(tabsTrackRef, activeMain?.id);
+  useCenterActiveTab(pillsTrackRef, `${activeMain?.id || ''}:${activeSub?.id || 'all'}`);
 
   const scopeKey = activeMain ? [activeMain.id, ...activeMain.children.map((c) => c.id)].join(',') : '';
 
@@ -135,7 +142,7 @@ export default function CollectionsPage() {
       ) : (
         <>
           <Reveal as="nav" className="ps-cbc-tabs" aria-label="Categories" delay={0.15}>
-            <div className="ps-cbc-tabs-track">
+            <div className="ps-cbc-tabs-track" ref={tabsTrackRef}>
               {!tree
                 ? [1, 2, 3, 4].map((n) => <span key={n} className="ps-cbc-tab-skeleton" />)
                 : mains.map((m) => {
@@ -163,7 +170,7 @@ export default function CollectionsPage() {
                 <Filter size={16} strokeWidth={1.5} aria-hidden="true" />
                 Filter:
               </span>
-              <div className="ps-cbc-pills" key={activeMain.id}>
+              <div className="ps-cbc-pills" key={activeMain.id} ref={pillsTrackRef}>
                 <button
                   type="button"
                   className={`ps-cbc-pill${!activeSub ? ' is-active' : ''}`}

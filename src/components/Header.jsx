@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, ShoppingBag, MapPin, User, Menu, Heart, ChevronDown } from 'lucide-react';
+import { Search, ShoppingBag, MapPin, User, Heart, ChevronDown } from 'lucide-react';
 import PSPerfumesLogo from './common/PSPerfumesLogo';
 const SearchModal = React.lazy(() => import('./SearchModal'));
 import { useCart } from '../context/CartContext';
@@ -19,6 +19,20 @@ const FIXED_NAV_ITEMS = [
 ];
 // Categories shown inline in the desktop bar; any further ones go under "More"
 const MAX_INLINE_CATEGORIES = 7;
+// One icon language for the whole header: same size and fine stroke
+const ICON_SIZE = 22;
+const ICON_STROKE = 1.6;
+
+// Refined menu icon: three fine lines, the middle one shorter (left-aligned)
+function MenuIcon() {
+  return (
+    <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={ICON_STROKE} strokeLinecap="round" aria-hidden="true" focusable="false">
+      <path d="M3.5 6.5h17" />
+      <path d="M3.5 12h11" />
+      <path d="M3.5 17.5h17" />
+    </svg>
+  );
+}
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -39,6 +53,14 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
 
   const { itemCount, wishlist, setIsCartOpen } = useCart();
+
+  // The bag gives a small bump (and its count pops) whenever something is added
+  const [bagBump, setBagBump] = useState(0);
+  const prevItemCount = useRef(itemCount);
+  useEffect(() => {
+    if (itemCount > prevItemCount.current) setBagBump((n) => n + 1);
+    prevItemCount.current = itemCount;
+  }, [itemCount]);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -99,18 +121,29 @@ export default function Header() {
             ========================================================== */}
         <div className="ps-top-bar">
           <div className="ps-top-bar-inner">
-            {/* Mobile Hamburger Toggle (Left on mobile) */}
-            <button
-              type="button"
-              className="ps-mobile-toggle-btn"
-              onPointerDown={() => loadMobileNav().catch(() => {})}
-              onClick={openMobileMenu}
-              aria-expanded={isMobileMenuOpen}
-              aria-haspopup="dialog"
-              aria-label="Open Navigation Menu"
-            >
-              <Menu size={24} />
-            </button>
+            {/* Left (phones and tablets): menu, then search, balancing wishlist and bag on the
+                right so the logo sits exactly in the centre */}
+            <div className="ps-top-bar-left">
+              <button
+                type="button"
+                className="ps-mobile-toggle-btn ps-header-icon-btn"
+                onPointerDown={() => loadMobileNav().catch(() => {})}
+                onClick={openMobileMenu}
+                aria-expanded={isMobileMenuOpen}
+                aria-haspopup="dialog"
+                aria-label="Open Navigation Menu"
+              >
+                <MenuIcon />
+              </button>
+              <button
+                type="button"
+                className="ps-icon-link ps-header-icon-btn ps-search-btn ps-search-btn--mobile"
+                onClick={() => setIsSearchOpen(true)}
+                aria-label="Search Fragrances"
+              >
+                <Search size={ICON_SIZE} strokeWidth={ICON_STROKE} />
+              </button>
+            </div>
 
             {/* Center: Vector SVG PS PERFUMES Logo (Zero Rectangular Box) */}
             <div className="ps-top-bar-center">
@@ -128,11 +161,11 @@ export default function Header() {
               {/* Search Button */}
               <button
                 type="button"
-                className="ps-icon-link ps-search-btn"
+                className="ps-icon-link ps-header-icon-btn ps-search-btn ps-search-btn--desktop"
                 onClick={() => setIsSearchOpen(true)}
                 aria-label="Search Fragrances"
               >
-                <Search size={21} strokeWidth={1.8} />
+                <Search size={ICON_SIZE} strokeWidth={ICON_STROKE} />
               </button>
 
               {/* Delivery Location Indicator */}
@@ -147,21 +180,21 @@ export default function Header() {
               {/* Account / Admin Portal */}
               <Link
                 to="/admin/login"
-                className="ps-icon-link ps-util-desktop-only"
+                className="ps-icon-link ps-header-icon-btn ps-util-desktop-only"
                 aria-label="Account / Admin Portal"
                 title="Account / Admin Portal"
               >
-                <User size={21} strokeWidth={1.8} />
+                <User size={ICON_SIZE} strokeWidth={ICON_STROKE} />
               </Link>
 
               {/* Wishlist: saved products and their count */}
               <Link
                 to="/wishlist"
-                className="ps-icon-link ps-cart-btn ps-wishlist-link"
+                className="ps-icon-link ps-header-icon-btn ps-cart-btn ps-wishlist-link"
                 aria-label={`Wishlist (${wishlist.length} saved)`}
                 title="Wishlist"
               >
-                <Heart size={21} strokeWidth={1.8} />
+                <Heart size={ICON_SIZE} strokeWidth={ICON_STROKE} />
                 {wishlist.length > 0 && (
                   <span className="ps-cart-badge ps-wishlist-badge" key={wishlist.length}>
                     {wishlist.length}
@@ -169,14 +202,16 @@ export default function Header() {
                 )}
               </Link>
 
-              {/* Shopping Bag Button */}
+              {/* Shopping Bag Button (the only bag control: opens the cart drawer) */}
               <button
+                key={`bag-${bagBump}`}
                 type="button"
-                className="ps-icon-link ps-cart-btn"
+                className={`ps-icon-link ps-header-icon-btn ps-cart-btn ps-bag-btn${bagBump > 0 ? ' is-bumped' : ''}`}
                 aria-label={`Shopping Bag (${itemCount} items)`}
+                title="Shopping Bag"
                 onClick={() => setIsCartOpen(true)}
               >
-                <ShoppingBag size={21} strokeWidth={1.8} />
+                <ShoppingBag size={ICON_SIZE} strokeWidth={ICON_STROKE} />
                 {itemCount > 0 && (
                   <span className="ps-cart-badge">{itemCount}</span>
                 )}

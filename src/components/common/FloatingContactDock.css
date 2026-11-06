@@ -1,63 +1,102 @@
 /* ==========================================================================
-   PS PERFUMES — floating contact button (bottom-left, opposite the bag button).
-   One gold button; its options (WhatsApp, Instagram, Location) fan out above it.
-   Motion is transform + opacity only, staggered, and off for reduced motion.
+   PS PERFUMES — floating contact toggle (bottom-left; the only floating control).
+   Closed: one gold circular toggle. Open: a dark glass bar expands from the
+   toggle to the right (left to right) holding three gold-outlined circular
+   icons — WhatsApp, Instagram, Location. Motion is clip-path, transform and
+   opacity only, staggered, and off for reduced motion.
    ========================================================================== */
 
 .ps-floating-contact-dock {
+  --dock-gap: 16px;
+  --dock-toggle: 52px;
+  --dock-icon: 44px;
   position: fixed;
-  bottom: 24px;
-  left: 24px;
-  z-index: 9980;
+  /* Clear of the iPhone home indicator and Safari's bottom toolbar */
+  bottom: calc(var(--dock-gap) + env(safe-area-inset-bottom, 0px));
+  left: calc(var(--dock-gap) + env(safe-area-inset-left, 0px));
+  /* Below the header, filter sheets, search, drawers and dialogs */
+  z-index: 950;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  /* The closed options still take space: only the visible controls catch clicks, never the
-     empty area, so the page behind stays usable */
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  /* Only the visible controls catch taps, never the empty area beside them */
   pointer-events: none;
 }
 
 .ps-contact-toggle,
-.is-open .ps-contact-option {
+.is-open .ps-contact-options {
   pointer-events: auto;
 }
 
-/* Main button ------------------------------------------------------------- */
+/* Toggle ------------------------------------------------------------------ */
 .ps-contact-toggle {
   position: relative;
-  width: 54px;
-  height: 54px;
+  z-index: 1;
+  width: var(--dock-toggle);
+  height: var(--dock-toggle);
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid rgba(168, 121, 36, 0.55);
+  border: 1px solid rgba(233, 216, 184, 0.7);
   border-radius: 50%;
-  background: linear-gradient(135deg, #EBD3A0 0%, #D6AF62 45%, #C69A43 100%);
-  color: #292D27;
+  background: radial-gradient(circle at 32% 28%, #F1DEB4 0%, #D9B46A 38%, #C69A43 70%, #A97F2F 100%);
+  color: #080706;
   cursor: pointer;
-  box-shadow: 0 10px 26px rgba(41, 35, 29, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.45);
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+  box-shadow:
+    0 10px 26px rgba(8, 7, 6, 0.28),
+    0 0 0 3px rgba(198, 154, 67, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease, background 0.28s ease;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-.ps-contact-toggle:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(41, 35, 29, 0.26), 0 0 0 5px rgba(198, 154, 67, 0.16);
+/* Fine inner gold ring */
+.ps-contact-toggle::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 1px solid rgba(8, 7, 6, 0.18);
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ps-contact-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 14px 30px rgba(8, 7, 6, 0.32),
+      0 0 0 5px rgba(198, 154, 67, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+}
+
+.ps-contact-toggle:active {
+  transform: scale(0.94);
+}
+
+.is-open .ps-contact-toggle {
+  background: #080706;
+  color: #E9D8B8;
+  border-color: #C69A43;
+  box-shadow: 0 10px 26px rgba(8, 7, 6, 0.32), 0 0 0 3px rgba(198, 154, 67, 0.22);
 }
 
 .ps-contact-toggle:focus-visible,
 .ps-contact-option-link:focus-visible {
-  outline: 2px solid #294532;
+  outline: 2px solid #E9D8B8;
   outline-offset: 3px;
+  box-shadow: 0 0 0 5px rgba(8, 7, 6, 0.55);
 }
 
-/* Chat icon turns into a close icon */
+/* Concierge icon turns into a close icon */
 .ps-contact-toggle-icon {
   position: absolute;
   display: inline-flex;
-  transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.2s ease, transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .ps-contact-toggle-icon.is-close {
@@ -75,111 +114,167 @@
   transform: none;
 }
 
-/* Options ----------------------------------------------------------------- */
+/* Options bar: expands from the toggle to the right -------------------------- */
 .ps-contact-options {
   list-style: none;
   margin: 0;
-  padding: 0 0 0 4px;
+  padding: 4px;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(198, 154, 67, 0.55);
+  border-radius: 999px;
+  background: rgba(8, 7, 6, 0.86);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  backdrop-filter: blur(10px) saturate(1.2);
+  box-shadow: 0 12px 30px rgba(8, 7, 6, 0.3);
+  /* Closed: clipped back to its left edge (next to the toggle) */
+  clip-path: inset(0 100% 0 0 round 999px);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-10px);
+  transition:
+    clip-path 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.22s ease 0.06s,
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0s linear 0.32s;
+}
+
+.is-open .ps-contact-options {
+  clip-path: inset(0 0 0 0 round 999px);
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    clip-path 0.46s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.2s ease,
+    transform 0.46s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 0s;
 }
 
 .ps-contact-option {
+  position: relative;
   opacity: 0;
-  visibility: hidden;
-  transform: translateY(14px) scale(0.85);
-  transform-origin: left bottom;
-  /* Closing: all together, quickly; hidden once faded */
-  transition: opacity 0.18s ease, transform 0.22s ease, visibility 0s linear 0.22s;
+  transform: translateX(-12px) scale(0.85);
+  /* Closing: farthest first, quickly */
+  transition: opacity 0.16s ease, transform 0.2s ease;
+  transition-delay: calc(var(--n, 0) * 30ms);
 }
 
 .is-open .ps-contact-option {
   opacity: 1;
-  visibility: visible;
   transform: none;
-  transition: opacity 0.22s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0s;
-  /* Opening: staggered, the option nearest the button first */
-  transition-delay: calc(var(--i, 0) * 45ms);
+  /* Opening: staggered, the option nearest the toggle first */
+  transition: opacity 0.26s ease, transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(80ms + var(--i, 0) * 55ms);
 }
 
 .ps-contact-option-link {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
   text-decoration: none;
-  color: #292D27;
+  border-radius: 50%;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .ps-contact-option-icon {
-  width: 46px;
-  height: 46px;
+  width: var(--dock-icon);
+  height: var(--dock-icon);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid rgba(198, 154, 67, 0.55);
+  border: 1px solid #C69A43;
   border-radius: 50%;
-  background: #FFFDF8;
-  color: #A87924;
-  box-shadow: 0 8px 20px rgba(41, 35, 29, 0.16);
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  background: radial-gradient(circle at 50% 30%, #1b1610 0%, #080706 75%);
+  color: #E9D8B8;
+  box-shadow: inset 0 0 0 3px rgba(8, 7, 6, 0.9), inset 0 0 0 4px rgba(198, 154, 67, 0.28);
+  transition: transform 0.2s ease, background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }
 
-.ps-contact-option--whatsapp .ps-contact-option-icon {
-  color: #1FA855;
+.ps-contact-option-link:active .ps-contact-option-icon {
+  transform: scale(0.92);
 }
 
-/* Label chip beside each icon */
+@media (hover: hover) and (pointer: fine) {
+  .ps-contact-option-link:hover .ps-contact-option-icon {
+    transform: translateY(-1px);
+    background: radial-gradient(circle at 32% 28%, #F1DEB4 0%, #D9B46A 40%, #C69A43 100%);
+    color: #080706;
+    border-color: #E9D8B8;
+    box-shadow: none;
+  }
+}
+
+/* Label: a small champagne tag above the icon on hover / keyboard focus (desktop); screen
+   readers use the link's own label */
 .ps-contact-option-label {
-  padding: 6px 12px;
-  border: 1px solid rgba(198, 154, 67, 0.4);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 12px);
+  padding: 5px 10px;
+  border: 1px solid rgba(198, 154, 67, 0.55);
   border-radius: 999px;
   background: #FFFDF8;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  color: #080706;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   white-space: nowrap;
-  box-shadow: 0 6px 16px rgba(41, 35, 29, 0.12);
+  box-shadow: 0 6px 16px rgba(8, 7, 6, 0.16);
+  opacity: 0;
+  transform: translate(-50%, 4px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  pointer-events: none;
 }
 
-.ps-contact-option-link:hover .ps-contact-option-icon,
-.ps-contact-option-link:focus-visible .ps-contact-option-icon {
-  transform: scale(1.06);
-  border-color: #C69A43;
-  box-shadow: 0 10px 24px rgba(41, 35, 29, 0.2), 0 0 0 4px rgba(198, 154, 67, 0.14);
+@media (hover: hover) and (pointer: fine) {
+  .ps-contact-option-link:hover .ps-contact-option-label {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
-.ps-contact-option-link:hover .ps-contact-option-label {
-  border-color: #C69A43;
-  color: #A87924;
+.ps-contact-option-link:focus-visible .ps-contact-option-label {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
+/* Phones and tablets ------------------------------------------------------- */
 @media (max-width: 768px) {
   .ps-floating-contact-dock {
-    bottom: 16px;
-    left: 12px;
-    gap: 10px;
+    --dock-gap: 14px;
+    --dock-toggle: 50px;
+    --dock-icon: 44px;
+    gap: 8px;
   }
-  .ps-contact-toggle {
-    width: 48px;
-    height: 48px;
+}
+
+@media (max-width: 340px) {
+  .ps-floating-contact-dock {
+    --dock-gap: 10px;
+    --dock-toggle: 46px;
+    --dock-icon: 42px;
   }
-  .ps-contact-option-icon {
-    width: 42px;
-    height: 42px;
-  }
-  .ps-contact-option-label {
-    font-size: 11.5px;
+  .ps-contact-options {
+    gap: 6px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ps-contact-toggle,
   .ps-contact-toggle-icon,
+  .ps-contact-options,
+  .is-open .ps-contact-options,
   .ps-contact-option,
   .is-open .ps-contact-option,
-  .ps-contact-option-icon {
+  .ps-contact-option-icon,
+  .ps-contact-option-label {
     transition: none;
   }
 }

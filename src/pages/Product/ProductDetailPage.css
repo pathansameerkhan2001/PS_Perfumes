@@ -976,3 +976,205 @@
   outline: 2px solid #C9A96E;
   outline-offset: 2px;
 }
+
+/* ==========================================================================
+   Add to Cart + Buy Now — balanced premium pair (November 2026 polish)
+   Same height, radius, type and icon spacing for both:
+   - Add to Cart: the champagne-gold button (common/AddToCartButton).
+   - Buy Now: onyx black with champagne type and a fine gold outline.
+   Layout: [quantity][Add to Cart] on one line and Buy Now full width below;
+   on narrow phones all three stack. Doubled root class outranks the shared
+   button theme (StorefrontTheme.css) without !important.
+   ========================================================================== */
+.ps-app-root.ps-app-root .ps-pdp-actions-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'qty add'
+    'buy buy';
+  align-items: stretch;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-quantity-box {
+  grid-area: qty;
+  height: 52px;
+  border-radius: 12px;
+  border-color: #E4D6BC;
+  background: #FFFDF8;
+}
+
+.ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-qty-btn {
+  width: 44px;
+  font-size: 18px;
+  touch-action: manipulation;
+}
+
+.ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-qty-display {
+  min-width: 32px;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Shared shape and type for both actions */
+.ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-add-btn.ps-atc,
+.ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-buynow-btn {
+  width: 100%;
+  min-width: 0;
+  height: 52px;
+  min-height: 52px;
+  margin: 0;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 12px;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-add-btn.ps-atc {
+  grid-area: add;
+  flex: none;
+}
+
+/* Icons sit optically centred with the capitals */
+.ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-add-btn.ps-atc svg,
+.ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-buynow-btn svg {
+  flex-shrink: 0;
+  margin-top: -1px;
+}
+
+/* Buy Now: onyx with champagne type and a fine gold outline */
+.ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-buynow-btn {
+  grid-area: buy;
+  flex: none;
+  border: 1px solid #C69A43;
+  background: linear-gradient(180deg, #1a1510 0%, #080706 100%);
+  color: #E9D8B8;
+  box-shadow: 0 6px 18px rgba(8, 7, 6, 0.18), inset 0 0 0 1px rgba(233, 216, 184, 0.08);
+  transition: transform 0.18s ease, box-shadow 0.25s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-buynow-btn svg {
+  color: #C69A43;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-buynow-btn:hover:not(:disabled) {
+    background: linear-gradient(180deg, #221b13 0%, #0d0b08 100%);
+    color: #F5E7C8;
+    border-color: #E9D8B8;
+    box-shadow: 0 10px 24px rgba(8, 7, 6, 0.26), inset 0 0 0 1px rgba(233, 216, 184, 0.14);
+    transform: translateY(-1px);
+  }
+}
+
+/* Pressed: a subtle press for both */
+.ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-buynow-btn:active:not(:disabled),
+.ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-add-btn.ps-atc:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+.ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-buynow-btn:focus-visible {
+  outline: 2px solid #C69A43;
+  outline-offset: 3px;
+}
+
+.ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-buynow-btn:disabled {
+  background: #EFE8DC;
+  border-color: #E4D6BC;
+  color: #8a8174;
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+}
+
+.ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-buynow-btn:disabled svg {
+  color: currentColor;
+}
+
+/* Loading (opening checkout) */
+.ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-buynow-btn.is-loading {
+  cursor: progress;
+  opacity: 0.92;
+}
+
+.ps-pdp-btn-spinner {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border: 2px solid rgba(233, 216, 184, 0.3);
+  border-top-color: #E9D8B8;
+  border-radius: 50%;
+  animation: ps-pdp-spin 0.8s linear infinite;
+}
+
+@keyframes ps-pdp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Phones: comfortable 50px targets; on narrow screens all three stack */
+@media (max-width: 720px) {
+  .ps-app-root.ps-app-root .ps-pdp-actions-row {
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+  .ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-quantity-box,
+  .ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-add-btn.ps-atc,
+  .ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-buynow-btn {
+    height: 50px;
+    min-height: 50px;
+  }
+  .ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-quantity-box {
+    width: auto;
+  }
+}
+
+@media (max-width: 420px) {
+  .ps-app-root.ps-app-root .ps-pdp-actions-row {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'qty'
+      'add'
+      'buy';
+  }
+  .ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-quantity-box {
+    width: 100%;
+    justify-content: space-between;
+    height: 48px;
+    min-height: 48px;
+  }
+  .ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-qty-btn {
+    width: 52px;
+  }
+}
+
+@media (max-width: 340px) {
+  .ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-add-btn.ps-atc,
+  .ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-buynow-btn {
+    font-size: 12.5px;
+    letter-spacing: 0.08em;
+    padding: 0 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-app-root.ps-app-root .ps-pdp-actions-row .ps-pdp-buynow-btn {
+    transition: none;
+  }
+  .ps-pdp-btn-spinner {
+    animation-duration: 2s;
+  }
+}

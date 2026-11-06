@@ -290,3 +290,11 @@
 .ps-public-footer summary:focus-visible {
   outline-color: #D4AD62;
 }
+
+/* The floating contact toggle (bottom-left) never covers the last footer line, and the footer
+   clears the iPhone home indicator / Safari toolbar */
+@media (max-width: 768px) {
+  .ps-footer-bottom {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+}
