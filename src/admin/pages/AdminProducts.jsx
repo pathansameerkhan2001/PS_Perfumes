@@ -209,7 +209,15 @@ export default function AdminProducts() {
   // Bottle types and sizes actually configured (active variants), instead of fixed labels
   const variantSummary = (prod) => {
     const active = (prod.variants || []).filter((v) => v.is_active !== false);
-    const bottles = [...new Set(active.map((v) => (String(v.bottle_type || '').toLowerCase().includes('pvc') ? 'PVC' : 'Glass')))];
+    // Glass / PVC for perfumes and attars; Home Fragrance options as stored ("Standard" = none)
+    const optionOf = (v) => {
+      const raw = String(v.bottle_type || '').trim();
+      const low = raw.toLowerCase();
+      if (low.includes('pvc')) return 'PVC';
+      if (low.includes('glass') || !raw) return 'Glass';
+      return low === 'standard' ? '' : raw;
+    };
+    const bottles = [...new Set(active.map(optionOf).filter(Boolean))];
     const sizes = [...new Set(active.map((v) => String(v.size_ml || '').replace(/\s+/g, '').toLowerCase()).filter(Boolean))];
     return { bottles: bottles.join(' & ') || '—', sizes: sizes.join(', ') || '—' };
   };

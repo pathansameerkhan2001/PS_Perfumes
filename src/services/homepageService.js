@@ -1,6 +1,5 @@
 import { supabase } from '../lib/supabase';
 import { getPublicImageUrl } from '../lib/storage';
-import { getProducts } from './products';
 import { cachedRequest } from '../lib/requestCache';
 
 /**
@@ -44,6 +43,19 @@ function formatHomepageProduct(item) {
     salePrice = lowest.sale_price ? Number(lowest.sale_price) : null;
   }
 
+  // Product type saved by Admin → Products (Home Fragrance options), in fragrance_notes metadata
+  let productType = null;
+  let sampleEligible = false;
+  try {
+    const meta = typeof item.fragrance_notes === 'string' ? JSON.parse(item.fragrance_notes) : item.fragrance_notes;
+    if (meta && typeof meta === 'object' && !Array.isArray(meta)) {
+      productType = meta.product_type || null;
+      sampleEligible = meta.sample_eligible === true;
+    }
+  } catch {
+    productType = null;
+  }
+
   const categoryName = item.categories?.name || item.category || 'Perfume';
   const categorySlug = item.categories?.slug || (categoryName || '').toLowerCase().trim();
 
@@ -54,6 +66,8 @@ function formatHomepageProduct(item) {
     brand: item.brand || 'PS PERFUMES',
     category: categoryName,
     category_slug: categorySlug,
+    product_type: productType,
+    sample_eligible: sampleEligible,
     main_image: resolvedImage,
     main_image_url: resolvedImage,
     image: resolvedImage,
@@ -70,8 +84,8 @@ function formatHomepageProduct(item) {
     variants: activeVariants.map((v) => ({
       id: v.id,
       product_id: v.product_id,
-      bottle_type: v.bottle_type || 'Glass Bottle',
-      size_ml: v.size_ml || '50 ml',
+      bottle_type: v.bottle_type || '',
+      size_ml: v.size_ml || '',
       price: Number(v.price) || 0,
       sale_price: v.sale_price ? Number(v.sale_price) : null,
       stock: Number(v.stock_quantity !== undefined ? v.stock_quantity : v.stock) || 0,
@@ -81,102 +95,8 @@ function formatHomepageProduct(item) {
   };
 }
 
-/**
- * Fetch Featured Products (is_featured = true AND is_active = true)
- * Falls back to active newest products if no items specifically flagged
- */
-export async function getFeaturedProducts(limit = 8) {
-  try {
-    if (supabase) {
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          id,
-          name,
-          slug,
-          brand,
-          main_image_path,
-          main_image_url,
-          is_featured,
-          is_bestseller,
-          is_active,
-          display_order,
-          created_at,
-          categories (
-            id,
-            name,
-            slug
-          ),
-          product_variants (
-            id,
-            product_id,
-            bottle_type,
-            size_ml,
-            price,
-            sale_price,
-            stock_quantity,
-            is_active
-          )
-        `)
-        .eq('is_active', true)
-        .eq('is_featured', true)
-        .order('display_order', { ascending: true })
-        .order('created_at', { ascending: false })
-        .limit(limit);
-
-      if (!error && Array.isArray(data) && data.length > 0) {
-        return data.map(formatHomepageProduct);
-      }
-
-      // Fallback: active products if none flagged as featured
-      const { data: activeData, error: activeErr } = await supabase
-        .from('products')
-        .select(`
-          id,
-          name,
-          slug,
-          brand,
-          main_image_path,
-          main_image_url,
-          is_featured,
-          is_bestseller,
-          is_active,
-          display_order,
-          created_at,
-          categories (
-            id,
-            name,
-            slug
-          ),
-          product_variants (
-            id,
-            product_id,
-            bottle_type,
-            size_ml,
-            price,
-            sale_price,
-            stock_quantity,
-            is_active
-          )
-        `)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(limit);
-
-      if (!activeErr && Array.isArray(activeData) && activeData.length > 0) {
-        return activeData.map(formatHomepageProduct);
-      }
-    }
-  } catch (err) {
-    if (import.meta.env.DEV) console.warn('getFeaturedProducts error:', err);
-  }
-
-  // Final fallback to catalog products
-  const prods = await getProducts({ status: 'active', limit });
-  return prods.map(formatHomepageProduct);
-}
-
-const NEW_ARRIVAL_SELECT = `
+// Card fields only (no N+1): product, its category and its variants
+const SECTION_SELECT = `
   id,
   name,
   slug,
@@ -189,207 +109,52 @@ const NEW_ARRIVAL_SELECT = `
   is_active,
   display_order,
   created_at,
+  fragrance_notes,
   categories ( id, name, slug ),
   product_variants ( id, product_id, bottle_type, size_ml, price, sale_price, stock_quantity, is_active )
 `;
 
 /**
- * Fetch New Arrivals for the homepage "new_arrivals" section.
- * Rule: active products the admin flagged "New Arrival" (is_new_arrival), in the display order set
- * in Admin → Products (lowest first; newest first among equal positions).
- * If none are flagged, the most recently added active products (created_at, newest first) —
- * i.e. the latest additions to the catalogue. Never demo products.
+ * Products the admin explicitly flagged for one homepage section, nothing else.
+ *
+ * Rule (owner request, November 2026): a homepage section shows ONLY active products whose
+ * flag is switched on in Admin → Products (Featured / Best Seller / New Arrival), in the display
+ * order set there (newest first among equal positions). There is deliberately no fallback to
+ * other active products, sales rankings, demo data or fixed ids: when nothing is flagged the
+ * list is empty and the homepage leaves the section out.
  */
-export async function getNewArrivalProducts(limit = 8) {
+async function getFlaggedProducts(flagColumn, limit) {
   if (!supabase) return [];
   try {
-    const { data: flagged, error } = await supabase
+    const { data, error } = await supabase
       .from('products')
-      .select(NEW_ARRIVAL_SELECT)
+      .select(SECTION_SELECT)
       .eq('is_active', true)
-      .eq('is_new_arrival', true)
+      .eq(flagColumn, true)
       .order('display_order', { ascending: true })
       .order('created_at', { ascending: false })
       .limit(limit);
     if (error) throw error;
-    if (Array.isArray(flagged) && flagged.length > 0) return flagged.map(formatHomepageProduct);
-
-    const { data: latest, error: latestErr } = await supabase
-      .from('products')
-      .select(NEW_ARRIVAL_SELECT)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-      .limit(limit);
-    if (latestErr) throw latestErr;
-    return (latest || []).map(formatHomepageProduct);
+    return (data || []).map(formatHomepageProduct).filter(Boolean);
   } catch (err) {
-    console.error('Could not load new arrivals:', err?.message || err);
+    console.error(`Could not load homepage products (${flagColumn}):`, err?.message || err);
     return [];
   }
 }
 
-/**
- * Fetch Best Selling Products:
- * 1. Primary logic: Rank using actual completed sales (orders & order_items) if sales exist.
- * 2. Fallback logic: If zero orders/sales exist, query products with is_bestseller = true AND is_active = true.
- * 3. Fallback: Query all active products.
- */
-export async function getBestSellingProducts(limit = 8) {
-  try {
-    if (supabase) {
-      // 1. Check if real sales data exists in order_items
-      const { data: orderItems, error: itemsErr } = await supabase
-        .from('order_items')
-        .select('product_id, quantity');
+/** Featured Products section: only products flagged "Featured Product". */
+export function getFeaturedProducts(limit = 8) {
+  return getFlaggedProducts('is_featured', limit);
+}
 
-      if (!itemsErr && Array.isArray(orderItems) && orderItems.length > 0) {
-        const salesTally = {};
-        for (const item of orderItems) {
-          if (!item.product_id) continue;
-          salesTally[item.product_id] = (salesTally[item.product_id] || 0) + (Number(item.quantity) || 1);
-        }
+/** New Arrivals section: only products flagged "New Arrival". */
+export function getNewArrivalProducts(limit = 8) {
+  return getFlaggedProducts('is_new_arrival', limit);
+}
 
-        const sortedProductIds = Object.keys(salesTally)
-          .sort((a, b) => salesTally[b] - salesTally[a])
-          .slice(0, limit);
-
-        if (sortedProductIds.length > 0) {
-          const { data: salesProducts, error: prodErr } = await supabase
-            .from('products')
-            .select(`
-              id,
-              name,
-              slug,
-              brand,
-              main_image_path,
-              main_image_url,
-              is_featured,
-              is_bestseller,
-              is_active,
-              display_order,
-              created_at,
-              categories (
-                id,
-                name,
-                slug
-              ),
-              product_variants (
-                id,
-                product_id,
-                bottle_type,
-                size_ml,
-                price,
-                sale_price,
-                stock_quantity,
-                is_active
-              )
-            `)
-            .in('id', sortedProductIds)
-            .eq('is_active', true);
-
-          if (!prodErr && Array.isArray(salesProducts) && salesProducts.length > 0) {
-            const prodMap = new Map(salesProducts.map((p) => [p.id, p]));
-            const orderedProducts = [];
-            for (const id of sortedProductIds) {
-              const prod = prodMap.get(id);
-              if (prod) {
-                orderedProducts.push(formatHomepageProduct(prod));
-              }
-            }
-            if (orderedProducts.length > 0) {
-              return orderedProducts;
-            }
-          }
-        }
-      }
-
-      // 2. Query products table where is_bestseller = true AND is_active = true
-      const { data: bestsellerProducts, error: bsErr } = await supabase
-        .from('products')
-        .select(`
-          id,
-          name,
-          slug,
-          brand,
-          main_image_path,
-          main_image_url,
-          is_featured,
-          is_bestseller,
-          is_active,
-          display_order,
-          created_at,
-          categories (
-            id,
-            name,
-            slug
-          ),
-          product_variants (
-            id,
-            product_id,
-            bottle_type,
-            size_ml,
-            price,
-            sale_price,
-            stock_quantity,
-            is_active
-          )
-        `)
-        .eq('is_active', true)
-        .eq('is_bestseller', true)
-        .order('display_order', { ascending: true })
-        .order('created_at', { ascending: false })
-        .limit(limit);
-
-      if (!bsErr && Array.isArray(bestsellerProducts) && bestsellerProducts.length > 0) {
-        return bestsellerProducts.map(formatHomepageProduct);
-      }
-
-      // 3. Fallback: active products ordered by display_order
-      const { data: fallbackActive, error: fallErr } = await supabase
-        .from('products')
-        .select(`
-          id,
-          name,
-          slug,
-          brand,
-          main_image_path,
-          main_image_url,
-          is_featured,
-          is_bestseller,
-          is_active,
-          display_order,
-          created_at,
-          categories (
-            id,
-            name,
-            slug
-          ),
-          product_variants (
-            id,
-            product_id,
-            bottle_type,
-            size_ml,
-            price,
-            sale_price,
-            stock_quantity,
-            is_active
-          )
-        `)
-        .eq('is_active', true)
-        .order('display_order', { ascending: true })
-        .limit(limit);
-
-      if (!fallErr && Array.isArray(fallbackActive) && fallbackActive.length > 0) {
-        return fallbackActive.map(formatHomepageProduct);
-      }
-    }
-  } catch (err) {
-    if (import.meta.env.DEV) console.warn('getBestSellingProducts error:', err);
-  }
-
-  // Fallback to catalog products
-  const prods = await getProducts({ status: 'active', limit });
-  return prods.map(formatHomepageProduct);
+/** Best Sellers section: only products flagged "Best Seller". */
+export function getBestSellingProducts(limit = 8) {
+  return getFlaggedProducts('is_bestseller', limit);
 }
 
 /**

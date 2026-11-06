@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
 import { isComboRecord, toComboCartProduct } from '../services/combos';
+import { productTypeOf, isDefaultOption } from '../utils/productTypes';
 import ProductImage from './common/ProductImage';
 import './ProductDetailModal.css';
 
@@ -92,6 +93,11 @@ export default function ProductDetailModal() {
   const product = selectedProduct;
   const isWishlisted = isInWishlist(product.id);
   const mainImage = product.image || product.image_url || product.main_image || '/assets/ps-perfumes-logo.webp';
+
+  // Option / size headings for this product type ("BOTTLE"/"SIZE"; Home Fragrance: "PACKAGE"/"WEIGHT" …)
+  const productTypeCfg = productTypeOf(product);
+  const optionLabel = productTypeCfg.kind === 'custom' ? productTypeCfg.optionLabel : 'Bottle';
+  const sizeLabel = productTypeCfg.kind === 'custom' ? productTypeCfg.sizeLabel : 'Size';
 
   const bottles = [...new Set(variants.map((v) => bottleLabel(v.bottle_type)))];
   const sizeOptions = variants
@@ -322,8 +328,8 @@ export default function ProductDetailModal() {
 
             {/* Options built from the product's real variants */}
             {!isCombo && bottles.length > 1 && (
-              <div className="ps-pdetail-sizes" role="group" aria-label="Bottle">
-                <span className="ps-sizes-label">BOTTLE:</span>
+              <div className="ps-pdetail-sizes" role="group" aria-label={optionLabel}>
+                <span className="ps-sizes-label">{optionLabel.toUpperCase()}:</span>
                 <div className="ps-sizes-options">
                   {bottles.map((b) => (
                     <button
@@ -333,7 +339,7 @@ export default function ProductDetailModal() {
                       aria-pressed={selectedBottle === b}
                       onClick={() => chooseBottle(b)}
                     >
-                      {b}
+                      {isDefaultOption(b) ? 'Standard' : b}
                     </button>
                   ))}
                 </div>
@@ -341,8 +347,8 @@ export default function ProductDetailModal() {
             )}
 
             {!isCombo && sizeOptions.length > 0 && (
-              <div className="ps-pdetail-sizes" role="group" aria-label="Size">
-                <span className="ps-sizes-label">SIZE:</span>
+              <div className="ps-pdetail-sizes" role="group" aria-label={sizeLabel}>
+                <span className="ps-sizes-label">{sizeLabel.toUpperCase()}:</span>
                 <div className="ps-sizes-options">
                   {sizeOptions.map((v) => {
                     const key = sizeKey(v.size_ml);

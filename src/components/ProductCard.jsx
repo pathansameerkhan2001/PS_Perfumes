@@ -3,17 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
 import { defaultVariant, variantPrice, variantStock, variantComparePrice } from '../utils/productVariants';
+import { variantDisplayLabel } from '../utils/productTypes';
 import { cardImageUrl, fullImageFallback } from '../lib/storage';
 import { isComboRecord, toComboCartProduct } from '../services/combos';
 import WishlistHeart from './common/WishlistHeart';
 import ProductImage from './common/ProductImage';
 import AddToCartButton from './common/AddToCartButton';
 import './ProductCard.css';
-
-const sizeLabel = (s) => {
-  const v = String(s || '').trim();
-  return !v || /ml|set/i.test(v) ? v : `${v} ml`;
-};
 
 /**
  * PS PERFUMES — the storefront product card, used by every product grid (homepage sections,
@@ -41,7 +37,8 @@ function ProductCard({ product, priority = false, viewMode = 'grid', pending = f
   const comparePrice = combo ? Number(combo.product.compare_at_price) || 0 : variant ? variantComparePrice(variant) : 0;
   const isUnavailable = combo ? !combo.product.is_purchasable || !(price > 0) : !variant;
   const isSoldOut = !isUnavailable && (combo ? combo.product.stock_quantity <= 0 : variantStock(variant) <= 0);
-  const detail = combo ? 'Combo set' : variant ? `${variant.bottle_type || 'Glass Bottle'} · ${sizeLabel(variant.size_ml)}` : '';
+  // "Glass Bottle · 50 ml" for perfumes; "Gift Box · 50 g" / "20 sticks" for Home Fragrance
+  const detail = combo ? 'Combo set' : variant ? variantDisplayLabel(variant) : '';
 
   // Combos have no product page: their quick view opens instead
   const openProduct = () => (combo ? setSelectedProduct(product) : navigate(`/product/${slug}`));

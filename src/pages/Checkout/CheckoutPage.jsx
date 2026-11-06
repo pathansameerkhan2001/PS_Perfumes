@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ShieldCheck, Lock, CheckCircle2, ArrowLeft, CreditCard, Banknote } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatCurrency';
+import { variantDisplayLabel } from '../../utils/productTypes';
 import { createOrder, prepareOnlineOrder, completeOnlineOrder, resetOnlineAttempt } from '../../services/orders';
 import {
   onlinePaymentsEnabled,
@@ -575,7 +576,7 @@ export default function CheckoutPage() {
                     <div className="ps-mini-info">
                       <span className="ps-mini-name">{item.name || item.product?.name}</span>
                       <span className="ps-mini-size">
-                        {[item.bottle_type, item.size_ml || item.size].filter(Boolean).join(' • ')} • Qty: {item.quantity}
+                        {[variantDisplayLabel(item, ' • '), `Qty: ${item.quantity}`].filter(Boolean).join(' • ')}
                       </span>
                     </div>
                     <span className="ps-mini-price">

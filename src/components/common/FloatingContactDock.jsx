@@ -50,8 +50,8 @@ function ConciergeIcon({ size = 22 }) {
 const isHttp = (url) => /^https?:\/\//.test(String(url || ''));
 
 /**
- * PS PERFUMES — floating contact toggle (bottom-left; the only floating control).
- * One gold button; pressing it expands a dark glass bar from left to right with three circular
+ * PS PERFUMES — floating contact toggle (bottom-right; the only floating control).
+ * One gold button; pressing it expands a dark glass bar from right to left with three circular
  * icons (WhatsApp, Instagram, Location), each opening
  * its real destination from Admin → Store Settings (the site configuration is the fallback; an
  * entry without a configured destination is left out). Pressing the button again, clicking or
@@ -151,7 +151,8 @@ export default function FloatingContactDock() {
 
   return (
     <div className={`ps-floating-contact-dock${open ? ' is-open' : ''}`} ref={dockRef}>
-      {/* One gold toggle; when open, the options slide out to its right (left to right) */}
+      {/* One gold toggle (bottom-right); when open, the options slide out to its left (right to
+          left). It comes first in the page so keyboard focus reaches it before the options. */}
       <button
         ref={toggleRef}
         type="button"
@@ -176,7 +177,7 @@ export default function FloatingContactDock() {
           <li
             key={item.id}
             className={`ps-contact-option ps-contact-option--${item.id}`}
-            // Staggered: the option nearest the toggle appears first and leaves last
+            // Staggered: the option nearest the toggle (Location, rightmost) appears first
             style={{ '--i': index, '--n': items.length - 1 - index }}
           >
             <a

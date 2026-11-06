@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { isValidUUID } from './products';
 import { dbError, assertRows } from './dbErrors';
+import { variantDisplayLabel } from '../utils/productTypes';
 import { redeemCoupon } from './coupons';
 import { getComboById, getComboAvailability } from './combos';
 
@@ -50,7 +51,7 @@ function formatOrder(ord) {
       ...it,
       price: Number(it.unit_price ?? it.price) || 0,
       total: Number(it.total_price ?? it.total) || 0,
-      size: [it.bottle_type, it.size_ml || it.size].filter(Boolean).join(' · '),
+      size: variantDisplayLabel(it),
     })),
   };
 }

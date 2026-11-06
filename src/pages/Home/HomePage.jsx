@@ -104,6 +104,8 @@ export default function HomePage() {
       case 'fragrance_categories':
         return <ShopByCategory key={sec.id} title={sec.title} subtitle={sec.subtitle} />;
       case 'bestsellers':
+        // Only products flagged "Best Seller" in Admin → Products; nothing flagged = no section
+        if (bestSellers.length === 0) return null;
         return (
           <ProductGridSection
             key={sec.id}
@@ -118,8 +120,8 @@ export default function HomePage() {
           />
         );
       case 'new_arrivals':
-        // Products flagged "New Arrival" in Admin → Products (their display order), else the most
-        // recently added (getNewArrivalProducts)
+        // Only products flagged "New Arrival" in Admin → Products (their display order); the
+        // section leaves itself out once loaded with none (NewArrivalsSection)
         return (
           <NewArrivalsSection
             key={sec.id}
@@ -130,6 +132,8 @@ export default function HomePage() {
           />
         );
       case 'featured_products':
+        // Only products flagged "Featured Product" in Admin → Products; nothing flagged = no section
+        if (featuredProducts.length === 0) return null;
         return (
           <ProductGridSection
             key={sec.id}

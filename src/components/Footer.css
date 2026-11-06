@@ -291,7 +291,8 @@
   outline-color: #D4AD62;
 }
 
-/* The floating contact toggle (bottom-left) never covers the last footer line, and the footer
+/* The floating contact toggle (bottom-right) never covers the last footer line or the
+   back-to-top button, and the footer
    clears the iPhone home indicator / Safari toolbar */
 @media (max-width: 768px) {
   .ps-footer-bottom {

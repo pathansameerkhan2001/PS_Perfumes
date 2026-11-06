@@ -3,6 +3,7 @@ import { X, Trash2, ShoppingBag, ArrowRight, Tag, Check, Truck } from 'lucide-re
 import { useNavigate } from 'react-router-dom';
 import { useCart, maxQuantityFor } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
+import { variantDisplayLabel, isTravelSampleEligible } from '../utils/productTypes';
 import { cardImageUrl, fullImageFallback } from '../lib/storage';
 import './CartDrawer.css';
 
@@ -170,7 +171,7 @@ export default function CartDrawer() {
 
                       <h4 className="ps-cart-item-title">{item.name || prod.name}</h4>
                       <span className="ps-cart-item-size">
-                        {item.bottle_type ? `${item.bottle_type} • ${item.size_ml || item.size}` : `Size: ${item.size || item.size_ml}`}
+                        {variantDisplayLabel(item, ' • ')}
                       </span>
 
                       <div className="ps-cart-item-bottom">
@@ -266,11 +267,14 @@ export default function CartDrawer() {
               </div>
             </div>
 
-            {/* Complimentary Gift Reassurance */}
-            <div className="ps-cart-complimentary-note">
-              <Check size={13} color="#10b981" />
-              <span>Complimentary 2x2ml Travel Sample with Gold Box included</span>
-            </div>
+            {/* Complimentary travel sample: only when the bag holds an eligible fragrance
+                (perfumes; attars marked eligible). Never for Home Fragrance products. */}
+            {cartItems.some(isTravelSampleEligible) && (
+              <div className="ps-cart-complimentary-note">
+                <Check size={13} color="#10b981" />
+                <span>Complimentary 2x2ml Travel Sample with Gold Box included</span>
+              </div>
+            )}
 
             {/* Checkout Action Button */}
             <button

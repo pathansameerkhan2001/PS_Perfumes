@@ -1,9 +1,11 @@
 /* ==========================================================================
-   PS PERFUMES — floating contact toggle (bottom-left; the only floating control).
+   PS PERFUMES — floating contact toggle (bottom-RIGHT; the only floating control).
    Closed: one gold circular toggle. Open: a dark glass bar expands from the
-   toggle to the right (left to right) holding three gold-outlined circular
+   toggle to the LEFT (right to left) holding three gold-outlined circular
    icons — WhatsApp, Instagram, Location. Motion is clip-path, transform and
    opacity only, staggered, and off for reduced motion.
+   It steps aside (fades out) while the product page's Add to Cart / Buy Now
+   row is on screen (html[data-dock-hidden], set by ProductDetailPage).
    ========================================================================== */
 
 .ps-floating-contact-dock {
@@ -13,15 +15,25 @@
   position: fixed;
   /* Clear of the iPhone home indicator and Safari's bottom toolbar */
   bottom: calc(var(--dock-gap) + env(safe-area-inset-bottom, 0px));
-  left: calc(var(--dock-gap) + env(safe-area-inset-left, 0px));
+  right: calc(var(--dock-gap) + env(safe-area-inset-right, 0px));
   /* Below the header, filter sheets, search, drawers and dialogs */
   z-index: 950;
   display: flex;
-  flex-direction: row;
+  /* Toggle first in the page (focus order), shown at the right; the options open to its left */
+  flex-direction: row-reverse;
   align-items: center;
   gap: 10px;
   /* Only the visible controls catch taps, never the empty area beside them */
   pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0s;
+}
+
+/* Product page: out of the way while Add to Cart / Buy Now are on screen */
+html[data-dock-hidden] .ps-floating-contact-dock {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(14px);
+  transition: opacity 0.2s ease, transform 0.25s ease, visibility 0s linear 0.25s;
 }
 
 .ps-contact-toggle,
@@ -114,7 +126,7 @@
   transform: none;
 }
 
-/* Options bar: expands from the toggle to the right -------------------------- */
+/* Options bar: expands from the toggle to the left --------------------------- */
 .ps-contact-options {
   list-style: none;
   margin: 0;
@@ -129,11 +141,11 @@
   -webkit-backdrop-filter: blur(10px) saturate(1.2);
   backdrop-filter: blur(10px) saturate(1.2);
   box-shadow: 0 12px 30px rgba(8, 7, 6, 0.3);
-  /* Closed: clipped back to its left edge (next to the toggle) */
-  clip-path: inset(0 100% 0 0 round 999px);
+  /* Closed: clipped back to its right edge (next to the toggle) */
+  clip-path: inset(0 0 0 100% round 999px);
   opacity: 0;
   visibility: hidden;
-  transform: translateX(-10px);
+  transform: translateX(10px);
   transition:
     clip-path 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.22s ease 0.06s,
@@ -156,18 +168,18 @@
 .ps-contact-option {
   position: relative;
   opacity: 0;
-  transform: translateX(-12px) scale(0.85);
-  /* Closing: farthest first, quickly */
+  transform: translateX(12px) scale(0.85);
+  /* Closing: farthest (leftmost) first, quickly */
   transition: opacity 0.16s ease, transform 0.2s ease;
-  transition-delay: calc(var(--n, 0) * 30ms);
+  transition-delay: calc(var(--i, 0) * 30ms);
 }
 
 .is-open .ps-contact-option {
   opacity: 1;
   transform: none;
-  /* Opening: staggered, the option nearest the toggle first */
+  /* Opening: staggered, the option nearest the toggle (rightmost) first */
   transition: opacity 0.26s ease, transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
-  transition-delay: calc(80ms + var(--i, 0) * 55ms);
+  transition-delay: calc(80ms + var(--n, 0) * 55ms);
 }
 
 .ps-contact-option-link {
@@ -274,7 +286,9 @@
   .ps-contact-option,
   .is-open .ps-contact-option,
   .ps-contact-option-icon,
-  .ps-contact-option-label {
+  .ps-contact-option-label,
+  .ps-floating-contact-dock,
+  html[data-dock-hidden] .ps-floating-contact-dock {
     transition: none;
   }
 }

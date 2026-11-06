@@ -8,9 +8,8 @@ import './NewArrivalsSection.css';
 
 /**
  * Homepage "Discover Our New Arrivals".
- * Products come from getNewArrivalProducts (homepageService): active products flagged
- * "New Arrival" in Admin → Products, in their display order; if none are flagged, the most
- * recently added active products. Cards are the shared ProductCard (variant pricing, bottle
+ * Products come from getNewArrivalProducts (homepageService): only active products flagged
+ * "New Arrival" in Admin → Products, in their display order (no fallback). Cards are the shared ProductCard (variant pricing, bottle
  * options, sold-out state, product page on click). Nothing is shown that is not in the catalogue.
  * Mobile: a swipeable row inside the section (no page-wide horizontal scroll).
  */

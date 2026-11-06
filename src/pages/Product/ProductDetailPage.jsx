@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -24,6 +24,7 @@ import AddToCartButton from '../../components/common/AddToCartButton';
 import GoldOrnament from '../../components/common/GoldOrnament';
 import Reveal from '../../components/common/Reveal';
 import { useSeo, SITE_URL } from '../../utils/useSeo';
+import { productTypeOf, isDefaultOption, formatSizeLabel } from '../../utils/productTypes';
 import './ProductDetailPage.css';
 
 /**
@@ -41,6 +42,32 @@ export default function ProductDetailPage() {
   const [productReviews, setProductReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isBuying, setIsBuying] = useState(false);
+
+  // The floating contact toggle (bottom-right) steps aside while the Add to Cart / Buy Now row
+  // is on screen, so it never covers them (CSS: html[data-dock-hidden])
+  const actionsObserverRef = useRef(null);
+  const actionsRowRef = useCallback((node) => {
+    actionsObserverRef.current?.disconnect();
+    actionsObserverRef.current = null;
+    const root = document.documentElement;
+    if (!node || typeof IntersectionObserver === 'undefined') {
+      root.removeAttribute('data-dock-hidden');
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => root.toggleAttribute('data-dock-hidden', entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(node);
+    actionsObserverRef.current = observer;
+  }, []);
+  useEffect(
+    () => () => {
+      actionsObserverRef.current?.disconnect();
+      document.documentElement.removeAttribute('data-dock-hidden');
+    },
+    []
+  );
   const [activeImage, setActiveImage] = useState('');
   const [selectedBottleType, setSelectedBottleType] = useState('Glass Bottle');
   const [selectedSize, setSelectedSize] = useState('50 ml');
@@ -61,19 +88,19 @@ export default function ProductDetailPage() {
     }));
   };
 
-  // Normalization helpers
+  // Normalization helpers. Glass / PVC and plain ml sizes normalise as before; any other
+  // option or size (Home Fragrance: "Gift Box", "50 g", "20 sticks") is kept as stored
   const normalizeBottle = (b) => {
     if (!b) return 'Glass Bottle';
     const s = String(b).toLowerCase();
     if (s.includes('pvc')) return 'PVC Bottle';
-    return 'Glass Bottle';
+    if (s.includes('glass')) return 'Glass Bottle';
+    return String(b).trim();
   };
 
   const normalizeSize = (s) => {
     if (!s) return '50 ml';
-    const str = String(s).trim();
-    const num = str.replace(/[^\d]/g, '');
-    return num ? `${num} ml` : str.toLowerCase();
+    return formatSizeLabel(s);
   };
 
   useEffect(() => {
@@ -274,6 +301,11 @@ export default function ProductDetailPage() {
 
   // 'attar' before Migration 12; 'attars' or an attar subcategory after it
   const isAttar = isAttarCategory(product.category_slug || product.category);
+
+  // Category-aware options: Perfumes / Attars choose a bottle and an ml size; Home Fragrance
+  // (Bakhoor, Incense Sticks, Bakhoor Burners) chooses its own option and size labels
+  const productType = productTypeOf(product);
+  const isCustomProduct = productType.kind === 'custom';
 
   // Distinct bottle types offered in active variants
   const availableBottleTypes = (() => {
@@ -504,8 +536,38 @@ export default function ProductDetailPage() {
 
             <div className="ps-pdp-divider" />
 
-            {/* BOTTLE TYPE SELECTOR */}
-            {availableBottleTypes.length > 1 ? (
+            {/* OPTION SELECTOR (Home Fragrance: package / pack / material — only real options;
+                the hidden "Standard" placeholder is never shown) */}
+            {isCustomProduct ? (
+              availableBottleTypes.length > 1 ? (
+                <div className="ps-pdp-selector-section">
+                  <span className="ps-pdp-section-heading">{productType.optionLabel.toUpperCase()}:</span>
+                  <div className="ps-pdp-sizes-grid ps-pdp-option-grid" role="group" aria-label={productType.optionLabel}>
+                    {availableBottleTypes.map((opt) => {
+                      const isSelected = normalizeBottle(selectedBottleType) === opt;
+                      return (
+                        <button
+                          key={opt}
+                          type="button"
+                          className={`ps-pdp-size-card ${isSelected ? 'is-selected' : ''}`}
+                          aria-pressed={isSelected}
+                          onClick={() => selectBottle(opt)}
+                        >
+                          <span className="ps-pdp-size-name">{isDefaultOption(opt) ? 'Standard' : opt}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : availableBottleTypes.length === 1 && !isDefaultOption(availableBottleTypes[0]) ? (
+                <div className="ps-pdp-selector-section">
+                  <span className="ps-pdp-section-heading">{productType.optionLabel.toUpperCase()}:</span>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 14px', background: '#F7F4EE', borderRadius: '6px', fontSize: '13px', color: '#171411', border: '1px solid #E5D7C3' }}>
+                    <span style={{ fontWeight: 600 }}>{availableBottleTypes[0]}</span>
+                  </div>
+                </div>
+              ) : null
+            ) : availableBottleTypes.length > 1 ? (
               <div className="ps-pdp-selector-section">
                 <span className="ps-pdp-section-heading">BOTTLE TYPE:</span>
                 <div className="ps-pdp-bottle-grid">
@@ -584,7 +646,7 @@ export default function ProductDetailPage() {
 
             {/* SIZE SELECTOR (only the product's real sizes) */}
             <div className="ps-pdp-selector-section" style={availableSizes.length === 0 ? { display: 'none' } : undefined}>
-              <span className="ps-pdp-section-heading">SIZE:</span>
+              <span className="ps-pdp-section-heading">{isCustomProduct ? `${productType.sizeLabel.toUpperCase()}:` : 'SIZE:'}</span>
               <div className="ps-pdp-sizes-grid">
                 {availableSizes.map((sz) => {
                   const vForSz = activeVariants.find(
@@ -603,7 +665,7 @@ export default function ProductDetailPage() {
                       className={`ps-pdp-size-card ${isSelected ? 'is-selected' : ''}`}
                       aria-pressed={isSelected}
                       disabled={notOffered}
-                      title={notOffered ? `${sz} is not available in ${selectedBottleType}` : undefined}
+                      title={notOffered ? `${sz} is not available in ${isDefaultOption(selectedBottleType) ? 'this option' : selectedBottleType}` : undefined}
                       onClick={() => {
                         setSelectedSize(sz);
                         setQuantity(1);
@@ -624,13 +686,17 @@ export default function ProductDetailPage() {
               <div className="ps-pdp-stock-status">
                 <span className="ps-pdp-stock-dot is-out" aria-hidden="true" />
                 <span className="ps-pdp-stock-text is-out">
-                  {variantUnavailable ? <>Not available in this bottle and size</> : <>Out of Stock</>}
+                  {variantUnavailable ? (
+                    <>{isCustomProduct ? 'Not available in this combination' : 'Not available in this bottle and size'}</>
+                  ) : (
+                    <>Out of Stock</>
+                  )}
                 </span>
               </div>
             )}
 
             {/* Actions: Quantity + ADD TO CART + BUY NOW */}
-            <div className="ps-pdp-actions-row">
+            <div className="ps-pdp-actions-row" ref={actionsRowRef}>
               {/* Clean Quantity Selector */}
               <div className="ps-pdp-quantity-box">
                 <button

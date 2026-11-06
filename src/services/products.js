@@ -262,6 +262,8 @@ export function formatProduct(p) {
     base_notes: notesMetadata.base || p.base_notes || p.baseNotes || [],
     ingredients: p.ingredients || '',
     sku: p.sku || notesMetadata.sku || '',
+    product_type: p.product_type || notesMetadata.product_type || null,
+    sample_eligible: p.sample_eligible === true || notesMetadata.sample_eligible === true,
     meta_title: p.meta_title || notesMetadata.meta_title || '',
     meta_description: p.meta_description || notesMetadata.meta_description || '',
     variants: formattedVariants,
@@ -278,7 +280,53 @@ export function formatProduct(p) {
   };
 }
 
-function buildNotesMetadata(data) {
+// Metadata key → the form / update field it comes from (fragrance_notes JSON)
+const NOTES_METADATA_SOURCES = {
+  top: 'top_notes',
+  heart: 'heart_notes',
+  base: 'base_notes',
+  glass_image: 'glass_image',
+  glass_image_path: 'glass_image_path',
+  pvc_image: 'pvc_image',
+  pvc_image_path: 'pvc_image_path',
+  gallery_images: 'gallery_images',
+  category_name: 'category',
+  product_type: 'product_type',
+  sample_eligible: 'sample_eligible',
+  sku: 'sku',
+  meta_title: 'meta_title',
+  meta_description: 'meta_description',
+};
+
+const parseNotesMetadata = (raw) => {
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) return raw;
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
+};
+
+/**
+ * fragrance_notes metadata for a save. With `existing` (an update), only the fields present in
+ * `data` are replaced: every other stored key (notes, images, product type, sample eligibility,
+ * keys written by other tools) is kept exactly as it was.
+ */
+function buildNotesMetadata(data, existing = null) {
+  const full = buildFullNotesMetadata(data);
+  if (!existing) return full;
+  const merged = { ...parseNotesMetadata(existing) };
+  for (const [key, source] of Object.entries(NOTES_METADATA_SOURCES)) {
+    if (data[source] !== undefined) merged[key] = full[key];
+  }
+  return merged;
+}
+
+function buildFullNotesMetadata(data) {
   const toList = (val) =>
     Array.isArray(val)
       ? val
@@ -296,6 +344,11 @@ function buildNotesMetadata(data) {
     pvc_image_path: data.pvc_image_path || null,
     gallery_images: Array.isArray(data.gallery_images) ? data.gallery_images : [],
     category_name: data.category || 'Perfume',
+    // Category-aware variant configuration (utils/productTypes): perfume, attar, bakhoor,
+    // incense, burner or home. Stored here so no schema change is needed.
+    product_type: data.product_type || null,
+    // Attars only: whether the complimentary 2x2ml travel sample applies (Admin → Products)
+    sample_eligible: data.sample_eligible === true,
     sku: data.sku || null,
     // SEO fields from Admin → Products → SEO (no dedicated columns exist in the live schema)
     meta_title: data.meta_title || null,
@@ -737,11 +790,22 @@ async function updateProductRecord(id, updates) {
       updates.base_notes !== undefined ||
       updates.gallery_images !== undefined ||
       updates.category !== undefined ||
+      updates.product_type !== undefined ||
+      updates.sample_eligible !== undefined ||
       updates.sku !== undefined ||
       updates.meta_title !== undefined ||
       updates.meta_description !== undefined
     ) {
-      dbUpdates.fragrance_notes = buildNotesMetadata(updates);
+      // Merge into the stored metadata so nothing the update does not mention is lost
+      const { data: current, error: curErr } = await supabase
+        .from('products')
+        .select('fragrance_notes')
+        .eq('id', id)
+        .maybeSingle();
+      if (curErr) {
+        throw new Error(`Could not read the product's current details: ${describeDbError(curErr)}`);
+      }
+      dbUpdates.fragrance_notes = buildNotesMetadata(updates, current?.fragrance_notes ?? {});
     }
 
     if (updates.is_active !== undefined) dbUpdates.is_active = updates.is_active;
@@ -801,6 +865,10 @@ async function updateProductRecord(id, updates) {
           const { data: vRows, error: vErr } = await supabase
             .from('product_variants')
             .update({
+              // Same variant (matched ignoring case and spaces): the id is kept; the labels take
+              // the admin's latest spelling
+              bottle_type: row.bottle_type,
+              size_ml: row.size_ml,
               price: row.price,
               sale_price: row.sale_price,
               stock_quantity: row.stock_quantity,

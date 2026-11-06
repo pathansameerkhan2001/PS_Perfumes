@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, ArrowRight, ShieldCheck, Tag, ArrowLeft, ShoppingBag } from 'lucide-react';
 import { useCart, maxQuantityFor } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatCurrency';
+import { variantDisplayLabel } from '../../utils/productTypes';
 import { cardImageUrl, fullImageFallback } from '../../lib/storage';
 import './CartPage.css';
 import { useSeo } from '../../utils/useSeo';
@@ -100,7 +101,7 @@ export default function CartPage() {
                           {item.name || prod.name}
                         </Link>
                         <span className="ps-cart-item-size">
-                          {item.bottle_type ? `${item.bottle_type} • ${item.size_ml || item.size}` : `Volume: ${item.size || item.size_ml}`}
+                          {variantDisplayLabel(item, ' • ')}
                         </span>
                         <button
                           type="button"

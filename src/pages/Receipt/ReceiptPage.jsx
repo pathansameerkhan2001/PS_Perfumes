@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Printer } from 'lucide-react';
 import { formatINR } from '../../utils/formatCurrency';
+import { variantDisplayLabel } from '../../utils/productTypes';
 import { useSeo } from '../../utils/useSeo';
 import { SITE_CONFIG } from '../../config/siteConfig';
 import './ReceiptPage.css';
@@ -95,7 +96,7 @@ export default function ReceiptPage() {
               <tr key={idx}>
                 <td>
                   {it.product_name}
-                  <small>{[it.bottle_type, it.size_ml].filter(Boolean).join(' · ')}</small>
+                  <small>{variantDisplayLabel(it)}</small>
                 </td>
                 <td>{it.quantity}</td>
                 <td>{money(it.unit_price)}</td>

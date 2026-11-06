@@ -159,20 +159,25 @@ export function CartProvider({ children }) {
   /**
    * Helper to normalize bottle type string
    */
+  // Glass / PVC labels are normalised as before; any other option (Home Fragrance: package,
+  // pack, material / design) is kept exactly as stored, so distinct variants never merge
   const normalizeBottleType = (bt) => {
     if (!bt) return 'Glass Bottle';
     const s = String(bt).toLowerCase();
     if (s.includes('pvc')) return 'PVC Bottle';
-    return 'Glass Bottle';
+    if (s.includes('glass')) return 'Glass Bottle';
+    return String(bt).trim();
   };
 
   /**
    * Helper to normalize size string
    */
+  // "50" → "50 ml" as before; labels that are not plain ml sizes ("50 g", "20 sticks",
+  // "Medium") are kept exactly as stored
   const normalizeSize = (sz) => {
     if (!sz) return '50 ml';
     const s = String(sz).trim();
-    if (!s.toLowerCase().includes('ml')) return `${s} ml`;
+    if (/^\d+(\.\d+)?$/.test(s)) return `${s} ml`;
     return s;
   };
 

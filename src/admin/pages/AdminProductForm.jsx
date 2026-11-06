@@ -9,10 +9,13 @@ import {
   Settings,
   RotateCcw,
   Loader2,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { getProductById, createProduct, updateProduct } from '../../services/products';
 import { getCategories, buildCategoryTree } from '../../services/categories';
 import { uploadImage } from '../../lib/storage';
+import { PRODUCT_TYPES, DEFAULT_OPTION_LABEL, detectProductType, isDefaultOption, hasBottleVariants, variantDisplayLabel } from '../../utils/productTypes';
 import './AdminProductForm.css';
 
 // Categories always come from the database (categories table). There is deliberately no
@@ -41,6 +44,13 @@ const bottleKey = (bt) => {
   if (s.includes('glass')) return 'Glass Bottle';
   return String(bt || '').trim();
 };
+
+// Home Fragrance variant row (Bakhoor, Incense Sticks, Bakhoor Burners): every value is entered
+// by the admin; nothing is pre-filled (no invented weights, counts or prices)
+let customRowSeq = 0;
+// savedPrice / savedSale: the stored values of a loaded variant, so a row the admin does not
+// re-price keeps its stored sale price exactly (perfume-form variants store sale = price)
+const blankCustomRow = () => ({ rowId: `row-${++customRowSeq}`, option: '', size: '', price: '', salePrice: '', stock: '', sku: '', savedPrice: null, savedSale: null });
 
 const EMPTY_SIZE_ROW = { glassPrice: 0, pvcPrice: 0, glassStock: 0, pvcStock: 0, glassSku: '', pvcSku: '' };
 
@@ -104,7 +114,11 @@ export default function AdminProductForm() {
     gallery_images: [],
     featured: false,
     new_arrival: false,
-    bestseller: true,
+    // Homepage flags start OFF: a product appears in Best Sellers / New Arrivals / Featured only
+    // when the admin switches the flag on
+    bestseller: false,
+    // Attars: whether the complimentary 2x2ml travel sample message applies (off until chosen)
+    sample_eligible: false,
     active: true,
     top_notes: '',
     heart_notes: '',
@@ -130,7 +144,17 @@ export default function AdminProductForm() {
   // saved variants as "Bottle|size" keys, so a save never removes one without confirmation
   const [storedSizes, setStoredSizes] = useState([]);
   const [storedVariantKeys, setStoredVariantKeys] = useState([]);
-  const sizeOptions = (cat) => sortSizes([...sizesForCategory(cat), ...storedSizes]);
+  // Extra ml sizes the admin adds for this product (e.g. a 4 ml or 20 ml attar)
+  const [extraSizes, setExtraSizes] = useState([]);
+  const [newSizeInput, setNewSizeInput] = useState('');
+  const sizeOptions = (cat) => sortSizes([...sizesForCategory(cat), ...storedSizes, ...extraSizes]);
+
+  // Home Fragrance products: free variant rows (option + size + price + sale price + stock + SKU)
+  const [customRows, setCustomRows] = useState([]);
+  // The saved product's variants: 'bottle' (Glass/PVC × ml) or 'custom' (Home Fragrance), with
+  // their labels, so a category change to the other kind is never silent
+  const [storedVariantKind, setStoredVariantKind] = useState('');
+  const [storedVariantLabels, setStoredVariantLabels] = useState([]);
 
   // Category records from the database: { id, name, slug, is_active }
   const [categories, setCategories] = useState([]);
@@ -195,6 +219,7 @@ export default function AdminProductForm() {
               featured: Boolean(p.featured || p.is_featured),
               new_arrival: Boolean(p.new_arrival || p.is_new_arrival),
               bestseller: Boolean(p.bestseller || p.is_bestseller),
+              sample_eligible: p.sample_eligible === true,
               active: p.is_active !== false,
               top_notes: Array.isArray(p.top_notes) ? p.top_notes.join(', ') : (p.top_notes || ''),
               heart_notes: Array.isArray(p.heart_notes) ? p.heart_notes.join(', ') : (p.heart_notes || ''),
@@ -203,6 +228,26 @@ export default function AdminProductForm() {
               meta_title: p.meta_title || p.name || '',
               meta_description: p.meta_description || p.short_description || '',
             });
+
+            // Home Fragrance editor rows: the saved variants exactly as stored
+            setCustomRows(
+              (Array.isArray(p.variants) ? p.variants : []).map((v) => ({
+                ...blankCustomRow(),
+                option: isDefaultOption(v.bottle_type) ? '' : String(v.bottle_type || ''),
+                size: String(v.size_ml || ''),
+                price: v.price ? String(v.price) : '',
+                salePrice: v.sale_price && Number(v.sale_price) < Number(v.price) ? String(v.sale_price) : '',
+                savedPrice: v.price != null ? Number(v.price) : null,
+                savedSale: v.sale_price != null ? Number(v.sale_price) : null,
+                stock: String(v.stock_quantity !== undefined ? v.stock_quantity : v.stock || 0),
+                sku: v.sku || '',
+              }))
+            );
+
+            if (Array.isArray(p.variants) && p.variants.length > 0) {
+              setStoredVariantKind(hasBottleVariants(p.variants) ? 'bottle' : 'custom');
+              setStoredVariantLabels(p.variants.map((v) => variantDisplayLabel(v) || `${v.bottle_type} ${v.size_ml}`));
+            }
 
             // Populate variant matrix and dynamic sizes if available
             if (Array.isArray(p.variants) && p.variants.length > 0) {
@@ -216,16 +261,22 @@ export default function AdminProductForm() {
                 const sz = sizeKey(v.size_ml);
                 if (!sz) return;
 
+                const isGlass = v.bottle_type?.toLowerCase().includes('glass');
+                const isPvc = v.bottle_type?.toLowerCase().includes('pvc');
+                // Every saved variant is remembered (a save never removes one without confirmation)
+                foundKeys.push(`${bottleKey(v.bottle_type)}|${sz}`);
+                // Only real bottle variants belong in the Glass / PVC × ml matrix; Home Fragrance
+                // variants ("Gift Box", "50 g") stay in their own editor and are never turned
+                // into "Glass Bottle 50 g"
+                if (!isGlass && !isPvc) return;
+
                 // Every stored size is kept, including sizes outside the category's usual set
                 if (!foundSizes.includes(sz)) {
                   foundSizes.push(sz);
                 }
 
-                const isGlass = v.bottle_type?.toLowerCase().includes('glass');
-                const isPvc = v.bottle_type?.toLowerCase().includes('pvc');
                 if (isPvc) hasPvc = true;
                 if (isGlass) hasGlass = true;
-                foundKeys.push(`${bottleKey(v.bottle_type)}|${sz}`);
 
                 if (!nextMatrix[sz]) nextMatrix[sz] = { ...EMPTY_SIZE_ROW };
                 if (isGlass) {
@@ -288,12 +339,27 @@ export default function AdminProductForm() {
   const selectedMainId = selectedCategory ? selectedCategory.parent_id || selectedCategory.id : '';
   const selectedMain = categoryTree.mains.find((m) => m.id === selectedMainId) || null;
 
+  // Category-aware configuration: Perfumes / Attars use the bottle × ml matrix; Home Fragrance
+  // (Bakhoor, Incense Sticks, Bakhoor Burners) uses free variant rows (utils/productTypes)
+  const typeFor = (cat) => {
+    if (!cat) return 'perfume';
+    const main = cat.parent_id ? categories.find((c) => c.id === cat.parent_id) : null;
+    return detectProductType(cat, main);
+  };
+  const productTypeKey = typeFor(selectedCategory);
+  const productType = PRODUCT_TYPES[productTypeKey];
+  const isCustom = productType.kind === 'custom';
+
   const handleCategoryChange = (e) => applyCategory(e.target.value);
 
   // category_id is the subcategory when one is chosen, otherwise the main category
   const applyCategory = (categoryId) => {
     const chosen = categories.find((c) => c.id === categoryId);
     const newCat = chosen ? chosen.name : '';
+    // Home Fragrance: start with one empty variant row for the admin to fill in
+    if (chosen && PRODUCT_TYPES[typeFor(chosen)].kind === 'custom') {
+      setCustomRows((rows) => (rows.length > 0 ? rows : [blankCustomRow()]));
+    }
     const allowed = sizeOptions(newCat);
     setForm((prev) => ({ ...prev, category_id: chosen ? chosen.id : '', category: newCat }));
 
@@ -330,11 +396,32 @@ export default function AdminProductForm() {
     setVariantMatrix((prev) => ({
       ...prev,
       [size]: {
-        ...prev[size],
+        ...(prev[size] || EMPTY_SIZE_ROW),
         [field]: value,
       },
     }));
   };
+
+  // Attars / Perfumes: add another ml size to this product (prices and stock are entered below)
+  const addExtraSize = () => {
+    const n = parseFloat(String(newSizeInput).replace(',', '.'));
+    if (!(n > 0) || n > 1000) {
+      setErrorMsg('Enter a size in ml, for example 6 or 20.');
+      return;
+    }
+    const sz = `${Number(n)} ml`;
+    setErrorMsg('');
+    setExtraSizes((prev) => (prev.includes(sz) ? prev : [...prev, sz]));
+    setSelectedSizes((prev) => (prev.includes(sz) ? prev : sortSizes([...prev, sz])));
+    setVariantMatrix((prev) => (prev[sz] ? prev : { ...prev, [sz]: { ...EMPTY_SIZE_ROW } }));
+    setNewSizeInput('');
+  };
+
+  // Home Fragrance rows
+  const updateCustomRow = (rowId, field, value) =>
+    setCustomRows((rows) => rows.map((r) => (r.rowId === rowId ? { ...r, [field]: value } : r)));
+  const addCustomRow = () => setCustomRows((rows) => [...rows, blankCustomRow()]);
+  const removeCustomRow = (rowId) => setCustomRows((rows) => rows.filter((r) => r.rowId !== rowId));
 
   // 1–3. Primary / Glass Bottle / PVC Bottle image uploads.
   // The form only receives the URL and storage path after Storage confirms the upload;
@@ -471,7 +558,7 @@ export default function AdminProductForm() {
       return;
     }
 
-    if (!bottleOptions.glass && !bottleOptions.pvc) {
+    if (!isCustom && !bottleOptions.glass && !bottleOptions.pvc) {
       setActiveTab('variants');
       setErrorMsg('Select at least one bottle type (Glass or PVC).');
       return;
@@ -494,8 +581,68 @@ export default function AdminProductForm() {
     // Generate exact variant records for enabled bottle types across the offered sizes
     // (the category's sizes plus any size the saved product already has)
     const generatedVariants = [];
+    if (isCustom) {
+      // Home Fragrance: one variant per filled row (option stored in bottle_type, size in size_ml)
+      const rows = customRows
+        .map((r) => ({ ...r, option: String(r.option || '').trim(), size: String(r.size || '').trim(), sku: String(r.sku || '').trim() }))
+        .filter((r) => r.option || r.size || String(r.price).trim() || String(r.stock).trim() || r.sku);
+      const fail = (msg) => {
+        setActiveTab('variants');
+        setErrorMsg(msg);
+      };
+      if (rows.length === 0) {
+        fail(`Add at least one variant with its ${productType.sizeLabel.toLowerCase()} and price.`);
+        return;
+      }
+      const seen = new Set();
+      for (const r of rows) {
+        const label = [r.option, r.size].filter(Boolean).join(' — ') || 'a variant';
+        if (!r.size) {
+          fail(`Every variant needs a ${productType.sizeLabel.toLowerCase()} (${productType.sizePlaceholder}).`);
+          return;
+        }
+        const price = Number(r.price);
+        if (!(price > 0)) {
+          fail(`Variant "${label}" needs a price greater than 0.`);
+          return;
+        }
+        const sale = Number(r.salePrice);
+        if (String(r.salePrice).trim() && !(sale > 0 && sale < price)) {
+          fail(`Variant "${label}": the sale price must be lower than the price (or left empty).`);
+          return;
+        }
+        const stock = Number(r.stock);
+        if (String(r.stock).trim() && !(Number.isInteger(stock) && stock >= 0)) {
+          fail(`Variant "${label}": stock must be a whole number (0 or more).`);
+          return;
+        }
+        const key = `${(r.option || DEFAULT_OPTION_LABEL).toLowerCase()}|${r.size.toLowerCase().replace(/\s+/g, '')}`;
+        if (seen.has(key)) {
+          fail(`Variant "${label}" is listed twice. Each ${productType.optionLabel.toLowerCase()} and ${productType.sizeLabel.toLowerCase()} combination must be unique.`);
+          return;
+        }
+        seen.add(key);
+        const qty = String(r.stock).trim() ? stock : 0;
+        generatedVariants.push({
+          bottle_type: r.option || DEFAULT_OPTION_LABEL,
+          size_ml: r.size,
+          price,
+          sale_price:
+            sale > 0 && sale < price
+              ? sale
+              : !String(r.salePrice).trim() && r.savedSale != null && r.savedPrice === price && r.savedSale >= price
+              ? r.savedSale // untouched row: stored sale price kept as it was
+              : null,
+          stock: qty,
+          stock_quantity: qty,
+          sku: r.sku,
+          active: true,
+          is_active: true,
+        });
+      }
+    }
     const allowedSizes = sizeOptions(form.category);
-    selectedSizes.filter((sz) => allowedSizes.includes(sz)).forEach((sz) => {
+    (isCustom ? [] : selectedSizes.filter((sz) => allowedSizes.includes(sz))).forEach((sz) => {
       const cfg = variantMatrix[sz] || DEFAULT_VARIANT_MATRIX[sz] || EMPTY_SIZE_ROW;
       const sizeNum = sz.replace(/\D/g, '');
 
@@ -564,6 +711,9 @@ export default function AdminProductForm() {
       // Saved as products.category_id (resolveCategoryId passes a UUID through unchanged)
       category_id: form.category_id,
       category: form.category,
+      product_type: productTypeKey,
+      // Only attars use the flag; the stored value is kept as it is for every other type
+      sample_eligible: Boolean(form.sample_eligible),
       slug: cleanSlug,
       price: minPrice,
       status: form.active ? 'active' : 'draft',
@@ -726,10 +876,146 @@ export default function AdminProductForm() {
               ======================================================== */}
           {activeTab === 'variants' && (
             <div className="ps-tab-pane">
-              <h2 className="ps-pane-title">Variants & Pricing Matrix</h2>
+              <h2 className="ps-pane-title">{isCustom ? `${productType.title} Variants & Pricing` : 'Variants & Pricing Matrix'}</h2>
               <p className="ps-pane-desc">
-                Configure bespoke sizes (3, 6, 8, 10, 12 ml for Attars; 30 ml, 50 ml, 100 ml for Perfumes) with individual pricing, inventory, and SKU management. Sizes this product already has are always listed.
+                {isCustom
+                  ? `${productType.help} No bottle types or ml sizes are used for ${productType.title} products.`
+                  : 'Configure bespoke sizes (3, 6, 8, 10, 12 ml for Attars — or add your own; 30 ml, 50 ml, 100 ml for Perfumes) with individual pricing, inventory, and SKU management. Sizes this product already has are always listed.'}
               </p>
+
+              {isEditing && storedVariantKind && storedVariantKind !== productType.kind && (
+                <div
+                  role="alert"
+                  style={{ margin: '0 0 16px', padding: '12px 14px', borderRadius: 8, border: '1px solid #FDE68A', background: '#FFFBEB', color: '#92400E', fontSize: 12.5, lineHeight: 1.55 }}
+                >
+                  <strong>Category type changed.</strong>{' '}
+                  {storedVariantKind === 'custom'
+                    ? `This product's saved variants are Home Fragrance variants (${storedVariantLabels.join(', ')}). The ${productType.title} category uses bottle types and ml sizes instead. If you save, those variants are replaced by the bottle sizes below — you will be asked to confirm first, and variants with order history are deactivated rather than deleted.`
+                    : `This product's saved variants are bottle / ml variants (${storedVariantLabels.join(', ')}). They are listed below unchanged and keep their ids, prices and stock; edit them into ${productType.sizeLabel.toLowerCase()} / ${productType.optionLabel.toLowerCase()} rows or remove them (removal asks for confirmation).`}
+                </div>
+              )}
+
+              {isCustom ? (
+                <div className="ps-builder-section" style={{ borderTop: 'none', paddingTop: 0 }}>
+                  <div className="ps-builder-section ps-matrix-scroll" role="region" aria-label={`${productType.title} variants`} tabIndex={0} style={{ borderTop: 'none', padding: 0 }}>
+                    <table className="ps-variant-matrix-table ps-custom-variant-table">
+                      <thead>
+                        <tr>
+                          <th>{productType.sizeLabel} *</th>
+                          <th>{productType.optionLabel}</th>
+                          <th>Price (₹) *</th>
+                          <th>Sale Price (₹)</th>
+                          <th>Stock</th>
+                          <th>SKU</th>
+                          <th aria-label="Remove" />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {customRows.map((r, i) => (
+                          <tr key={r.rowId}>
+                            <td>
+                              <input
+                                type="text"
+                                className="ps-matrix-input"
+                                value={r.size}
+                                onChange={(e) => updateCustomRow(r.rowId, 'size', e.target.value)}
+                                placeholder={productType.sizePlaceholder}
+                                aria-label={`Variant ${i + 1} ${productType.sizeLabel}`}
+                                style={{ width: '150px' }}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="text"
+                                className="ps-matrix-input"
+                                value={r.option}
+                                onChange={(e) => updateCustomRow(r.rowId, 'option', e.target.value)}
+                                placeholder={productType.optionPlaceholder}
+                                aria-label={`Variant ${i + 1} ${productType.optionLabel}`}
+                                style={{ width: '170px' }}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                className="ps-matrix-input"
+                                value={r.price}
+                                onChange={(e) => updateCustomRow(r.rowId, 'price', e.target.value)}
+                                placeholder="₹"
+                                aria-label={`Variant ${i + 1} price`}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                className="ps-matrix-input"
+                                value={r.salePrice}
+                                onChange={(e) => updateCustomRow(r.rowId, 'salePrice', e.target.value)}
+                                placeholder="Optional"
+                                aria-label={`Variant ${i + 1} sale price`}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                className="ps-matrix-input"
+                                value={r.stock}
+                                onChange={(e) => updateCustomRow(r.rowId, 'stock', e.target.value)}
+                                placeholder="Qty"
+                                aria-label={`Variant ${i + 1} stock`}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="text"
+                                className="ps-matrix-input"
+                                value={r.sku}
+                                onChange={(e) => updateCustomRow(r.rowId, 'sku', e.target.value)}
+                                placeholder={`${form.sku || 'PS'}-${i + 1}`}
+                                aria-label={`Variant ${i + 1} SKU`}
+                                style={{ width: '130px', fontSize: '11.5px' }}
+                              />
+                            </td>
+                            <td>
+                              <button
+                                type="button"
+                                onClick={() => removeCustomRow(r.rowId)}
+                                aria-label={`Remove variant ${i + 1}`}
+                                title="Remove variant"
+                                style={{ background: 'transparent', border: '1px solid #E5E0D8', borderRadius: 6, padding: 6, cursor: 'pointer', color: '#B91C1C', lineHeight: 0 }}
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {customRows.length === 0 && (
+                    <p style={{ margin: '12px 0 0', fontSize: '12.5px', color: '#8C8479' }}>
+                      No variants yet. Add the first {productType.sizeLabel.toLowerCase()} and its price.
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={addCustomRow}
+                    style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 20, border: '1px solid #C9A96E', background: '#1A1714', color: '#C9A96E', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    <Plus size={14} /> Add variant
+                  </button>
+                  <p style={{ margin: '10px 0 0', fontSize: '12px', color: '#8C8479' }}>
+                    {productType.sizeLabel} is required for every variant; {productType.optionLabel.toLowerCase()} is optional. Each combination gets its own price, stock and SKU, and is what the customer chooses on the product page.
+                  </p>
+                </div>
+              ) : (
+              <>
 
               {/* 1. Size Configuration Pill Controls */}
               <div className="ps-builder-section" style={{ borderTop: 'none', paddingTop: 0 }}>
@@ -768,6 +1054,33 @@ export default function AdminProductForm() {
                       </button>
                     );
                   })}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                  <label htmlFor="pf-extra-size" style={{ fontSize: 12, color: '#6F675E' }}>Add another size (ml)</label>
+                  <input
+                    id="pf-extra-size"
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    className="ps-matrix-input"
+                    value={newSizeInput}
+                    onChange={(e) => setNewSizeInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addExtraSize();
+                      }
+                    }}
+                    placeholder="e.g. 20"
+                    style={{ width: 90 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={addExtraSize}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 16, border: '1px solid #C9A96E', background: '#FFFFFF', color: '#7A5A22', fontSize: 12, cursor: 'pointer' }}
+                  >
+                    <Plus size={13} /> Add size
+                  </button>
                 </div>
               </div>
 
@@ -895,6 +1208,9 @@ export default function AdminProductForm() {
                 )}
               </div>
 
+              </>
+              )}
+
               {/* Other Settings Toggles */}
               <div className="ps-builder-section">
                 <h3 className="ps-sub-heading">Product Badges & Visibility</h3>
@@ -946,6 +1262,20 @@ export default function AdminProductForm() {
                     </label>
                     <span className="ps-toggle-label">Best Seller</span>
                   </div>
+
+                  {productTypeKey === 'attar' && (
+                    <div className="ps-toggle-row">
+                      <label className="ps-switch">
+                        <input
+                          type="checkbox"
+                          checked={form.sample_eligible}
+                          onChange={(e) => setForm({ ...form, sample_eligible: e.target.checked })}
+                        />
+                        <span className="ps-slider" />
+                      </label>
+                      <span className="ps-toggle-label">Eligible for complimentary 2x2ml travel sample</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1063,7 +1393,7 @@ export default function AdminProductForm() {
               ======================================================== */}
           {activeTab === 'images' && (
             <div className="ps-tab-pane">
-              <h2 className="ps-pane-title">Flacon Imagery</h2>
+              <h2 className="ps-pane-title">{isCustom ? 'Product Imagery' : 'Flacon Imagery'}</h2>
               <p className="ps-pane-desc">
                 Upload luxury assets to Supabase Storage (folder <code>products/</code>). Supports WebP, PNG, and JPEG.
               </p>
@@ -1122,6 +1452,10 @@ export default function AdminProductForm() {
                 </div>
               </div>
 
+              {/* 2–3. Bottle images: Perfumes and Attars only (Home Fragrance has no bottle types;
+                  images already stored on the product are kept on save) */}
+              {!isCustom && (
+              <>
               {/* 2. Glass Bottle Flacon Image */}
               <div className="ps-builder-section">
                 <h3 className="ps-sub-heading">Glass Bottle Flacon Image</h3>
@@ -1237,6 +1571,9 @@ export default function AdminProductForm() {
                     PVC Bottle option is not enabled for this product. You can enable it in Variants &amp; Pricing if needed.
                   </p>
                 </div>
+              )}
+
+              </>
               )}
 
               {/* 4. Gallery Images */}
