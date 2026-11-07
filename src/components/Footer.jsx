@@ -56,22 +56,30 @@ function FooterGroup({ id, title, isMobile, children }) {
 
 const telHref = (phone) => `tel:${String(phone).replace(/[^\d+]/g, '')}`;
 
+/** Business contact details shown in the footer. */
+const BUSINESS = {
+  name: 'PS Perfumes',
+  address: 'Habeebullah St, beside Friends Gym, Ganagapeta, Kadapa, Andhra Pradesh 516001',
+  email: 'psperfumeskadapa1@gmail.com',
+  phones: ['6300012223', '7386942503'],
+};
+const BUSINESS_DIRECTIONS_URL = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+  `${BUSINESS.name}, ${BUSINESS.address}`
+)}`;
+const formatPhone = (p) => `+91 ${p.slice(0, 5)} ${p.slice(5)}`;
+
 /**
  * PS PERFUMES — compact storefront footer.
- * Contact details and social links come from Admin → Store Settings (store_settings), with the
- * existing site configuration as fallback; category links from the shared category source.
+ * Business address, email and phone numbers are fixed below (BUSINESS); social links come from
+ * Admin → Store Settings (store_settings), with the site configuration as fallback; category links from the shared category source.
  * Only pages that exist are linked.
  */
 export default function Footer() {
   const categories = useStorefrontCategories();
   const isMobile = useIsMobile();
   const [contact, setContact] = useState({
-    address: SITE_CONFIG.address,
-    phone: SITE_CONFIG.phone,
-    email: SITE_CONFIG.contactEmail,
     instagramUrl: SITE_CONFIG.instagramUrl,
     whatsappUrl: SITE_CONFIG.whatsappUrl,
-    mapsUrl: SITE_CONFIG.googleMapsUrl,
   });
 
   useEffect(() => {
@@ -80,12 +88,8 @@ export default function Footer() {
       .then((s) => {
         if (!mounted || !s) return;
         setContact((prev) => ({
-          address: s.address || prev.address,
-          phone: s.phone || prev.phone,
-          email: s.contact_email || prev.email,
           instagramUrl: s.instagram_url || prev.instagramUrl,
           whatsappUrl: s.whatsapp_url || prev.whatsappUrl,
-          mapsUrl: s.google_maps_url || prev.mapsUrl,
         }));
       })
       .catch(() => {
@@ -156,34 +160,46 @@ export default function Footer() {
           <div className="ps-footer-group ps-footer-contact">
             <h3 className="ps-footer-heading">Contact</h3>
             <ul className="ps-footer-contact-list">
-              {contact.address && (
-                <li>
-                  <MapPin size={15} aria-hidden="true" />
-                  {contact.mapsUrl ? (
-                    <a href={contact.mapsUrl} target="_blank" rel="noopener noreferrer">{contact.address}</a>
-                  ) : (
-                    <span>{contact.address}</span>
-                  )}
-                </li>
-              )}
-              {contact.phone && (
-                <li>
-                  <Phone size={15} aria-hidden="true" />
-                  <a href={telHref(contact.phone)}>{contact.phone}</a>
-                </li>
-              )}
-              {contact.email && (
-                <li>
-                  <Mail size={15} aria-hidden="true" />
-                  <a href={`mailto:${contact.email}`}>{contact.email}</a>
-                </li>
-              )}
+              <li>
+                <MapPin size={15} aria-hidden="true" />
+                <a
+                  href={BUSINESS_DIRECTIONS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Get directions to ${BUSINESS.name}: ${BUSINESS.address} (opens Google Maps in a new tab)`}
+                >
+                  <strong className="ps-footer-contact-name">{BUSINESS.name}</strong>
+                  {BUSINESS.address}
+                </a>
+              </li>
+              <li>
+                <Mail size={15} aria-hidden="true" />
+                <a href={`mailto:${BUSINESS.email}`}>{BUSINESS.email}</a>
+              </li>
+              <li>
+                <Phone size={15} aria-hidden="true" />
+                <span className="ps-footer-phones">
+                  {BUSINESS.phones.map((p) => (
+                    <a key={p} href={telHref(`+91${p}`)} aria-label={`Call ${formatPhone(p)}`}>
+                      {formatPhone(p)}
+                    </a>
+                  ))}
+                </span>
+              </li>
             </ul>
           </div>
         </div>
 
         <div className="ps-footer-bottom">
-          <p className="ps-footer-copyright">© {new Date().getFullYear()} PS PERFUMES. All rights reserved.</p>
+          <div className="ps-footer-legal">
+            <p className="ps-footer-copyright">© {new Date().getFullYear()} PS PERFUMES. All rights reserved.</p>
+            <p className="ps-footer-credit">
+              Designed &amp; Developed by{' '}
+              <a href="https://www.brandnix.in/" target="_blank" rel="noopener noreferrer" aria-label="Brandnix (opens in a new tab)">
+                Brandnix
+              </a>
+            </p>
+          </div>
           <button type="button" onClick={scrollToTop} className="ps-footer-top-btn" aria-label="Back to top">
             <span>Back to top</span>
             <ArrowUp size={13} strokeWidth={2} aria-hidden="true" />

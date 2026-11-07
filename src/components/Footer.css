@@ -299,3 +299,71 @@
     padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* Business name above the address, two phone numbers, Brandnix credit */
+.ps-footer-contact-list a .ps-footer-contact-name {
+  display: block;
+  margin-bottom: 2px;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #D4AD62;
+}
+
+.ps-footer-phones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+
+.ps-footer-legal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 18px;
+  min-width: 0;
+}
+
+.ps-footer-credit {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: #9C907B;
+}
+
+.ps-footer-credit a {
+  color: #D4AD62;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(212, 173, 98, 0.35);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+@media (hover: hover) {
+  .ps-footer-credit a:hover {
+    color: #E3C58B;
+    border-bottom-color: #E3C58B;
+  }
+}
+
+@media (max-width: 640px) {
+  .ps-footer-legal {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ps-footer-bottom {
+    align-items: flex-start;
+  }
+  .ps-footer-contact-list li {
+    padding: 2px 0;
+  }
+  .ps-footer-phones a {
+    display: inline-block;
+    padding: 4px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-footer-credit a {
+    transition: none;
+  }
+}
