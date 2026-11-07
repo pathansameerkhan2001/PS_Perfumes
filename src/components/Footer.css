@@ -327,7 +327,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   Credit strip: full-width ivory band below the black footer, centred
+   Credit strip: full-width ivory band above the black footer, centred
    "Designed & Developed by" label and a Brandnix pill
    -------------------------------------------------------------------------- */
 .ps-footer-credit-strip {
@@ -339,7 +339,7 @@
   min-height: 100px;
   padding: 20px 16px;
   background-color: #F8F5EC;
-  border-top: 1px solid rgba(140, 105, 47, 0.45);
+  border-bottom: 1px solid rgba(140, 105, 47, 0.45);
   text-align: center;
 }
 
@@ -397,25 +397,12 @@
   }
 }
 
-/* Phones: the floating contact dock and bag button sit over the end of the page,
-   so the clearance moves from the black footer into the ivory strip */
-@media (max-width: 768px) {
-  .ps-public-footer {
-    padding-bottom: 0;
-  }
-  .ps-footer-bottom {
-    padding-bottom: 14px;
-  }
-  .ps-footer-credit-strip {
-    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
-  }
-}
-
 @media (max-width: 640px) {
   .ps-footer-credit-strip {
     flex-direction: column;
     gap: 10px;
-    padding-top: 22px;
+    min-height: 0;
+    padding: 22px 16px;
   }
   .ps-footer-credit-label {
     font-size: 10px;

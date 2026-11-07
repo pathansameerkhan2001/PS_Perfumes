@@ -108,6 +108,21 @@ export default function Footer() {
 
   return (
     <footer className="ps-public-footer ps-arabesque" aria-label="PS PERFUMES footer">
+      <div className="ps-footer-credit-strip">
+        <span className="ps-footer-credit-label">Designed &amp; Developed by</span>
+        <a
+          href="https://www.instagram.com/_brandnix/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ps-footer-credit-pill"
+          aria-label="Brandnix on Instagram (opens in a new tab)"
+        >
+          <img src={brandnixMark} alt="" width="28" height="28" className="ps-footer-credit-logo" />
+          <span>Brandnix</span>
+          <ArrowUpRight size={14} strokeWidth={2} aria-hidden="true" className="ps-footer-credit-arrow" />
+        </a>
+      </div>
+
       <div className="ps-footer-inner">
         <div className="ps-footer-grid">
           {/* Brand */}
@@ -198,21 +213,6 @@ export default function Footer() {
             <ArrowUp size={13} strokeWidth={2} aria-hidden="true" />
           </button>
         </div>
-      </div>
-
-      <div className="ps-footer-credit-strip">
-        <span className="ps-footer-credit-label">Designed &amp; Developed by</span>
-        <a
-          href="https://www.brandnix.in/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="ps-footer-credit-pill"
-          aria-label="Brandnix website (opens in a new tab)"
-        >
-          <img src={brandnixMark} alt="" width="28" height="28" className="ps-footer-credit-logo" />
-          <span>Brandnix</span>
-          <ArrowUpRight size={14} strokeWidth={2} aria-hidden="true" className="ps-footer-credit-arrow" />
-        </a>
       </div>
     </footer>
   );
