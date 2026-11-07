@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Mail, Phone, ArrowUp, ChevronDown, MessageCircle } from 'lucide-react';
+import { MapPin, Mail, Phone, ArrowUp, ArrowUpRight, ChevronDown, MessageCircle } from 'lucide-react';
 import PSPerfumesLogo from './common/PSPerfumesLogo';
 import { SITE_CONFIG } from '../config/siteConfig';
 import { getStorefrontSettings } from '../services/settings';
 import { useStorefrontCategories, withComboLink } from '../utils/useStorefrontCategories';
+import brandnixMark from '../assets/brandnix-mark.svg';
 import './Footer.css';
 
 const MOBILE_QUERY = '(max-width: 640px)';
@@ -191,20 +192,27 @@ export default function Footer() {
         </div>
 
         <div className="ps-footer-bottom">
-          <div className="ps-footer-legal">
-            <p className="ps-footer-copyright">© {new Date().getFullYear()} PS PERFUMES. All rights reserved.</p>
-            <p className="ps-footer-credit">
-              Designed &amp; Developed by{' '}
-              <a href="https://www.brandnix.in/" target="_blank" rel="noopener noreferrer" aria-label="Brandnix (opens in a new tab)">
-                Brandnix
-              </a>
-            </p>
-          </div>
+          <p className="ps-footer-copyright">© {new Date().getFullYear()} PS PERFUMES. All rights reserved.</p>
           <button type="button" onClick={scrollToTop} className="ps-footer-top-btn" aria-label="Back to top">
             <span>Back to top</span>
             <ArrowUp size={13} strokeWidth={2} aria-hidden="true" />
           </button>
         </div>
+      </div>
+
+      <div className="ps-footer-credit-strip">
+        <span className="ps-footer-credit-label">Designed &amp; Developed by</span>
+        <a
+          href="https://www.brandnix.in/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ps-footer-credit-pill"
+          aria-label="Brandnix website (opens in a new tab)"
+        >
+          <img src={brandnixMark} alt="" width="28" height="28" className="ps-footer-credit-logo" />
+          <span>Brandnix</span>
+          <ArrowUpRight size={14} strokeWidth={2} aria-hidden="true" className="ps-footer-credit-arrow" />
+        </a>
       </div>
     </footer>
   );

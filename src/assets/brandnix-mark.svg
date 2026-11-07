@@ -1,0 +1,23 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="14" fill="#0B1320"/>
+  <g transform="translate(7, 7) scale(0.65)">
+    <!-- White Lettermark -->
+    <path
+      d="M2 10H38C48 10 54 16 54 26C54 36 48 42 38 42H18V64H2V10ZM18 26H36C39 26 40 24 40 22C40 20 39 18 36 18H18V26Z"
+      fill="#FFFFFF"
+    />
+    <!-- Brandnix Orange Checkmark / Arrow -->
+    <path
+      d="M6 40L28 58L68 14"
+      stroke="#F59E0B"
+      stroke-width="11"
+      stroke-linecap="square"
+      stroke-linejoin="miter"
+      stroke-miterlimit="4"
+    />
+    <path
+      d="M60 4L78 12L68 28L60 4Z"
+      fill="#F59E0B"
+    />
+  </g>
+</svg>
