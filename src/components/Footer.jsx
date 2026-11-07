@@ -5,7 +5,7 @@ import PSPerfumesLogo from './common/PSPerfumesLogo';
 import { SITE_CONFIG } from '../config/siteConfig';
 import { getStorefrontSettings } from '../services/settings';
 import { useStorefrontCategories, withComboLink } from '../utils/useStorefrontCategories';
-import brandnixMark from '../assets/brandnix-mark.svg';
+import brandnixLogo from '../assets/brandnix-logo.webp';
 import './Footer.css';
 
 const MOBILE_QUERY = '(max-width: 640px)';
@@ -117,7 +117,7 @@ export default function Footer() {
           className="ps-footer-credit-pill"
           aria-label="Brandnix on Instagram (opens in a new tab)"
         >
-          <img src={brandnixMark} alt="" width="28" height="28" className="ps-footer-credit-logo" />
+          <img src={brandnixLogo} alt="" width="32" height="32" className="ps-footer-credit-logo" />
           <span>Brandnix</span>
           <ArrowUpRight size={14} strokeWidth={2} aria-hidden="true" className="ps-footer-credit-arrow" />
         </a>
