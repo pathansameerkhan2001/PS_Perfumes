@@ -153,3 +153,80 @@ export function variantDisplayLabel(variant, separator = ' · ') {
   const size = formatSizeLabel(variant?.size_ml || variant?.size);
   return [option, size].filter(Boolean).join(separator);
 }
+
+/** Option label as the product page shows it: "glass" → "Glass Bottle", "pvc" → "PVC Bottle", others as stored. */
+export function optionDisplayLabel(option) {
+  const s = String(option || '').trim();
+  if (/pvc/i.test(s)) return 'PVC Bottle';
+  if (/glass/i.test(s)) return 'Glass Bottle';
+  return s;
+}
+
+// Smaller sizes first ("3 ml" before "12 ml"); labels without a number keep their configured order
+const sizeOrder = (label) => {
+  const n = parseFloat(String(label).replace(/[^\d.]/g, ''));
+  return Number.isFinite(n) ? n : Number.MAX_SAFE_INTEGER;
+};
+
+/**
+ * Rows for the product page's Details section, built only from what is configured for this product:
+ * its category, its ACTIVE variants (option + size) and the optional fields saved with it.
+ * Nothing is assumed from the category: no sizes, bottle descriptions or concentration are invented,
+ * and Perfume-only facts (concentration, atelier origin) never appear on other product types.
+ * @returns {{ label: string, value: string }[]}
+ */
+export function productDetailRows(product) {
+  if (!product) return [];
+  const type = productTypeOf(product);
+  const variants = (Array.isArray(product.variants) ? product.variants : []).filter(
+    (v) => v && v.is_active !== false && v.active !== false
+  );
+
+  // Configured sizes per option, in variant order; the hidden "Standard" option counts as no option
+  const sizesByOption = new Map();
+  variants.forEach((v) => {
+    const option = isDefaultOption(v.bottle_type) ? '' : optionDisplayLabel(v.bottle_type);
+    const size = formatSizeLabel(v.size_ml || v.size);
+    if (!sizesByOption.has(option)) sizesByOption.set(option, []);
+    const list = sizesByOption.get(option);
+    if (size && !list.includes(size)) list.push(size);
+  });
+  for (const list of sizesByOption.values()) {
+    list.sort((a, b) => sizeOrder(a) - sizeOrder(b));
+  }
+
+  const rows = [];
+  if (product.category) rows.push({ label: 'Category', value: String(product.category) });
+  if (type.key === 'perfume' && String(product.concentration || '').trim()) {
+    rows.push({ label: 'Concentration', value: String(product.concentration).trim() });
+  }
+
+  const options = [...sizesByOption.keys()].filter(Boolean);
+  const sizeSets = [...sizesByOption.values()].filter((l) => l.length > 0);
+  const allSizes = [...new Set(sizeSets.flat())].sort((a, b) => sizeOrder(a) - sizeOrder(b));
+  const sameSizesForEveryOption = sizeSets.every((l) => l.join('|') === (sizeSets[0] || []).join('|'));
+  const sizesLabel = type.kind === 'bottle' ? 'Available Sizes' : type.sizeLabel;
+
+  if (options.length > 0) {
+    rows.push({ label: type.optionLabel, value: options.join(', ') });
+  }
+  if (options.length > 1 && !sameSizesForEveryOption) {
+    // Different sizes per option: say exactly which sizes each option comes in
+    options.forEach((option) => {
+      const list = sizesByOption.get(option) || [];
+      if (list.length > 0) rows.push({ label: `${sizesLabel} (${option})`, value: list.join(', ') });
+    });
+    const unnamed = sizesByOption.get('') || [];
+    if (unnamed.length > 0) rows.push({ label: sizesLabel, value: unnamed.join(', ') });
+  } else if (allSizes.length > 0) {
+    rows.push({ label: sizesLabel, value: allSizes.join(', ') });
+  }
+
+  if (type.key === 'perfume' || type.key === 'attar') {
+    rows.push({ label: 'Atelier Origin', value: 'Handcrafted in Kadapa, Andhra Pradesh, India (516001)' });
+  }
+  if (String(product.ingredients || '').trim()) {
+    rows.push({ label: 'Ingredients', value: String(product.ingredients).trim() });
+  }
+  return rows;
+}

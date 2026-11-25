@@ -3,6 +3,7 @@ import { X, Trash2, ShoppingBag, ArrowRight, Tag, Check, Truck } from 'lucide-re
 import { useNavigate } from 'react-router-dom';
 import { useCart, maxQuantityFor } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
+import { SHIPPING_LABEL } from '../config/shipping';
 import { variantDisplayLabel, isTravelSampleEligible } from '../utils/productTypes';
 import { cardImageUrl, fullImageFallback } from '../lib/storage';
 import './CartDrawer.css';
@@ -257,7 +258,7 @@ export default function CartDrawer() {
               )}
 
               <div className="ps-summary-row">
-                <span>Estimated Express Shipping</span>
+                <span>{SHIPPING_LABEL}</span>
                 <span>{shipping === null ? 'By PIN code at checkout' : shipping === 0 ? 'FREE' : formatINR(shipping)}</span>
               </div>
 

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getSiteSettings, updateSiteSettings } from '../../services/settings';
+import { SHIPPING_LABEL, FLAT_SHIPPING_FEE } from '../../config/shipping';
+import { formatINR } from '../../utils/formatCurrency';
 import { uploadImage } from '../../lib/storage';
 import { Save, CheckCircle, AlertCircle, Building, MapPin, Share2, Truck, RefreshCw, Upload } from 'lucide-react';
 import './AdminProductForm.css';
@@ -21,8 +23,6 @@ export default function AdminSettings() {
     instagram_url: 'https://www.instagram.com/ps_perfumes_kadapa/?hl=en',
     google_maps_url: 'https://share.google/b0yildKJKTaGc365J',
     whatsapp_url: 'https://wa.me/919494951600',
-    free_shipping_threshold: 1500,
-    standard_shipping_fee: 99,
     currency: 'INR',
     currency_symbol: '₹',
     store_status: 'open',
@@ -382,39 +382,12 @@ export default function AdminSettings() {
         <div className="ps-admin-form-card">
           <div className="ps-admin-card-header">
             <Truck size={20} className="ps-admin-gold-icon" />
-            <h2 className="ps-admin-card-title">Pan-India Shipping & Rates</h2>
+            <h2 className="ps-admin-card-title">Shipping &amp; Currency</h2>
           </div>
           <span className="ps-admin-input-hint">
-            The standard rule. Checkout uses it unless Admin → Shipping is switched to PIN code rates.
+            Shipping: {SHIPPING_LABEL}, a flat {formatINR(FLAT_SHIPPING_FEE)} per order with no free-shipping
+            minimum. It is set in the code and charged by the database at checkout, not edited here.
           </span>
-
-          <div className="ps-admin-row-2">
-            <div className="ps-admin-input-group">
-              <label htmlFor="free_shipping_threshold">Free Shipping Order Minimum (₹)</label>
-              <input
-                id="free_shipping_threshold"
-                name="free_shipping_threshold"
-                type="number"
-                min="0"
-                value={settings.free_shipping_threshold}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="ps-admin-input-group">
-              <label htmlFor="standard_shipping_fee">Standard Delivery Fee (₹)</label>
-              <input
-                id="standard_shipping_fee"
-                name="standard_shipping_fee"
-                type="number"
-                min="0"
-                value={settings.standard_shipping_fee}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
 
           <div className="ps-admin-row-2">
             <div className="ps-admin-input-group">

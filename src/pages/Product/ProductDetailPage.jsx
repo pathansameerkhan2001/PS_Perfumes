@@ -24,7 +24,7 @@ import AddToCartButton from '../../components/common/AddToCartButton';
 import GoldOrnament from '../../components/common/GoldOrnament';
 import Reveal from '../../components/common/Reveal';
 import { useSeo, SITE_URL } from '../../utils/useSeo';
-import { productTypeOf, isDefaultOption, formatSizeLabel } from '../../utils/productTypes';
+import { productTypeOf, isDefaultOption, formatSizeLabel, productDetailRows } from '../../utils/productTypes';
 import './ProductDetailPage.css';
 
 /**
@@ -174,11 +174,17 @@ export default function ProductDetailPage() {
     (v) => v.is_active !== false && Number(v.sale_price || v.price) > 0
   );
   const seoPrices = seoVariants.map((v) => Number(v.sale_price || v.price));
+  // Configured sizes only (e.g. "3 ml, 6 ml, 12 ml" for an attar), never assumed bottle types
+  const seoOptions = [...new Set(seoVariants.map((v) => formatSizeLabel(v.size_ml)).filter(Boolean))];
   const seoDescription =
     product?.meta_description ||
     product?.short_description ||
     product?.description ||
-    (product ? `${product.name} by PS PERFUMES, ${product.category || 'fragrance'} available in glass and PVC bottles.` : '');
+    (product
+      ? `${product.name} by PS PERFUMES${product.category ? `, ${product.category}` : ''}.${
+          seoOptions.length > 0 ? ` Available in ${seoOptions.join(', ')}.` : ''
+        }`
+      : '');
   useSeo({
     title: product
       ? product.meta_title || `${product.name} – ${product.category || 'Fragrance'}`
@@ -299,13 +305,13 @@ export default function ProductDetailPage() {
   const categoryName = (product.category || 'WOODY').toUpperCase();
   const genderName = product.gender ? String(product.gender).toUpperCase() : '';
 
-  // 'attar' before Migration 12; 'attars' or an attar subcategory after it
-  const isAttar = isAttarCategory(product.category_slug || product.category);
 
   // Category-aware options: Perfumes / Attars choose a bottle and an ml size; Home Fragrance
   // (Bakhoor, Incense Sticks, Bakhoor Burners) chooses its own option and size labels
   const productType = productTypeOf(product);
   const isCustomProduct = productType.kind === 'custom';
+  // Details section: only this product's configured category, options, sizes and fields
+  const detailRows = productDetailRows(product);
 
   // Distinct bottle types offered in active variants
   const availableBottleTypes = (() => {
@@ -528,11 +534,9 @@ export default function ProductDetailPage() {
             <span className="ps-pdp-tax-note">Inclusive of all duties & taxes</span>
 
             {/* Product Description */}
-            <p className="ps-pdp-description-para">
-              {product.description ||
-                product.short_description ||
-                'Creamy, soothing, and intensely addictive. Pure artisanal extractions crafted for those who appreciate quiet luxury.'}
-            </p>
+            {(product.description || product.short_description) && (
+              <p className="ps-pdp-description-para">{product.description || product.short_description}</p>
+            )}
 
             <div className="ps-pdp-divider" />
 
@@ -571,75 +575,60 @@ export default function ProductDetailPage() {
               <div className="ps-pdp-selector-section">
                 <span className="ps-pdp-section-heading">BOTTLE TYPE:</span>
                 <div className="ps-pdp-bottle-grid">
-                  {/* Glass Bottle Option */}
-                  <button
-                    type="button"
-                    className={`ps-pdp-bottle-card ${
-                      normalizeBottle(selectedBottleType) === 'Glass Bottle' ? 'is-selected' : ''
-                    }`}
-                    aria-pressed={normalizeBottle(selectedBottleType) === 'Glass Bottle'}
-                    onClick={() => selectBottle('Glass Bottle', product.glass_image)}
-                  >
-                    <div className="ps-pdp-bottle-icon" aria-hidden="true">
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                  {availableBottleTypes.map((opt) => {
+                    const isPvc = opt === 'PVC Bottle';
+                    const isGlass = opt === 'Glass Bottle';
+                    const isSelected = normalizeBottle(selectedBottleType) === opt;
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        className={`ps-pdp-bottle-card ${isSelected ? 'is-selected' : ''}`}
+                        aria-pressed={isSelected}
+                        onClick={() => selectBottle(opt, isPvc ? product.pvc_image : isGlass ? product.glass_image : undefined)}
                       >
-                        <path d="M10 2h4v3h-4z" />
-                        <path d="M7 8a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z" />
-                        <line x1="7" y1="12" x2="17" y2="12" />
-                      </svg>
-                    </div>
-                    <div className="ps-pdp-bottle-text">
-                      <span className="ps-pdp-card-title">Glass Bottle</span>
-                      <span className="ps-pdp-card-subtitle">Premium quality</span>
-                    </div>
-                  </button>
-
-                  {/* PVC Bottle Option */}
-                  <button
-                    type="button"
-                    className={`ps-pdp-bottle-card ${
-                      normalizeBottle(selectedBottleType) === 'PVC Bottle' ? 'is-selected' : ''
-                    }`}
-                    aria-pressed={normalizeBottle(selectedBottleType) === 'PVC Bottle'}
-                    onClick={() => selectBottle('PVC Bottle', product.pvc_image)}
-                  >
-                    <div className="ps-pdp-bottle-icon" aria-hidden="true">
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <rect x="8" y="2" width="8" height="4" rx="1" />
-                        <path d="M7 7h10l-1 14a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1z" />
-                        <line x1="12" y1="11" x2="12" y2="17" />
-                      </svg>
-                    </div>
-                    <div className="ps-pdp-bottle-text">
-                      <span className="ps-pdp-card-title">PVC Bottle</span>
-                      <span className="ps-pdp-card-subtitle">Regular quality</span>
-                    </div>
-                  </button>
+                        <div className="ps-pdp-bottle-icon" aria-hidden="true">
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            {isPvc ? (
+                              <>
+                                <rect x="8" y="2" width="8" height="4" rx="1" />
+                                <path d="M7 7h10l-1 14a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1z" />
+                                <line x1="12" y1="11" x2="12" y2="17" />
+                              </>
+                            ) : (
+                              <>
+                                <path d="M10 2h4v3h-4z" />
+                                <path d="M7 8a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z" />
+                                <line x1="7" y1="12" x2="17" y2="12" />
+                              </>
+                            )}
+                          </svg>
+                        </div>
+                        <div className="ps-pdp-bottle-text">
+                          <span className="ps-pdp-card-title">{opt}</span>
+                          {(isGlass || isPvc) && (
+                            <span className="ps-pdp-card-subtitle">{isGlass ? 'Premium quality' : 'Regular quality'}</span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             ) : availableBottleTypes.length === 1 ? (
               <div className="ps-pdp-selector-section">
-                <span className="ps-pdp-section-heading">FLACON TYPE:</span>
+                <span className="ps-pdp-section-heading">BOTTLE TYPE:</span>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 14px', background: '#F7F4EE', borderRadius: '6px', fontSize: '13px', color: '#171411', border: '1px solid #E5D7C3' }}>
                   <span style={{ fontWeight: 600 }}>{availableBottleTypes[0]}</span>
-                  <span style={{ fontSize: '11px', color: '#8C8479' }}>{isAttar ? '(Artisanal Oil Roll-On)' : '(Luxury Flacon)'}</span>
                 </div>
               </div>
             ) : null}
@@ -801,10 +790,11 @@ export default function ProductDetailPage() {
               </button>
               {openAccordions.desc && (
                 <div className="ps-pdp-accordion-body">
-                  <p className="ps-pdp-accordion-para">
-                    {product.description ||
-                      'An extraordinary olfactory composition crafted with aged natural extractions.'}
-                  </p>
+                  {product.description ? (
+                    <p className="ps-pdp-accordion-para">{product.description}</p>
+                  ) : !product.occasion && !product.longevity ? (
+                    <p className="ps-pdp-accordion-para">No description has been added for this product yet.</p>
+                  ) : null}
                   {product.occasion && (
                     <p className="ps-pdp-accordion-meta">
                       <strong>Occasion:</strong> {product.occasion}
@@ -839,23 +829,11 @@ export default function ProductDetailPage() {
               {openAccordions.details && (
                 <div className="ps-pdp-accordion-body">
                   <ul className="ps-pdp-details-list">
-                    <li>
-                      <strong>Concentration:</strong> {product.type || 'Extrait de Parfum'} (30% Artisanal Oil Concentration)
-                    </li>
-                    <li>
-                      <strong>Available Sizes:</strong> 30 ml, 50 ml, 100 ml
-                    </li>
-                    <li>
-                      <strong>Bottle Options:</strong> Luxury Heavyweight Flacon (Glass) &amp; Travel-Safe Precision Bottle (PVC)
-                    </li>
-                    <li>
-                      <strong>Atelier Origin:</strong> Handcrafted in Kadapa, Andhra Pradesh, India (516001)
-                    </li>
-                    {product.ingredients && (
-                      <li>
-                        <strong>Ingredients:</strong> {product.ingredients}
+                    {detailRows.map((row) => (
+                      <li key={row.label}>
+                        <strong>{row.label}:</strong> {row.value}
                       </li>
-                    )}
+                    ))}
                   </ul>
                 </div>
               )}

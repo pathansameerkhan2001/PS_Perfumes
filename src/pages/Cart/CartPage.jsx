@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, ArrowRight, ShieldCheck, Tag, ArrowLeft, ShoppingBag } from 'lucide-react';
 import { useCart, maxQuantityFor } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatCurrency';
+import { SHIPPING_LABEL } from '../../config/shipping';
 import { variantDisplayLabel } from '../../utils/productTypes';
 import { cardImageUrl, fullImageFallback } from '../../lib/storage';
 import './CartPage.css';
@@ -220,7 +221,7 @@ export default function CartPage() {
                   </div>
                 )}
                 <div className="ps-summary-line">
-                  <span>Shipping (Pan-India)</span>
+                  <span>{SHIPPING_LABEL}</span>
                   <span>{shipping === null ? 'By PIN code at checkout' : shipping === 0 ? 'FREE' : formatINR(shipping)}</span>
                 </div>
                 <div className="ps-summary-line ps-summary-total">

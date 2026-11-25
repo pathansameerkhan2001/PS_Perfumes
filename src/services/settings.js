@@ -22,8 +22,6 @@ export const INITIAL_SETTINGS = {
   instagram_url: 'https://www.instagram.com/ps_perfumes_kadapa/?hl=en',
   google_maps_url: 'https://share.google/b0yildKJKTaGc365J',
   whatsapp_url: 'https://wa.me/919494951600',
-  free_shipping_threshold: 1500, // matches the cart rule used before this setting is saved
-  standard_shipping_fee: 99,
   currency: 'INR',
   currency_symbol: '₹',
   store_status: 'open',
@@ -31,7 +29,9 @@ export const INITIAL_SETTINGS = {
 };
 
 const SETTING_KEYS = Object.keys(INITIAL_SETTINGS);
-const NUMERIC_KEYS = new Set(['free_shipping_threshold', 'standard_shipping_fee']);
+// Shipping is a flat charge (src/config/shipping.js), so free_shipping_threshold and
+// standard_shipping_fee are no longer read or written here; existing rows stay untouched.
+const NUMERIC_KEYS = new Set();
 
 function decodeValue(key, raw) {
   let value = raw;
@@ -66,8 +66,7 @@ export async function getSiteSettings() {
   return { ...merged, _storedKeys: storedKeys };
 }
 
-// Storefront: one settings request per page load, shared by the bag (shipping rule) and the
-// footer (contact details). The admin always reads fresh values with getSiteSettings().
+// Storefront: one settings request per page load, shared by the footer and contact dock. The admin always reads fresh values with getSiteSettings().
 let storefrontSettingsPromise = null;
 
 export function getStorefrontSettings() {

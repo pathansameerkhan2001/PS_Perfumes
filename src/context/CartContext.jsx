@@ -1,12 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getStorefrontSettings } from '../services/settings';
 import { validateCouponCode, computeCouponDiscount } from '../services/coupons';
 import { isComboRecord, toComboCartProduct } from '../services/combos';
 import { getShippingQuote } from '../services/shipping';
-
-// Shipping rule used until Store Settings has saved values in the database
-const DEFAULT_FREE_SHIPPING_THRESHOLD = 1500;
-const DEFAULT_SHIPPING_FEE = 99;
+import { flatShippingFor } from '../config/shipping';
 
 const CartContext = createContext(null);
 
@@ -81,28 +77,8 @@ export function CartProvider({ children }) {
   // Toast / notification feedback
   const [toastMessage, setToastMessage] = useState(null);
 
-  // Shipping rule: values saved in Admin → Store Settings override the defaults
-  const [shippingRule, setShippingRule] = useState({
-    threshold: DEFAULT_FREE_SHIPPING_THRESHOLD,
-    fee: DEFAULT_SHIPPING_FEE,
-  });
-
-  useEffect(() => {
-    let mounted = true;
-    getStorefrontSettings()
-      .then((s) => {
-        if (!mounted || !s) return;
-        const stored = new Set(s._storedKeys || []);
-        setShippingRule((prev) => ({
-          threshold: stored.has('free_shipping_threshold') ? Number(s.free_shipping_threshold) || 0 : prev.threshold,
-          fee: stored.has('standard_shipping_fee') ? Number(s.standard_shipping_fee) || 0 : prev.fee,
-        }));
-      })
-      .catch((err) => console.error('Could not load shipping settings:', err));
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  // Shipping is a flat Air Shipping charge (src/config/shipping.js), the same amount the
+  // database charges in place_order / place_order_core. Store Settings no longer decide it.
 
   // 'pincode': the delivery PIN code decides shipping, so the bag cannot price it before checkout.
   // Its free-shipping threshold is the owner's decision there (null: none).
@@ -450,12 +426,10 @@ export function CartProvider({ children }) {
     0
   );
   const shippingMode = pincodeShipping ? 'pincode' : 'legacy';
-  // null in pincode mode: no free-shipping promise unless the owner set one
-  const freeShippingThreshold = pincodeShipping ? pincodeShipping.freeShippingThreshold : shippingRule.threshold;
+  // Flat shipping has no free-shipping threshold (null). In pincode mode the owner's rule applies.
+  const freeShippingThreshold = pincodeShipping ? pincodeShipping.freeShippingThreshold : null;
   // null in pincode mode: priced at checkout from the PIN code, and left out of the bag total
-  const shipping = pincodeShipping
-    ? null
-    : subtotal >= freeShippingThreshold || subtotal === 0 ? 0 : shippingRule.fee;
+  const shipping = pincodeShipping ? null : flatShippingFor(subtotal);
   // Recomputed whenever the cart changes; 0 if the subtotal drops below the coupon minimum
   const discountAmount = computeCouponDiscount(appliedCoupon, subtotal);
   const promoCode = appliedCoupon?.code || '';

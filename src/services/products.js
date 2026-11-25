@@ -261,6 +261,8 @@ export function formatProduct(p) {
     heart_notes: notesMetadata.heart || p.heart_notes || p.heartNotes || [],
     base_notes: notesMetadata.base || p.base_notes || p.baseNotes || [],
     ingredients: p.ingredients || '',
+    // Shown on the product page only for Perfumes, and only when saved for this product
+    concentration: p.concentration || notesMetadata.concentration || '',
     sku: p.sku || notesMetadata.sku || '',
     product_type: p.product_type || notesMetadata.product_type || null,
     sample_eligible: p.sample_eligible === true || notesMetadata.sample_eligible === true,

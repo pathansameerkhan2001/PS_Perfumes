@@ -14,6 +14,7 @@ import {
   getUnconfirmedPayment,
 } from '../../services/payments';
 import { getShippingQuote } from '../../services/shipping';
+import { SHIPPING_LABEL } from '../../config/shipping';
 import './CheckoutPage.css';
 import { useSeo } from '../../utils/useSeo';
 
@@ -598,7 +599,7 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 <div className="ps-summary-line">
-                  <span>{byPincode ? `Delivery${quoteReady ? ` to ${quotedPincode}` : ''}` : 'Pan-India Air Shipping'}</span>
+                  <span>{byPincode ? `Delivery${quoteReady ? ` to ${quotedPincode}` : ''}` : SHIPPING_LABEL}</span>
                   <span>{shippingLabel}</span>
                 </div>
                 <div className="ps-summary-line ps-summary-total">
