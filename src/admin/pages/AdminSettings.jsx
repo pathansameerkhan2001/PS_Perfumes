@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getSiteSettings, updateSiteSettings } from '../../services/settings';
-import { SHIPPING_LABEL, FLAT_SHIPPING_FEE } from '../../config/shipping';
+import { SHIPPING_LABEL, STANDARD_DELIVERY_FEE, FREE_DELIVERY_PINCODE } from '../../config/shipping';
 import { formatINR } from '../../utils/formatCurrency';
 import { uploadImage } from '../../lib/storage';
 import { Save, CheckCircle, AlertCircle, Building, MapPin, Share2, Truck, RefreshCw, Upload } from 'lucide-react';
@@ -385,8 +385,7 @@ export default function AdminSettings() {
             <h2 className="ps-admin-card-title">Shipping &amp; Currency</h2>
           </div>
           <span className="ps-admin-input-hint">
-            Shipping: {SHIPPING_LABEL}, a flat {formatINR(FLAT_SHIPPING_FEE)} per order with no free-shipping
-            minimum. It is set in the code and charged by the database at checkout, not edited here.
+            Delivery: {SHIPPING_LABEL}, free for PIN code {FREE_DELIVERY_PINCODE} (Kadapa), flat {formatINR(STANDARD_DELIVERY_FEE)} for all other valid Indian PIN codes. It is calculated by the database at checkout, not edited here.
           </span>
 
           <div className="ps-admin-row-2">

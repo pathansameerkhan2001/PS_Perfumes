@@ -272,7 +272,7 @@ export default function AdminOrders() {
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Shipping Fee</span>
+                <span>Delivery Charges</span>
                 <span>{selectedOrder.shipping_fee === 0 ? 'FREE' : formatINR(selectedOrder.shipping_fee)}</span>
               </div>
               {/* How shipping was priced (Migration 11); older orders have no record */}

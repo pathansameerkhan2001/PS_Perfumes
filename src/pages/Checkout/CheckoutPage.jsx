@@ -13,8 +13,7 @@ import {
   rememberUnconfirmedPayment,
   getUnconfirmedPayment,
 } from '../../services/payments';
-import { getShippingQuote } from '../../services/shipping';
-import { SHIPPING_LABEL } from '../../config/shipping';
+import { SHIPPING_LABEL, calculateDeliveryFee, isValidPincode } from '../../config/shipping';
 import './CheckoutPage.css';
 import { useSeo } from '../../utils/useSeo';
 
@@ -23,7 +22,7 @@ const UNCONFIRMED_MESSAGE =
 
 export default function CheckoutPage() {
   useSeo({ title: 'Checkout', path: '/checkout', noindex: true });
-  const { cartItems, subtotal, shipping, shippingMode, shippingModeChecked, discountAmount, clearCart, promoCode } = useCart();
+  const { cartItems, subtotal, shippingModeChecked, discountAmount, clearCart, promoCode } = useCart();
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -51,56 +50,20 @@ export default function CheckoutPage() {
   // Server total the shopper has been shown, when it differed from the bag
   const acceptedAmount = useRef(null);
 
-  // Pincode mode: the delivery charge for the PIN code typed, as the server quotes it. The order is
-  // priced again on the server, so this only decides what the page shows and whether it may submit.
-  const [shippingQuote, setShippingQuote] = useState({ pincode: '', status: 'idle', amount: null, message: '' });
+  // Delivery charge by delivery PIN code:
+  // - PIN 516001 (Kadapa atelier) -> Free delivery (₹0)
+  // - All other valid 6-digit Indian PIN codes -> ₹49
+  // - Incomplete/invalid PIN code -> null (pending, disables checkout submission)
   const quotedPincode = formData.pincode.trim();
-  const pincodeComplete = /^[1-9]\d{5}$/.test(quotedPincode);
-
-  useEffect(() => {
-    if (shippingMode !== 'pincode' || !pincodeComplete) return undefined;
-    let current = true;
-    setShippingQuote({ pincode: quotedPincode, status: 'loading', amount: null, message: '' });
-    const timer = setTimeout(() => {
-      getShippingQuote(quotedPincode, subtotal)
-        .then((quote) => {
-          if (!current) return;
-          setShippingQuote(
-            quote?.ok
-              ? { pincode: quotedPincode, status: 'ok', amount: quote.amount, message: '' }
-              : { pincode: quotedPincode, status: 'refused', amount: null, message: quote?.message || 'Delivery is not available for this PIN code.' }
-          );
-        })
-        .catch(() => {
-          if (current) {
-            setShippingQuote({ pincode: quotedPincode, status: 'error', amount: null, message: 'The delivery charge could not be checked. Please try again.' });
-          }
-        });
-    }, 400);
-    return () => {
-      current = false;
-      clearTimeout(timer);
-    };
-  }, [shippingMode, pincodeComplete, quotedPincode, subtotal]);
-
-  const byPincode = shippingMode === 'pincode';
-  const quoteReady = byPincode && shippingQuote.status === 'ok' && shippingQuote.pincode === quotedPincode;
-  // What this page shows and sends; null while the PIN code's charge is not known yet
-  const checkoutShipping = byPincode ? (quoteReady ? shippingQuote.amount : null) : shipping;
+  const pincodeValid = isValidPincode(quotedPincode);
+  const checkoutShipping = calculateDeliveryFee(quotedPincode, subtotal);
   const checkoutTotal = Math.max(0, subtotal - discountAmount + (checkoutShipping ?? 0));
-  const shippingLabel = !byPincode
-    ? shipping === 0 ? 'FREE' : formatINR(shipping)
-    : quoteReady
-      ? checkoutShipping === 0 ? 'FREE' : formatINR(checkoutShipping)
-      : !pincodeComplete
-        ? 'Enter PIN code'
-        : shippingQuote.status === 'loading' || shippingQuote.pincode !== quotedPincode
-          ? 'Checking…'
-          : 'Not available';
-  const pincodeShippingError =
-    byPincode && pincodeComplete && shippingQuote.pincode === quotedPincode && ['refused', 'error'].includes(shippingQuote.status)
-      ? shippingQuote.message
-      : '';
+  const shippingLabel = checkoutShipping === null
+    ? (quotedPincode.length === 0 ? 'Enter PIN code' : 'Invalid PIN code')
+    : checkoutShipping === 0
+      ? 'FREE'
+      : formatINR(checkoutShipping);
+  const pincodeShippingError = !pincodeValid && quotedPincode.length > 0 ? 'Enter a valid 6-digit PIN code' : '';
 
   const validate = () => {
     const errs = {};
@@ -113,8 +76,7 @@ export default function CheckoutPage() {
     if (!formData.address.trim()) errs.address = 'Delivery address is required';
     if (!formData.city.trim()) errs.city = 'City is required';
     if (!formData.state.trim()) errs.state = 'State is required';
-    if (!/^[1-9]\d{5}$/.test(formData.pincode.trim())) errs.pincode = 'Enter a valid 6-digit PIN code';
-    else if (byPincode && !quoteReady) errs.pincode = pincodeShippingError || 'Checking the delivery charge for this PIN code…';
+    if (!isValidPincode(formData.pincode)) errs.pincode = 'Enter a valid 6-digit PIN code';
     setErrors(errs);
     const firstInvalid = Object.keys(errs)[0];
     if (firstInvalid) {
@@ -599,7 +561,7 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 <div className="ps-summary-line">
-                  <span>{byPincode ? `Delivery${quoteReady ? ` to ${quotedPincode}` : ''}` : SHIPPING_LABEL}</span>
+                  <span>{quotedPincode && pincodeValid ? `${SHIPPING_LABEL} (${quotedPincode})` : SHIPPING_LABEL}</span>
                   <span>{shippingLabel}</span>
                 </div>
                 <div className="ps-summary-line ps-summary-total">
@@ -613,14 +575,14 @@ export default function CheckoutPage() {
               <button
                 type="submit"
                 className="ps-btn-gold-primary ps-place-order-btn"
-                disabled={submitting || !shippingModeChecked}
+                disabled={submitting || !shippingModeChecked || checkoutShipping === null}
               >
                 {submitting ? (
                   <span>{formData.paymentMethod === 'RAZORPAY' ? 'PROCESSING PAYMENT...' : 'CONFIRMING DISPATCH...'}</span>
                 ) : unconfirmedPayment ? (
                   <span>CHECK PAYMENT STATUS</span>
                 ) : checkoutShipping === null ? (
-                  <span>{formData.paymentMethod === 'RAZORPAY' ? 'PAY NOW' : 'PLACE ORDER'}</span>
+                  <span>{quotedPincode.length === 0 ? 'ENTER PIN CODE TO CONTINUE' : 'ENTER VALID PIN CODE'}</span>
                 ) : formData.paymentMethod === 'RAZORPAY' ? (
                   <span>PAY NOW ({formatINR(checkoutTotal)})</span>
                 ) : (

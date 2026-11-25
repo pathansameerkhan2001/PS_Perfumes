@@ -3,7 +3,7 @@ import { X, Heart, Star, ShoppingBag, Zap, ShieldCheck, Truck, Sparkles, Check }
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { formatINR } from '../utils/formatCurrency';
-import { SHIPPING_LABEL, FLAT_SHIPPING_FEE } from '../config/shipping';
+import { SHIPPING_LABEL, STANDARD_DELIVERY_FEE, FREE_DELIVERY_PINCODE } from '../config/shipping';
 import { isComboRecord, toComboCartProduct } from '../services/combos';
 import { productTypeOf, isDefaultOption } from '../utils/productTypes';
 import ProductImage from './common/ProductImage';
@@ -33,8 +33,6 @@ export default function ProductDetailModal() {
     addToCart,
     toggleWishlist,
     isInWishlist,
-    freeShippingThreshold,
-    shippingMode,
   } = useCart();
 
   const navigate = useNavigate();
@@ -456,11 +454,7 @@ export default function ProductDetailModal() {
               <div className="ps-perk-item">
                 <Truck size={15} color="#c5a059" />
                 <span>
-                  {freeShippingThreshold != null
-                    ? `Free shipping across India over ${formatINR(freeShippingThreshold)}`
-                    : shippingMode === 'pincode'
-                    ? 'Delivery charge shown by PIN code at checkout'
-                    : `${SHIPPING_LABEL}: ${formatINR(FLAT_SHIPPING_FEE)} per order`}
+                  {`${SHIPPING_LABEL}: Free for ${FREE_DELIVERY_PINCODE} · ${formatINR(STANDARD_DELIVERY_FEE)} Pan-India`}
                 </span>
               </div>
               <div className="ps-perk-item">

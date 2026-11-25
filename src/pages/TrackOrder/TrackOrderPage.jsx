@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { getOrderByNumber } from '../../services/orders';
 import { formatINR } from '../../utils/formatCurrency';
+import { SHIPPING_LABEL } from '../../config/shipping';
 import './TrackOrderPage.css';
 import { useSeo } from '../../utils/useSeo';
 
@@ -255,7 +256,7 @@ export default function TrackOrderPage() {
                   </div>
                   {order.shipping_fee > 0 && (
                     <div className="ps-fin-row">
-                      <span>Shipping</span>
+                      <span>{SHIPPING_LABEL}</span>
                       <span>{formatINR(order.shipping_fee)}</span>
                     </div>
                   )}

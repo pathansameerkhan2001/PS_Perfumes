@@ -1,11 +1,43 @@
 /**
- * Shipping rule shown on the storefront: one flat charge per order, no free-shipping threshold.
- * The database charges the same amount when the order is placed (place_order for COD,
- * place_order_core for Razorpay) once supabase/new-project/proposed-16-flat-shipping is applied.
- * Keep the two in step: change FLAT_SHIPPING_FEE only together with that migration.
+ * Delivery charges configuration for PS Perfumes storefront and checkout.
+ * - PIN code 516001 (Kadapa atelier) -> Free delivery (₹0).
+ * - All other valid 6-digit Indian PIN codes -> ₹49 delivery charge.
+ * - Missing/incomplete/invalid PIN code -> null (pending calculation, checkout disabled).
+ * - Empty cart / 0 subtotal -> ₹0.
+ *
+ * Keep in sync with backend database functions in place_order and place_order_core (Step 17 migration).
  */
-export const SHIPPING_LABEL = 'Air Shipping';
-export const FLAT_SHIPPING_FEE = 49;
+export const SHIPPING_LABEL = 'Delivery Charges';
+export const STANDARD_DELIVERY_FEE = 49;
+export const FREE_DELIVERY_PINCODE = '516001';
 
-/** Shipping for a bag with this subtotal: nothing for an empty bag, otherwise the flat charge. */
-export const flatShippingFor = (subtotal) => (Number(subtotal) > 0 ? FLAT_SHIPPING_FEE : 0);
+/**
+ * Validates whether a PIN code string matches standard 6-digit Indian postal code format.
+ * First digit must be 1-9, followed by 5 digits.
+ */
+export function isValidPincode(pincode) {
+  return /^[1-9]\d{5}$/.test(String(pincode || '').trim());
+}
+
+/**
+ * Calculates delivery fee based on PIN code and subtotal:
+ * - Empty bag / 0 subtotal: 0
+ * - Invalid or incomplete PIN code: null (cannot calculate until valid PIN provided)
+ * - Kadapa PIN 516001: 0 (FREE)
+ * - All other valid PIN codes: 49
+ *
+ * @param {string|null|undefined} pincode
+ * @param {number} subtotal
+ * @returns {number|null}
+ */
+export function calculateDeliveryFee(pincode, subtotal) {
+  if (Number(subtotal) <= 0) return 0;
+  const cleanPin = String(pincode || '').trim();
+  if (!isValidPincode(cleanPin)) return null;
+  if (cleanPin === FREE_DELIVERY_PINCODE) return 0;
+  return STANDARD_DELIVERY_FEE;
+}
+
+/** Backward-compatible aliases */
+export const FLAT_SHIPPING_FEE = STANDARD_DELIVERY_FEE;
+export const flatShippingFor = (subtotal) => (Number(subtotal) > 0 ? STANDARD_DELIVERY_FEE : 0);

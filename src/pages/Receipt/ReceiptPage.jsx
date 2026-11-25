@@ -5,6 +5,7 @@ import { formatINR } from '../../utils/formatCurrency';
 import { variantDisplayLabel } from '../../utils/productTypes';
 import { useSeo } from '../../utils/useSeo';
 import { SITE_CONFIG } from '../../config/siteConfig';
+import { SHIPPING_LABEL } from '../../config/shipping';
 import './ReceiptPage.css';
 
 const money = (amount) => formatINR(amount, { showDecimals: true });
@@ -112,7 +113,7 @@ export default function ReceiptPage() {
             <div><span>Discount</span><span>-{money(order.discount_amount)}</span></div>
           )}
           <div>
-            <span>Shipping</span>
+            <span>{SHIPPING_LABEL}</span>
             <span>{Number(order.shipping_amount) > 0 ? money(order.shipping_amount) : 'FREE'}</span>
           </div>
           <div className="ps-receipt-grand-total"><span>Total Paid</span><span>{money(order.total_amount)}</span></div>

@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { validateCouponCode, computeCouponDiscount } from '../services/coupons';
 import { isComboRecord, toComboCartProduct } from '../services/combos';
-import { getShippingQuote } from '../services/shipping';
-import { flatShippingFor } from '../config/shipping';
 
 const CartContext = createContext(null);
 
@@ -77,27 +75,10 @@ export function CartProvider({ children }) {
   // Toast / notification feedback
   const [toastMessage, setToastMessage] = useState(null);
 
-  // Shipping is a flat Air Shipping charge (src/config/shipping.js), the same amount the
-  // database charges in place_order / place_order_core. Store Settings no longer decide it.
-
-  // 'pincode': the delivery PIN code decides shipping, so the bag cannot price it before checkout.
-  // Its free-shipping threshold is the owner's decision there (null: none).
-  const [pincodeShipping, setPincodeShipping] = useState(null);
-  // Checkout waits for this, so it never shows the standard charge for a PIN code priced store
-  const [shippingModeChecked, setShippingModeChecked] = useState(false);
-
-  useEffect(() => {
-    let mounted = true;
-    getShippingQuote(null, 0)
-      .then((quote) => {
-        if (mounted && quote?.mode === 'pincode') setPincodeShipping({ freeShippingThreshold: quote.freeShippingThreshold });
-      })
-      .catch((err) => console.error('Could not load the shipping mode:', err))
-      .finally(() => mounted && setShippingModeChecked(true));
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  // Delivery charge is determined by the shipping PIN code at checkout (src/config/shipping.js):
+  // Free for 516001 (Kadapa), flat ₹49 for all other valid Indian PIN codes.
+  // In the bag (before a valid delivery PIN code is entered at checkout), shipping is pending (null).
+  const shippingModeChecked = true;
 
   useEffect(() => {
     try {
@@ -425,11 +406,10 @@ export function CartProvider({ children }) {
     (acc, item) => acc + (Number(item.price) || Number(item.product?.price) || 0) * item.quantity,
     0
   );
-  const shippingMode = pincodeShipping ? 'pincode' : 'legacy';
-  // Flat shipping has no free-shipping threshold (null). In pincode mode the owner's rule applies.
-  const freeShippingThreshold = pincodeShipping ? pincodeShipping.freeShippingThreshold : null;
-  // null in pincode mode: priced at checkout from the PIN code, and left out of the bag total
-  const shipping = pincodeShipping ? null : flatShippingFor(subtotal);
+  const shippingMode = 'pincode';
+  const freeShippingThreshold = null;
+  // null in the bag before a valid delivery PIN code is entered at checkout; 0 if empty
+  const shipping = subtotal > 0 ? null : 0;
   // Recomputed whenever the cart changes; 0 if the subtotal drops below the coupon minimum
   const discountAmount = computeCouponDiscount(appliedCoupon, subtotal);
   const promoCode = appliedCoupon?.code || '';

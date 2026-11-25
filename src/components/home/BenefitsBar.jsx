@@ -3,15 +3,14 @@ import { Truck, ShieldCheck, CreditCard, Gift } from 'lucide-react';
 import BenefitItem from './BenefitItem';
 import { useCart } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatCurrency';
-import { SHIPPING_LABEL, FLAT_SHIPPING_FEE } from '../../config/shipping';
+import { SHIPPING_LABEL, STANDARD_DELIVERY_FEE, FREE_DELIVERY_PINCODE } from '../../config/shipping';
 import './BenefitsBar.css';
 
 const BENEFITS = [
   {
     id: 'shipping',
     icon: Truck,
-    title: 'FREE SHIPPING',
-    // Filled in from the cart's shipping rule (Store Settings) at render time
+    title: 'DELIVERY CHARGES',
     description: '',
   },
   {
@@ -35,14 +34,8 @@ const BENEFITS = [
 ];
 
 export default function BenefitsBar() {
-  const { freeShippingThreshold, shippingMode } = useCart();
-  // No free-shipping promise when shipping is priced by PIN code without one
-  const freeShipping = freeShippingThreshold != null;
-  const shippingText = freeShipping
-    ? `On all orders over ${formatINR(freeShippingThreshold)}`
-    : shippingMode === 'pincode'
-    ? 'Charge shown by PIN code at checkout'
-    : `Flat ${formatINR(FLAT_SHIPPING_FEE)} per order`;
+  const shippingTitle = SHIPPING_LABEL.toUpperCase();
+  const shippingText = `Free for ${FREE_DELIVERY_PINCODE} · Flat ${formatINR(STANDARD_DELIVERY_FEE)} Pan-India`;
 
   return (
     <section className="ps-benefits-bar" aria-label="Brand Guarantees & Pillars">
@@ -52,7 +45,7 @@ export default function BenefitsBar() {
             <BenefitItem
               key={item.id}
               icon={item.icon}
-              title={item.id === 'shipping' && !freeShipping ? (shippingMode === 'pincode' ? 'DELIVERY' : SHIPPING_LABEL.toUpperCase()) : item.title}
+              title={item.id === 'shipping' ? shippingTitle : item.title}
               description={item.id === 'shipping' ? shippingText : item.description}
               isLast={index === BENEFITS.length - 1}
             />
