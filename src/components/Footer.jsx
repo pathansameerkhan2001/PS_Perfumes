@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Mail, Phone, ArrowUp, ArrowUpRight, ChevronDown, MessageCircle } from 'lucide-react';
+import { MapPin, Mail, Phone, ArrowUp, ChevronDown, MessageCircle } from 'lucide-react';
 import PSPerfumesLogo from './common/PSPerfumesLogo';
 import { SITE_CONFIG } from '../config/siteConfig';
 import { getStorefrontSettings } from '../services/settings';
 import { useStorefrontCategories, withComboLink } from '../utils/useStorefrontCategories';
-import brandnixLogo from '../assets/brandnix-logo.webp';
 import './Footer.css';
 
 const MOBILE_QUERY = '(max-width: 640px)';
@@ -108,21 +107,6 @@ export default function Footer() {
 
   return (
     <footer className="ps-public-footer ps-arabesque" aria-label="PS PERFUMES footer">
-      <div className="ps-footer-credit-strip">
-        <span className="ps-footer-credit-label">Designed &amp; Developed by</span>
-        <a
-          href="https://www.instagram.com/_brandnix/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="ps-footer-credit-pill"
-          aria-label="Brandnix on Instagram (opens in a new tab)"
-        >
-          <img src={brandnixLogo} alt="" width="32" height="32" className="ps-footer-credit-logo" />
-          <span>Brandnix</span>
-          <ArrowUpRight size={14} strokeWidth={2} aria-hidden="true" className="ps-footer-credit-arrow" />
-        </a>
-      </div>
-
       <div className="ps-footer-inner">
         <div className="ps-footer-grid">
           {/* Brand */}
