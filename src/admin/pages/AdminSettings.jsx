@@ -385,7 +385,7 @@ export default function AdminSettings() {
             <h2 className="ps-admin-card-title">Shipping &amp; Currency</h2>
           </div>
           <span className="ps-admin-input-hint">
-            Delivery: {SHIPPING_LABEL}, free for PIN code {FREE_DELIVERY_PINCODE} (Kadapa), flat {formatINR(STANDARD_DELIVERY_FEE)} for all other valid Indian PIN codes. It is calculated by the database at checkout, not edited here.
+            Delivery: {SHIPPING_LABEL}, free for PIN codes 516001 &amp; 516002 (Kadapa), flat {formatINR(STANDARD_DELIVERY_FEE)} for all other valid Indian PIN codes. It is calculated by the database at checkout, not edited here.
           </span>
 
           <div className="ps-admin-row-2">

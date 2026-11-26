@@ -15,7 +15,7 @@ set local statement_timeout = '60s';
 do $$
 declare
   c_step16 constant text := '  v_shipping := case when v_subtotal > 0 then 49 else 0 end; -- Step 16: flat Air Shipping';
-  c_step17 constant text := '  v_shipping := case when v_subtotal > 0 and v_pincode <> ''516001'' then 49 else 0 end; -- Step 17: PIN 516001 free, others ₹49';
+  c_step17 constant text := '  v_shipping := case when v_subtotal > 0 and v_pincode not in (''516001'', ''516002'') then 49 else 0 end; -- Step 17: PIN 516001 & 516002 free, others ₹49';
   r        record;
   v_oid    oid;
   v_fp     text;
@@ -23,8 +23,8 @@ declare
 begin
   for r in
     select * from (values
-      ('place_order(jsonb, jsonb, text, text, uuid)',      'fb2885684155bbd2b930a7b16cb329eb', '7e6e340c8f2fb2c9deb0f7c753ac7a8a'),
-      ('place_order_core(jsonb, jsonb, text, text, uuid)', '8be0ba3088c0cd75671598eb5468e13c', '99cfea71ece5e3b8706ff5b5c74ecc43')
+      ('place_order(jsonb, jsonb, text, text, uuid)',      '5ce511e7c3119b4210d0c9128f06301b', '7e6e340c8f2fb2c9deb0f7c753ac7a8a'),
+      ('place_order_core(jsonb, jsonb, text, text, uuid)', '8f318b975a346db1012356db55a3ac27', '99cfea71ece5e3b8706ff5b5c74ecc43')
     ) as t(sig, fp_step17, fp_step16)
   loop
     v_oid := to_regprocedure('public.' || r.sig)::oid;

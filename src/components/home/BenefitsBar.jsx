@@ -35,7 +35,7 @@ const BENEFITS = [
 
 export default function BenefitsBar() {
   const shippingTitle = SHIPPING_LABEL.toUpperCase();
-  const shippingText = `Free for ${FREE_DELIVERY_PINCODE} · Flat ${formatINR(STANDARD_DELIVERY_FEE)} Pan-India`;
+  const shippingText = `Free for 516001 & 516002 · Flat ${formatINR(STANDARD_DELIVERY_FEE)} Pan-India`;
 
   return (
     <section className="ps-benefits-bar" aria-label="Brand Guarantees & Pillars">

@@ -267,6 +267,10 @@ export default function ProductDetailModal() {
               </span>
             </div>
 
+            <div className="ps-product-disclaimer" role="note">
+              <span className="ps-disclaimer-label">DISCLAIMER :</span> This is a designer-inspired version, not an original product.
+            </div>
+
             {product.description && <p className="ps-pdetail-description">{product.description}</p>}
 
             {isCombo && Array.isArray(product.items) && product.items.length > 0 && (
@@ -454,7 +458,7 @@ export default function ProductDetailModal() {
               <div className="ps-perk-item">
                 <Truck size={15} color="#c5a059" />
                 <span>
-                  {`${SHIPPING_LABEL}: Free for ${FREE_DELIVERY_PINCODE} · ${formatINR(STANDARD_DELIVERY_FEE)} Pan-India`}
+                  {`${SHIPPING_LABEL}: Free for 516001 & 516002 · ${formatINR(STANDARD_DELIVERY_FEE)} Pan-India`}
                 </span>
               </div>
               <div className="ps-perk-item">

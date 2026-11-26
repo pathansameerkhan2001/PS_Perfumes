@@ -3,6 +3,8 @@ import {
   SHIPPING_LABEL,
   STANDARD_DELIVERY_FEE,
   FREE_DELIVERY_PINCODE,
+  FREE_DELIVERY_PINCODES,
+  isFreeDeliveryPincode,
   isValidPincode,
   calculateDeliveryFee,
   flatShippingFor,
@@ -15,7 +17,10 @@ console.log('--- RUNNING SHIPPING & DELIVERY CHARGES TEST SUITE ---\n');
   console.log('1. Configuration exports');
   assert.equal(SHIPPING_LABEL, 'Delivery Charges', 'SHIPPING_LABEL must be "Delivery Charges"');
   assert.equal(STANDARD_DELIVERY_FEE, 49, 'STANDARD_DELIVERY_FEE must be 49');
-  assert.equal(FREE_DELIVERY_PINCODE, '516001', 'FREE_DELIVERY_PINCODE must be "516001"');
+  assert.deepEqual(FREE_DELIVERY_PINCODES, ['516001', '516002'], 'FREE_DELIVERY_PINCODES must contain 516001 and 516002');
+  assert.equal(isFreeDeliveryPincode('516001'), true, '516001 is free delivery');
+  assert.equal(isFreeDeliveryPincode('516002'), true, '516002 is free delivery');
+  assert.equal(isFreeDeliveryPincode('560001'), false, '560001 is not free delivery');
   console.log('   ✓ Configuration constants verified');
 }
 
@@ -24,11 +29,14 @@ console.log('--- RUNNING SHIPPING & DELIVERY CHARGES TEST SUITE ---\n');
   console.log('2. PIN code validation (isValidPincode)');
   // Valid PIN codes
   assert.equal(isValidPincode('516001'), true, '516001 is valid');
+  assert.equal(isValidPincode('516002'), true, '516002 is valid');
   assert.equal(isValidPincode('560001'), true, '560001 is valid');
   assert.equal(isValidPincode('110001'), true, '110001 is valid');
   assert.equal(isValidPincode('400001'), true, '400001 is valid');
   assert.equal(isValidPincode(' 516001 '), true, 'Padded 516001 should be valid when trimmed');
+  assert.equal(isValidPincode(' 516002 '), true, 'Padded 516002 should be valid when trimmed');
   assert.equal(isValidPincode(516001), true, 'Numeric 516001 should be valid');
+  assert.equal(isValidPincode(516002), true, 'Numeric 516002 should be valid');
 
   // Invalid PIN codes
   assert.equal(isValidPincode(''), false, 'Empty string is invalid');
@@ -46,10 +54,14 @@ console.log('--- RUNNING SHIPPING & DELIVERY CHARGES TEST SUITE ---\n');
 // 3. calculateDeliveryFee tests
 {
   console.log('3. calculateDeliveryFee logic');
-  // Free delivery for Kadapa PIN 516001
+  // Free delivery for Kadapa PINs 516001 and 516002
   assert.equal(calculateDeliveryFee('516001', 500), 0, 'PIN 516001 with subtotal 500 -> ₹0');
   assert.equal(calculateDeliveryFee('516001', 2500), 0, 'PIN 516001 with subtotal 2500 -> ₹0');
   assert.equal(calculateDeliveryFee(' 516001 ', 999), 0, 'Padded 516001 -> ₹0');
+
+  assert.equal(calculateDeliveryFee('516002', 500), 0, 'PIN 516002 with subtotal 500 -> ₹0');
+  assert.equal(calculateDeliveryFee('516002', 2500), 0, 'PIN 516002 with subtotal 2500 -> ₹0');
+  assert.equal(calculateDeliveryFee(' 516002 ', 999), 0, 'Padded 516002 -> ₹0');
 
   // Standard ₹49 delivery for other valid PINs
   assert.equal(calculateDeliveryFee('560001', 500), 49, 'PIN 560001 with subtotal 500 -> ₹49');
@@ -58,6 +70,7 @@ console.log('--- RUNNING SHIPPING & DELIVERY CHARGES TEST SUITE ---\n');
 
   // Empty cart / zero subtotal
   assert.equal(calculateDeliveryFee('516001', 0), 0, 'PIN 516001 with subtotal 0 -> ₹0');
+  assert.equal(calculateDeliveryFee('516002', 0), 0, 'PIN 516002 with subtotal 0 -> ₹0');
   assert.equal(calculateDeliveryFee('560001', 0), 0, 'PIN 560001 with subtotal 0 -> ₹0');
   assert.equal(calculateDeliveryFee('', 0), 0, 'Empty PIN with subtotal 0 -> ₹0');
 
@@ -90,11 +103,20 @@ console.log('--- RUNNING SHIPPING & DELIVERY CHARGES TEST SUITE ---\n');
   fee = calculateDeliveryFee(pincode, subtotal);
   total = Math.max(0, subtotal - discount + (fee ?? 0));
   canSubmit = fee !== null;
-  assert.equal(fee, 0, 'Fee is 0 for Kadapa PIN');
+  assert.equal(fee, 0, 'Fee is 0 for Kadapa PIN 516001');
   assert.equal(total, 1000, 'Total is ₹1000 with free delivery');
   assert.equal(canSubmit, true, 'Checkout submission enabled');
 
-  // Step C: Shopper changes address to Bengaluru PIN 560001
+  // Step C: Shopper changes address to Kadapa PIN 516002
+  pincode = '516002';
+  fee = calculateDeliveryFee(pincode, subtotal);
+  total = Math.max(0, subtotal - discount + (fee ?? 0));
+  canSubmit = fee !== null;
+  assert.equal(fee, 0, 'Fee is 0 for Kadapa PIN 516002');
+  assert.equal(total, 1000, 'Total is ₹1000 with free delivery');
+  assert.equal(canSubmit, true, 'Checkout submission enabled');
+
+  // Step D: Shopper changes address to Bengaluru PIN 560001
   pincode = '560001';
   fee = calculateDeliveryFee(pincode, subtotal);
   total = Math.max(0, subtotal - discount + (fee ?? 0));
@@ -103,7 +125,7 @@ console.log('--- RUNNING SHIPPING & DELIVERY CHARGES TEST SUITE ---\n');
   assert.equal(total, 1049, 'Total immediately updates to ₹1049');
   assert.equal(canSubmit, true, 'Checkout submission remains enabled');
 
-  // Step D: Shopper backspaces to '56000' (incomplete)
+  // Step E: Shopper backspaces to '56000' (incomplete)
   pincode = '56000';
   fee = calculateDeliveryFee(pincode, subtotal);
   total = Math.max(0, subtotal - discount + (fee ?? 0));
@@ -127,8 +149,8 @@ console.log('--- RUNNING SHIPPING & DELIVERY CHARGES TEST SUITE ---\n');
     }
 
     // Step 17 replacement line:
-    // v_shipping := case when v_subtotal > 0 and v_pincode <> '516001' then 49 else 0 end;
-    const v_shipping = (v_subtotal > 0 && v_pincode !== '516001') ? 49 : 0;
+    // v_shipping := case when v_subtotal > 0 and v_pincode not in ('516001', '516002') then 49 else 0 end;
+    const v_shipping = (v_subtotal > 0 && !['516001', '516002'].includes(v_pincode)) ? 49 : 0;
 
     // Database NEVER reads clientClaimedShipping!
     return {
@@ -138,16 +160,21 @@ console.log('--- RUNNING SHIPPING & DELIVERY CHARGES TEST SUITE ---\n');
   }
 
   // Case 5a: COD order for Kadapa (516001)
-  const codKadapa = simulateDbOrderCalculation({ customerPincode: '516001', subtotal: 800, clientClaimedShipping: 999 });
-  assert.equal(codKadapa.shipping_fee, 0, 'Database charges 0 shipping for Kadapa (ignores client value 999)');
-  assert.equal(codKadapa.total_amount, 800);
+  const codKadapa1 = simulateDbOrderCalculation({ customerPincode: '516001', subtotal: 800, clientClaimedShipping: 999 });
+  assert.equal(codKadapa1.shipping_fee, 0, 'Database charges 0 shipping for Kadapa 516001 (ignores client value 999)');
+  assert.equal(codKadapa1.total_amount, 800);
 
-  // Case 5b: Razorpay order for Mumbai (400001)
+  // Case 5b: COD order for Kadapa (516002)
+  const codKadapa2 = simulateDbOrderCalculation({ customerPincode: '516002', subtotal: 1200, clientClaimedShipping: 999 });
+  assert.equal(codKadapa2.shipping_fee, 0, 'Database charges 0 shipping for Kadapa 516002 (ignores client value 999)');
+  assert.equal(codKadapa2.total_amount, 1200);
+
+  // Case 5c: Razorpay order for Mumbai (400001)
   const razorpayMumbai = simulateDbOrderCalculation({ customerPincode: '400001', subtotal: 1500, clientClaimedShipping: 0 });
   assert.equal(razorpayMumbai.shipping_fee, 49, 'Database charges 49 shipping for Mumbai (ignores client tamper 0)');
   assert.equal(razorpayMumbai.total_amount, 1549);
 
-  // Case 5c: Invalid PIN rejected by database exception
+  // Case 5d: Invalid PIN rejected by database exception
   assert.throws(
     () => simulateDbOrderCalculation({ customerPincode: '012345', subtotal: 500 }),
     /Enter a valid 6-digit PIN code\./

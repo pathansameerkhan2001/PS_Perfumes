@@ -220,6 +220,10 @@ export default function QuickAddModal({ product, isOpen, onClose }) {
                 <span className="ps-quickadd-discount-tag">{discountPercent}% OFF</span>
               )}
             </div>
+
+            <div className="ps-quickadd-disclaimer" role="note">
+              <span className="ps-disclaimer-label">DISCLAIMER :</span> This is a designer-inspired version, not an original product.
+            </div>
           </div>
         </div>
 

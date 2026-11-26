@@ -1,6 +1,6 @@
 /**
  * Delivery charges configuration for PS Perfumes storefront and checkout.
- * - PIN code 516001 (Kadapa atelier) -> Free delivery (₹0).
+ * - PIN codes 516001 & 516002 (Kadapa atelier) -> Free delivery (₹0).
  * - All other valid 6-digit Indian PIN codes -> ₹49 delivery charge.
  * - Missing/incomplete/invalid PIN code -> null (pending calculation, checkout disabled).
  * - Empty cart / 0 subtotal -> ₹0.
@@ -9,7 +9,8 @@
  */
 export const SHIPPING_LABEL = 'Delivery Charges';
 export const STANDARD_DELIVERY_FEE = 49;
-export const FREE_DELIVERY_PINCODE = '516001';
+export const FREE_DELIVERY_PINCODES = ['516001', '516002'];
+export const FREE_DELIVERY_PINCODE = '516001, 516002';
 
 /**
  * Validates whether a PIN code string matches standard 6-digit Indian postal code format.
@@ -20,10 +21,18 @@ export function isValidPincode(pincode) {
 }
 
 /**
+ * Checks if a PIN code qualifies for free delivery (Kadapa PINs 516001 and 516002).
+ */
+export function isFreeDeliveryPincode(pincode) {
+  const clean = String(pincode || '').trim();
+  return FREE_DELIVERY_PINCODES.includes(clean);
+}
+
+/**
  * Calculates delivery fee based on PIN code and subtotal:
  * - Empty bag / 0 subtotal: 0
  * - Invalid or incomplete PIN code: null (cannot calculate until valid PIN provided)
- * - Kadapa PIN 516001: 0 (FREE)
+ * - Kadapa PINs 516001 & 516002: 0 (FREE)
  * - All other valid PIN codes: 49
  *
  * @param {string|null|undefined} pincode
@@ -34,7 +43,7 @@ export function calculateDeliveryFee(pincode, subtotal) {
   if (Number(subtotal) <= 0) return 0;
   const cleanPin = String(pincode || '').trim();
   if (!isValidPincode(cleanPin)) return null;
-  if (cleanPin === FREE_DELIVERY_PINCODE) return 0;
+  if (isFreeDeliveryPincode(cleanPin)) return 0;
   return STANDARD_DELIVERY_FEE;
 }
 

@@ -8,10 +8,10 @@
 --     place_order       (COD, step 08 / patched in step 16)
 --     place_order_core  (Razorpay, step 10 v2 / patched in step 16)
 --   before:  v_shipping := case when v_subtotal > 0 then 49 else 0 end; -- Step 16: flat Air Shipping
---   after:   v_shipping := case when v_subtotal > 0 and v_pincode <> '516001' then 49 else 0 end; -- Step 17: PIN 516001 free, others ₹49
+--   after:   v_shipping := case when v_subtotal > 0 and v_pincode not in ('516001', '516002') then 49 else 0 end; -- Step 17: PIN 516001 & 516002 free, others ₹49
 --
 -- Delivery rule:
---   - PIN 516001 (Kadapa atelier) -> Free delivery (₹0)
+--   - PIN 516001 & 516002 (Kadapa atelier) -> Free delivery (₹0)
 --   - All other valid 6-digit Indian PIN codes -> ₹49 delivery charge
 --   - Empty cart (v_subtotal <= 0) -> ₹0
 --   Note: v_pincode is already validated by both functions earlier in the body:
@@ -42,7 +42,7 @@ set local statement_timeout = '60s';
 do $$
 declare
   c_old constant text := '  v_shipping := case when v_subtotal > 0 then 49 else 0 end; -- Step 16: flat Air Shipping';
-  c_new constant text := '  v_shipping := case when v_subtotal > 0 and v_pincode <> ''516001'' then 49 else 0 end; -- Step 17: PIN 516001 free, others ₹49';
+  c_new constant text := '  v_shipping := case when v_subtotal > 0 and v_pincode not in (''516001'', ''516002'') then 49 else 0 end; -- Step 17: PIN 516001 & 516002 free, others ₹49';
   r      record;
   v_oid  oid;
   v_fp   text;
@@ -57,8 +57,8 @@ begin
 
   for r in
     select * from (values
-      ('place_order(jsonb, jsonb, text, text, uuid)',      '7e6e340c8f2fb2c9deb0f7c753ac7a8a', 'fb2885684155bbd2b930a7b16cb329eb'),
-      ('place_order_core(jsonb, jsonb, text, text, uuid)', '99cfea71ece5e3b8706ff5b5c74ecc43', '8be0ba3088c0cd75671598eb5468e13c')
+      ('place_order(jsonb, jsonb, text, text, uuid)',      '7e6e340c8f2fb2c9deb0f7c753ac7a8a', '5ce511e7c3119b4210d0c9128f06301b'),
+      ('place_order_core(jsonb, jsonb, text, text, uuid)', '99cfea71ece5e3b8706ff5b5c74ecc43', '8f318b975a346db1012356db55a3ac27')
     ) as t(sig, fp_before, fp_after)
   loop
     v_oid := to_regprocedure('public.' || r.sig)::oid;
@@ -85,7 +85,7 @@ begin
     if v_fp is distinct from r.fp_after then
       raise exception 'public.%: unexpected result (fingerprint %). Nothing was changed.', r.sig, v_fp;
     end if;
-    raise notice 'public.% now charges PIN-code delivery (516001 free, others ₹49).', r.sig;
+    raise notice 'public.% now charges PIN-code delivery (516001 & 516002 free, others ₹49).', r.sig;
   end loop;
 end $$;
 

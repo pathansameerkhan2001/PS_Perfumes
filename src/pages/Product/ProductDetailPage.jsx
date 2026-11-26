@@ -533,6 +533,11 @@ export default function ProductDetailPage() {
             {/* Tax Note */}
             <span className="ps-pdp-tax-note">Inclusive of all duties & taxes</span>
 
+            {/* Product Designer Disclaimer */}
+            <div className="ps-pdp-disclaimer" role="note">
+              <span className="ps-disclaimer-label">DISCLAIMER :</span> This is a designer-inspired version, not an original product.
+            </div>
+
             {/* Product Description */}
             {(product.description || product.short_description) && (
               <p className="ps-pdp-description-para">{product.description || product.short_description}</p>
@@ -790,6 +795,9 @@ export default function ProductDetailPage() {
               </button>
               {openAccordions.desc && (
                 <div className="ps-pdp-accordion-body">
+                  <div className="ps-pdp-disclaimer" role="note" style={{ margin: '0 0 16px 0' }}>
+                    <span className="ps-disclaimer-label">DISCLAIMER :</span> This is a designer-inspired version, not an original product.
+                  </div>
                   {product.description ? (
                     <p className="ps-pdp-accordion-para">{product.description}</p>
                   ) : !product.occasion && !product.longevity ? (
@@ -828,6 +836,9 @@ export default function ProductDetailPage() {
               </button>
               {openAccordions.details && (
                 <div className="ps-pdp-accordion-body">
+                  <div className="ps-pdp-disclaimer" role="note" style={{ margin: '0 0 16px 0' }}>
+                    <span className="ps-disclaimer-label">DISCLAIMER :</span> This is a designer-inspired version, not an original product.
+                  </div>
                   <ul className="ps-pdp-details-list">
                     {detailRows.map((row) => (
                       <li key={row.label}>
