@@ -222,7 +222,7 @@ export default function QuickAddModal({ product, isOpen, onClose }) {
             </div>
 
             <div className="ps-quickadd-disclaimer" role="note">
-              <span className="ps-disclaimer-label">DISCLAIMER :</span> This is a designer-inspired version, not an original product.
+              A designer-inspired fragrance, crafted by PS Perfumes.
             </div>
           </div>
         </div>

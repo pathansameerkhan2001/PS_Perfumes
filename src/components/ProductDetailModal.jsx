@@ -268,7 +268,7 @@ export default function ProductDetailModal() {
             </div>
 
             <div className="ps-product-disclaimer" role="note">
-              <span className="ps-disclaimer-label">DISCLAIMER :</span> This is a designer-inspired version, not an original product.
+              A designer-inspired fragrance, crafted by PS Perfumes.
             </div>
 
             {product.description && <p className="ps-pdetail-description">{product.description}</p>}
