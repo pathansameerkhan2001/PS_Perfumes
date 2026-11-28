@@ -334,7 +334,7 @@
   font-size: 14px;
   line-height: 1.65;
   color: #5a5248;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .ps-pdp-divider {
@@ -1179,18 +1179,35 @@
   }
 }
 
-/* Product Designer-Inspired Disclaimer */
+/* Product Designer-Inspired Disclaimer Card */
 .ps-pdp-disclaimer {
   display: block;
   padding: 10px 14px;
-  margin: 14px 0 16px 0;
+  margin: 0 0 20px 0;
   background-color: #faf7f2;
   border: 1px solid #e8ded1;
   border-left: 3px solid #c9a96e;
   border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.ps-pdp-disclaimer .ps-disclaimer-heading {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8c6827;
+  margin-bottom: 3px;
+  line-height: 1.2;
+}
+
+.ps-pdp-disclaimer .ps-disclaimer-text {
+  margin: 0;
+  padding: 0;
   font-size: 12.5px;
-  font-weight: 500;
   line-height: 1.5;
   color: #3d342c;
+  font-weight: 500;
   letter-spacing: 0.01em;
 }

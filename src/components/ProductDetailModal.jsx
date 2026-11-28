@@ -267,10 +267,6 @@ export default function ProductDetailModal() {
               </span>
             </div>
 
-            <div className="ps-product-disclaimer" role="note">
-              A designer-inspired fragrance, crafted by PS Perfumes.
-            </div>
-
             {product.description && <p className="ps-pdetail-description">{product.description}</p>}
 
             {isCombo && Array.isArray(product.items) && product.items.length > 0 && (
@@ -286,6 +282,11 @@ export default function ProductDetailModal() {
                 {product.unavailable_reason === 'out_of_stock' ? 'Out of stock.' : `Currently unavailable. ${product.unavailable_message}`}
               </p>
             )}
+
+            <div className="ps-product-disclaimer" role="note">
+              <span className="ps-disclaimer-heading">DISCLAIMER</span>
+              <p className="ps-disclaimer-text">A designer-inspired fragrance, crafted by PS Perfumes.</p>
+            </div>
 
             {/* Fragrance notes — only when the product has them */}
             {hasNotes && (

@@ -533,15 +533,16 @@ export default function ProductDetailPage() {
             {/* Tax Note */}
             <span className="ps-pdp-tax-note">Inclusive of all duties & taxes</span>
 
-            {/* Product Designer Disclaimer */}
-            <div className="ps-pdp-disclaimer" role="note">
-              A designer-inspired fragrance, crafted by PS Perfumes.
-            </div>
-
             {/* Product Description */}
             {(product.description || product.short_description) && (
               <p className="ps-pdp-description-para">{product.description || product.short_description}</p>
             )}
+
+            {/* Product Designer Disclaimer */}
+            <div className="ps-pdp-disclaimer" role="note">
+              <span className="ps-disclaimer-heading">DISCLAIMER</span>
+              <p className="ps-disclaimer-text">A designer-inspired fragrance, crafted by PS Perfumes.</p>
+            </div>
 
             <div className="ps-pdp-divider" />
 
@@ -795,9 +796,6 @@ export default function ProductDetailPage() {
               </button>
               {openAccordions.desc && (
                 <div className="ps-pdp-accordion-body">
-                  <div className="ps-pdp-disclaimer" role="note" style={{ margin: '0 0 16px 0' }}>
-                    A designer-inspired fragrance, crafted by PS Perfumes.
-                  </div>
                   {product.description ? (
                     <p className="ps-pdp-accordion-para">{product.description}</p>
                   ) : !product.occasion && !product.longevity ? (
@@ -813,6 +811,10 @@ export default function ProductDetailPage() {
                       <strong>Longevity:</strong> {product.longevity}
                     </p>
                   )}
+                  <div className="ps-pdp-disclaimer" role="note" style={{ margin: '14px 0 0 0' }}>
+                    <span className="ps-disclaimer-heading">DISCLAIMER</span>
+                    <p className="ps-disclaimer-text">A designer-inspired fragrance, crafted by PS Perfumes.</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -837,7 +839,8 @@ export default function ProductDetailPage() {
               {openAccordions.details && (
                 <div className="ps-pdp-accordion-body">
                   <div className="ps-pdp-disclaimer" role="note" style={{ margin: '0 0 16px 0' }}>
-                    A designer-inspired fragrance, crafted by PS Perfumes.
+                    <span className="ps-disclaimer-heading">DISCLAIMER</span>
+                    <p className="ps-disclaimer-text">A designer-inspired fragrance, crafted by PS Perfumes.</p>
                   </div>
                   <ul className="ps-pdp-details-list">
                     {detailRows.map((row) => (
